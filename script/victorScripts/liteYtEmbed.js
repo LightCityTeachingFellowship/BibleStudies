@@ -109,10 +109,10 @@ function runFirstPartOfCode() {
         
                                         // Append the modified text and the span element to the video title
                                         videoTitleElement.appendChild(modifiedText);
-                                        videoTitleElement.appendChild(videoDateElement);
-        
                                         // Add the modified video title content (without HTML tags) as a new attribute
                                         videoBoxElement.setAttribute('video-title', stripHtmlTags(videoTitleElement.innerHTML));
+                                        videoTitleElement.appendChild(videoDateElement);
+        
         
                                         // Add the date as an attribute to the current video-box
                                         videoBoxElement.setAttribute('date-posted', dayOfWeek + ', ' + dateString);
