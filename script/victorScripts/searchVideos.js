@@ -108,7 +108,6 @@ function handleVideoSearch() {
         searchResultsContainerInner.style.height = '0';
         searchResultsContainerInner.innerHTML = '';
         displayedVideoCountElement.remove();
-        // displayedVideoCountElement.style.display = 'none';
         displayedVideos.clear();
     }
 }
@@ -116,22 +115,16 @@ function handleVideoSearch() {
 function applyStyles() {
     let height;
         if (window.matchMedia("(max-width: 390px)").matches) {
-            // For screens smaller than or equal to 390px
             height = '275px';
         } else if (window.matchMedia("(max-width: 415px)").matches) {
-            // For screens smaller than or equal to 390px
             height = '295px';
         } else if (window.matchMedia("(max-width: 600px)").matches) {
-            // For screens smaller than or equal to 600px
             height = '250px';
         } else if (window.matchMedia("(max-width: 900px)").matches) {
-            // For screens smaller than or equal to 600px
             height = '307px';
         } else if (window.matchMedia("(max-width: 1024px)").matches) {
-            // For screens smaller than or equal to 1024px
             height = '350px';
         } else {
-            // For larger screens
             height = '340px';
         }
         searchResultsContainerInner.style.height = height;

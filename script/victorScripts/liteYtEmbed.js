@@ -50,15 +50,13 @@ function runFirstPartOfCode() {
             
                         let videoTitleElement;
                         var modifiedText;
-                        var videoDateElement;
-            
+                        var videoDateElement;                                   
                         // Define the array with the video's Category name
                         const videoCategories = ["Sunday", "Monday", "Wednesday", "Program"];
             
                         // Get all video-box elements
                         const videoBoxElement = this.closest(`#All-Tab-content .video-box`);
                         if (!videoBoxElement) {return}
-
                         // Set up channel Logo
                             var channelLogoCon = document.createElement('div');
                             channelLogoCon.classList.add('channelLogo-container');
@@ -76,14 +74,12 @@ function runFirstPartOfCode() {
                             // Get the video title element within the current video-box
                             if (videoTitleElement) {
                                 // Get the text content of the video-title (h3) element
-                                const videoTitleText = videoTitleElement.textContent;
-        
+                                const videoTitleText = videoTitleElement.textContent;        
                                 // Extract the date from the video title
                                 const firstDateFormatMatch = videoTitleText.match(/(\d{1,2}(?:st|nd|rd|th)?)\s?(\w{3})\.\s?(\d{4})\.?/);
                                 const secondDateFormatMatch = videoTitleText.match(/(?:\w{3},\s)?(\w{3})\s(\d{1,2}),\s(\d{4})\.?/);
         
-                                let dateString, dateObject;
-        
+                                let dateString, dateObject;        
                                 if (firstDateFormatMatch && firstDateFormatMatch.length > 0) {
                                     const [dayMatch, monthMatch, yearMatch] = firstDateFormatMatch.slice(1);
                                     dateString = `${monthMatch} ${dayMatch.replace(/\D/g, '')}, ${yearMatch}`;
@@ -93,27 +89,21 @@ function runFirstPartOfCode() {
                                 }
         
                                 if (dateString) {
-                                    dateObject = new Date(dateString);
-        
+                                    dateObject = new Date(dateString);        
                                     if (!isNaN(dateObject)) {
-                                        const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(dateObject);
-        
+                                        const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(dateObject);        
                                         // Create a span element
                                         videoDateElement = document.createElement('span');
                                         videoDateElement.classList.add('video-date');
                                         videoDateElement.textContent = dayOfWeek + ', ' + dateString + '.';
-        
                                         // Create a new text node with the modified text (excluding the date)
                                         modifiedText = document.createTextNode(videoTitleText.replace(firstDateFormatMatch ? firstDateFormatMatch[0] : secondDateFormatMatch[0], ''));
                                         videoTitleElement.innerHTML = '';
-        
                                         // Append the modified text and the span element to the video title
                                         videoTitleElement.appendChild(modifiedText);
                                         // Add the modified video title content (without HTML tags) as a new attribute
                                         videoBoxElement.setAttribute('video-title', stripHtmlTags(videoTitleElement.innerHTML));
                                         videoTitleElement.appendChild(videoDateElement);
-        
-        
                                         // Add the date as an attribute to the current video-box
                                         videoBoxElement.setAttribute('date-posted', dayOfWeek + ', ' + dateString);
                                     } else {
@@ -122,11 +112,8 @@ function runFirstPartOfCode() {
                                 } else {
                                     console.error('No date match found');
                                 }
-        
                                 // Check if any of the target words are present in the video title text
                                 const matchedCategory = videoCategories.find(word => videoTitleText.includes(word));
-        
-                                // If a match is found, set an attribute on the video-box element
                                 if (matchedCategory) {
                                     videoBoxElement.setAttribute('categoryTab', matchedCategory);
                                 }
@@ -296,5 +283,172 @@ function videoCloneToOtherTabs() {
             targetCategoryDiv.appendChild(clonedVideoBox);
         }
     });
+
+       // Create an array to store all video boxes from all tabs
+       const allVideoBoxes = [];
+       let latestVideoBox;
+       let latestDate = new Date(0); // Initialize with a very early date
+       let tabOfLatestVideoBox;
+       let previousVideoBoxOne;
+       let previousDateOne;
+       let tabOfpreviousVideoBoxOne;
+       let previousVideoBoxTwo;
+       let previousDateTwo;
+       let tabOfpreviousVideoBoxTwo;
+       let previousVideoBoxThree;
+       let previousDateThree;
+       let tabOfpreviousVideoBoxThree;    
+       // Assuming allTabs is a NodeList or an array of tabs
+       Array.from(allTabs).slice(1).forEach((tab) => {
+         const linkId = tab.id;
+         // Retrieve all video boxes for the current tab
+         const allVideoBox = document.querySelectorAll(`#${linkId} .video-box`);
+         // Push video boxes into the array
+         allVideoBoxes.push(...allVideoBox);
+         // Iterate over video boxes for the current tab
+         allVideoBoxes.forEach((videoBox) => {
+           const dateAttribute = videoBox.getAttribute('date-posted');
+           const currentDate = new Date(dateAttribute.replace(/(\d{1,2})(st|nd|rd|th)?/, '$1'));
+           // Check if the current video box has a later date than the latest one
+           if (currentDate > latestDate) {
+             // Update the latest video box information
+             previousVideoBoxThree = previousVideoBoxTwo;
+             previousDateThree = previousDateTwo;
+             tabOfpreviousVideoBoxThree = tabOfpreviousVideoBoxTwo;
+   
+             previousVideoBoxTwo = previousVideoBoxOne;
+             previousDateTwo = previousDateOne;
+             tabOfpreviousVideoBoxTwo = tabOfpreviousVideoBoxOne;
+       
+             previousVideoBoxOne = latestVideoBox;
+             previousDateOne = latestDate;
+             tabOfpreviousVideoBoxOne = tabOfLatestVideoBox;
+       
+             latestDate = currentDate;
+             latestVideoBox = videoBox;
+             tabOfLatestVideoBox = tab;
+           } else if (currentDate > previousDateOne && currentDate < latestDate) {
+             // Update the previous video box information
+             previousVideoBoxThree = previousVideoBoxTwo;
+             previousDateThree = previousDateTwo;
+             tabOfpreviousVideoBoxThree = tabOfpreviousVideoBoxTwo;
+   
+             previousVideoBoxTwo = previousVideoBoxOne;
+             previousDateTwo = previousDateOne;
+             tabOfpreviousVideoBoxTwo = tabOfpreviousVideoBoxOne;
+       
+             previousDateOne = currentDate;
+             previousVideoBoxOne = videoBox;
+             tabOfpreviousVideoBoxOne = tab;
+           } else if (currentDate > previousDateTwo && currentDate < previousDateOne && currentDate < latestDate) {
+             // Update the previous video box information
+             previousVideoBoxThree = previousVideoBoxTwo;
+             previousDateThree = previousDateTwo;
+             tabOfpreviousVideoBoxThree = tabOfpreviousVideoBoxTwo;
+             
+             previousDateTwo = currentDate;
+             previousVideoBoxTwo = videoBox;
+             tabOfpreviousVideoBoxTwo = tab;
+           } else if (currentDate > previousDateThree && currentDate < previousDateTwo && currentDate < previousDateOne && currentDate < latestDate) {
+             // Update the previous video box information
+             previousDateThree = currentDate;
+             previousVideoBoxThree = videoBox;
+             tabOfpreviousVideoBoxThree = tab;
+           }
+         });
+       });
+       console.log(latestVideoBox);
+       console.log(tabOfLatestVideoBox);
+       console.log(previousVideoBoxOne);
+       console.log(tabOfpreviousVideoBoxOne);
+       console.log(previousVideoBoxTwo);
+       console.log(tabOfpreviousVideoBoxTwo);
+       console.log(previousVideoBoxThree);    
+       console.log(tabOfpreviousVideoBoxThree);
+   
+       let moved = false; // Flag to track whether the buttons have been moved
+       const btnArray = Array.from(allBtns);
+       // Iterate over buttons
+       for (let elem of btnArray.slice(1)) {
+         let btnId = elem.id;
+         let theButtonMatch;
+         // Check for tabOfPreviousVideoBoxThree condition
+         if (tabOfpreviousVideoBoxThree) {
+           const parentOfPreviousVideoBoxThree = previousVideoBoxThree.parentNode;
+           const parentOfPreviousVideoBoxThreeId = parentOfPreviousVideoBoxThree.id;
+           if (parentOfPreviousVideoBoxThreeId.includes(btnId)) {
+             // console.log(btnId);
+             theButtonMatch = elem;
+             // console.log(theButtonMatch);
+             theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
+             const indexToMove = btnArray.indexOf(theButtonMatch);
+             if (indexToMove !== -1) {
+               // console.log(indexToMove);
+               const movedElement = btnArray.splice(indexToMove, 1)[0];
+               // console.log(movedElement);
+               btnArray.splice(4, 0, movedElement);
+               moved = true; // Set the flag to true
+             }
+           }
+         }
+         // Check for tabOfPreviousVideoBoxTwo condition
+         if (tabOfpreviousVideoBoxTwo) {
+           const parentOfPreviousVideoBoxTwo = previousVideoBoxTwo.parentNode;
+           const parentOfPreviousVideoBoxTwoId = parentOfPreviousVideoBoxTwo.id;
+           if (parentOfPreviousVideoBoxTwoId.includes(btnId)) {
+             theButtonMatch = elem;
+             // console.log(theButtonMatch);
+             theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
+             const indexToMove = btnArray.indexOf(theButtonMatch);
+             if (indexToMove !== -1) {
+               const movedElement = btnArray.splice(indexToMove, 1)[0];
+               btnArray.splice(3, 0, movedElement);
+               moved = true; // Set the flag to true
+             }
+           }
+         }
+         // Check for tabOfPreviousVideoBoxOne condition
+         if (tabOfpreviousVideoBoxOne) {
+           const parentOfPreviousVideoBoxOne = previousVideoBoxOne.parentNode;
+           const parentOfPreviousVideoBoxOneId = parentOfPreviousVideoBoxOne.id;
+           if (parentOfPreviousVideoBoxOneId.includes(btnId)) {
+             theButtonMatch = elem;
+             theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
+             const indexToMove = btnArray.indexOf(theButtonMatch);
+             if (indexToMove !== -1) {
+               const movedElement = btnArray.splice(indexToMove, 1)[0];
+               btnArray.splice(2, 0, movedElement);
+               moved = true; // Set the flag to true
+             }
+           }
+         }
+         // Check for tabOfLatestVideoBox condition
+         if (tabOfLatestVideoBox) {
+           const parentOfLatestVideoBox = latestVideoBox.parentNode;
+           const parentOfLatestVideoBoxId = parentOfLatestVideoBox.id;
+           if (parentOfLatestVideoBoxId.includes(btnId)) {
+             theButtonMatch = elem;
+             theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
+             const indexToMove = btnArray.indexOf(theButtonMatch);
+             if (indexToMove !== -1) {
+               const movedElement = btnArray.splice(indexToMove, 1)[0];
+               btnArray.splice(1, 0, movedElement);
+               moved = true; // Set the flag to true
+             }
+           }
+         }
+       }
+       // Remove existing buttons from the DOM and insert buttons in the updated order
+       if (moved) {
+         const parentElement = document.querySelector('.videos-header-btns-cont');
+         // Remove existing buttons from the DOM
+         document.querySelectorAll('.videos-header-btns').forEach((button) => {
+           button.remove();
+         });
+         // Insert buttons in the updated order
+         btnArray.forEach((button) => {
+           parentElement.appendChild(button);
+         });
+       } 
 }
 setTimeout(videoCloneToOtherTabs, 3000);
