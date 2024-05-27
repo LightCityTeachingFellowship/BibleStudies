@@ -21,7 +21,7 @@
     position:relative;}
 .videos-header-cont .arrows{
     position:absolute;
-/*     z-index:2020; */
+    /* z-index:2020; */
     height:100%;
     top:0;
     display:flex;
@@ -115,11 +115,20 @@
     padding:0 0 18px 0;
     padding:5px 5px 18px 5px;}
 .video-box h3{padding:5px 5px 0;}}
+@media only screen and (min-width:540px){
+.videotab-content, .searchvideotab-content{grid-template-columns:repeat(2, 1fr);}}
+@media only screen and (min-width:1160px){
+.videotab-content, .searchvideotab-content{grid-template-columns:repeat(3, 1fr);}}
 @media only screen and (min-width:1260px){
 .videotab-content, .searchvideotab-content{grid-template-columns:repeat(4, 1fr);}}
 /* search CSS */
-#searchResults{position:relative;}
+#searchResults{
+    display:grid;
+    position:relative;}
+#searchResults #searchResultsInner{
+    overflow:auto;
+    position:relative;}
 .highlighted{border-radius:2px;}
 .displayedVideoCountElement{
     position:absolute;
-    padding-top:6px;}
+    margin-top:6px;}
