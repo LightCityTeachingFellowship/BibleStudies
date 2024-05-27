@@ -1,5 +1,6 @@
 const videoSearchInput = document.getElementById("videoSearch");
 const searchResultsContainer = document.getElementById("searchResults");
+const searchResultsContainerInner = document.getElementById("searchResultsInner");
 const searchFromAllTabContent = document.querySelector('#All-Tab-content');
 const displayedVideos = new Set();
 let observer;
@@ -29,7 +30,7 @@ function handleHighLight(searchQuery) {
     if (observer) {
         observer.disconnect();
     }
-    const videoBoxes = searchResultsContainer.querySelectorAll(".video-box");
+    const videoBoxes = searchResultsContainerInner.querySelectorAll(".video-box");
     videoBoxes.forEach((video) => {
         const videoTitleElement = video.querySelector(".video-title");
         const { videoTitleAttribute, videoDateAttribute } = getAttributes(video);
@@ -55,13 +56,18 @@ function handleHighLight(searchQuery) {
         });
     }
     // Reconnect the observer to detect further changes
-    observer.observe(searchResultsContainer, { childList: true, subtree: true, attributes: true });
+    observer.observe(searchResultsContainerInner, { childList: true, subtree: true, attributes: true });
 }
+
 // Function to handle video search
 function handleVideoSearch() {
     const searchQuery = videoSearchInput.value.toLowerCase();
-    searchResultsContainer.innerHTML = "";
+    searchResultsContainerInner.innerHTML = "";
     displayedVideos.clear();
+    const existingCountElement = searchResultsContainer.querySelector('.displayedVideoCountElement');
+    if (existingCountElement) {
+        existingCountElement.remove();
+    }
     const videoBoxes = searchFromAllTabContent.querySelectorAll(".video-box");
     videoBoxes.forEach((video) => {
         const { videoTitleAttribute, videoDateAttribute } = getAttributes(video);
@@ -73,26 +79,60 @@ function handleVideoSearch() {
             const videoDate = videoDateAttribute.toLowerCase();
             if ((videoTitle.includes(searchQuery) || videoDate.includes(searchQuery)) && !displayedVideos.has(videoId)) {
                 const videoClone = video.cloneNode(true);
-                searchResultsContainer.appendChild(videoClone);
+                searchResultsContainerInner.appendChild(videoClone);
                 displayedVideos.add(videoId);
             }
         }
     });
-    const displayedVideoCount = searchResultsContainer.children.length;
+    const displayedVideoCount = searchResultsContainerInner.children.length;
     const displayedVideoCountElement = document.createElement('em');
     displayedVideoCountElement.classList.add('displayedVideoCountElement');
     if (displayedVideoCount === 0) {
-        displayedVideoCountElement.innerHTML = 'Search Results: No match found...';
+        displayedVideoCountElement.innerHTML = 'Search Result: No match found...';
+        searchResultsContainerInner.style.height = '0';
     } else if (displayedVideoCount === 1) {
-        displayedVideoCountElement.innerHTML = 'Search Results: ' + displayedVideoCount  + ' video.';
+        displayedVideoCountElement.innerHTML = 'Search Result: ' + displayedVideoCount  + ' video.';
     } else {
-        displayedVideoCountElement.innerHTML = 'Search Results: ' + displayedVideoCount  + ' videos.';
+        displayedVideoCountElement.innerHTML = 'Search Result: ' + displayedVideoCount  + ' videos.';
+        // Apply initial styles
+        applyStyles();
+        window.addEventListener('resize', applyStyles);
     }
     searchResultsContainer.prepend(displayedVideoCountElement);
-    searchResultsContainer.style.paddingTop = displayedVideoCount === 0 ? '30px' : '40px';
+    searchResultsContainer.style.paddingTop = displayedVideoCount === 0 ? '30px' : '30px';
+    searchResultsContainerInner.style.marginTop = displayedVideoCount === 0 ? '0' : '6px';
+
     if (searchQuery === "") {
         searchResultsContainer.style.removeProperty('padding-top');
-        searchResultsContainer.innerHTML = "";
+        searchResultsContainerInner.style.removeProperty('margin-top');
+        searchResultsContainerInner.style.height = '0';
+        searchResultsContainerInner.innerHTML = '';
+        displayedVideoCountElement.remove();
+        // displayedVideoCountElement.style.display = 'none';
         displayedVideos.clear();
     }
 }
+// Function to apply styles based on screen size
+function applyStyles() {
+    let height;
+        if (window.matchMedia("(max-width: 390px)").matches) {
+            // For screens smaller than or equal to 390px
+            height = '275px';
+        } else if (window.matchMedia("(max-width: 415px)").matches) {
+            // For screens smaller than or equal to 390px
+            height = '295px';
+        } else if (window.matchMedia("(max-width: 600px)").matches) {
+            // For screens smaller than or equal to 600px
+            height = '250px';
+        } else if (window.matchMedia("(max-width: 900px)").matches) {
+            // For screens smaller than or equal to 600px
+            height = '307px';
+        } else if (window.matchMedia("(max-width: 1024px)").matches) {
+            // For screens smaller than or equal to 1024px
+            height = '350px';
+        } else {
+            // For larger screens
+            height = '340px';
+        }
+        searchResultsContainerInner.style.height = height;
+    }
