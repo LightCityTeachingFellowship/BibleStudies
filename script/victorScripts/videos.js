@@ -14,7 +14,7 @@ const allTabs = document.querySelectorAll(".videotab-content");
       // // Define a function to handle the setTimeout callback
       function updateButton() {
           // Find the corresponding tab for the button
-          const correspondingTab = tabsArray.find((tab) => tab.id === linkId + "-content");
+          const correspondingTab = tabsArrayAll.find((tab) => tab.id === linkId + "-content");
           if (correspondingTab) {
               // Count the children of the corresponding tab
               const tabChildrenCount = correspondingTab.children.length;
@@ -28,29 +28,10 @@ const allTabs = document.querySelectorAll(".videotab-content");
               elem.innerHTML = '';
               // Append the original text and the count element to the button
               elem.appendChild(document.createTextNode(originalText));
-              elem.appendChild(tabChildrenCountElement);
-          }
-          // Find the corresponding tab for the button (for the first tab)
-          if (tabsArrayFirst.length > 0) {
-              const firstCorrespondingTab = tabsArrayFirst.find((tab) => tab.id === linkId + "-content");
-              if (firstCorrespondingTab) {
-                  // Count the children of the corresponding tab
-                  const firstTabChildrenCount = firstCorrespondingTab.children.length;
-                  const firstTabChildrenCountElement = document.createElement('span');
-                  firstTabChildrenCountElement.classList.add('video-count');
-                  const firstCountText = document.createTextNode(`(${firstTabChildrenCount})`);
-                  firstTabChildrenCountElement.appendChild(firstCountText);
-
-                  // Get the original text from the data-original-text attribute, or fallback to current inner text
-                  const firstOriginalText = elem.getAttribute('data-original-text') || elem.innerText;
-                  elem.innerHTML = '';
-                  // Append the original text and the count element to the button
-                  elem.appendChild(document.createTextNode(firstOriginalText));
-                  elem.appendChild(firstTabChildrenCountElement);
-              }
+            //   elem.appendChild(tabChildrenCountElement);
           }
       }
-      setTimeout(updateButton, 3250);
+      setTimeout(updateButton, 3255);
 
       elem.addEventListener('click', function() {
           allBtns.forEach((button) => {
