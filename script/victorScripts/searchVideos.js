@@ -89,12 +89,11 @@ function handleVideoSearch() {
     displayedVideoCountElement.classList.add('displayedVideoCountElement');
     if (displayedVideoCount === 0) {
         displayedVideoCountElement.innerHTML = 'Search Result: No match found...';
-        searchResultsContainerInner.style.height = '0';
+        searchResultsContainerInner.style.maxHeight = '0';
     } else if (displayedVideoCount === 1) {
         displayedVideoCountElement.innerHTML = 'Search Result: ' + displayedVideoCount  + ' video.';
     } else {
         displayedVideoCountElement.innerHTML = 'Search Result: ' + displayedVideoCount  + ' videos.';
-        // Apply initial styles
         applyStyles();
         window.addEventListener('resize', applyStyles);
     }
@@ -105,7 +104,7 @@ function handleVideoSearch() {
     if (searchQuery === "") {
         searchResultsContainer.style.removeProperty('padding-top');
         searchResultsContainerInner.style.removeProperty('margin-top');
-        searchResultsContainerInner.style.height = '0';
+        searchResultsContainerInner.style.maxHeight = '0';
         searchResultsContainerInner.innerHTML = '';
         displayedVideoCountElement.remove();
         displayedVideos.clear();
@@ -113,19 +112,13 @@ function handleVideoSearch() {
 }
 // Function to apply styles based on screen size
 function applyStyles() {
-    let height;
-        if (window.matchMedia("(max-width: 390px)").matches) {
-            height = '275px';
-        } else if (window.matchMedia("(max-width: 415px)").matches) {
-            height = '295px';
-        } else if (window.matchMedia("(max-width: 600px)").matches) {
-            height = '250px';
-        } else if (window.matchMedia("(max-width: 900px)").matches) {
-            height = '307px';
+    let maxHeight;
+        if (window.matchMedia("(max-width: 600px)").matches) {
+            maxHeight = '300px';
         } else if (window.matchMedia("(max-width: 1024px)").matches) {
-            height = '350px';
+            maxHeight = '350px';
         } else {
-            height = '340px';
+            maxHeight = '340px';
         }
-        searchResultsContainerInner.style.height = height;
+        searchResultsContainerInner.style.maxHeight = maxHeight;
     }

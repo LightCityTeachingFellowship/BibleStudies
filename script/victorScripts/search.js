@@ -24,16 +24,12 @@
     middleware:function(){}
   };
   var n=function(t,e){
-    var n=e.length
-    ,r=t.length;
-    if(n<r)
-    return!1;
-    if(r===n)
-    return t===e;
+    var n=e.length, r=t.length;
+    if(n<r) return!1;
+    if(r===n) return t===e;
     t:for(var i=0,o=0;i<r;i++){
       for(var u=t.charCodeAt(i);o<n;)
-      if(e.charCodeAt(o++)===u)
-      continue t;
+        if(e.charCodeAt(o++)===u) continue t;
       return!1
     }
     return!0
@@ -93,7 +89,7 @@
       c=t||{},
       c.fuzzy=t.fuzzy||!1,
       c.limit=t.limit||15,
-      c.searchStrategy=t.fuzzy?e:r,
+      c.searchStrategy=c.fuzzy?e:r,
       c.sort=t.sort||o,
       c.exclude=t.exclude||[]
     }
@@ -183,8 +179,7 @@
       sortMiddleware:function(){
         return 0
       },
-      noResultsText:"No results found",
-      limit:15,
+      limit:1000,
       fuzzy:!1,
       debounceTime:null,
       exclude:[]
@@ -217,8 +212,6 @@
       (e=t)&&0<e.length&&(c(),
       function(e,n){
         var r=e.length;
-        if(0===r)
-        return s(i.noResultsText);
         for(let t=0;t<r;t++)
         e[t].query=n,
         s(f.compile(e[t]))
@@ -253,4 +246,4 @@
         t
       }
     }(window)
-  }();
+}();
