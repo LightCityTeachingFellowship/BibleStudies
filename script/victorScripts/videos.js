@@ -1,7 +1,11 @@
 const firstBtn = document.querySelector(".videos-header-btns-cont button").classList.add('active');
 const firstTab = document.querySelector(".videotab-content").classList.add('videotab-content--active');
 const allBtns = document.querySelectorAll(".videos-header-btns-cont button");
+// const lastBtn = allBtns[allBtns.length - 1];
+// lastBtn.classList.add('active');
 const allTabs = document.querySelectorAll(".videotab-content");
+// const lastTab = allTabs[allTabs.length - 1];
+// lastTab.classList.add('videotab-content--active');
 
   // Convert allTabs to an array using Array.from or the spread operator
   const tabsArrayAll = Array.from(allTabs);
@@ -11,7 +15,7 @@ const allTabs = document.querySelectorAll(".videotab-content");
   allBtns.forEach((elem) => {
       const linkId = elem.id;
 
-      // // Define a function to handle the setTimeout callback
+      // Define a function to handle the setTimeout callback
       function updateButton() {
           // Find the corresponding tab for the button
           const correspondingTab = tabsArrayAll.find((tab) => tab.id === linkId + "-content");
@@ -23,13 +27,21 @@ const allTabs = document.querySelectorAll(".videotab-content");
               const countText = document.createTextNode(`(${tabChildrenCount})`);
               tabChildrenCountElement.appendChild(countText);
 
-              // Get the original text from the data-original-text attribute, or fallback to current inner text
-              const originalText = elem.getAttribute('data-original-text') || elem.innerText;
-              elem.innerHTML = '';
-              // Append the original text and the count element to the button
-              elem.appendChild(document.createTextNode(originalText));
-            //   elem.appendChild(tabChildrenCountElement);
-          }
+              // Determine the text based on the screen size
+              if (window.matchMedia("(max-width: 600px)").matches) {
+                    // For small screens, use the 'data-original-text' attribute
+                    const originalText = elem.getAttribute('data-original-text');
+                    elem.innerHTML = '';
+                    elem.appendChild(document.createTextNode(originalText));
+                    // elem.appendChild(tabChildrenCountElement);
+                } else {
+                    // For larger screens, use 'elem.innerText'
+                    const originalText = elem.innerText;
+                    elem.innerHTML = '';
+                    elem.appendChild(document.createTextNode(originalText));
+                    // elem.appendChild(tabChildrenCountElement);                
+                }
+            }
       }
       setTimeout(updateButton, 3255);
 
@@ -52,109 +64,128 @@ const allTabs = document.querySelectorAll(".videotab-content");
       });
   });
 
-  // Right and Left arrows for scrolling
-  const btnsContainer = document.querySelector('.videos-header-cont');
-  const btnsContainerInner = document.querySelector('.videos-header-btns-cont');
-  let arrowIndicatorRight;
-  let arrowIndicatorLeft;
-  let scrollSpeed = 200; // Adjust the scroll speed as needed
-  let isAnimating = false;
+// Right and Left arrows for scrolling
+const btnsContainer = document.querySelector('.videos-header-cont');
+const btnsContainerInner = document.querySelector('.videos-header-btns-cont');
+let arrowIndicatorRight;
+let arrowIndicatorLeft;
+let scrollSpeed = 200; // Adjust the scroll speed as needed
+let isAnimating = false;
 
-  function addArrowIndicatorLeft() {
-      arrowIndicatorLeft = document.createElement('div');
-      arrowIndicatorLeft.className = 'arrows arrow-left';
-      arrowIndicatorLeft.innerHTML = `
-          <div id="arrow-left-btn" style="fill: currentcolor;">
-              <div class="arrow-btn-size">
-                  <div style="width: 100%; height: 100%; fill: currentcolor;">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" style="pointer-events: none; display: block; width: 100%; height: 100%;">
-                          <path d="M14.96 18.96 8 12l6.96-6.96.71.71L9.41 12l6.25 6.25-.7.71z"></path>
-                      </svg>
-                  </div>
-              </div>
-          </div>`;
-      btnsContainer.appendChild(arrowIndicatorLeft);
+function addArrowIndicatorLeft() {
+    arrowIndicatorLeft = document.createElement('div');
+    arrowIndicatorLeft.className = 'arrows arrow-left';
+    arrowIndicatorLeft.innerHTML = `
+        <div id="arrow-left-btn" style="fill: currentcolor;">
+            <div class="arrow-btn-size">
+                <div style="width: 100%; height: 100%; fill: currentcolor;">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" style="pointer-events: none; display: block; width: 100%; height: 100%;">
+                        <path d="M14.96 18.96 8 12l6.96-6.96.71.71L9.41 12l6.25 6.25-.7.71z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>`;
+    btnsContainer.appendChild(arrowIndicatorLeft);
 
-      arrowIndicatorLeft.addEventListener('click', function () {
-          if (!isAnimating) {
-              smoothScroll(btnsContainerInner, -scrollSpeed);
-          }
-      });
-  }
+    arrowIndicatorLeft.addEventListener('click', function () {
+        if (!isAnimating) {
+            smoothScroll(btnsContainerInner, -scrollSpeed);
+        }
+    });
+}
 
-  function addArrowIndicatorRight() {
-      arrowIndicatorRight = document.createElement('div');
-      arrowIndicatorRight.className = 'arrows arrow-right';
-      arrowIndicatorRight.innerHTML = `
-          <div id="arrow-right-btn" style="fill: currentcolor;">
-              <div class="arrow-btn-size">
-                  <div style="width: 100%; height: 100%; fill: currentcolor;">
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" style="pointer-events: none; display: block; width: 100%; height: 100%;">
-                          <path d="m9.4 18.4-.7-.7 5.6-5.6-5.7-5.7.7-.7 6.4 6.4-6.3 6.3z"></path>
-                      </svg>
-                  </div>
-              </div>
-          </div>`;
-      btnsContainer.appendChild(arrowIndicatorRight);
+function addArrowIndicatorRight() {
+    arrowIndicatorRight = document.createElement('div');
+    arrowIndicatorRight.className = 'arrows arrow-right';
+    arrowIndicatorRight.innerHTML = `
+        <div id="arrow-right-btn" style="fill: currentcolor;">
+            <div class="arrow-btn-size">
+                <div style="width: 100%; height: 100%; fill: currentcolor;">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" focusable="false" style="pointer-events: none; display: block; width: 100%; height: 100%;">
+                        <path d="m9.4 18.4-.7-.7 5.6-5.6-5.7-5.7.7-.7 6.4 6.4-6.3 6.3z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>`;
+    btnsContainer.appendChild(arrowIndicatorRight);
 
-      arrowIndicatorRight.addEventListener('click', function () {
-          if (!isAnimating) {
-              smoothScroll(btnsContainerInner, scrollSpeed);
-          }
-      });
-  }
+    arrowIndicatorRight.addEventListener('click', function () {
+        if (!isAnimating) {
+            smoothScroll(btnsContainerInner, scrollSpeed);
+        }
+    });
+}
 
-  function removeArrowIndicators() {
-      if (arrowIndicatorRight) {
-          btnsContainer.removeChild(arrowIndicatorRight);
-          arrowIndicatorRight = null;
-      }
-      if (arrowIndicatorLeft) {
-          btnsContainer.removeChild(arrowIndicatorLeft);
-          arrowIndicatorLeft = null;
-      }
-  }
+function removeArrowIndicators() {
+    if (arrowIndicatorRight) {
+        btnsContainer.removeChild(arrowIndicatorRight);
+        arrowIndicatorRight = null;
+    }
+    if (arrowIndicatorLeft) {
+        btnsContainer.removeChild(arrowIndicatorLeft);
+        arrowIndicatorLeft = null;
+    }
+}
 
-  function checkOverflow() {
-      const isOverflowRight = btnsContainerInner.scrollWidth > btnsContainerInner.clientWidth + btnsContainerInner.scrollLeft;
-      const isOverflowLeft = btnsContainerInner.scrollLeft > 0;
-      removeArrowIndicators();
-      if (isOverflowRight) {
-          addArrowIndicatorRight();
-      }
-      if (isOverflowLeft) {
-          addArrowIndicatorLeft();
-      }
-  }
+function checkOverflow() {
+    const isOverflowRight = btnsContainerInner.scrollWidth > btnsContainerInner.clientWidth + btnsContainerInner.scrollLeft + 1;
+    const isOverflowLeft = btnsContainerInner.scrollLeft > 1;
 
-  checkOverflow();
-  btnsContainerInner.addEventListener('scroll', function () {
-      checkOverflow();
-  });
+    if (isOverflowRight) {
+        if (!arrowIndicatorRight) {
+            addArrowIndicatorRight();
+        }
+    } else {
+        if (arrowIndicatorRight) {
+            removeArrowIndicators();
+        }
+    }
 
-  // Function for custom smooth scrolling
-  function smoothScroll(element, distance) {
-      const start = element.scrollLeft;
-      const end = start + distance;
-      const duration = 500; // Adjust the duration as needed
-      let startTime;
+    if (isOverflowLeft) {
+        if (!arrowIndicatorLeft) {
+            addArrowIndicatorLeft();
+        }
+    } else {
+        if (arrowIndicatorLeft) {
+            removeArrowIndicators();
+        }
+    }
+}
 
-      function scrollAnimation(currentTime) {
-          if (!startTime) startTime = currentTime;
+// Initial check on load
+checkOverflow();
 
-          const progress = currentTime - startTime;
-          const easeInOut = 0.5 - 0.5 * Math.cos(Math.PI * progress / duration);
+// Event listener for scroll to check overflow
+btnsContainerInner.addEventListener('scroll', function () {
+    checkOverflow();
+});
 
-          element.scrollLeft = start + easeInOut * distance;
+// Function for custom smooth scrolling
+function smoothScroll(element, distance) {
+    const start = element.scrollLeft;
+    const end = start + distance;
+    const duration = 500; // Adjust the duration as needed
+    let startTime;
 
-          if (progress < duration) {
-              requestAnimationFrame(scrollAnimation);
-          } else {
-              isAnimating = false;
-          }
-      }
+    function scrollAnimation(currentTime) {
+        if (!startTime) startTime = currentTime;
 
-      isAnimating = true;
-      requestAnimationFrame(scrollAnimation);
-  }
+        const progress = currentTime - startTime;
+        const easeInOut = 0.5 - 0.5 * Math.cos(Math.PI * progress / duration);
 
+        element.scrollLeft = start + easeInOut * distance;
+
+        if (progress < duration) {
+            requestAnimationFrame(scrollAnimation);
+        } else {
+            isAnimating = false;
+            checkOverflow(); // Check overflow again after scrolling
+        }
+    }
+
+    isAnimating = true;
+    requestAnimationFrame(scrollAnimation);
+}
+
+// Re-check on window resize to handle dynamic content
+window.addEventListener('resize', checkOverflow);
