@@ -88,7 +88,7 @@
     setOptions:function(t){
       c=t||{},
       c.fuzzy=t.fuzzy||!1,
-      c.limit=t.limit||15,
+      c.limit=t.limit||0,
       c.searchStrategy=c.fuzzy?e:r,
       c.sort=t.sort||o,
       c.exclude=t.exclude||[]
@@ -111,7 +111,7 @@
     u
   }
   c.fuzzy=!1,
-  c.limit=15,
+  c.limit=0,
   c.searchStrategy=c.fuzzy?e:r,
   c.sort=o,
   c.exclude=[];
