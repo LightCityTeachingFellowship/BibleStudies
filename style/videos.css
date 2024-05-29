@@ -126,6 +126,7 @@
     display:grid;
     position:relative;}
 #searchResults #searchResultsInner{
+    height:auto;
     overflow:auto;
     position:relative;}
 .highlighted{border-radius:2px;}
