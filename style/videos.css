@@ -16,7 +16,7 @@
     flex-wrap:nowrap;
     position:relative;
     border-radius:10px;
-    gap:15px;
+    gap:10px;
     margin-left:1px;
     position:relative;}
 .videos-header-cont .arrows{
@@ -50,10 +50,10 @@
 .videos-header-btns{
     border-bottom:3px solid transparent!important;
     display:flex;
-    font-size:calc(20px + (24 - 16)*((100vw - 320px) / (1920 - 320)))!important;
+    font-size:calc(18px + (24 - 16)*((100vw - 320px) / (1920 - 320)))!important;
     font-weight:600;
     position:relative;
-    padding:3px 15px;
+    padding:3px 12px;
     transition:all 0.2s ease-in-out;
     white-space:nowrap;
     gap:5px;
@@ -61,11 +61,11 @@
 @media only screen and (min-width:541px){ 
 .videos-header-btns{padding:3px 25px;}}
 @media only screen and (min-width:768px){ 
-.videos-header-btns{padding:3px 30px;}}
+.videos-header-btns{padding:3px 20px;}}
 @media only screen and (min-width:912px){ 
-.videos-header-btns{padding:3px 35px;}}
+.videos-header-btns{padding:3px 30px;}}
 @media only screen and (min-width:990px){ 
-.videos-header-btns{padding:3px 45px;}}
+.videos-header-btns{padding:3px 40px;}}
 @media only screen and (min-width:1110px){ 
 .videos-header-btns{padding:3px 60px;}}
 @media only screen and (min-width:1290px){ 
