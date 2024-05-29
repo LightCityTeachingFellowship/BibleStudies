@@ -115,10 +115,8 @@ function applyStyles() {
     let maxHeight;
         if (window.matchMedia("(max-width: 600px)").matches) {
             maxHeight = '300px';
-        } else if (window.matchMedia("(max-width: 1024px)").matches) {
-            maxHeight = '350px';
         } else {
-            maxHeight = '340px';
+            maxHeight = '350px';
         }
         searchResultsContainerInner.style.maxHeight = maxHeight;
     }

@@ -121,18 +121,10 @@ function updateSearchResults(searchQuery) {
 // Function to apply styles based on screen size
 function applyStyles() {
   let maxHeight;
-      if (window.matchMedia("(max-width: 390px)").matches) {
-          maxHeight = '275px';
-      } else if (window.matchMedia("(max-width: 415px)").matches) {
-          maxHeight = '295px';
-      } else if (window.matchMedia("(max-width: 600px)").matches) {
-          maxHeight = '250px';
-      } else if (window.matchMedia("(max-width: 900px)").matches) {
-          maxHeight = '307px';
-      } else if (window.matchMedia("(max-width: 1024px)").matches) {
-          maxHeight = '350px';
+      if (window.matchMedia("(max-width: 600px)").matches) {
+          maxHeight = '300px';
       } else {
-          maxHeight = '340px';
+          maxHeight = '350px';
       }
       searchResultsContainerInner.style.maxHeight = maxHeight;
   }
