@@ -74,7 +74,7 @@ let isAnimating = false;
 
 function addArrowIndicatorLeft() {
     arrowIndicatorLeft = document.createElement('div');
-    arrowIndicatorLeft.className = 'arrows arrow-left';
+    arrowIndicatorLeft.className = 'arrows arrow-left slideInFromLeft';
     arrowIndicatorLeft.innerHTML = `
         <div id="arrow-left-btn" style="fill: currentcolor;">
             <div class="arrow-btn-size">
@@ -96,7 +96,7 @@ function addArrowIndicatorLeft() {
 
 function addArrowIndicatorRight() {
     arrowIndicatorRight = document.createElement('div');
-    arrowIndicatorRight.className = 'arrows arrow-right';
+    arrowIndicatorRight.className = 'arrows arrow-right slideInFromRight';
     arrowIndicatorRight.innerHTML = `
         <div id="arrow-right-btn" style="fill: currentcolor;">
             <div class="arrow-btn-size">
@@ -116,14 +116,17 @@ function addArrowIndicatorRight() {
     });
 }
 
-function removeArrowIndicators() {
-    if (arrowIndicatorRight) {
-        btnsContainer.removeChild(arrowIndicatorRight);
-        arrowIndicatorRight = null;
-    }
+function removeArrowIndicatorLeft() {
     if (arrowIndicatorLeft) {
         btnsContainer.removeChild(arrowIndicatorLeft);
         arrowIndicatorLeft = null;
+    }
+}
+
+function removeArrowIndicatorRight() {
+    if (arrowIndicatorRight) {
+        btnsContainer.removeChild(arrowIndicatorRight);
+        arrowIndicatorRight = null;
     }
 }
 
@@ -136,9 +139,7 @@ function checkOverflow() {
             addArrowIndicatorRight();
         }
     } else {
-        if (arrowIndicatorRight) {
-            removeArrowIndicators();
-        }
+        removeArrowIndicatorRight();
     }
 
     if (isOverflowLeft) {
@@ -146,9 +147,7 @@ function checkOverflow() {
             addArrowIndicatorLeft();
         }
     } else {
-        if (arrowIndicatorLeft) {
-            removeArrowIndicators();
-        }
+        removeArrowIndicatorLeft();
     }
 }
 
