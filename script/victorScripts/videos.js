@@ -28,7 +28,7 @@ const allTabs = document.querySelectorAll(".videotab-content");
               tabChildrenCountElement.appendChild(countText);
 
               // Determine the text based on the screen size
-              if (window.matchMedia("(max-width: 600px)").matches) {
+              if (window.matchMedia("(max-width: 539px)").matches) {
                     // For small screens, use the 'data-original-text' attribute
                     const originalText = elem.getAttribute('data-original-text');
                     elem.innerHTML = '';
