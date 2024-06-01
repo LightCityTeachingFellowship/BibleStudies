@@ -27,8 +27,8 @@
     display:flex;
     flex-direction:row;
     justify-content:center;}
-.arrow-left{left:-15px;}
-.arrow-right{right:-15px;}
+.arrow-left{left:-10px;}
+.arrow-right{right:-10px;}
 .arrow-btn-size{
     width:40px;
     height:100%;}
