@@ -11,13 +11,16 @@
     flex-wrap:nowrap;
     position:relative;}
 .videos-header-btns-cont{
+    width:100%;
     display:flex;
+    justify-content:space-between;
+    box-sizing:border-box;
     overflow:inherit;
     flex-wrap:nowrap;
     position:relative;
     border-radius:10px;
     gap:10px;
-    margin-left:1px;
+    /* margin-left:1px; */
     position:relative;}
 .videos-header-cont .arrows{
     position:absolute;
@@ -48,28 +51,18 @@
 .arrow-btn-size{width:25px;}}
 .videos-header-cont::-webkit-scrollbar,.videos-header-btns-cont::-webkit-scrollbar{display:none;}
 .videos-header-btns{
+    text-align:center;
+    box-sizing:border-box;
     border-bottom:3px solid transparent!important;
     display:flex;
     font-size:calc(18px + (24 - 16)*((100vw - 320px) / (1920 - 320)))!important;
     font-weight:600;
-    position:relative;
     padding:3px 12px;
+    position:relative;
     transition:all 0.2s ease-in-out;
     white-space:nowrap;
     gap:5px;
     border-radius:10px;}
-@media only screen and (min-width:541px){ 
-.videos-header-btns{padding:3px 25px;}}
-@media only screen and (min-width:768px){ 
-.videos-header-btns{padding:3px 20px;}}
-@media only screen and (min-width:912px){ 
-.videos-header-btns{padding:3px 30px;}}
-@media only screen and (min-width:990px){ 
-.videos-header-btns{padding:3px 40px;}}
-@media only screen and (min-width:1110px){ 
-.videos-header-btns{padding:3px 60px;}}
-@media only screen and (min-width:1290px){ 
-.videos-header-btns{padding:3px 75px;}}
 .videotab-content-wrapper{padding:15px 0 0 0;}
 .videotab-content, .searchvideotab-content{ 
     display:none;
