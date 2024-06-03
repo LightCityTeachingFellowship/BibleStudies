@@ -67,6 +67,28 @@ const allTabs = document.querySelectorAll(".videotab-content");
           });
       });
   });
+  function adjustButtonPadding() {
+    const container = document.querySelector('.videos-header-btns-cont');
+    const buttons = document.querySelectorAll('.videos-header-btns');
+    const containerWidth = container.clientWidth;
+    const buttonCount = buttons.length;
+    if (window.matchMedia("(min-width: 600px)").matches) {
+        const totalButtonWidth = Array.from(buttons).reduce((total, button) => {
+            return total + button.clientWidth;
+        }, 0);
+
+        const availablePadding = (containerWidth - totalButtonWidth) / buttonCount;
+        const paddingPerSide = availablePadding / 2;
+
+        buttons.forEach(button => {
+            button.style.paddingLeft = `${paddingPerSide - 5}px`;
+            button.style.paddingRight = `${paddingPerSide - 5}px`;
+        });
+    }
+}
+
+window.addEventListener('resize', adjustButtonPadding);
+window.addEventListener('load', adjustButtonPadding);
 
 // Right and Left arrows for scrolling
 const btnsContainer = document.querySelector('.videos-header-cont');
