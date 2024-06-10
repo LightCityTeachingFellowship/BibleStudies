@@ -164,6 +164,10 @@ a.cat-link{
 ::placeholder{
     color:var(--inherit);}
 /* styles from article-style.css */
+article a{
+    color:tomato!important;
+    color:midnightblue!important;
+    color:#39547f!important;}
 article img{background-color:var(--bgColor-smoke-white);}
 .leftBorderForArticleTitle{background-color:tomato;}
 article h1,article h2,article h3,article h4, articleh5,article h6{ 

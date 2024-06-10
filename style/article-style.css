@@ -27,9 +27,6 @@ article>main{
 main>h1,main>h2,main>h3,main>h4,main>h5,main>h6,main>p, main>ol, main>ul, main>blockquote, main>table, main>span, h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5, article>main>header, article>main>div, #expandANDdate, .visibility{
     visibility:hidden;}
 article a{
-    color:tomato!important;
-    color:midnightblue!important;
-    color:#39547f!important;
     font-size:85%;}
 .homeResources-grid-containter{padding:22px 15px;}
 @media only screen and (max-width:300px){ 
@@ -360,9 +357,3 @@ table ul, table ol{
     color:black!important;
     margin-top:20px;
     width:-webkit-fill-available!important;}
-/* .pureHTMLtimeline>div{height:auto!important;} */
-/* [event_node][tabindex="1"],
-[event_node]:has(>span[ref]) {
-    border: 2px solid red;
-    height: auto;
-} */
