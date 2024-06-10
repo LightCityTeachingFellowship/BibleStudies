@@ -215,7 +215,9 @@ blockquote:before{color:var(--light-purple);}
 #searchResults .homeResources-grid-containter {
     background-color:var(--bgColor-smoke-white)!important;}
 /* styles from reftaggerLightCity.css */
-#context_menu{background:var(--whitesmoke);}
+#context_menu{
+    background:var(--whitesmoke);
+    color:var(--black);}
 #context_menu .buttons{
     background:var(--ref-img);
     border-bottom:2px solid #70707072;}

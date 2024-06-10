@@ -194,12 +194,12 @@ blockquote:before{color:var(--DM-light-purple);}
 #arrow-left-btn,#arrow-right-btn{
     background-color:var(--DM-bgColor-smoke-white);
     background-color:transparent;}
-.arrow-left::after{background:linear-gradient(to right,var(--DM-bgColor-smoke-white) 10%,rgba(33,33,33,0) 90%);}
-.arrow-right::before{background:linear-gradient(to left,var(--DM-bgColor-smoke-white) 10%,rgba(33,33,33,0) 90%);}
-@media only screen and (max-width:420px){
+.arrow-left::after{background:linear-gradient(to right,var(--DM-bgColor-smoke-white) 30%,rgba(33,33,33,0) 90%);}
+.arrow-right::before{background:linear-gradient(to left,var(--DM-bgColor-smoke-white) 30%,rgba(33,33,33,0) 90%);}
+/* @media only screen and (max-width:420px){
 .arrow-left::after{background: linear-gradient(to right,var(--DM-bgColor-smoke-white) 10%,rgba(33,33,33,0) 90%);}
 .arrow-right::before{background: linear-gradient(to left,var(--DM-bgColor-smoke-white) 10%,rgba(33,33,33,0) 90%);}
-}
+} */
 .videos-header-btns-cont{
     /* background-color:var(--DM-grayTwo)!important; */
     box-shadow:4px 7px 10px rgba(0, 0, 0, 0.1);}
@@ -217,7 +217,8 @@ blockquote:before{color:var(--DM-light-purple);}
     background-color:var(--DM-grayTwo)!important;}
 /* styles from video.css */
 #context_menu{
-    background:var(--DM-bgColor-smoke-white);}
+    background:var(--DM-bgColor-smoke-white);
+    color:var(--DM-black);}
 #context_menu .buttons{
     background:var(--DM-light-gray);
     border-bottom:2px solid #70707072;}
