@@ -15,9 +15,9 @@ videoSearchInput.addEventListener("input", () => {
 });
 function getAttributes(video) {
     let videoTitleAttribute = video.getAttribute("video-title");
+    let videoTitleCategoryAttribute = video.getAttribute("video-category");
     let videoDateAttribute = video.getAttribute("date-posted");
-    videoDateAttribute = videoDateAttribute ? videoDateAttribute + '.' : '';
-    return { videoTitleAttribute, videoDateAttribute };
+    return { videoTitleAttribute, videoTitleCategoryAttribute, videoDateAttribute };
 }
 function highlightText(text, searchQuery) {
     const escapedSearchQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -33,11 +33,18 @@ function handleHighLight(searchQuery) {
     const videoBoxes = searchResultsContainerInner.querySelectorAll(".video-box");
     videoBoxes.forEach((video) => {
         const videoTitleElement = video.querySelector(".video-title");
-        const { videoTitleAttribute, videoDateAttribute } = getAttributes(video);
+        const { videoTitleAttribute, videoTitleCategoryAttribute, videoDateAttribute } = getAttributes(video);
         if (videoTitleAttribute) {
             const highlightedTitle = highlightText(videoTitleAttribute, searchQuery);
             const tempElement = document.createElement('div');
             tempElement.innerHTML = highlightedTitle;
+            if (videoTitleCategoryAttribute) {
+                const highlightedCategory = highlightText(videoTitleCategoryAttribute, searchQuery);
+                const highlightedCategoryElement = document.createElement('span');
+                highlightedCategoryElement.classList.add('video-category');
+                highlightedCategoryElement.innerHTML = highlightedCategory;
+                tempElement.innerHTML += highlightedCategoryElement.outerHTML;
+            }
             if (videoDateAttribute) {
                 const highlightedDate = highlightText(videoDateAttribute, searchQuery);
                 const highlightedDateElement = document.createElement('span');
@@ -70,14 +77,15 @@ function handleVideoSearch() {
     }
     const videoBoxes = searchFromAllTabContent.querySelectorAll(".video-box");
     videoBoxes.forEach((video) => {
-        const { videoTitleAttribute, videoDateAttribute } = getAttributes(video);
+        const { videoTitleAttribute, videoTitleCategoryAttribute, videoDateAttribute } = getAttributes(video);
         const videoIdElement = video.querySelector("lite-youtube");
         const videoId = videoIdElement.getAttribute("videoid");
-        if (videoTitleAttribute || videoDateAttribute) {
+        if (videoTitleAttribute || videoTitleCategoryAttribute || videoDateAttribute) {
             const originalVideoTitle = videoTitleAttribute;
             const videoTitle = originalVideoTitle.toLowerCase();
+            const videoCategory = videoTitleCategoryAttribute.toLowerCase();
             const videoDate = videoDateAttribute.toLowerCase();
-            if ((videoTitle.includes(searchQuery) || videoDate.includes(searchQuery)) && !displayedVideos.has(videoId)) {
+            if ((videoTitle.includes(searchQuery) || videoCategory.includes(searchQuery)) || videoDate.includes(searchQuery) && !displayedVideos.has(videoId)) {
                 const videoClone = video.cloneNode(true);
                 searchResultsContainerInner.appendChild(videoClone);
                 displayedVideos.add(videoId);
