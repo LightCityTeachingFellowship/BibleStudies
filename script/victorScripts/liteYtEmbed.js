@@ -102,8 +102,6 @@ function runFirstPartOfCode() {
                                         videoDateElement = document.createElement('span');
                                         videoDateElement.classList.add('video-date');
                                         videoDateElement.textContent = dayOfWeek + ', ' + dateString + '.';
-                                        console.log(dayOfWeek);
-                                        console.log(dateString);
                                         // Create a new text node with the modified text (excluding the date)
                                         videoTitleNoDate = document.createTextNode(videoTitleText.replace(firstDateFormatMatch ? firstDateFormatMatch[0] : SecondDateFormatMatch ? SecondDateFormatMatch[0] : thirdDateFormatMatch[0], ''));
                                         // Extract the words from videoTitleNoDate until the last '-'
@@ -111,8 +109,7 @@ function runFirstPartOfCode() {
                                         const lastDashIndex = videoTitleNoDateText.lastIndexOf('-');
                                         // If a dash is found, split the text accordingly
                                         let beforeDash = '';
-                                        let afterDash = videoTitleNoDateText;
-                                        
+                                        let afterDash = videoTitleNoDateText;                                        
                                         if (lastDashIndex !== -1) {
                                             beforeDash = videoTitleNoDateText.substring(0, lastDashIndex + 1).trim();
                                             afterDash = videoTitleNoDateText.substring(lastDashIndex + 1).trim();

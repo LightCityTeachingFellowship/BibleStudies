@@ -28,7 +28,7 @@ const allTabs = document.querySelectorAll(".videotab-content");
               const originalText = elem.innerText;
               elem.innerHTML = '';
               elem.appendChild(document.createTextNode(originalText));
-              elem.appendChild(tabChildrenCountElement); 
+            //   elem.appendChild(tabChildrenCountElement); 
 
             //   // Determine the text based on the screen size
             //   if (window.matchMedia("(max-width: 539px)").matches) {
