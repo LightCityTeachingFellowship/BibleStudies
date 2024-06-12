@@ -52,7 +52,7 @@
 @media only screen and (max-width:420px){
 .arrow-left{left:-12px;}
 .arrow-right{right:-12px;}
-.arrow-left::after,.arrow-right::before{width:23px;}
+.arrow-left::after,.arrow-right::before{width:30px;}
 .arrow-right::before{right:11px;}
 .arrow-left::after{left:11px;}
 .arrow-btn-size{width:35px;}}
