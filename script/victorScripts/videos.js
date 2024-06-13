@@ -13,40 +13,31 @@ const allTabs = document.querySelectorAll(".videotab-content");
   const tabsArray = tabsArrayAll.slice(1);
 
   allBtns.forEach((elem) => {
-      const linkId = elem.id;
-      // Define a function to handle the setTimeout callback
-      function updateButton() {
-          // Find the corresponding tab for the button
-          const correspondingTab = tabsArrayAll.find((tab) => tab.id === linkId + "-content");
-          if (correspondingTab) {
-              // Count the children of the corresponding tab
-              const tabChildrenCount = correspondingTab.children.length;
-              const tabChildrenCountElement = document.createElement('span');
-              tabChildrenCountElement.classList.add('video-count');
-              const countText = document.createTextNode(`(${tabChildrenCount})`);
-              tabChildrenCountElement.appendChild(countText);
-              const originalText = elem.innerText;
-              elem.innerHTML = '';
-              elem.appendChild(document.createTextNode(originalText));
-            //   elem.appendChild(tabChildrenCountElement); 
-
-            //   // Determine the text based on the screen size
-            //   if (window.matchMedia("(max-width: 539px)").matches) {
-            //         // For small screens, use the 'data-original-text' attribute
-            //         const originalText = elem.getAttribute('data-original-text');
-            //         elem.innerHTML = '';
-            //         elem.appendChild(document.createTextNode(originalText));
-            //         // elem.appendChild(tabChildrenCountElement);
-            //     } else {
-            //         // For larger screens, use 'elem.innerText'
-            //         const originalText = elem.innerText;
-            //         elem.innerHTML = '';
-            //         elem.appendChild(document.createTextNode(originalText));
-            //         // elem.appendChild(tabChildrenCountElement);                
-            //     }
+    const linkId = elem.id;
+    // Define a function to handle the setTimeout callback
+    function updateButton() {
+        // Find the corresponding tab for the button
+        const correspondingTab = tabsArrayAll.find((tab) => tab.id === linkId + "-content");
+        if (correspondingTab) {
+            // Count the children of the corresponding tab
+            const tabChildrenCount = correspondingTab.children.length;
+            if (tabChildrenCount === 0) {
+                // Hide the button if there are no children in the corresponding tab
+                // elem.style.display = 'none';
+            } else {
+                const tabChildrenCountElement = document.createElement('span');
+                tabChildrenCountElement.classList.add('video-count');
+                const countText = document.createTextNode(`(${tabChildrenCount})`);
+                tabChildrenCountElement.appendChild(countText);
+                const originalText = elem.innerText;
+                elem.innerHTML = '';
+                elem.appendChild(document.createTextNode(originalText));
+                // elem.appendChild(tabChildrenCountElement);
             }
-      }
-      setTimeout(updateButton, 3155);
+        }
+    }
+    setTimeout(updateButton, 3155);
+
 
       elem.addEventListener('click', function() {
           allBtns.forEach((button) => {
