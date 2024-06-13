@@ -10,6 +10,32 @@
  *   https://github.com/Daugilas/lazyYT
  *   https://github.com/vb/lazyframe
  */
+const buttons = document.querySelectorAll('.videos-header-btns');
+const videoCategories = [];
+// Iterate over each button to extract the 'data-original-text' attribute value
+buttons.forEach((button, index) => {
+    if (index > 0) { // Start from the second button (index 1)
+        const category = button.getAttribute('videoCategory-btn');
+        if (category) {
+            videoCategories.push(category);
+        }
+    }
+});
+// Select the container element where the divs will be appended
+const videoTabContainer = document.getElementById('videotab-container');
+
+// Create and append div elements with ids from the videoCategories array
+videoCategories.forEach(category => {
+    const div = document.createElement('div');
+    div.id = category + '-Tab-content';
+    div.classList.add('videotab-content');
+    videoTabContainer.appendChild(div);
+});
+ // Function to strip HTML tags from a string
+ function stripHtmlTags(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+} 
 function runFirstPartOfCode() {
     class LiteYTEmbed extends HTMLElement {
         constructor() {
@@ -26,7 +52,7 @@ function runFirstPartOfCode() {
             if (!this.style.backgroundImage) {
             this.style.backgroundImage = `url("https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg")`;
             }
-            
+        
             // Set up video title
             const videoURL = `https://www.youtube.com/watch?v=${this.videoId}`;
             const oEmbedURL = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoURL)}&format=json`;
@@ -41,25 +67,16 @@ function runFirstPartOfCode() {
                             throw new Error("Failed to retrieve video information.");
                         }
                     })
-                    .then(data => {
-                        // Function to strip HTML tags from a string
-                        function stripHtmlTags(html) {
-                            const doc = new DOMParser().parseFromString(html, 'text/html');
-                            return doc.body.textContent || "";
-                        }
-            
+                    .then(data => {                        
                         let videoTitleElement;
                         var videoTitleNoDate;
                         var videoTitleJustCategory;
                         var videoTitleOnly;
-                        var videoDateElement;                                   
-                        // Define the array with the video's Category name
-                        const videoCategories = ["Sunday", "Prayer", "Study", "Program", "Excerpts"];
-            
+                        var videoDateElement;             
                         // Get all video-box elements
                         const videoBoxElement = this.closest(`#All-Tab-content .video-box`);
                         if (!videoBoxElement) {return}
-                        // Set up channel Logo
+                            // Set up channel Logo
                             var channelLogoCon = document.createElement('div');
                             channelLogoCon.classList.add('channelLogo-container');
                             var channelLogo = document.createElement('div');
@@ -67,7 +84,7 @@ function runFirstPartOfCode() {
                             channelLogoCon.prepend(channelLogo);
                             this.append(channelLogoCon);
 
-                        // Set up video title
+                            // Set up video title
                             videoTitleElement = document.createElement('h3');
                             videoTitleElement.classList.add('video-title');
                             videoTitleElement.append(data.title);
@@ -92,8 +109,7 @@ function runFirstPartOfCode() {
                                 } else if (thirdDateFormatMatch && thirdDateFormatMatch.length > 0) {
                                     const [, monthMatch, dayMatch, yearMatch] = thirdDateFormatMatch;
                                     dateString = `${monthMatch} ${dayMatch}, ${yearMatch}`;
-                                }
-        
+                                }        
                                 if (dateString) {
                                     dateObject = new Date(dateString);        
                                     if (!isNaN(dateObject)) {
@@ -133,7 +149,7 @@ function runFirstPartOfCode() {
                                         // Check if any of the target words are present in the video title text
                                         const matchedCategory = videoCategories.find(word => videoTitleJustCategory.textContent.includes(word));
                                         if (matchedCategory) {
-                                            videoBoxElement.setAttribute('categoryTab', matchedCategory);
+                                            videoBoxElement.setAttribute('videoCategoryTab', matchedCategory);
                                         }
                                     } else {
                                         console.error('Invalid date object:', dateObject);
@@ -291,10 +307,10 @@ function videoCloneToOtherTabs() {
     const videoBoxes = document.querySelectorAll('.video-box');
     // Loop through each video box
     videoBoxes.forEach(function(videoBox) {
-        // Get the categorytab attribute value
-        const categoryTabAtt = videoBox.getAttribute('categorytab');
-        // Construct the ID of the target div based on the categorytab value
-        const targetCategoryDivId = categoryTabAtt + '-Tab-content';
+        // Get the videoCategoryTab attribute value
+        const videoCategoryTabAtt = videoBox.getAttribute('videoCategoryTab');
+        // Construct the ID of the target div based on the videoCategoryTab value
+        const targetCategoryDivId = videoCategoryTabAtt + '-Tab-content';
         // Get the target div by ID
         const targetCategoryDiv = document.getElementById(targetCategoryDivId);
         // If the target div exists, clone the video box and append it to the target div

@@ -32,7 +32,7 @@ const allTabs = document.querySelectorAll(".videotab-content");
                 const originalText = elem.innerText;
                 elem.innerHTML = '';
                 elem.appendChild(document.createTextNode(originalText));
-                // elem.appendChild(tabChildrenCountElement);
+                elem.appendChild(tabChildrenCountElement);
             }
         }
     }
