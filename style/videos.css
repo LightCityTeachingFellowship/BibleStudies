@@ -52,7 +52,7 @@
 @media only screen and (max-width:420px){
 .arrow-left{left:-12px;}
 .arrow-right{right:-12px;}
-.arrow-left::after,.arrow-right::before{width:30px;}
+.arrow-left::after,.arrow-right::before{width:40px;}
 .arrow-right::before{right:11px;}
 .arrow-left::after{left:11px;}
 .arrow-btn-size{width:35px;}}
@@ -60,7 +60,7 @@
 .videos-header-btns{
     text-align:center;
     box-sizing:border-box;
-    border-bottom:3px solid transparent!important;
+    /* border-bottom:3px solid transparent!important; */
     display:flex;
     font-size:calc(18px + (24 - 16)*((100vw - 320px) / (1920 - 320)))!important;
     font-weight:600;
