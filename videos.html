@@ -10,22 +10,19 @@ title: "Videos"
             <h1 class="titles">LightCity Videos</h1>
             <div class="videos-header-cont">
                 <div class="videos-header-btns-cont">
-                    <button id="All-Tab" class="videos-header-btns" title="All Videos" data-original-text="All">All</button>
-                    <button id="Sunday-Tab" class="videos-header-btns" title="Sunday Fellowship" data-original-text="Sun">Sunday Fellowship</button>
-                    <button id="Prayer-Tab" class="videos-header-btns" title="Monday Prayer Meeting" data-original-text="Mon">Prayer Meeting</button>
-                    <button id="Study-Tab" class="videos-header-btns" title="Bible Studies" data-original-text="Wed">Bible Study</button>
-                    <button id="Program-Tab" class="videos-header-btns" title="Programs" data-original-text="Progs">Programs</button>
-                    <button id="Excerpts-Tab" class="videos-header-btns" title="Teaching Excerpts" data-original-text="Excerpts">Excerpts</button>
+                    <button id="All-Tab" class="videos-header-btns" title="All Videos" videoCategory-btn="All">All</button>
+                    <button id="Sunday-Tab" class="videos-header-btns" title="Sunday Fellowship" videoCategory-btn="Sunday">Sunday Fellowship</button>
+                    <button id="Prayer-Tab" class="videos-header-btns" title="Monday Prayer Meeting" videoCategory-btn="Prayer">Prayer Meeting</button>
+                    <button id="Study-Tab" class="videos-header-btns" title="Bible Studies" videoCategory-btn="Study">Bible Study</button>
+                    <button id="Program-Tab" class="videos-header-btns" title="Programs" videoCategory-btn="Program">Programs</button>
+                    <button id="Excerpts-Tab" class="videos-header-btns" title="Teaching Excerpts" videoCategory-btn="Excerpts">Excerpts</button>
                 </div>
             </div>
         </div>
-        <div class="videotab-content-wrapper">
-            {% include videosALL.html %}
-            {% include videosSUNDAY.html %}
-            {% include videosMONDAY.html %}
-            {% include videosWEDNESDAY.html %}
-            {% include videosPROGRAM.html %}
-            {% include videosEXCERPTS.html %}
+        <div id="videotab-container" class="videotab-content-wrapper">
+            <div id="All-Tab-content" class="videotab-content">
+                {% include videosALL.html %}
+            </div>
         </div>
     </div>
 </section>
