@@ -305,127 +305,34 @@ runFirstPartOfCode();
 function videoCloneToOtherTabs() {
     // Get all video boxes
     const videoBoxes = document.querySelectorAll('.video-box');
-    // Loop through each video box
+    
+    // Loop through each video box to clone it into the appropriate category tab
     videoBoxes.forEach(function(videoBox) {
-        // Get the videoCategoryTab attribute value
         const videoCategoryTabAtt = videoBox.getAttribute('videoCategoryTab');
-        // Construct the ID of the target div based on the videoCategoryTab value
-        const targetCategoryDivId = videoCategoryTabAtt + '-Tab-content';
-        // Get the target div by ID
+        const targetCategoryDivId = `${videoCategoryTabAtt}-Tab-content`;
         const targetCategoryDiv = document.getElementById(targetCategoryDivId);
-        // If the target div exists, clone the video box and append it to the target div
+        
         if (targetCategoryDiv) {
             const clonedVideoBox = videoBox.cloneNode(true);
             targetCategoryDiv.appendChild(clonedVideoBox);
         }
     });
-    // Create an array to store all video boxes from all tabs
-    const allVideoBoxes = [];
-    let latestVideoBox;
-    let latestDate = new Date(0); // Initialize with a very early date
-    let tabOfLatestVideoBox;
-    let previousVideoBoxOne;
-    let previousDateOne;
-    let tabOfpreviousVideoBoxOne;
-    let previousVideoBoxTwo;
-    let previousDateTwo;
-    let tabOfpreviousVideoBoxTwo;
-    let previousVideoBoxThree;
-    let previousDateThree;
-    let tabOfpreviousVideoBoxThree;    
-    let previousVideoBoxFour;
-    let previousDateFour;
-    let tabOfpreviousVideoBoxFour;    
-    // Assuming allTabs is a NodeList or an array of tabs
+    // Array to store the latest video box from each tab by date and arrange their corresponding tab button accordingly 
+    const videoBoxArray = [];
     Array.from(allTabs).slice(1).forEach((tab) => {
         const linkId = tab.id;
-        // Retrieve all video boxes for the current tab
-        const allVideoBox = document.querySelectorAll(`#${linkId} .video-box`);
-        // Push video boxes into the array
-        allVideoBoxes.push(...allVideoBox);
-        // Iterate over video boxes for the current tab
-        allVideoBoxes.forEach((videoBox) => {
-        const dateAttribute = videoBox.getAttribute('date-posted');
-        const currentDate = new Date(dateAttribute.replace(/(\d{1,2})(st|nd|rd|th)?/, '$1'));
-        // Check if the current video box has a later date than the latest one
-        if (currentDate > latestDate) {
-            // Update the latest video box information
-            previousVideoBoxFour = previousVideoBoxThree;
-            previousDateFour = previousDateThree;
-            tabOfpreviousVideoBoxFour = tabOfpreviousVideoBoxThree;
+        const videoBox = document.querySelector(`#${linkId} .video-box`);        
+        if (videoBox) {
+            const dateAttribute = videoBox.getAttribute('date-posted');
+            const currentDate = new Date(dateAttribute.replace(/(\d{1,2})(st|nd|rd|th)?/, '$1'));
 
-            previousVideoBoxThree = previousVideoBoxTwo;
-            previousDateThree = previousDateTwo;
-            tabOfpreviousVideoBoxThree = tabOfpreviousVideoBoxTwo;
-
-            previousVideoBoxTwo = previousVideoBoxOne;
-            previousDateTwo = previousDateOne;
-            tabOfpreviousVideoBoxTwo = tabOfpreviousVideoBoxOne;
-    
-            previousVideoBoxOne = latestVideoBox;
-            previousDateOne = latestDate;
-            tabOfpreviousVideoBoxOne = tabOfLatestVideoBox;
-    
-            latestDate = currentDate;
-            latestVideoBox = videoBox;
-            tabOfLatestVideoBox = tab;
-        } else if (currentDate > previousDateOne && currentDate < latestDate) {
-            // Update the previous video box information
-            previousVideoBoxFour = previousVideoBoxThree;
-            previousDateFour = previousDateThree;
-            tabOfpreviousVideoBoxFour = tabOfpreviousVideoBoxThree;
-
-            previousVideoBoxThree = previousVideoBoxTwo;
-            previousDateThree = previousDateTwo;
-            tabOfpreviousVideoBoxThree = tabOfpreviousVideoBoxTwo;
-
-            previousVideoBoxTwo = previousVideoBoxOne;
-            previousDateTwo = previousDateOne;
-            tabOfpreviousVideoBoxTwo = tabOfpreviousVideoBoxOne;
-    
-            previousDateOne = currentDate;
-            previousVideoBoxOne = videoBox;
-            tabOfpreviousVideoBoxOne = tab;
-        } else if (currentDate > previousDateTwo && currentDate < previousDateOne && currentDate < latestDate) {
-            // Update the previous video box information
-            previousVideoBoxFour = previousVideoBoxThree;
-            previousDateFour = previousDateThree;
-            tabOfpreviousVideoBoxFour = tabOfpreviousVideoBoxThree;
-
-            previousVideoBoxThree = previousVideoBoxTwo;
-            previousDateThree = previousDateTwo;
-            tabOfpreviousVideoBoxThree = tabOfpreviousVideoBoxTwo;
-            
-            previousDateTwo = currentDate;
-            previousVideoBoxTwo = videoBox;
-            tabOfpreviousVideoBoxTwo = tab;
-        } else if (currentDate > previousDateThree && currentDate < previousDateTwo && currentDate < previousDateOne && currentDate < latestDate) {
-            // Update the previous video box information
-            previousVideoBoxFour = previousVideoBoxThree;
-            previousDateFour = previousDateThree;
-            tabOfpreviousVideoBoxFour = tabOfpreviousVideoBoxThree;
-            
-            previousDateThree = currentDate;
-            previousVideoBoxThree = videoBox;
-            tabOfpreviousVideoBoxThree = tab;
-        } else if (currentDate > previousDateFour && currentDate < previousDateThree && currentDate < previousDateTwo && currentDate < previousDateOne && currentDate < latestDate) {
-            // Update the previous video box information
-            previousDateFour = currentDate;
-            previousVideoBoxFour = videoBox;
-            tabOfpreviousVideoBoxFour = tab;
+            videoBoxArray.push({ date: currentDate, videoBox, tab });
         }
-        });
     });
-    // console.log(latestVideoBox);
-    // console.log(tabOfLatestVideoBox);
-    // console.log(previousVideoBoxOne);
-    // console.log(tabOfpreviousVideoBoxOne);
-    // console.log(previousVideoBoxTwo);
-    // console.log(tabOfpreviousVideoBoxTwo);
-    // console.log(previousVideoBoxThree);    
-    // console.log(tabOfpreviousVideoBoxThree);
-    // console.log(previousVideoBoxFour);    
-    // console.log(tabOfpreviousVideoBoxFour);
+    // Sort the array by date in descending order
+    const sortedVideoBoxes = videoBoxArray.sort((a, b) => b.date - a.date);
+    const latestVideoBox = sortedVideoBoxes[0]?.videoBox;
+    const previousVideoBoxes = sortedVideoBoxes.slice(1);
 
     let moved = false; // Flag to track whether the buttons have been moved
     const btnArray = Array.from(allBtns);
@@ -433,102 +340,37 @@ function videoCloneToOtherTabs() {
     for (let elem of btnArray.slice(1)) {
         let btnId = elem.id;
         let theButtonMatch;
-        // Check for tabOfPreviousVideoBoxFour condition
-        if (tabOfpreviousVideoBoxFour) {
-        const parentOfPreviousVideoBoxFour = previousVideoBoxFour.parentNode;
-        const parentOfPreviousVideoBoxFourId = parentOfPreviousVideoBoxFour.id;
-        if (parentOfPreviousVideoBoxFourId.includes(btnId)) {
-            // console.log(btnId);
-            theButtonMatch = elem;
-            // console.log(theButtonMatch);
-            theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
-            const indexToMove = btnArray.indexOf(theButtonMatch);
-            if (indexToMove !== -1) {
-            // console.log(indexToMove);
-            const movedElement = btnArray.splice(indexToMove, 1)[0];
-            // console.log(movedElement);
-            btnArray.splice(5, 0, movedElement);
-            moved = true; // Set the flag to true
+        // Check and move buttons based on the corresponding video box's parent ID
+        const moveButton = (videoBox, position) => {
+            const parentId = videoBox.parentNode.id;
+            if (parentId.includes(btnId)) {
+                theButtonMatch = btnArray.find((btn) => btn.id === elem.id);
+                const indexToMove = btnArray.indexOf(theButtonMatch);
+                if (indexToMove !== -1) {
+                    const movedElement = btnArray.splice(indexToMove, 1)[0];
+                    btnArray.splice(position, 0, movedElement);
+                    moved = true; // Set the flag to true
+                }
             }
-        }
-        }
-        // Check for tabOfPreviousVideoBoxThree condition
-        if (tabOfpreviousVideoBoxThree) {
-        const parentOfPreviousVideoBoxThree = previousVideoBoxThree.parentNode;
-        const parentOfPreviousVideoBoxThreeId = parentOfPreviousVideoBoxThree.id;
-        if (parentOfPreviousVideoBoxThreeId.includes(btnId)) {
-            // console.log(btnId);
-            theButtonMatch = elem;
-            // console.log(theButtonMatch);
-            theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
-            const indexToMove = btnArray.indexOf(theButtonMatch);
-            if (indexToMove !== -1) {
-            // console.log(indexToMove);
-            const movedElement = btnArray.splice(indexToMove, 1)[0];
-            // console.log(movedElement);
-            btnArray.splice(4, 0, movedElement);
-            moved = true; // Set the flag to true
-            }
-        }
-        }
-        // Check for tabOfPreviousVideoBoxTwo condition
-        if (tabOfpreviousVideoBoxTwo) {
-        const parentOfPreviousVideoBoxTwo = previousVideoBoxTwo.parentNode;
-        const parentOfPreviousVideoBoxTwoId = parentOfPreviousVideoBoxTwo.id;
-        if (parentOfPreviousVideoBoxTwoId.includes(btnId)) {
-            theButtonMatch = elem;
-            // console.log(theButtonMatch);
-            theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
-            const indexToMove = btnArray.indexOf(theButtonMatch);
-            if (indexToMove !== -1) {
-            const movedElement = btnArray.splice(indexToMove, 1)[0];
-            btnArray.splice(3, 0, movedElement);
-            moved = true; // Set the flag to true
-            }
-        }
-        }
-        // Check for tabOfPreviousVideoBoxOne condition
-        if (tabOfpreviousVideoBoxOne) {
-        const parentOfPreviousVideoBoxOne = previousVideoBoxOne.parentNode;
-        const parentOfPreviousVideoBoxOneId = parentOfPreviousVideoBoxOne.id;
-        if (parentOfPreviousVideoBoxOneId.includes(btnId)) {
-            theButtonMatch = elem;
-            theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
-            const indexToMove = btnArray.indexOf(theButtonMatch);
-            if (indexToMove !== -1) {
-            const movedElement = btnArray.splice(indexToMove, 1)[0];
-            btnArray.splice(2, 0, movedElement);
-            moved = true; // Set the flag to true
-            }
-        }
-        }
-        // Check for tabOfLatestVideoBox condition
-        if (tabOfLatestVideoBox) {
-        const parentOfLatestVideoBox = latestVideoBox.parentNode;
-        const parentOfLatestVideoBoxId = parentOfLatestVideoBox.id;
-        if (parentOfLatestVideoBoxId.includes(btnId)) {
-            theButtonMatch = elem;
-            theButtonMatch = btnArray.find((elem) => elem.id === theButtonMatch.id);
-            const indexToMove = btnArray.indexOf(theButtonMatch);
-            if (indexToMove !== -1) {
-            const movedElement = btnArray.splice(indexToMove, 1)[0];
-            btnArray.splice(1, 0, movedElement);
-            moved = true; // Set the flag to true
-            }
-        }
-        }
+        };
+        // Move latest video box button
+        if (latestVideoBox) moveButton(latestVideoBox, 1);
+        // Move previous video boxes buttons
+        previousVideoBoxes.forEach((item, index) => {
+            if (item?.videoBox) moveButton(item.videoBox, index + 2);
+        });
     }
     // Remove existing buttons from the DOM and insert buttons in the updated order
     if (moved) {
         const parentElement = document.querySelector('.videos-header-btns-cont');
+        
         // Remove existing buttons from the DOM
         document.querySelectorAll('.videos-header-btns').forEach((button) => {
-        button.remove();
-        });
+            button.remove();
+        });        
         // Insert buttons in the updated order
         btnArray.forEach((button) => {
-        parentElement.appendChild(button);
+            parentElement.appendChild(button);
         });
-    } 
-}
-setTimeout(videoCloneToOtherTabs, 3000);
+    }
+} setTimeout(videoCloneToOtherTabs, 3000);
