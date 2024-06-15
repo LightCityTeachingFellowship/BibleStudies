@@ -66,6 +66,28 @@ lite-youtube > .lty-playbtn{
     overflow-x:auto;
     white-space:nowrap;}
 .channelLogo-container::-webkit-scrollbar{display:none;}
+.live-indicator, .video-duration{
+    display:flex;
+    place-items:center;
+    color:var(--white);
+    font-family:"Roboto", "Noto", sans-serif;
+    font-size:calc(10px + (24 - 16)*((100vw - 320px) / (1920 - 320)));
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:.011em;
+    text-transform:uppercase;
+    border-radius:2px;
+    padding:2px 4px;
+    position:absolute;
+    bottom:10px;
+    right:15px;
+    fill:currentcolor;}
+.video-duration{background:var(--bgColor-youtube-duration);}
+.live-indicator{background:var(--bgColor-youtube-live);}
+.live-icon{
+    color:var(--white);
+    height:16px;
+    width:16px;}
+.live-text{margin-left:2px;}
 /* channel image */
 .channelLogo-container > .lty-channelLogo{ 
     display:block;
