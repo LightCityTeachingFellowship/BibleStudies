@@ -36,7 +36,7 @@ const allTabs = document.querySelectorAll(".videotab-content");
             }
         }
     }
-    setTimeout(updateButton, 3155);
+    setTimeout(updateButton, 3655);
 
 
       elem.addEventListener('click', function() {

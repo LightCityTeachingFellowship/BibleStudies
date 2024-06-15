@@ -36,6 +36,17 @@ videoCategories.forEach(category => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.body.textContent || "";
 } 
+// Parse duration
+function parseDuration(duration) {
+    const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+    if (!match) {
+        return "0:00"; // Return a default value if duration format is unexpected
+    }
+    const hours = parseInt(match[1]) || 0;
+    const minutes = parseInt(match[2]) || 0;
+    const seconds = parseInt(match[3]) || 0;
+    return `${hours > 0 ? hours + ':' : ''}${minutes > 0 ? (hours > 0 && minutes < 10 ? '0' + minutes : minutes) + ':' : '0:'}${seconds < 10 ? '0' + seconds : seconds}`;
+}
 function runFirstPartOfCode() {
     class LiteYTEmbed extends HTMLElement {
         constructor() {
@@ -52,7 +63,7 @@ function runFirstPartOfCode() {
             if (!this.style.backgroundImage) {
             this.style.backgroundImage = `url("https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg")`;
             }
-        
+
             // Set up video title
             const videoURL = `https://www.youtube.com/watch?v=${this.videoId}`;
             const oEmbedURL = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoURL)}&format=json`;
@@ -67,103 +78,151 @@ function runFirstPartOfCode() {
                             throw new Error("Failed to retrieve video information.");
                         }
                     })
-                    .then(data => {                        
+                    .then(data => {
                         let videoTitleElement;
-                        var videoTitleNoDate;
-                        var videoTitleJustCategory;
-                        var videoTitleOnly;
-                        var videoDateElement;             
+                        let videoTitleNoDate;
+                        let videoTitleJustCategory;
+                        let videoTitleOnly;
+                        let videoDateElement;
                         // Get all video-box elements
                         const videoBoxElement = this.closest(`#All-Tab-content .video-box`);
-                        if (!videoBoxElement) {return}
-                            // Set up channel Logo
-                            var channelLogoCon = document.createElement('div');
-                            channelLogoCon.classList.add('channelLogo-container');
-                            var channelLogo = document.createElement('div');
-                            channelLogo.classList.add('lty-channelLogo');
-                            channelLogoCon.prepend(channelLogo);
-                            this.append(channelLogoCon);
-
-                            // Set up video title
-                            videoTitleElement = document.createElement('h3');
-                            videoTitleElement.classList.add('video-title');
-                            videoTitleElement.append(data.title);
-                            videoBoxElement.append(videoTitleElement);
+                        if (!videoBoxElement) { return }
             
-                            // Get the video title element within the current video-box
-                            if (videoTitleElement) {
-                                // Get the text content of the video-title (h3) element
-                                const videoTitleText = videoTitleElement.textContent;        
-                                // Extract the date from the video title
-                                const firstDateFormatMatch = videoTitleText.match(/(\d{1,2}(?:st|nd|rd|th)?)\s?(\w{3})\,\s?(\d{4})\.?/);
-                                const SecondDateFormatMatch = videoTitleText.match(/(\d{1,2}(?:st|nd|rd|th)?)\s?(\w{3})\.\s?(\d{4})\.?/);
-                                const thirdDateFormatMatch = videoTitleText.match(/(?:\w{3},\s)?(\w{3})\s(\d{1,2}),\s(\d{4})\.?/);
-        
-                                let dateString, dateObject;        
-                                if (firstDateFormatMatch && firstDateFormatMatch.length > 0) {
-                                    const [dayMatch, monthMatch, yearMatch] = firstDateFormatMatch.slice(1);
-                                    dateString = `${monthMatch} ${dayMatch.replace(/\D/g, '')}, ${yearMatch}`;
-                                } else if (SecondDateFormatMatch && SecondDateFormatMatch.length > 0) {
-                                    const [dayMatch, monthMatch, yearMatch] = SecondDateFormatMatch.slice(1);
-                                    dateString = `${monthMatch} ${dayMatch.replace(/\D/g, '')}, ${yearMatch}`;
-                                } else if (thirdDateFormatMatch && thirdDateFormatMatch.length > 0) {
-                                    const [, monthMatch, dayMatch, yearMatch] = thirdDateFormatMatch;
-                                    dateString = `${monthMatch} ${dayMatch}, ${yearMatch}`;
-                                }        
-                                if (dateString) {
-                                    dateObject = new Date(dateString);        
-                                    if (!isNaN(dateObject)) {
-                                        const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(dateObject);        
-                                        // Create a span element
-                                        videoDateElement = document.createElement('span');
-                                        videoDateElement.classList.add('video-date');
-                                        videoDateElement.textContent = dayOfWeek + ', ' + dateString + '.';
-                                        // Create a new text node with the modified text (excluding the date)
-                                        videoTitleNoDate = document.createTextNode(videoTitleText.replace(firstDateFormatMatch ? firstDateFormatMatch[0] : SecondDateFormatMatch ? SecondDateFormatMatch[0] : thirdDateFormatMatch[0], ''));
-                                        // Extract the words from videoTitleNoDate until the last '-'
-                                        const videoTitleNoDateText = videoTitleNoDate.textContent;
-                                        const lastDashIndex = videoTitleNoDateText.lastIndexOf('-');
-                                        // If a dash is found, split the text accordingly
-                                        let beforeDash = '';
-                                        let afterDash = videoTitleNoDateText;                                        
-                                        if (lastDashIndex !== -1) {
-                                            beforeDash = videoTitleNoDateText.substring(0, lastDashIndex + 1).trim();
-                                            afterDash = videoTitleNoDateText.substring(lastDashIndex + 1).trim();
-                                        }
-                                        videoTitleOnly = beforeDash + ' ';
-                                        videoTitleJustCategory = document.createElement('span');
-                                        videoTitleJustCategory.classList.add('video-category');
-                                        videoTitleJustCategory.textContent = afterDash + ' ';
-
-                                        videoTitleElement.innerHTML = '';
-                                        // Append the modified text and the span element to the video title
-                                        videoTitleElement.appendChild(document.createTextNode(videoTitleOnly));
-                                        videoTitleElement.appendChild(videoTitleJustCategory);
-                                        videoTitleElement.appendChild(videoDateElement);
-                                        // Add the modified video title content (without HTML tags) as a new attribute
-                                        videoBoxElement.setAttribute('video-title', videoTitleOnly);
-                                        // Add the modified video category content (without HTML tags) as a new attribute
-                                        videoBoxElement.setAttribute('video-category', stripHtmlTags(videoTitleJustCategory.innerHTML));
-                                        // Add the date as an attribute to the current video-box (without HTML tags)
-                                        videoBoxElement.setAttribute('date-posted', stripHtmlTags(videoDateElement.innerHTML));
-                                        // Check if any of the target words are present in the video title text
-                                        const matchedCategory = videoCategories.find(word => videoTitleJustCategory.textContent.includes(word));
-                                        if (matchedCategory) {
-                                            videoBoxElement.setAttribute('videoCategoryTab', matchedCategory);
-                                        }
-                                    } else {
-                                        console.error('Invalid date object:', dateObject);
+                        // Set up channel Logo
+                        const channelLogoCon = document.createElement('div');
+                        channelLogoCon.classList.add('channelLogo-container');
+                        const channelLogo = document.createElement('div');
+                        channelLogo.classList.add('lty-channelLogo');
+                        channelLogoCon.prepend(channelLogo);
+                        this.append(channelLogoCon);
+            
+                        // Set up video title
+                        videoTitleElement = document.createElement('h3');
+                        videoTitleElement.classList.add('video-title');
+                        videoTitleElement.append(data.title);
+                        videoBoxElement.append(videoTitleElement);
+            
+                        // Extract date from video title
+                        if (videoTitleElement) {
+                            const videoTitleText = videoTitleElement.textContent;
+                            const firstDateFormatMatch = videoTitleText.match(/(\d{1,2}(?:st|nd|rd|th)?)\s?(\w{3})\,\s?(\d{4})\.?/);
+                            const secondDateFormatMatch = videoTitleText.match(/(\d{1,2}(?:st|nd|rd|th)?)\s?(\w{3})\.\s?(\d{4})\.?/);
+                            const thirdDateFormatMatch = videoTitleText.match(/(?:\w{3},\s)?(\w{3})\s(\d{1,2}),\s(\d{4})\.?/);
+            
+                            let dateString, dateObject;
+                            if (firstDateFormatMatch) {
+                                const [dayMatch, monthMatch, yearMatch] = firstDateFormatMatch.slice(1);
+                                dateString = `${monthMatch} ${dayMatch.replace(/\D/g, '')}, ${yearMatch}`;
+                            } else if (secondDateFormatMatch) {
+                                const [dayMatch, monthMatch, yearMatch] = secondDateFormatMatch.slice(1);
+                                dateString = `${monthMatch} ${dayMatch.replace(/\D/g, '')}, ${yearMatch}`;
+                            } else if (thirdDateFormatMatch) {
+                                const [, monthMatch, dayMatch, yearMatch] = thirdDateFormatMatch;
+                                dateString = `${monthMatch} ${dayMatch}, ${yearMatch}`;
+                            }
+                            if (dateString) {
+                                dateObject = new Date(dateString);
+                                if (!isNaN(dateObject)) {
+                                    const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(dateObject);
+                                    videoDateElement = document.createElement('span');
+                                    videoDateElement.classList.add('video-date');
+                                    videoDateElement.textContent = dayOfWeek + ', ' + dateString + '.';
+            
+                                    videoTitleNoDate = document.createTextNode(videoTitleText.replace(firstDateFormatMatch ? firstDateFormatMatch[0] : secondDateFormatMatch ? secondDateFormatMatch[0] : thirdDateFormatMatch[0], ''));
+                                    const videoTitleNoDateText = videoTitleNoDate.textContent;
+                                    const lastDashIndex = videoTitleNoDateText.lastIndexOf('-');
+                                    let beforeDash = '';
+                                    let afterDash = videoTitleNoDateText;
+                                    if (lastDashIndex !== -1) {
+                                        beforeDash = videoTitleNoDateText.substring(0, lastDashIndex + 1).trim();
+                                        afterDash = videoTitleNoDateText.substring(lastDashIndex + 1).trim();
+                                    }
+                                    videoTitleOnly = beforeDash + ' ';
+                                    videoTitleJustCategory = document.createElement('span');
+                                    videoTitleJustCategory.classList.add('video-category');
+                                    videoTitleJustCategory.textContent = afterDash + ' ';
+            
+                                    videoTitleElement.innerHTML = '';
+                                    videoTitleElement.appendChild(document.createTextNode(videoTitleOnly));
+                                    videoTitleElement.appendChild(videoTitleJustCategory);
+                                    videoTitleElement.appendChild(videoDateElement);
+            
+                                    videoBoxElement.setAttribute('video-title', videoTitleOnly);
+                                    videoBoxElement.setAttribute('video-category', stripHtmlTags(videoTitleJustCategory.innerHTML));
+                                    videoBoxElement.setAttribute('date-posted', stripHtmlTags(videoDateElement.innerHTML));
+            
+                                    const matchedCategory = videoCategories.find(word => videoTitleJustCategory.textContent.includes(word));
+                                    if (matchedCategory) {
+                                        videoBoxElement.setAttribute('videoCategoryTab', matchedCategory);
                                     }
                                 } else {
-                                    console.error('No date match found');
+                                    console.error('Invalid date object:', dateObject);
                                 }
+                            } else {
+                                console.error('No date match found');
                             }
+                        }
+
+                        // Fetch additional video details from YouTube Data API v3
+                        const apiKey = 'AIzaSyBQjKp7Xt5hFJHYwPCjM1wBXg6KBBZrayo';
+                        const videoDetailsURL = `https://www.googleapis.com/youtube/v3/videos?id=${this.videoId}&part=snippet,contentDetails,liveStreamingDetails&key=${apiKey}`;
+
+                        // Fetch video details
+                        fetch(videoDetailsURL)
+                            .then(response => response.json())
+                            .then(detailsData => {
+                                if (!detailsData.items || detailsData.items.length === 0) {
+                                    throw new Error("No video details found.");
+                                }
+                                const videoDetails = detailsData.items[0];
+                                const duration = videoDetails.contentDetails.duration;
+                                const liveBroadcastContent = videoDetails.snippet.liveBroadcastContent;
+                                
+                                // Display duration
+                                videoBoxElement.setAttribute('video-duration', parseDuration(duration));
+                                const videoDurationElement = document.createElement('div');
+                                videoDurationElement.classList.add('video-duration');
+                                videoDurationElement.textContent = parseDuration(duration);
+                                this.append(videoDurationElement); 
+                                
+                                // Check if the video is live
+                                if (liveBroadcastContent === 'live') {
+                                    videoBoxElement.setAttribute('live-status', 'live');
+                                    const liveIndicator = document.createElement('div');
+                                    liveIndicator.classList.add('live-indicator');
+                                    liveIndicator.innerHTML = `
+                                    <span class="live-icon">
+                                        <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" style="pointer-events: none; display: block; width: 100%; height: 100%;">
+                                            <g width="24" height="24" viewBox="0 0 24 24" class="style-scope tp-yt-iron-icon">
+                                                <path d="M14 11.9999C14 13.0999 13.1 13.9999 12 13.9999C10.9 13.9999 10 13.0999 10 11.9999C10 10.8999 10.9 9.99992 12 9.99992C13.1 9.99992 14 10.8999 14 11.9999ZM8.48 8.44992L7.77 7.74992C6.68 8.82992 6 10.3399 6 11.9999C6 13.6599 6.68 15.1699 7.77 16.2499L8.48 15.5399C7.57 14.6399 7 13.3899 7 11.9999C7 10.6099 7.57 9.35992 8.48 8.44992ZM16.23 7.74992L15.52 8.45992C16.43 9.35992 17 10.6099 17 11.9999C17 13.3899 16.43 14.6399 15.52 15.5499L16.23 16.2599C17.32 15.1699 18 13.6599 18 11.9999C18 10.3399 17.32 8.82992 16.23 7.74992ZM5.65 5.62992L4.95 4.91992C3.13 6.72992 2 9.23992 2 11.9999C2 14.7599 3.13 17.2699 4.95 19.0799L5.66 18.3699C4.02 16.7399 3 14.4899 3 11.9999C3 9.50992 4.02 7.25992 5.65 5.62992ZM19.05 4.91992L18.34 5.62992C19.98 7.25992 21 9.50992 21 11.9999C21 14.4899 19.98 16.7399 18.35 18.3699L19.06 19.0799C20.87 17.2699 22 14.7599 22 11.9999C22 9.23992 20.87 6.72992 19.05 4.91992Z" class="style-scope tp-yt-iron-icon"></path>
+                                            </g>
+                                        </svg>
+                                    </span>`;
+                                    const liveText = document.createElement('span');
+                                    liveText.classList.add('live-text');
+                                    liveText.textContent = 'LIVE';
+            
+                                    liveIndicator.appendChild(liveText);
+                                    this.append(liveIndicator);
+
+                                    // Remove the duration element for live videos
+                                    if (videoDurationElement) {
+                                        videoDurationElement.remove();
+                                    }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Failed to fetch video details:', error);
+                            });
+            
                         this.hasFetchedVideoInfo = true; // Set the flag to true after processing
                     })
                     .catch(error => {
                         console.error(error);
                     });
             }
+            
+
             
             // Set up play button, and its visually hidden label
             if (!playBtnEl) {
@@ -373,4 +432,4 @@ function videoCloneToOtherTabs() {
             parentElement.appendChild(button);
         });
     }
-} setTimeout(videoCloneToOtherTabs, 3000);
+} setTimeout(videoCloneToOtherTabs, 3500);
