@@ -16,17 +16,13 @@
 // // Iterate over each button to extract the 'videoid' attribute value
 // liteVideosIds.forEach((button, index) => {
 //         const category = button.getAttribute('videoid');
-//         console.log(category);
 //         if (category) {
 //             videoIds.push(category);
 //         }
 // });
 
-// // Log the 'videoIds' array
-// console.log(videoIds);
-
 // // Create a formatted string with single quotes around each video ID
-// const formattedVideoIds = videoIds.map(id => `'${id}'`).join(',\n');
+// const formattedVideoIds = videoIds.map(id => `${id}`).join(',\n');
 
 // // Log the formatted string
 // console.log(formattedVideoIds);
@@ -40,6 +36,45 @@
 //         console.error('Error copying to clipboard:', err);
 //     });
 
+
+// function videoIds() {
+    const ImportvideoIdsString = document.getElementById('videoIDS');
+    const videoIdsString = ImportvideoIdsString.textContent;
+    // Convert the string to an array of video IDs
+    // const videoIds = videoIdsString.split(',').map(id => id.trim());
+
+    // Convert the multiline string to an array
+    const videoIds = videoIdsString.trim().split(/\s+/);   
+    // Function to create and append video cards
+    function createVideoCards(videoIds) {
+        const container = document.getElementById('All-Tab-content');   
+        // Clear the container before appending new video cards
+        container.innerHTML = '';    
+        videoIds.forEach(videoId => {
+            // Create the necessary elements
+            const ionCard = document.createElement('div');
+            ionCard.className = 'video-box homeResources-grid-containter';    
+            const divContainer = document.createElement('div');
+            divContainer.className = 'iframe-container';    
+            const lazyLoad = document.createElement('lite-youtube');
+            lazyLoad.setAttribute('videoid', videoId); // already trimmed
+            lazyLoad.setAttribute('params', 'controls=1');    
+            // Append the elements to form the structure
+            divContainer.appendChild(lazyLoad);
+            ionCard.appendChild(divContainer);
+            container.appendChild(ionCard);
+        });
+    }
+    // Initial call to create the video cards
+    setTimeout(() => {
+      createVideoCards(videoIds);
+    }, 1);    
+    // Function to add a new video ID and update the structure
+    function addVideoId(newVideoId) {
+        videoIds.push(newVideoId.trim());
+        createVideoCards(videoIds);
+    }
+// }
 
 const buttons = document.querySelectorAll('.videos-header-btns');
 const videoCategories = [];
@@ -66,17 +101,6 @@ videoCategories.forEach(category => {
  function stripHtmlTags(html) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.body.textContent || "";
-} 
-// Parse duration
-function parseDuration(duration) {
-    const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-    if (!match) {
-        return "0:00"; // Return a default value if duration format is unexpected
-    }
-    const hours = parseInt(match[1]) || 0;
-    const minutes = parseInt(match[2]) || 0;
-    const seconds = parseInt(match[3]) || 0;
-    return `${hours > 0 ? hours + ':' : ''}${minutes > 0 ? (hours > 0 && minutes < 10 ? '0' + minutes : minutes) + ':' : '0:'}${seconds < 10 ? '0' + seconds : seconds}`;
 }
 function runFirstPartOfCode() {
     class LiteYTEmbed extends HTMLElement {
@@ -387,7 +411,7 @@ function runFirstPartOfCode() {
     customElements.define('lite-youtube', LiteYTEmbed);
 }
 // Run the first part of the code
-runFirstPartOfCode();
+setTimeout(runFirstPartOfCode, 1);
 
 function videoCloneToOtherTabs() {
     // Get all video boxes
