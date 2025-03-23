@@ -72,7 +72,7 @@
     transition:all 0.2s ease-in-out;
     white-space:nowrap;
     gap:5px;
-    border-radius:10px;}
+    border-radius:30px;}
 .videotab-content-wrapper{padding:15px 0 0 0;}
 .videotab-content, .searchvideotab-content{ 
     display:none;
