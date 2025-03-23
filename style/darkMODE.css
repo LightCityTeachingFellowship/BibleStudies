@@ -198,7 +198,7 @@ blockquote:before{color:var(--DM-light-purple);}
 .arrow-left::after{background:linear-gradient(to right,var(--DM-bgColor-smoke-white) 30%,rgba(33,33,33,0) 90%);}
 .arrow-right::before{background:linear-gradient(to left,var(--DM-bgColor-smoke-white) 30%,rgba(33,33,33,0) 90%);}
 .videos-header-btns-cont{
-    /* background-color:var(--DM-grayTwo)!important; */
+    background-color:var(--DM-grayTwo)!important;
     box-shadow:4px 7px 10px rgba(0, 0, 0, 0.1);}
 .videos-header-btns-cont>.active{
     background-color:var(--DM-vivid-orange)!important;

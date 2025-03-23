@@ -1,3 +1,6 @@
+#videoIDS{
+    display: none!important;
+}
 .videos-container{padding:0 0 22px 0!important;}
 .videos-header{
     overflow-x:auto;
@@ -5,7 +8,7 @@
 .videos-header-cont{
     display:flex;
     place-content:center;
-    border-radius:6px;
+    border-radius:30px;
     margin-top:12px;
     overflow:inherit;
     flex-wrap:nowrap;
@@ -18,7 +21,7 @@
     overflow:inherit;
     flex-wrap:nowrap;
     position:relative;
-    border-radius:10px;
+    border-radius:30px;
     gap:10px;
     /* margin-left:1px; */
     position:relative;}
