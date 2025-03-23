@@ -5,6 +5,8 @@
     --bgColor-emphasize:rgb(245, 220, 244);
     --bgColor-youtube-live:rgba(204,0,0,0.9);
     --bgColor-youtube-duration:rgba(0,0,0,0.8);
+    --borderColor-default: #d1d9e0;
+    --borderColor-muted: #d1d9e0b3;
     --white:#ffffff;
     --black:#212121;
     --black:#282828;
@@ -43,4 +45,6 @@
     --DM-red:#ff3c3c; /* Bright red for alerts */
     --DM-light-purple:rgba(179, 0, 179, 0.5); /* Adjust the light purple color */
     --DM-inherit:inherit; /* Keep inherit as it is */
+
+    --borderWidth-thin: 0.0625rem;
 }
