@@ -91,12 +91,12 @@ h1>a,h2>a,h3>a,h4>a,h5>a,h6>a{
     font-size:inherit;}
 table{ 
     margin:1em 0;}
-h1>p:first-child,
-h2>p:first-child,
-h3>p:first-child,
-h4>p:first-child,
-h5>p:first-child,
-h6>p:first-child{ 
+h1>img:first-child,
+h2>img:first-child,
+h3>img:first-child,
+h4>img:first-child,
+h5>img:first-child,
+h6>img:first-child{ 
     display:flex;
     height:-webkit-fill-available;
     position:absolute;
