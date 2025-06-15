@@ -166,7 +166,7 @@ article a{
     color:#5e8ad0!important;}
 article img{background-color:var(--bgColor-smoke-white);}
 .leftBorderForArticleTitle{background-color:var(--DM-red);}
-h1:not(header > h1), h2, h3, h4, h5, h6{ 
+h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5{ 
     background-color:var(--DM-articleSubHeading);
     color:var(--black);
     border-top:0.7px solid rgba(190,190,190,.5);
