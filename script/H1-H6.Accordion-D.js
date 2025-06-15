@@ -4,8 +4,8 @@ var htmlhArray = ["H6", "H5", "H4", "H3", "H2", "H1"];
 var displayNoneOrBlock = '';
 
 function hideOrShowAllHnum() {
-    const sopen = "/images/arrow-up-svgrepo-com.svg";
-    const sclose = "/images/arrow-down-svgrepo-com.svg";
+    const sopen = "../images/arrow-up-svgrepo-com.svg";
+    const sclose = "../images/arrow-down-svgrepo-com.svg";
 	// Handle H1 specifically
 	const allIconsH0 = document.querySelectorAll('h1.H0>img.toggle-icon');
     allIconsH0.forEach(icon => {
@@ -96,9 +96,9 @@ var iconImg = this.querySelector(".toggle-icon");
 var isClosed = iconImg.src.includes("arrow-down-svgrepo-com.svg");  // use actual filename
 
 if (isClosed) {
-    iconImg.src = "/images/arrow-up-svgrepo-com.svg";  // update to open icon
+    iconImg.src = "../images/arrow-up-svgrepo-com.svg";  // update to open icon
 } else {
-    iconImg.src = "/images/arrow-down-svgrepo-com.svg";  // update to closed icon
+    iconImg.src = "../images/arrow-down-svgrepo-com.svg";  // update to closed icon
 }
 
 
