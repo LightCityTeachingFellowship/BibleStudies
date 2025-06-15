@@ -74,8 +74,6 @@ for (i; i < b.length; i++) {
 		var iconImg = document.createElement("img");
 		iconImg.classList.add("toggle-icon");
 		iconImg.src = "../images/arrow-right-angle-svgrepo-com.svg";  // default is closed
-		iconImg.style.width = "16px";  // or as needed
-		iconImg.style.marginRight = "8px";  // spacing before text
 		b[i].prepend(iconImg);
 		    // Wrap remaining text in <nav>
 		    var navWrapper = document.createElement("nav");
