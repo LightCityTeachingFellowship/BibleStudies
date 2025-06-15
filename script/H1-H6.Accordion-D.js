@@ -5,7 +5,7 @@ var displayNoneOrBlock = '';
 
 function hideOrShowAllHnum() {
     const sopen = "../images/arrow-down-svgrepo-com.svg";
-    const sclose = "../images/arrow-right-svgrepo-com.svg";
+    const sclose = "../images/arrow-right-angle-svgrepo-com.svg";
 	// Handle H1 specifically
 	const allIconsH0 = document.querySelectorAll('h1.H0>img.toggle-icon');
     allIconsH0.forEach(icon => {
@@ -73,7 +73,7 @@ for (i; i < b.length; i++) {
 		/* Prepend span element in headers to hold utf-8 symbols for open and close */
 		var iconImg = document.createElement("img");
 		iconImg.classList.add("toggle-icon");
-		iconImg.src = "../images/arrow-right-svgrepo-com.svg";  // default is closed
+		iconImg.src = "../images/arrow-right-angle-svgrepo-com.svg";  // default is closed
 		iconImg.style.width = "16px";  // or as needed
 		iconImg.style.marginRight = "8px";  // spacing before text
 		b[i].prepend(iconImg);
@@ -93,12 +93,12 @@ function togglefunction() {
 	/* To toggle open/close svg icons */
 	
 var iconImg = this.querySelector(".toggle-icon");
-var isClosed = iconImg.src.includes("arrow-right-svgrepo-com.svg");  // use actual filename
+var isClosed = iconImg.src.includes("arrow-right-angle-svgrepo-com.svg");  // use actual filename
 
 if (isClosed) {
     iconImg.src = "../images/arrow-down-svgrepo-com.svg";  // update to open icon
 } else {
-    iconImg.src = "../images/arrow-right-svgrepo-com.svg";  // update to closed icon
+    iconImg.src = "../images/arrow-right-angle-svgrepo-com.svg";  // update to closed icon
 }
 
 
