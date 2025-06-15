@@ -77,6 +77,18 @@ for (i; i < b.length; i++) {
 		iconImg.style.width = "16px";  // or as needed
 		iconImg.style.marginRight = "8px";  // spacing before text
 		b[i].prepend(iconImg);
+		    // Wrap remaining text in <nav>
+		    var navWrapper = document.createElement("nav");
+		
+		    // Move all non-icon child nodes into <nav>
+		    const childNodes = Array.from(b[i].childNodes);
+		    childNodes.forEach(node => {
+			if (node !== iconImg) {
+			    navWrapper.appendChild(node);
+			}
+		    });
+		
+		    b[i].appendChild(navWrapper);
 	} 
 	/* For Elements other than H1 - H6 and SCRIPT */
 	/* HIDE ALL ELEMENTS THAT ARE NOT H1 */
