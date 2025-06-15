@@ -5,7 +5,8 @@ body{
 .loader-bg{
     background:var(--bgColor-smoke-white)!important;}
 .loader{
-    background-image:url(../images/preload.svg);}
+    background-image:url(../images/preload.svg);
+    background-image:url(/images/preload.svg);}
 /* custom CSS */
 button{background-color:transparent;}
 button,input,optgroup,textarea{color:var(--DM-inherit);}
@@ -61,7 +62,7 @@ button,input,optgroup,textarea{color:var(--DM-inherit);}
 @keyframes easeIn{ 
     0%{color:transparent;}
     60%{color:var(--DM-inherit);}
-    100%{color:var(--DM-inherit);}}
+    100%{color:var(--black);}}
 @keyframes easeInTwo{ 
     0%{color:transparent;}
     80%{color:var(--DM-inherit);}
@@ -165,9 +166,14 @@ article a{
     color:#5e8ad0!important;}
 article img{background-color:var(--bgColor-smoke-white);}
 .leftBorderForArticleTitle{background-color:var(--DM-red);}
-article h1,article h2,article h3,article h4, articleh5,article h6{ 
-    border-bottom:2px solid rgba(190,190,190,.5);
-    border-bottom:1px solid var(--DM-black);}
+h1:not(header > h1), h2, h3, h4, h5, h6{ 
+    background-color:var(--DM-articleSubHeading);
+    color:var(--black);
+    border-top:0.7px solid rgba(190,190,190,.5);
+    border-top:0.3px solid var(--gray);
+    border-bottom:0.6px solid var(--gray);}
+h1>nav, h2>nav, h3>nav, h4>nav, h5>nav, h6>nav{ 
+    color:var(--black)!important;}
 .emphasize{ 
     color:var(--DM-black);
     background-color:var(--light-purple);}
@@ -184,14 +190,14 @@ blockquote:before{color:var(--DM-light-purple);}
 .open, .close{ 
     color:var(--DM-vivid-orange);
     color:var(--DM-black);}
-.PageNavigation a{
-    color:var(--DM-black);}
-.PageNavigation a:hover{
-    color:var(--gray)!important;
+.PageNavigation a, .categoryNavigation a{
+    color:var(--DM-catAndArtLinks)!important;}
+.PageNavigation a:hover, .categoryNavigation a:hover{
+    color:var(--DM-catAndArtLinksHover)!important;
     text-decoration:none!important;
     border-bottom:none!important;}
-.prev-link p, .next-link p{
-    color:var(--gray);}
+.prev-link p, .next-link p, .category-link p{
+    color:var(--gray)!important;}
 .prev-link span, .next-link span{
     color:var(--inherit)!important;}
 /* styles from video.css */
@@ -225,20 +231,20 @@ blockquote:before{color:var(--DM-light-purple);}
     border-bottom:1px solid var(--scroll-track-bg-color);
     box-shadow:0px -25.5px 6px 28px #000000;}
 #context_menu #cmenu_closebtn,.cmenu_closebtn{
-    background:url(../images/cancel-svgrepo-com-DarkMode.svg) center no-repeat;}
+    background:var(--img-cancel-dark);}
 #context_menu #cmenu_closebtn:hover,.cmenu_closebtn:hover{
-    background:url(../images/cancel-svgrepo-com-BLACK.svg) center no-repeat;}
+    background:var(--img-cancel-black) center no-repeat;}
 .cmenu_navnclose_btns button.prv_verse,.cmenu_navnclose_btns button.nxt_verse,
 .cmenu_navnclose_btns button.prv,.cmenu_navnclose_btns button.nxt,
 #context_menu summary>div:first-of-type{
-    background:url(../images/arrow-up-svgrepo-com-DarkMode.svg) center no-repeat;}
+    background:var(--img-arrow-up-dark);}
 .cmenu_navnclose_btns button.prv_verse:hover,.cmenu_navnclose_btns button.nxt_verse:hover,
 .cmenu_navnclose_btns button.prv:hover,.cmenu_navnclose_btns button.nxt:hover{
-    background:url(../images/arrow-up-svgrepo-com.svg) center no-repeat;}
+    background:var(--img-arrow-up);}
 .cmenu_tsk:hover{color:var(--black);}
 #context_menu code:not(.cmtitlebar code):hover,.crossrefs span:hover{color:rgb(20 157 237)!important;}
 #context_menu details[open] > summary > div:first-of-type{
-    background:url(../images/arrow-up-svgrepo-com-DarkMode.svg) center no-repeat;
+    background:var(--img-arrow-up-dark);
     transform:rotate(-180deg);}
 span.translated:not(.win2_noteholder blockquote .verse:not(.verse:hover) span.translated){
     color:var(--DM-translated-word);}
@@ -256,4 +262,4 @@ span.translated:not(.win2_noteholder blockquote .verse:not(.verse:hover) span.tr
     background:var(--DM-bgColor-smoke-white);
     box-shadow:inset 0 1px 4px var(--black);}
 .crossrefs h1::before, .crossrefs h2::before, .crossrefs h3::before, .crossrefs h4::before, .crossrefs h5::before, .crossrefs h6::before,.crossrefs .hidingsibs::before{
-    content:url(../images/arrow-up-svgrepo-com-DarkMode.svg);}
+    content:var(--img-arrow-up-dark);}

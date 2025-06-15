@@ -20,6 +20,9 @@
     --supernova:#5f40f6;
     --red:red;
     --light-purple:rgb(83, 0, 83, 0.5);
+    --catAndArtLinks: #006AA8;
+    --catAndArtLinksHover: #149DED;
+    --articleSubHeading: #ffedd5; /* Article link color */
     /* --selection:rgba(0, 0, 255, 0.1); */
     --selection:#f8d261;
     --inherit:inherit;
@@ -43,6 +46,9 @@
     --DM-light-vivid-orange:#ffe35e; /* Lighten the light vivid orange */
     --DM-supernova:#9a74f6; /* Darken the supernova color */
     --DM-red:#ff3c3c; /* Bright red for alerts */
+    --DM-catAndArtLinks: #149DED;
+    --DM-catAndArtLinksHover: #006AA8;
+    --DM-articleSubHeading: #ffedd5; /* Keep article link color */
     --DM-light-purple:rgba(179, 0, 179, 0.5); /* Adjust the light purple color */
     --DM-inherit:inherit; /* Keep inherit as it is */
 
