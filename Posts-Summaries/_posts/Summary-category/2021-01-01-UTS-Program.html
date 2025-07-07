@@ -11,12 +11,12 @@ categories: ["HomePage-Program"]
 		<p>A collection of our Teaching Summaries for UTS Program.</p>
 	</div>
 	<div class="homeResources-grid-containter">
-		<ol>
+			<ol>
 			{% for post in site.categories.Program %}
 			<li class="all-links">
 				<a href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}">{{ post.title }}</a> &nbsp; <small class="archive-date-summary">{{ post.date | date: "%a, %b %d, %y" }}.</small>
 			</li>
 			{% endfor %}
 		</ol>
-	</div>	
+	</div>
 </div>
