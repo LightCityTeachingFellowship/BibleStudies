@@ -1,8 +1,8 @@
 ---
 layout: cat-homepageTEMPLATE-summary
 title: "UTS Program"
-permalink: /Program/
-categories: ["HomePage-Program"]
+permalink: /UTS Program/
+categories: ["HomePage-UTS-Program"]
 ---
 
 <div id="categories" class="homeBody-section container-fluid-inner">
@@ -12,7 +12,7 @@ categories: ["HomePage-Program"]
 	</div>
 	<div class="homeResources-grid-containter">
 			<ol>
-			{% for post in site.categories.Program %}
+			{% for post in site.categories['UTS-Program'] %}
 			<li class="all-links">
 				<a href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}">{{ post.title }}</a> &nbsp; <small class="archive-date-summary">{{ post.date | date: "%a, %b %d, %y" }}.</small>
 			</li>
