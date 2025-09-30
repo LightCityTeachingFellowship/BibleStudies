@@ -37,27 +37,27 @@
     --searchedword-hlt:maroon;
     --searchedword-hlt2:blue;
     --ref-img:url(../images/background.jpg);
-    --ref-img:url(/images/background.jpg);
+    /* --ref-img:url(/images/background.jpg); */
     --translated-word:#01003b;
     /* --ref-img:#D7D5D1; */
     --img-cancel:url(../images/cancel-svgrepo-com.svg);
-    --img-cancel:url(/images/cancel-svgrepo-com.svg);
+    /* --img-cancel:url(/images/cancel-svgrepo-com.svg); */
     --img-cancel-dark:url(../images/cancel-svgrepo-com-DarkMode.svg);
-    --img-cancel-dark:url(/images/cancel-svgrepo-com-DarkMode.svg);
+    /* --img-cancel-dark:url(/images/cancel-svgrepo-com-DarkMode.svg); */
     --img-cancel-black:url(../images/cancel-svgrepo-com-BLACK.svg);
-    --img-cancel-black:url(/images/cancel-svgrepo-com-BLACK.svg);
+    /* --img-cancel-black:url(/images/cancel-svgrepo-com-BLACK.svg); */
     --img-arrow-up: url(../images/arrow-up-svgrepo-com.svg) center no-repeat;
-    --img-arrow-up: url(/images/arrow-up-svgrepo-com.svg) center no-repeat;
+    /* --img-arrow-up: url(/images/arrow-up-svgrepo-com.svg) center no-repeat; */
     --img-arrow-down: url(../images/arrow-down-svgrepo-com.svg) center no-repeat;
-    --img-arrow-down: url(/images/arrow-down-svgrepo-com.svg) center no-repeat;
+    /* --img-arrow-down: url(/images/arrow-down-svgrepo-com.svg) center no-repeat; */
     --img-arrow-up-dark: url(../images/arrow-up-svgrepo-com-DarkMode.svg) center no-repeat;
-    --img-arrow-up-dark: url(/images/arrow-up-svgrepo-com-DarkMode.svg) center no-repeat;
+    /* --img-arrow-up-dark: url(/images/arrow-up-svgrepo-com-DarkMode.svg) center no-repeat; */
     --img-arrow-down-dark: url(../images/arrow-down-svgrepo-com-DarkMode.svg) center no-repeat;
-    --img-arrow-down-dark: url(/images/arrow-down-svgrepo-com-DarkMode.svg) center no-repeat;
+    /* --img-arrow-down-dark: url(/images/arrow-down-svgrepo-com-DarkMode.svg) center no-repeat; */
     --img-chkbox:url(../images/check-box-svgrepo-com.svg);
-    --img-chkbox:url(/images/check-box-svgrepo-com.svg);
+    /* --img-chkbox:url(/images/check-box-svgrepo-com.svg); */
     --ref-paper:url(../images/IyEMTp.jpg);
-    --ref-paper:url(/images/IyEMTp.jpg);
+    /* --ref-paper:url(/images/IyEMTp.jpg); */
     --verse-higlight:#ffff92;
     --verse-higlight:#fffb001b;
     --vhlt-hover:#fff08f99;
