@@ -166,7 +166,7 @@ article a{
     color:#5e8ad0!important;}
 article img{background-color:var(--bgColor-smoke-white);}
 .leftBorderForArticleTitle{background-color:var(--DM-red);}
-h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5{ 
+main>h1:not(header > h1), main>h2, main>h3, main>h4, main>h5, main>h6{ 
     background-color:var(--DM-articleSubHeading);
     color:var(--black);
     border-top:0.7px solid rgba(190,190,190,.5);
@@ -233,7 +233,7 @@ blockquote:before{color:var(--DM-light-purple);}
 #context_menu #cmenu_closebtn,.cmenu_closebtn{
     background:var(--img-cancel-dark);}
 #context_menu #cmenu_closebtn:hover,.cmenu_closebtn:hover{
-    background:var(--img-cancel-black) center no-repeat;}
+    background:var(--img-cancel-black)}
 .cmenu_navnclose_btns button.prv_verse,.cmenu_navnclose_btns button.nxt_verse,
 .cmenu_navnclose_btns button.prv,.cmenu_navnclose_btns button.nxt,
 #context_menu summary>div:first-of-type{
