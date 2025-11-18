@@ -342,7 +342,8 @@ table ul, table ol{
     text-align:right;}
 .prev-link p, .next-link p, .category-link p{
     font-size:calc(12px + (18 - 6)*((100vw - 320px)/(1920 - 320)))!important;
-    margin:0.5em 0;}
+    margin:0.5em 0;
+	padding: 0;}
 .prev-link span, .next-link span{
     display:contents;
     font-size:var(--inherit);
@@ -365,4 +366,5 @@ table ul, table ol{
     color:black!important;
     margin-top:20px;
     width:-webkit-fill-available!important;}
+
 
