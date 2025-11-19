@@ -540,6 +540,7 @@ input:checked + .slider.round::before{
   font-weight:600;
   top:50%;
   margin:0;
+  padding:0!important;
   transform:translateY(-50%);}
 #sun-icon{
   left:10px;
@@ -549,4 +550,5 @@ input:checked + .slider.round::before{
   color:var(--black);}
 .crossrefs h5{display:flex;}
 .crossrefs h5::before{place-self:end;}
+
   
