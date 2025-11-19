@@ -1,7 +1,8 @@
 h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5{
     display:grid;
     grid-template-columns:5% 95%;
-    place-content:center;}
+    place-content:center;
+    padding:5px 0!important;}
 .toggle-icon {
     background:none!important;
     border-radius:50%;
@@ -35,3 +36,4 @@ h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5{
 @media only screen and (max-width:300px){
 h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5{
     grid-template-columns:18% 82%;}}
+
