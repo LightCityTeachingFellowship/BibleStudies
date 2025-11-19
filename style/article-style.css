@@ -68,6 +68,8 @@ blockquote,blockquote>p,blockquote>p>em{font-size:calc(16px + (18 - 6)*((100vw -
 article>main>header{
     display:grid;
     grid-template-columns:10px auto;}
+small, article>main>header{
+    margin-left: 15px;}
 .leftBorderForArticleTitle{
     border-radius:40px;
     width:10px;}
@@ -79,10 +81,9 @@ header>h1:first-of-type, div>h1:first-of-type{
     margin:0;
     border-bottom:none!important;}
 .displayNone{word-break:break-word;}
-/*PSAM.220516b:the Rule for h1-h6 below was added for better alignment*/
 h1:not(header > h1), h2, h3, h4, h5, h6{ 
     font-family: 'Times New Roman', Times, serif;
-    padding: 5px 0;}
+    padding:5px 15px!important;}}
 h1,h2,h3,h4,h5,h6{ 
     display:block;
     margin-top:1.2em;
@@ -366,5 +367,6 @@ table ul, table ol{
     color:black!important;
     margin-top:20px;
     width:-webkit-fill-available!important;}
+
 
 
