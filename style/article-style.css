@@ -69,7 +69,7 @@ article>main>header{
     display:grid;
     grid-template-columns:10px auto;}
 small, article>main>header{
-    margin-left: 15px;}
+    margin-left: 15px!important;}
 .leftBorderForArticleTitle{
     border-radius:40px;
     width:10px;}
@@ -367,6 +367,7 @@ table ul, table ol{
     color:black!important;
     margin-top:20px;
     width:-webkit-fill-available!important;}
+
 
 
 
