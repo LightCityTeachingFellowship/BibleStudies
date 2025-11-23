@@ -139,6 +139,7 @@ article ol,article ul{
     list-style-type:decimal;
     margin:0;}
 ol>li>ol{ 
+	padding-left:20px;
     list-style-type:lower-roman;
     list-style-type:lower-alpha;}
 ol>li>ol>li>ol, ol>li>ol>li>ol>li>ol, ol>li>ol>li>ul, ol>li>ol>li>ul>li>ul{
@@ -178,6 +179,8 @@ li::marker{
 @media only screen and (min-width:540px){ 
 article ol, article ul{ 
     padding-left:50px;}
+ol>li>ol{
+    padding-left:30px;}
 li::marker{ 
     font-size:80%;}}
 .italize{ 
@@ -367,6 +370,7 @@ table ul, table ol{
     color:black!important;
     margin-top:20px;
     width:-webkit-fill-available!important;}
+
 
 
 
