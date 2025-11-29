@@ -1,8 +1,8 @@
 ---
 layout: cat-homepageTEMPLATE
-title: "Fall of Man"
-permalink: /Fall of Man/
-categories: ["HomePageArticle-Fall-of-Man"]
+title: "Tests"
+permalink: /Tests/
+categories: ["HomePageArticle-Tests"]
 ---
 
 <div id="categories" class="homeBody-section container-fluid-inner">
@@ -14,11 +14,11 @@ categories: ["HomePageArticle-Fall-of-Man"]
 	
 	{% for subcat in subcatarray %}
 	{% for page in site.pages %}
-	{% if page.categories contains "Fall-of-Man" %}
+	{% if page.categories contains "Tests" %}
 	{% if page.subsection contains subcat %}
 	<div class="homeResources-grid-containter">
 		{% for page in site.pages %}
-		{% if page.categories contains "Fall-of-Man" %}
+		{% if page.categories contains "Tests" %}
 		{% if page.subsection contains subcat %}
 				<h2 class="titles">{{ subcat }}</h2>
 				<ol>
@@ -27,7 +27,7 @@ categories: ["HomePageArticle-Fall-of-Man"]
 					{% endif %}
 					{% endfor %}
 					{% for page in site.pages %}
-		{% if page.categories contains "Fall-of-Man" %}
+		{% if page.categories contains "Tests" %}
 		{% if page.subsection contains subcat %}
 					<li class="all-links">
 						<a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">{{ page.title }}</a> &nbsp; <small class="archive-date-summary">{{ page.date | date: "%a, %b %d, %y" }}.</small>
