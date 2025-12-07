@@ -161,7 +161,7 @@ article li{
     margin-left:0;
     display:list-item;
     margin-top:1em;
-	padding:0!important;}
+	padding:0 15px 0 0!important;}
 em>span,li>span,li>strong>span,li>em>span,li>strong>em>span,p>span,p>em>span,blockquote>span,blockquote>em>span,blockquote>p>em>span{ 
     font-style:initial;}
 /* li:before{ 
@@ -370,6 +370,7 @@ table ul, table ol{
     color:black!important;
     margin-top:20px;
     width:-webkit-fill-available!important;}
+
 
 
 
