@@ -551,4 +551,4 @@ input:checked + .slider.round::before{
 .crossrefs h5{display:flex;}
 .crossrefs h5::before{place-self:end;}
 
-  
+#Contact-section li, #Contact-section li:not(#context_menu.fillscreen details div li) {margin-left:0em;}
