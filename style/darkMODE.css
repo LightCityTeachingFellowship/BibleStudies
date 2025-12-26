@@ -1,8 +1,7 @@
 .darkmode {
-    --img-arrow-up-dark::url(../images/arrow-up-svgrepo-com-DarkMode.svg);
-    --arrow-up:url(../images/arrow-up-svgrepo-com-DarkMode.svg);
-    --arrow-up-content:url(../images/arrow-up-svgrepo-com-DarkMode.svg);
-    --arrow-up-white:url(../images/white-arrow-up-svgrepo-com.svg);
+    --img-arrow-up-dark: url(../images/arrow-up-svgrepo-com-DarkMode.svg);
+    --arrow-up: url(../images/arrow-up-svgrepo-com-DarkMode.svg);
+    --arrow-up-content: url(../images/arrow-up-svgrepo-com-DarkMode.svg);
 }
 body{
     background-color:var(--DM-light-gray)!important;
@@ -269,4 +268,5 @@ span.translated:not(.win2_noteholder blockquote .verse:not(.verse:hover) span.tr
     box-shadow:inset 0 1px 4px var(--black);}
 .crossrefs h1::before, .crossrefs h2::before, .crossrefs h3::before, .crossrefs h4::before, .crossrefs h5::before, .crossrefs h6::before,.crossrefs .hidingsibs::before{
     content:var(--img-arrow-up-dark);}
+
 
