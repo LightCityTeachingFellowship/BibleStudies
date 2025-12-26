@@ -3,9 +3,9 @@ let main = document.body;
 let pagemaster = document.body;
 let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent)
 let contextMenu_touch="contextmenu";
-// let bibleversions_Array = ['KJV','ESV','NIV84','ABP-en','ABP-gr','NETplus'];
 let bibleversions_Array = ['KJV','ESV','NIV84','ABP-gr','NETplus'];
-
+if(localStorage.getItem("bversionName") == 'NIV’84'){localStorage.setItem("bversionName", "NIV84")}
+	
 if (lcrcmsih=document.head.querySelector('#lightCityReftaggerContextMenuStyleInHead')) {lcrcmsih.remove()}
 
 /* **** ****************************** **** */
@@ -390,7 +390,7 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
             let cmenuVerses = context_menu.querySelectorAll('span.verse')
             for (const spanVerse of cmenuVerses) {
                 const [bN, bC, cV] = spanVerse.querySelector('[ref]').getAttribute('ref').split(/[(?<=\s)(?<=:)](?=\d)/);
-                checkAndIndicateThatVerseHasNote(bN,bC,cV,spanVerse).notes;// Check if Verse Has Note;
+                // checkAndIndicateThatVerseHasNote(bN,bC,cV,spanVerse).notes;// Check if Verse Has Note; // VerseNotes are not available
             };
         }
     }
@@ -2216,7 +2216,7 @@ function cmenu_goToPrevOrNextVerse(prvNxt, searchWindowVerse, shiftKey, eTarget)
         spanVerse.classList.remove('user1note','noted');
         spanVerse.setAttribute('class', spanVerse.getAttribute('class').replace(/marker_[^\s]+\s*/g, ''));
         const [bN, bC, cV] = spanVerse.querySelector('[ref]').getAttribute('ref').split(/[(?<=\s)(?<=:)](?=\d)/);
-        checkAndIndicateThatVerseHasNote(bN,bC,cV,spanVerse).notes;// Check if Verse Has Note;
+        // checkAndIndicateThatVerseHasNote(bN,bC,cV,spanVerse).notes;// Check if Verse Has Note;
     };
     // createTransliterationAttr(newVerse)
     updateRefsInVerseSectionHeading(verses_section);
