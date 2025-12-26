@@ -3,7 +3,8 @@ let main = document.body;
 let pagemaster = document.body;
 let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent)
 let contextMenu_touch="contextmenu";
-let bibleversions_Array = ['KJV','ESV','NIV84','ABP-en','ABP-gr','NETplus'];
+// let bibleversions_Array = ['KJV','ESV','NIV84','ABP-en','ABP-gr','NETplus'];
+let bibleversions_Array = ['KJV','ESV','NIV84','ABP-gr','NETplus'];
 
 if (lcrcmsih=document.head.querySelector('#lightCityReftaggerContextMenuStyleInHead')) {lcrcmsih.remove()}
 
