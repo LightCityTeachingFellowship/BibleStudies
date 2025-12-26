@@ -27,6 +27,7 @@ button,input,optgroup,textarea{color:inherit;}
 .highlighted{color:var(--DM-vivid-orange)!important;}
 .homeResources-grid-containter{
     background-color:var(--white)!important;
+    background-color:#ffffff6e!important;
     box-shadow:7px 8px 16px -5px rgba(0, 0, 0, 0.14);
     box-shadow:4px 7px 10px rgba(0, 0, 0, 0.1);
     box-shadow:0 2px 4px rgba(0, 0, 0, 0.2);
@@ -267,4 +268,5 @@ span.translated:not(.win2_noteholder blockquote .verse:not(.verse:hover) span.tr
     box-shadow:inset 0 1px 4px var(--black);}
 .crossrefs h1::before, .crossrefs h2::before, .crossrefs h3::before, .crossrefs h4::before, .crossrefs h5::before, .crossrefs h6::before,.crossrefs .hidingsibs::before{
     content:var(--img-arrow-up);}
+
 .crossrefs span:hover{color:blue;}
