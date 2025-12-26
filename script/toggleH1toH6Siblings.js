@@ -244,3 +244,25 @@ function isMouseOverHighlightedText() {
     }
     return false;
 }
+// Function to find the closest scrollable ancestors for x and y directions
+function closestScrollableAncestors(element,limit) {
+    let scrollableAncestor;
+    let scrollableAncestorY = null;
+    let scrollableAncestorX = null;
+
+    while (element) {
+        const style = window.getComputedStyle(element);
+        const overflowY = style.overflowY;
+        const overflowX = style.overflowX;
+
+        const isScrollableY = (overflowY === 'auto' || overflowY === 'scroll') && element.scrollHeight > element.clientHeight;
+        const isScrollableX = (overflowX === 'auto' || overflowX === 'scroll') && element.scrollWidth > element.clientWidth;
+
+        if (isScrollableY && !scrollableAncestorY) {scrollableAncestorY = element;}
+        if (isScrollableX && !scrollableAncestorX) {scrollableAncestorX = element;}
+        scrollableAncestor = element;
+        if ((scrollableAncestorY && scrollableAncestorX)||(element==limit)) {break;}// Found both scrollable ancestors //don't go beyond this parent
+        element = element.parentElement;
+    }
+    return { elm:scrollableAncestor, x: scrollableAncestorX, y: scrollableAncestorY };
+}
