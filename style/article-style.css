@@ -147,26 +147,36 @@ ol>li>ol{
 	padding-left:20px;
     list-style-type:lower-roman;
     list-style-type:lower-alpha;}
-ol>li>ol>li>ol, ol>li>ol>li>ol>li>ol, ol>li>ol>li>ul, ol>li>ol>li>ul>li>ul{
-    list-style-type:lower-roman;}
-ol>li>ol>li>ol{ 
+ol>li>ol>li>ol, ol>li>ol>li>ol>li>ol, ol>li>ol>li>ul, ol>li>ol>li>ul>li>ul {
+    list-style-type:lower-roman;
+}
+ol>li>ol>li>ol { 
     list-style-type:decimal-leading-zero;
+    list-style-type:lower-roman;
+}
+ol>li>ol>li>ol>li>ol { 
+    list-style-type:lower-roman;
+}
+ol>li>ol>li>ol>li>ol>li>ol { 
+    list-style-type:lower-roman;
+}
+ol>li>ol>li>ol>li>ol>li>ol>li>ol { 
     list-style-type:lower-roman;}
-ol>li>ol>li>ol>li>ol{ 
-    list-style-type:lower-roman;}
-ol>li>ol>li>ol>li>ol>li>ol{ 
-    list-style-type:lower-roman;}
-ol>li>ol>li>ol>li>ol>li>ol>li>ol{ 
-    list-style-type:lower-roman;}
-body>li:first-child{ 
-    margin-top:0.6em;}
-article li li, article li li li, article li li li li{ 
-    margin:0.2em 0 0 0;}
-article li{ 
+body>li:first-child { 
+    margin-top:0.6em;
+}
+article li li, article li li li, article li li li li { 
+    margin:0.2em 0 0 0;
+}
+article li {
     margin-left:0;
     display:list-item;
+	padding:0 15px 0 0!important;
+    margin-top:0.25em;
+}
+article :is(h1,h2,h3,h4,h5,h6) + :is(ol,ul) > li:first-of-type {
     margin-top:1em;
-	padding:0 15px 0 0!important;}
+}
 em>span,li>span,li>strong>span,li>em>span,li>strong>em>span,p>span,p>em>span,blockquote>span,blockquote>em>span,blockquote>p>em>span{ 
     font-style:initial;}
 /* li:before{ 
@@ -394,3 +404,4 @@ header :is(h1,h2,h3,h4,h5,h6):before {
 .darkmode :is(blockquote, blockquote *) {color: white!important;}
 :is(header, #Contact-section) :is(h1,h2,h3,h4,h5,h6):before {display:none;}
 :is(header, #Contact-section) :is(h1,h2,h3,h4,h5,h6) {padding-left:0;}
+
