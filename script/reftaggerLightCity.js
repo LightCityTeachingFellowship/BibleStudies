@@ -4021,3 +4021,229 @@ function minimalBibleReference(refStr) {
 
     return outputList.join('; ');
 }
+// LIST COLLAPSER
+function htmlListCollapser(e) {
+    let clicked_li = e.target.closest('li');
+    let c_li_descendants_olul = clicked_li ? clicked_li.querySelectorAll('li>:is(ol,ul)'):null;
+    if (!(clicked_li && c_li_descendants_olul)){return}
+    // Check if the clicked element is an `li` item       
+    const olOrUl = clicked_li.closest('ul, ol');
+    if(wasMarkerClicked()){
+        if(e.type=='mousedown'){document.querySelectorAll('#pageEditNsaveBtns').forEach(pEnsB=>pEnsB.remove());return}
+        allow_pageEditNsaveBtns = false;
+        (e instanceof Event) ? e.preventDefault() : null;
+        
+        // CLICK
+        if(e.type!='contextmenu'){
+            // CLICK - CTRL
+            if(!e.ctrlKey){
+                for (let i = 0; i < c_li_descendants_olul.length; i++) {
+                    const d_olul = c_li_descendants_olul[i];
+                    (d_olul.matches('li>:is(ol,ul)') && d_olul.parentElement==clicked_li) ? slide_OLUL_UpDown(d_olul):null
+                }
+            }
+            // CLICK + CTRL // hide descendants of li's first generation li descendants
+            else {
+                for (let index = 0; index < c_li_descendants_olul.length; index++) {
+                    const d_olul = c_li_descendants_olul[index];
+                    if(d_olul.matches('li>:is(ol,ul)') && d_olul.parentElement==clicked_li){
+                        let d_olul_descendants_li = d_olul.querySelectorAll('li');
+                        let isAnyDescendant_of_d_olul_descendants_li_hidden = Array.from(d_olul_descendants_li).some(d_olul_d_li=>Array.from(d_olul_d_li.children).some(x=>(x.matches('ol.displaynone,ul.displaynone,ol.sld_up,ul.sld_up'))));
+                        
+                        let olul_children_olul = Array.from(d_olul.querySelectorAll('li>:is(ol,ul)')).reverse();
+                        for (let i = 0; i < olul_children_olul.length; i++) {
+                            const element = olul_children_olul[i];
+                            // isAnyDescendant_of_d_olul_descendants_li_hidden ? oul.classList.remove('displaynone'):oul.classList.add('displaynone')
+                            slide_OLUL_UpDown(oul, isAnyDescendant_of_d_olul_descendants_li_hidden ? 'show':'hide');
+                        }
+                    }
+                }
+            }
+        }
+        //RIGHT-CLICK
+        else {
+            let li_childOLULisHidden = c_li_descendants_olul[0].matches('ol.displaynone,ul.displaynone,ol.sld_up,ul.sld_up');//the first ol or ul should be the direct descendant of clickedLi
+            
+            // CONTEXTMENU + SHIFT - CTRL // Hide or Show all OLs and Uls in Parent of clicked li
+            if(!e.ctrlKey && e.shiftKey || e.buttons & 1){
+                let closestOlUl = clicked_li.closest('ol,ul');
+                let closestOlUlChildrenOLUL = closestOlUl.querySelectorAll('li>:is(ol,ul)');
+                for (let i = 0; i < closestOlUlChildrenOLUL.length; i++) {
+                    const all_olul_inParentOLUL = closestOlUlChildrenOLUL[i];
+                    all_olul_inParentOLUL.setAttribute('hiddingAll','true');
+                    let clicked_li_siblings = Array.from(closestOlUl.children);
+                    const t = !clicked_li_siblings.includes(all_olul_inParentOLUL) ?  0 : 100; // to stagger all OL/UL's of LI's of the same level as the clicked li 
+                    setTimeout(() => {
+                        slide_OLUL_UpDown(all_olul_inParentOLUL,li_childOLULisHidden?'show':'hide',undefined,true);
+                    }, i*t);
+                }
+            }
+            // CONTEXTMENU - SHIFT - CTRL // Toggle Clicked Li's OL/UL and Hide all Other OLs and Uls in Parent of clicked li
+            else if(!e.ctrlKey && !e.shiftKey){
+                let closestOlUl = clicked_li.closest('ol,ul');
+                let inCM = clicked_li.closest('.context_menu');
+                const e2scroll = inCM ? context_menu : closestScrollableAncestors(clicked_li,document.body).elm;
+                let o_scroll_d = (clicked_li.getBoundingClientRect().top - (inCM ? e2scroll.querySelector('.cmtitlebar').getBoundingClientRect().bottom : e2scroll.getBoundingClientRect().top));//original_scroll_distance
+                
+                let c = closestOlUl.querySelectorAll('li>:is(ol,ul)');
+
+                for (let i = 0; i < c.length; i++) {
+                    const all_olul_inParentOLUL = c[i];
+                
+                    all_olul_inParentOLUL.setAttribute('hiddingAll','true');
+                    
+                    let clicked_li_siblings = Array.from(closestOlUl.children);
+                    const t = !clicked_li_siblings.includes(all_olul_inParentOLUL) ?  0 : 100; // to stagger all OL/UL's of LI's of the same level as the clicked li 
+                    setTimeout(() => {
+                        if(all_olul_inParentOLUL.parentElement==clicked_li){
+                            slide_OLUL_UpDown(all_olul_inParentOLUL,li_childOLULisHidden?'show':'hide',undefined,true);
+                        }
+                        else {
+                            slide_OLUL_UpDown(all_olul_inParentOLUL,'hide',undefined,true);
+                        }
+                    }, i*t);
+                    if(i==c.length-1){
+                        setTimeout(() => {
+                            const new_scroll_d = (clicked_li.getBoundingClientRect().top - (inCM ? e2scroll.querySelector('.cmtitlebar').getBoundingClientRect().bottom : e2scroll.getBoundingClientRect().top));
+                            const amountOfChange = new_scroll_d - o_scroll_d;
+                            amountOfChange < 0 ? e2scroll.scrollBy({ top:amountOfChange, behavior:'smooth'}):null;
+                        }, 200)
+                    };
+                }
+            }
+            // CONTEXTMENU + CTRL // Hide or Show all OLs and Uls in the Page
+            else {
+                // if (li_childOLULisHidden) {} else {}
+                // Array.from(document.querySelectorAll('li>ol,li>ul')).reverse().forEach((all_olul_inParentOLUL,i)=>{
+                let liOLliUL = document.querySelectorAll('li>ol,li>ul');
+                for (let i = 0; i < liOLliUL.length; i++) {
+                    const all_olul_inParentOLUL = liOLliUL[i];
+                    // li_childOLULisHidden ? all_olul_inParentOLUL.classList.remove('displaynone'):oul.classList.add('displaynone');
+                    const t = all_olul_inParentOLUL.parentElement.matches('li > ol > li, li > ul > li') ?  0 : 10; //to stagger direct descendant OL/UL's of the first level LI's on the page
+                    setTimeout(() => {
+                        slide_OLUL_UpDown(all_olul_inParentOLUL, li_childOLULisHidden?'show':'hide',undefined,true);
+                        all_olul_inParentOLUL.setAttribute('hiddingAll','true');
+                    }, i*t);
+                }
+            }
+        }
+        allow_pageEditNsaveBtns = true;
+        if(pageEditNsaveBtns=document.querySelector('#pageEditNsaveBtns')){pageEditNsaveBtns.remove()}
+        return
+    }
+        
+    function wasMarkerClicked() {
+        if (!olOrUl) return false;
+        // doesn't work for nested li's children if ol/ul, li is positioned relative
+        const parentOLUL_paddingLeft = parseFloat(window.getComputedStyle(olOrUl).paddingLeft) + parseFloat(olOrUl.getBoundingClientRect().left);// Calculate the padding-left of ul or `ol`
+        const li_marginLeft = parseFloat(window.getComputedStyle(clicked_li).marginLeft);// calculate the margin-left of clicked_li
+        const clickX = e.clientX;
+        const markerBoundary = parentOLUL_paddingLeft + li_marginLeft;// Calculate marker boundary based on combined padding and margin
+        const markerWasClicked = clickX <= markerBoundary;// Check if the click falls within the marker boundary
+        return markerWasClicked
+    }
+}
+function clickAllLisOnPage(appendHere=document.body) {
+    appendHere = appendHere instanceof Event ? document.body : appendHere;
+    
+    function addStyleToHead() {
+        document.getElementById('liOlUlStyle_temporaryStyle') ? liOlUlStyle_temporaryStyle.remove() : null;
+        const styleElement = document.createElement('style');
+        styleElement.id = 'liOlUlStyle_temporaryStyle';
+        styleElement.textContent = 'li>:is(ol,ul){opacity:0;}';
+        document.head.appendChild(styleElement);
+    }
+    let isBody = appendHere==document.body;  
+    isBody ? addStyleToHead() : null;// make all li>ol,li>ul invisible
+    
+    let lazyloaderStyle, loadingOverlay;
+    // Remove the loading overlay if it exists
+    appendHere==document.body ? null : (document.querySelectorAll('#lazyloaderStyle,#loadingOverlay').forEach(x=>{x.remove()}),createAndAddSpinnerAndSpinnerStyle());
+    // createAndAddSpinnerAndSpinnerStyle();
+
+    setTimeout(() => {
+        if (isBody) {
+            clickALlLis();
+            setTimeout(() => {
+                liOlUlStyle_temporaryStyle ? liOlUlStyle_temporaryStyle.remove() : null;
+                // Remove the loading overlay
+                document.querySelectorAll('#lazyloaderStyle,#loadingOverlay').forEach(x=>{x.remove()});
+                loadingOverlay ? loadingOverlay.remove() : null;
+                lazyloaderStyle ? lazyloaderStyle.remove() : null;
+                //Hide Everything On Page Load (Because of Opening Files in Church so that they don't read or capture what I don't want them to)
+                Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6')).reverse().forEach(hx=>{toggleH1to6siblings(null,hx)});
+            }, 1500);
+        } else {
+            appendHere.querySelectorAll('li').forEach(function(li) {li.click();});
+            let t = 100;
+            Array.from(appendHere.querySelectorAll(':is(h1,h2,h3,h4,h5,h6):not(.notemenu *)')).forEach((hx, i) => {
+                if (i != 0) t = toggleH1to6siblings(null,hx);
+            });
+            setTimeout(() => {
+                // Remove the loading overlay
+                document.querySelectorAll('#lazyloaderStyle,#loadingOverlay').forEach(x=>{x.remove()});
+            }, t+100);
+        }
+    },1500);
+    function clickALlLis() {
+        appendHere.querySelectorAll('*:not(li):not(ul):not(ol) > :is(ol,ul)').forEach(olUl=>{
+            const li = olUl.querySelector('li:has(ol)');
+            if (li) {  
+                let clientX = parseFloat(window.getComputedStyle(li).paddingLeft) + parseFloat(li.getBoundingClientRect().left)/2;
+                htmlListCollapser({type:'contextmenu', ctrlKey:false, shiftKey:false, target:li, clientX})
+            }
+        })
+    }
+    function createAndAddSpinnerAndSpinnerStyle() {
+        document.getElementById('loadingOverlay') ? document.getElementById('loadingOverlay').remove() : null;
+        // Create a loading overlay with a spinner
+        loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'loadingOverlay';
+        isBody ? loadingOverlay.style.setProperty('position', 'fixed', 'important') : loadingOverlay.style.position = 'absolute';
+        loadingOverlay.style.top = '0';
+        loadingOverlay.style.left = '0';
+        loadingOverlay.style.width = isBody ? '100vw' : '100%';
+        loadingOverlay.style.height = isBody ? '100vh' : '100%';
+        loadingOverlay.style.backgroundColor = 'var(--transparent-ref-img)';
+        loadingOverlay.style.zIndex = '1000';
+        loadingOverlay.style.setProperty('display', 'flex', 'important');
+        loadingOverlay.style.justifyContent = 'center';
+        loadingOverlay.style.alignItems = 'center';
+
+        // Create a spinner element
+        const spinner = document.createElement('div');
+        spinner.style.border = '16px solid #f3f3f3';
+        spinner.style.borderTop = '16px solid var(--chpt)'; /* #3498db */
+        spinner.style.borderRadius = '50%';
+        spinner.style.width = '120px';
+        spinner.style.height = '120px';
+        spinner.style.animation = 'spin 2s linear infinite';
+        spinner.id = 'lazyLoaderSpinner';
+
+        // Append the spinner to the loading overlay
+        loadingOverlay.appendChild(spinner);
+
+        // Add CSS for the spinner animation
+        const lls = document.getElementById('lazyloaderStyle');
+        lls ? lls.remove() : null;
+        lazyloaderStyle = document.createElement('style');
+        lazyloaderStyle.id = 'lazyloaderStyle';
+        lazyloaderStyle.innerHTML = `
+    .darkmode #loadingOverlay{background:rgba(12,14,18,0.93)!important;}
+    .darkmode #lazyLoaderSpinner{background:rgba(12,14,18,0)!important;border:16px solid var(--ref-img)!important;border-top-color:rgb(219, 135, 52)!important;}
+    #lazyLoaderSpinner{box-shadow:0px 0px 0.5px var(--sh),0px 0px 0.5px var(--sh) inset!important;}
+    @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+    }`;
+        lazyloaderStyle.innerHTML += isBody ? 'body {overflow:hidden;position:static!important;} #loadingOverlay{position:fixed;min-height:100vh!important;min-width:100vw!important;}' : `#${appendHere.closest('[id]').id} .text_content {overflow:hidden;position:relative;}`;
+
+        document.head.appendChild(lazyloaderStyle);
+        // Append the overlay to the appendHere element
+        appendHere.appendChild(loadingOverlay);
+    }
+}
+document.addEventListener('mousedown', htmlListCollapser);
+document.addEventListener('click', htmlListCollapser);
+document.addEventListener('contextmenu', htmlListCollapser);
+clickAllLisOnPage();// Click all li's on the page to collapse them
