@@ -131,10 +131,11 @@ function applyStyles() {
   
 //Reverse the arrangement of summary categories (could not achive this with Jekyll at this time)
 const categories = document.getElementsByClassName('postCategories')[0];
-const categoriesChildrenToRev = Array.from(categories?.getElementsByClassName('homeResources-grid-containter'));
+const categoriesChildrenToRev = categories ? Array.from(categories?.getElementsByClassName('homeResources-grid-containter')) : [];
 categoriesChildrenToRev?.reverse();
 for (const homeResourcesGridContainter of categoriesChildrenToRev) {
   categories.appendChild(homeResourcesGridContainter);
 
 }
+
 
