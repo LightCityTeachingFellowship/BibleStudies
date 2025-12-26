@@ -31,7 +31,7 @@ const searchResultsContainerInner = document.getElementById("results-container-i
 let observer; // Declare observer variable
 
 // Event listener for highlighting and updating search results count
-searchInput.addEventListener("input", () => {
+searchInput?.addEventListener("input", () => {
     const searchQuery = searchInput.value.toLowerCase();
     updateSearchResults(searchQuery);
     handleHighLight(searchQuery);
@@ -135,4 +135,5 @@ const categoriesChildrenToRev = Array.from(categories.getElementsByClassName('ho
 categoriesChildrenToRev.reverse();
 for (const homeResourcesGridContainter of categoriesChildrenToRev) {
   categories.appendChild(homeResourcesGridContainter);
+
 }
