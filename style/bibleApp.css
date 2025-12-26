@@ -93,10 +93,13 @@
     --body-padding:2vw;
     --topgap-for-cketoolbar:15vh
 }
+
 .darkmode #context_menu .cmenu_navnclose_btns button {
-    background-color:#292929!important;
     border:solid 0.25px grey!important;
     box-shadow: 0 0 1.5px 0 whitesmoke!important;
+}
+.darkmode #context_menu .cmenu_navnclose_btns button:not(button:hover) {
+    background-color:#292929!important;
 }
 button * {pointer-events:none;}
 .text_content:empty::before{
