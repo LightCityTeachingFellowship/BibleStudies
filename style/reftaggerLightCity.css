@@ -748,7 +748,7 @@ body #context_menu.fillscreen .verse .none_mainsection_note {font-size:calc(1em 
     justify-content: center;
     width: 100%;
     font-size:0.75em;
-    padding-top: 1px !important;
+    padding-top: 0.5px !important;
 }
 #context_menu .verse:has(.crfnnote) .crfnnote {
     margin-top: 0.2em!important;
