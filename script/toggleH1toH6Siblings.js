@@ -218,4 +218,29 @@ function wasMarkerClicked(e,clicked_elm) {
     const markerBoundary = clicked_elm_paddingLeft + clicked_elm_Left;// Calculate marker boundary based on combined padding and margin
     const markerWasClicked = clickX >= clicked_elm_Left && clickX <= markerBoundary;// Check if the click falls within the marker boundary
     return markerWasClicked
+
+}
+// Function to check if the mouse is over the highlighted text
+function isMouseOverHighlightedText() {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (range) {
+            const rects = range.getClientRects();
+            if (rects.length > 0) {
+                for (let i = 0; i < rects.length; i++) {
+                  const rect = rects[i];
+                  if (
+                    event.clientX >= rect.left &&
+                    event.clientX <= rect.right &&
+                    event.clientY >= rect.top &&
+                    event.clientY <= rect.bottom
+                    ) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
 }
