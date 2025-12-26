@@ -1402,7 +1402,7 @@ function loadVersion(versionName) {
     url = fullPathHead + `resources/app/src/bibles/${versionName}.json`;
   } else {
     // Web (Netlify/GitHub Pages): Use absolute path from site root
-    url = '/src/bibles/' + versionName + '.json';
+    url = '../bibles/' + versionName + '.json';
   }
 
   return fetch(url)
@@ -1883,7 +1883,7 @@ async function getCrossReference(x,bkn,bvName) {
                 let request_Version_URL;
                 if (window.location.protocol !== 'file:') {
                     // In browser
-                    request_Version_URL = `/src/bibles/${_bvnm}.json`;
+                    request_Version_URL = `../bibles/${_bvnm}.json`;
                 } else {
                     // In Electron.js
                     const fullPathHead = document.querySelectorAll('body')[0].baseURI.split('resources/app')[0];
@@ -1900,7 +1900,7 @@ async function getCrossReference(x,bkn,bvName) {
                 let request_Version_URL;
                 if (window.location.protocol !== 'file:') {
                     // In browser
-                    request_Version_URL = `/src/bibles/${_bvnm}.json`;
+                    request_Version_URL = `../bibles/${_bvnm}.json`;
                 } else {
                     // In Electron.js
                     const fullPathHead = document.querySelectorAll('body')[0].baseURI.split('resources/app')[0];
