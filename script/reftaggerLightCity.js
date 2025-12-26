@@ -3459,6 +3459,8 @@ function htmlListCollapser(e) {
         return markerWasClicked
     }
 }
+
+let liOlUlStyle_temporaryStyle;
 function clickAllLisOnPage(appendHere=document.body) {
     appendHere = appendHere instanceof Event ? document.body : appendHere;
     
@@ -3511,6 +3513,7 @@ function clickAllLisOnPage(appendHere=document.body) {
         })
     }
     function createAndAddSpinnerAndSpinnerStyle() {
+        return
         document.getElementById('loadingOverlay') ? document.getElementById('loadingOverlay').remove() : null;
         // Create a loading overlay with a spinner
         loadingOverlay = document.createElement('div');
@@ -4158,8 +4161,7 @@ function clickAllLisOnPage(appendHere=document.body) {
     
     let lazyloaderStyle, loadingOverlay;
     // Remove the loading overlay if it exists
-    appendHere==document.body ? null : (document.querySelectorAll('#lazyloaderStyle,#loadingOverlay').forEach(x=>{x.remove()}),createAndAddSpinnerAndSpinnerStyle());
-    // createAndAddSpinnerAndSpinnerStyle();
+    // appendHere==document.body ? null : (document.querySelectorAll('#lazyloaderStyle,#loadingOverlay').forEach(x=>{x.remove()}),createAndAddSpinnerAndSpinnerStyle());
 
     setTimeout(() => {
         if (isBody) {
@@ -4195,6 +4197,7 @@ function clickAllLisOnPage(appendHere=document.body) {
         })
     }
     function createAndAddSpinnerAndSpinnerStyle() {
+        return
         document.getElementById('loadingOverlay') ? document.getElementById('loadingOverlay').remove() : null;
         // Create a loading overlay with a spinner
         loadingOverlay = document.createElement('div');
