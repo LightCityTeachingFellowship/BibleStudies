@@ -5,11 +5,11 @@ function toggleTheme() {
   if (themeStylesheet.getAttribute('href') === '../style/lightMODE.css') {
     themeStylesheet.setAttribute('href', '../style/darkMODE.css');
     saveThemePreference('darkMODE');
-    document.body.classListAdd("darkmode");
+    document.body.classList.add("darkmode");
   } else {
     themeStylesheet.setAttribute('href', '../style/lightMODE.css');
     saveThemePreference('lightMODE');
-    document.body.classListRemove("darkmode");
+    document.body.classList.remove("darkmode");
   }
 }
 // Save the user's theme preference
@@ -23,19 +23,20 @@ function applyThemePreference() {
     themeStylesheet.setAttribute('href', `../style/${userPreference}.css`);
     if (userPreference === 'darkMODE') {
       themeToggle.checked = true;
-      document.body.classListAdd("darkmode");
+      document.body.classList.add("darkmode");
     }
   } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     themeStylesheet.setAttribute('href', '../style/darkMODE.css');
     themeToggle.checked = true;
-    document.body.classListAdd("darkmode");
+    document.body.classList.add("darkmode");
   } else {
     themeStylesheet.setAttribute('href', '../style/lightMODE.css');
     saveThemePreference('lightMODE');
-    document.body.classListRemove("darkmode");
+    document.body.classList.remove("darkmode");
   }
 }
 themeToggle.addEventListener('click', toggleTheme);
 // Apply the user's or system preference on page load
 
 applyThemePreference();
+
