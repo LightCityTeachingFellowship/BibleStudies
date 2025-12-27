@@ -76,9 +76,10 @@ if(!document.querySelector('#homeBodyContent')){
     const article = document.body.querySelector('article');
     document.body.querySelectorAll('article :is(h6,h5,h4,h3,h2,h1)').forEach(h=>{
         h.addEventListener('click', ()=>{
-            if(article.querySelector('.hidingsibs')){
+            if(!article.querySelector('.hidingsibs')){
+                // All headers are showing lower siblings
                 toggleAllBtn.checked = true;
-            } else if(!article.querySelector('.hidingsibs')){
+            } else {
                 toggleAllBtn.checked = false;
             }
         })
@@ -280,4 +281,5 @@ function closestScrollableAncestors(element,limit) {
     }
     return { elm:scrollableAncestor, x: scrollableAncestorX, y: scrollableAncestorY };
 }
+
 
