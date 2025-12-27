@@ -629,7 +629,7 @@ function mainBibleVersion(e){
         localStorage.setItem('bversionName',bversionName);
     }
 }
-function hideRightClickContextMenu() {if(context_menu == document.querySelector('#context_menu')){contextMenu_Remove({'type':'click','key':'Escape','target':context_menu})}}
+function hideRightClickContextMenu() {if(context_menu = document.querySelector('#context_menu')){contextMenu_Remove({'type':'click','key':'Escape','target':context_menu})}}
 function contextMenu_Remove(e) {
     //Don't remove the cmenu if it is a strong's number
     if(e.target.matches(`:is(.verse,.verse_compare) .cmenu_closebtn, .crossrefs span:not(.context_menu .crossrefs span), #pageEditNsaveBtns, #pageEditNsaveBtns *`)||(e.type!='click' && e.key !== 'Escape')||(e.key=='Escape' && document.querySelector('#pageEditNsaveBtns'))){return}
@@ -3307,7 +3307,7 @@ function clickAllLisOnPage(appendHere=document.body) {
         if (isBody) {
             clickALlLis();
             setTimeout(() => {
-                liOlUlStyle_temporaryStyle ? liOlUlStyle_temporaryStyle.remove() : null;
+                document.getElementById('liOlUlStyle_temporaryStyle')?.remove();
                 // Remove the loading overlay
                 document.querySelectorAll('#lazyloaderStyle,#loadingOverlay').forEach(x=>{x.remove()});
                 loadingOverlay ? loadingOverlay.remove() : null;
