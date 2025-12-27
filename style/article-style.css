@@ -24,11 +24,12 @@ body *{
     line-height:17px;
     margin-top:20px;
     white-space:nowrap;}
-article{
+article {
     display:block!important;
-    min-height:100vh;
-    margin-bottom:20px!important;}
-article img{margin-top:10px;}
+    /* min-height:100vh; */
+    margin-bottom:20px!important;
+}
+article img {margin-top:10px;}
 main{
     line-height:1.45;
     letter-spacing: 1px;}
@@ -408,4 +409,9 @@ header :is(h1,h2,h3,h4,h5,h6):before {
 :is(header, #Contact-section) :is(h1,h2,h3,h4,h5,h6):before {display:none;}
 :is(header, #Contact-section) :is(h1,h2,h3,h4,h5,h6) {padding-left:0;}
 
-
+.toggleAllHeaders p:first-child::before {
+    content: 'Collapse All';
+}
+.toggleAllHeaders:has(input#toggleAllBtn::checked) p:first-child::before {
+    content: 'Expand All';
+}
