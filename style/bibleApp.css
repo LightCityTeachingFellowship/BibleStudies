@@ -2713,8 +2713,7 @@ button.compare_withinsearchresult_button:hover{
     cursor:pointer;
 }
 :is(.hidby_H1,.hidby_H2,.hidby_H3,.hidby_H4,.hidby_H5,.hidby_H6):not(.forcedDisplay):not(*:has(.current_search_marker)):not(.bottombar)  {display:none!important}
-:is(h1,h2,h3,h4,h5,h6):not(summary :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before,
-.hidingsibs::before {
+:is(h1,h2,h3,h4,h5,h6):not(:is(#homeBodyContent, summary) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before, .hidingsibs::before {
     margin:0 0.5em;
     width:1em;
     height:1em;
@@ -2722,7 +2721,7 @@ button.compare_withinsearchresult_button:hover{
     flex-grow:0;
     flex-shrink:0;
 }
-:is(h1,h2,h3,h4,h5,h6):not(:only-child)::before {
+:is(h1,h2,h3,h4,h5,h6):not(#homeBodyContent *):not(:only-child)::before {
     display:inline-block;
     content:var(--arrow-up-content);
     transform:rotate(180deg);
@@ -2821,10 +2820,10 @@ body:not(body.darkmode) .mce-container-body button:hover{
     border-radius:2px;
     font-weight:normal!important;
 }
-:is(h1,h2,h3,h4,h5,h6):not(.strngsdefinition > summary :is(h1,h2,h3,h4,h5,h6)):not(:only-child) {
+:is(h1,h2,h3,h4,h5,h6):not(:is(.strngsdefinition > summary, #homeBodyContent) :is(h1,h2,h3,h4,h5,h6)):not(:only-child) {
     padding-left:0.75em;/*1.5em*/
 }
-:is(h1,h2,h3,h4,h5,h6):not(.strngsdefinition > summary :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before {
+:is(h1,h2,h3,h4,h5,h6):not(:is(.strngsdefinition > summary, #homeBodyContent) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before {
     margin-left:-1.5em!important;
     margin-right:0.25em!important;
     border:1px solid;
@@ -2837,7 +2836,7 @@ body:not(body.darkmode) .mce-container-body button:hover{
     min-height:1em;
     max-height:50em;
 }
-:is(h1,h2,h3,h4,h5,h6)::before {
+:is(h1,h2,h3,h4,h5,h6):not(#homeBodyContent *)::before {
     position:absolute;
     top:1.5em;/*1.2em|60%*/
     /* top:auto;
