@@ -10,25 +10,33 @@ function hideOrShowAllHnum() {
 	}
 	// CLOSE ALL
 	else {
-		let allChildrenOf_article = Array.from(article.children), prvHx, youMayHide=false;
-		allChildrenOf_article.forEach((elm,i)=>{
-			//Only hide after coming across a header
-			let elmTagName=elm.tagName.toUpperCase();
-			if(!youMayHide && h1to6arr.includes(elmTagName)){
-				prvHx=h1to6arr.find(x=>{return x==elmTagName.toUpperCase();});
-				youMayHide=true;
-			}
-			if(youMayHide){
-				if (!h1to6arr.includes(elmTagName) || Number(elmTagName.match(/\d+/g)) < Number(prvHx.match(/\d+/g))) {
-					h1to6arr.forEach(hx=>{elm.classList.remove('hidby_'+hx)});//don't hide headings
-					elm.classList.add('hidby_' + prvHx);
-				}
-				if(h1to6arr.includes(elmTagName)){//elm is header 
-					elm.nextElementSibling && !elm.nextElementSibling.matches('h1,h2,h3,h4,h5,h6')?elm.classList.add('hidingsibs'):null;
-					h1to6arr.forEach(hx=>{elm.classList.remove('hidby_'+hx)});//don't hide headings
-					prvHx=h1to6arr.find(x=>{return x==elmTagName.toUpperCase();});
-				}
-			}
-		})
+		const h1to6arrReversed = [...h1to6arr].reverse();
+		
+		h1to6arrReversed.forEach((hx,i)=> {
+		    document.querySelectorAll(`article ${hx}`).forEach(h => {
+		        const higherHxs = h1to6arrReversed.slice(i);     // same or higher
+		        const lowerHxs  = h1to6arrReversed.slice(0, i);  // lower only
+				
+		        const higherSel = higherHxs.map(x => x.toLowerCase()).join(',');
+		        const lowerSel  = lowerHxs.map(x => x.toLowerCase()).join(',');
+		    
+		        let hSib = h.nextElementSibling;
+		        hSib && !hSib.matches(`script,style,${higherSel}`) ? h.classList.add('hidingsibs') : hSib = null;
+		        
+		        while (hSib) {
+		            hSib.classList.add(`hidby_${hx}`);
+		            
+		            hSib = hSib.nextElementSibling;
+		            if (!hSib) break;
+		            
+		            if (hSib.matches(`script,style,${higherSel}`)) break;
+		            
+		            if (lowerSel && hSib.matches(lowerSel)) {
+		                hSib.classList.add(`hidby_${hx}`);
+		                break;
+		            }
+		        }
+		    });
+		});
 	}
 }
