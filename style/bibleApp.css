@@ -3121,9 +3121,10 @@ body.middleContextMenu:has(#context_menu.fillscreen) button.middle_cmenu {
     margin: 0.125em 0.2em 0.1em -0.2em !important;
 }
 body:not(.newDocTinyMCE) .hidingsibs{margin-top:2px;margin-bottom:2px;}
-body:not(.newDocTinyMCE) :is(h1,h2,h3,h4,h5,h6):not(.context_menu *):not(header *):not(#Contact-section *) {
+body:not(.newDocTinyMCE) :is(h1,h2,h3,h4,h5,h6):not(.context_menu *):not(header *):not(body > footer *):not(#Contact-section *):not(#homeBodyContent *) {
     top:0;
     background: var(--chpt)!important;
+    box-shadow: grey -1px 0 0px, grey 1px 0 0px;
     z-index: 10;
 }
 body:not(.newDocTinyMCE) :is(h1,h2,h3,h4,h5,h6) {margin-top:0;}
