@@ -65,11 +65,14 @@ if (!Element.prototype.scrollIntoViewAvoidCover) {
         }
     };
 }
+// DON'T ADD EVENTLISTNER IF HOMEPAGE
+if(!document.querySelector('#homeBodyContent')){
+    document.body.addEventListener('click', toggleH1to6siblings);
+    document.body.addEventListener('contextmenu', toggleH1to6siblings);
+    document.body.addEventListener('keydown', toggleH1to6siblings);
+    // document.body.querySelectorAll('h6,h5,h4,h3,h2,h1').forEach(x=>{toggleH1to6siblings(null, x)})
 
-document.body.addEventListener('click', toggleH1to6siblings);
-document.body.addEventListener('contextmenu', toggleH1to6siblings);
-document.body.addEventListener('keydown', toggleH1to6siblings);
-// document.body.querySelectorAll('h6,h5,h4,h3,h2,h1').forEach(x=>{toggleH1to6siblings(null, x)})
+}
 function toggleH1to6siblings(e, eTarget, mustMatch){   
     if((e && (!e.target.closest('H1,H2,H3,H4,H5,H6') || e.target.closest('.verse_note .notemenu, body header, body footer')||(e.target.closest('#searchPreviewFixed,#scriptureCompareWindow') && !e.target.closest('.context_menu,.crossrefs'))||(e.type=='contextmenu' && e.target.closest(':is([ref],.strnum,[strnum]):not(.context_menu)'))))||(mustMatch && !e.target.closest(mustMatch))){return}
 
@@ -266,4 +269,5 @@ function closestScrollableAncestors(element,limit) {
     }
     return { elm:scrollableAncestor, x: scrollableAncestorX, y: scrollableAncestorY };
 }
+
 
