@@ -73,11 +73,12 @@ if(!document.querySelector('#homeBodyContent')){
     
     // AutoAdjust checked state of #toggleAllBtn
     const toggleAllBtn = document.body.querySelector('#toggleAllBtn');
+    const article = document.body.querySelector('article');
     document.body.querySelectorAll('article :is(h6,h5,h4,h3,h2,h1)').forEach(h=>{
         h.addEventListener('click', ()=>{
-            if(document.querySelector('.hidingsibs')){
+            if(article.querySelector('.hidingsibs')){
                 toggleAllBtn.checked = true;
-            } else if(!document.querySelector('.hidingsibs')){
+            } else if(!article.querySelector('.hidingsibs')){
                 toggleAllBtn.checked = false;
             }
         })
@@ -279,3 +280,4 @@ function closestScrollableAncestors(element,limit) {
     }
     return { elm:scrollableAncestor, x: scrollableAncestorX, y: scrollableAncestorY };
 }
+
