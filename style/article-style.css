@@ -412,6 +412,6 @@ header :is(h1,h2,h3,h4,h5,h6):before {
 .toggleAllHeaders p:first-child::before {
     content: 'Collapse All';
 }
-.toggleAllHeaders:has(input#toggleAllBtn::checked) p:first-child::before {
+.toggleAllHeaders:has(input#toggleAllBtn:checked) p:first-child::before {
     content: 'Expand All';
 }
