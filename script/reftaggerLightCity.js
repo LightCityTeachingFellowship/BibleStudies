@@ -629,7 +629,7 @@ function mainBibleVersion(e){
         localStorage.setItem('bversionName',bversionName);
     }
 }
-function hideRightClickContextMenu() {contextMenu_Remove({'type':'click','key':'Escape','target':context_menu})}
+function hideRightClickContextMenu() {if(context_menu == document.querySelector('#context_menu')){contextMenu_Remove({'type':'click','key':'Escape','target':context_menu})}}
 function contextMenu_Remove(e) {
     //Don't remove the cmenu if it is a strong's number
     if(e.target.matches(`:is(.verse,.verse_compare) .cmenu_closebtn, .crossrefs span:not(.context_menu .crossrefs span), #pageEditNsaveBtns, #pageEditNsaveBtns *`)||(e.type!='click' && e.key !== 'Escape')||(e.key=='Escape' && document.querySelector('#pageEditNsaveBtns'))){return}
