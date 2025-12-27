@@ -31,10 +31,10 @@ function hideOrShowAllHnum() {
 		            
 		            if (hSib.matches(`script,style,${higherSel}`)) break;
 		            
-		            if (lowerSel && hSib.matches(lowerSel)) {
-		                hSib.classList.add(`hidby_${hx}`);
-		                break;
-		            }
+		            // if (lowerSel && hSib.matches(lowerSel)) {
+		            //     hSib.classList.add(`hidby_${hx}`);
+		            //     break;
+		            // }
 		        }
 		    });
 		});
