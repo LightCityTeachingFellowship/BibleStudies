@@ -3313,14 +3313,15 @@ function clickAllLisOnPage(appendHere=document.body) {
                 loadingOverlay ? loadingOverlay.remove() : null;
                 lazyloaderStyle ? lazyloaderStyle.remove() : null;
                 //Hide Everything On Page Load (Because of Opening Files in Church so that they don't read or capture what I don't want them to)
-                Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6')).reverse().forEach(hx=>{toggleH1to6siblings(null,hx)});
+                // Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6')).reverse().forEach(hx=>{toggleH1to6siblings(null,hx)});// // H1-H6.Accordion-D.js already takes care of hiding all H1to6 sibs
             }, 1500);
         } else {
             appendHere.querySelectorAll('li').forEach(function(li) {li.click();});
             let t = 100;
-            Array.from(appendHere.querySelectorAll(':is(h1,h2,h3,h4,h5,h6):not(.notemenu *)')).forEach((hx, i) => {
-                if (i != 0) t = toggleH1to6siblings(null,hx);
-            });
+			// // H1-H6.Accordion-D.js already takes care of hiding all H1to6 sibs
+            // Array.from(appendHere.querySelectorAll(':is(h1,h2,h3,h4,h5,h6):not(.notemenu *)')).forEach((hx, i) => {
+            //     if (i != 0) t = toggleH1to6siblings(null,hx);
+            // });
             setTimeout(() => {
                 // Remove the loading overlay
                 document.querySelectorAll('#lazyloaderStyle,#loadingOverlay').forEach(x=>{x.remove()});
