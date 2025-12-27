@@ -6,7 +6,7 @@ let contextMenu_touch="contextmenu";
 let bibleversions_Array = ['KJV','ESV','NIV84','ABP-gr','NETplus'];
 if(localStorage.getItem("bversionName") == 'NIV’84'){localStorage.setItem("bversionName", "NIV84")}
 	
-if (lcrcmsih=document.head.querySelector('#lightCityReftaggerContextMenuStyleInHead')) {lcrcmsih.remove()}
+document.head.querySelectorAll('#lightCityReftaggerContextMenuStyleInHead').forEach(l => {l.remove()})
 
 /* **** ****************************** **** */
 /* **** CONTEXTMENU//SCRIPTURE TOOLTIP **** */
@@ -120,7 +120,7 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
             else {return}
         }
     }
-    if (!e.target.matches('span[ref], rect[ref], .crossrefs>span:not(.notref), .translated, .strnum, #context_menu span:not(.notref):not(.verse)')||e.target.closest('.ignorecmenu')){return} // Select the element(s) that the context menu will be attached to
+    if (!e.target.matches('span[ref], rect[ref], .crossrefs>span:not(.notref), .translated, .strnum, #context_menu span:not(.notref):not(.verse)')||e.target.closest('.ignorecmenu')){hideRightClickContextMenu(); return} // Select the element(s) that the context menu will be attached to
 	if (!e.target.matches('#context_menu *')){cmenu_backwards_navigation_arr=[];} // Reset the cmenu_backwards_navigation_arr if the context menu is not called from context_menu
     let addquotes = true,prv_indx='',currentContextMenu_style, cmenu_cmt_dX, cmenu_cmt_dY, cmenu_dX,cmenu_dY, prv_cmenuIndx=false, prv_title='',cmenu_tsk_display='displaynone',dzabled='disabled';
     // formerContextMenu_Coordinates.transform = context_menu.style.transform;
@@ -637,8 +637,10 @@ function contextMenu_Remove(e) {
     if ((xmenu=document.querySelector('.context_menu.fillscreen')) && e.key == 'Escape') {xmenu.classList.remove('fillscreen');}
     else if (typeof context_menu!='undefined' && ((e.key=='Escape') || (e.type=='click' && (e.target.matches('.cmenu_navnclose_btns .cmenu_closebtn') || !e.target.closest('#context_menu'))))) {
         context_menu.matches('.showingXref')?showingXref=true:showingXref=false;
-        localStorage.setItem('showingXref',showingXref)
-        context_menu.remove();
+        localStorage.setItem('showingXref',showingXref);
+		document.querySelectorAll('#context_menu').forEach(cm => {cm.remove()});
+		document.querySelectorAll('#lightCityReftaggerContextMenuStyleInHead').forEach(lcrcmsih => lcrcmsih.remove());
+		console.log('removing Cmenu')
     }
 }
 function add_cMenuNavigationByKeys(e) {
