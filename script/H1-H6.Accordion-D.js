@@ -1,8 +1,9 @@
-function hideOrShowAllHnum() {
+hideOrShowAllHnum(true); // Hide all on page load
+function hideOrShowAllHnum(hideAll) {
 	const h1to6arr = ['H1','H2','H3','H4','H5','H6'];
 	const article = document.querySelector('article');
 	// OPEN ALL
-	if(toggleAllBtn.checked){
+	if(!hideAll && toggleAllBtn.checked){
 		article.querySelectorAll('.hidingsibs').forEach(x => {x.classList.remove('hidingsibs');})
 		h1to6arr.forEach(x=>{
 			article.querySelectorAll('.hidby_'+ x).forEach(y=>{y.classList.remove('hidby_'+ x);})
