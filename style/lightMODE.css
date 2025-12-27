@@ -8,12 +8,9 @@ body{
     background-color:var(--bgColor-smoke-white)!important;
     color:var(--black);}
 /* PRELOAD CSS */
-.loader-bg{
-    background:var(--bgColor-smoke-white)!important;}
-.loader{
-    /* animation properties */
-    background-image:url(../images/preload.svg);
-    background-image:url(/images/preload.svg);}
+.loader-bg {background:var(--bgColor-smoke-white)!important;}
+/* animation properties */
+.loader { background-image:url(../images/preload.svg); }
 /* custom CSS */
 button{background-color:transparent;}
 button,input,optgroup,textarea{color:inherit;}
@@ -276,5 +273,6 @@ span.translated:not(.win2_noteholder blockquote .verse:not(.verse:hover) span.tr
     content:var(--img-arrow-up);}
 
 .crossrefs span:hover{color:blue;}
+
 
 
