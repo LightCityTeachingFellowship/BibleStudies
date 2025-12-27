@@ -4152,7 +4152,7 @@ function clickAllLisOnPage(appendHere=document.body) {
     appendHere = appendHere instanceof Event ? document.body : appendHere;
     
     function addStyleToHead() {
-        document.getElementById('liOlUlStyle_temporaryStyle') ? liOlUlStyle_temporaryStyle.remove() : null;
+        document.getElementById('liOlUlStyle_temporaryStyle')?.remove();
         const styleElement = document.createElement('style');
         styleElement.id = 'liOlUlStyle_temporaryStyle';
         styleElement.textContent = 'li>:is(ol,ul){opacity:0;}';
