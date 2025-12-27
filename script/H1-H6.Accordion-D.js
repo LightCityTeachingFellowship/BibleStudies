@@ -1,4 +1,4 @@
-// hideOrShowAllHnum(true); // Hide all on page load
+hideOrShowAllHnum(true); // Hide all on page load
 function hideOrShowAllHnum(hideAll) {
 	const h1to6arr = ['H1','H2','H3','H4','H5','H6'];
 	const article = document.querySelector('article');
