@@ -409,9 +409,9 @@ header :is(h1,h2,h3,h4,h5,h6):before {
 :is(header, #Contact-section) :is(h1,h2,h3,h4,h5,h6):before {display:none;}
 :is(header, #Contact-section) :is(h1,h2,h3,h4,h5,h6) {padding-left:0;}
 
-.toggleAllHeaders p:first-child::before {
-    content: 'Collapse All';
-}
-.toggleAllHeaders:has(input#toggleAllBtn:checked) p:first-child::before {
+.toggleAllHeaders p:first-child::after {
     content: 'Expand All';
+}
+.toggleAllHeaders:has(input#toggleAllBtn:checked) p:first-child::after {
+    content: 'Collapse All';
 }
