@@ -86,7 +86,7 @@ if(!document.querySelector('#homeBodyContent')){
     })
 }
 function toggleH1to6siblings(e, eTarget, mustMatch){   
-    if((e && (!e.target.closest('H1,H2,H3,H4,H5,H6') || e.target.closest('.verse_note .notemenu, body header, body footer')||(e.target.closest('#searchPreviewFixed,#scriptureCompareWindow') && !e.target.closest('.context_menu,.crossrefs'))||(e.type=='contextmenu' && e.target.closest(':is([ref],.strnum,[strnum]):not(.context_menu)'))))||(mustMatch && !e.target.closest(mustMatch))){return}
+    if((e && (!e.target.closest('H1,H2,H3,H4,H5,H6') || e.target.closest('.verse_note .notemenu, body header, body footer, #homeBodyContent, #Contact-section') || (e.target.closest('#searchPreviewFixed,#scriptureCompareWindow') && !e.target.closest('.context_menu,.crossrefs'))||(e.type=='contextmenu' && e.target.closest(':is([ref],.strnum,[strnum]):not(.context_menu)'))))||(mustMatch && !e.target.closest(mustMatch))){return}
 
     let hElm, hTag;
     const h1to6arr = ['H1','H2','H3','H4','H5','H6'];
@@ -281,6 +281,7 @@ function closestScrollableAncestors(element,limit) {
     }
     return { elm:scrollableAncestor, x: scrollableAncestorX, y: scrollableAncestorY };
 }
+
 
 
 
