@@ -78,9 +78,9 @@ if(!document.querySelector('#homeBodyContent')){
         h.addEventListener('click', ()=>{
             if(!article.querySelector('.hidingsibs')){
                 // All headers are showing lower siblings
-                toggleAllBtn.checked = true;
-            } else {
                 toggleAllBtn.checked = false;
+            } else {
+                toggleAllBtn.checked = true;
             }
         })
     })
@@ -281,5 +281,6 @@ function closestScrollableAncestors(element,limit) {
     }
     return { elm:scrollableAncestor, x: scrollableAncestorX, y: scrollableAncestorY };
 }
+
 
 
