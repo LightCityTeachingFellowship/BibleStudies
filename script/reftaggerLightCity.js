@@ -629,7 +629,7 @@ function mainBibleVersion(e){
         localStorage.setItem('bversionName',bversionName);
     }
 }
-function hideRightClickContextMenu() {if(context_menu = document.querySelector('#context_menu')){contextMenu_Remove({'type':'click','key':'Escape','target':context_menu})}}
+function hideRightClickContextMenu() {if(_cm = document.querySelector('#context_menu')){contextMenu_Remove({'type':'click','key':'Escape','target':_cm})}}
 function contextMenu_Remove(e) {
     //Don't remove the cmenu if it is a strong's number
     if(e.target.matches(`:is(.verse,.verse_compare) .cmenu_closebtn, .crossrefs span:not(.context_menu .crossrefs span), #pageEditNsaveBtns, #pageEditNsaveBtns *`)||(e.type!='click' && e.key !== 'Escape')||(e.key=='Escape' && document.querySelector('#pageEditNsaveBtns'))){return}
@@ -637,10 +637,8 @@ function contextMenu_Remove(e) {
     if ((xmenu=document.querySelector('.context_menu.fillscreen')) && e.key == 'Escape') {xmenu.classList.remove('fillscreen');}
     else if (typeof context_menu!='undefined' && ((e.key=='Escape') || (e.type=='click' && (e.target.matches('.cmenu_navnclose_btns .cmenu_closebtn') || !e.target.closest('#context_menu'))))) {
         context_menu.matches('.showingXref')?showingXref=true:showingXref=false;
-        localStorage.setItem('showingXref',showingXref);
-		document.querySelectorAll('#context_menu').forEach(cm => {cm.remove()});
-		document.querySelectorAll('#lightCityReftaggerContextMenuStyleInHead').forEach(lcrcmsih => lcrcmsih.remove());
-		console.log('removing Cmenu')
+        localStorage.setItem('showingXref',showingXref)
+        document.querySelector('#context_menu')?.remove();
     }
 }
 function add_cMenuNavigationByKeys(e) {
