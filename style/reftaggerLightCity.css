@@ -943,4 +943,4 @@ div.table-wrapper:has(table) {
 }
 .crossrefs span[tabindex] {font-size: 80%!important;}
 :is(ol,ul):not(#context_menu.fillscreen details div :is(ol,ul)){margin-left:-0.1em;}
-li:not(#context_menu.fillscreen details div li) {margin-left:-0.5em;}
+/* li:not(#context_menu.fillscreen details div li) {margin-left:-0.5em;} */
