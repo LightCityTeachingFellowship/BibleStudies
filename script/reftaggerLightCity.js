@@ -639,11 +639,12 @@ function contextMenu_Remove(e) {
         context_menu.matches('.showingXref')?showingXref=true:showingXref=false;
         localStorage.setItem('showingXref',showingXref)
         document.querySelector('#context_menu')?.remove();
-		remove_cMenuNavigationByKeys();
+		// remove_cMenuNavigationByKeys();
     }
 }
 function add_cMenuNavigationByKeys(e) {
-    e?.target?.classList.add('keydownready')
+    // e?.target?.classList.add('keydownready')
+	 e.target.classList.add('keydownready')
     document.addEventListener('keydown', cMenuNavigationByKeys);
 }
 function remove_cMenuNavigationByKeys(e) {
