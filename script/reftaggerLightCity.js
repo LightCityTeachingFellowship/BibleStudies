@@ -159,8 +159,6 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
 	// }
     parentIsContextMenu = 0;
     let oldcMenuHeight = null;
-    cmenu_filling_screen = document.getElementById('context_menu')?.classList.contains('fillscreen');
-	
     let newCmenu = createNewContextMenu();
     await ifForStrongsNumberORforCrossRef();
     await appendORpositionContextMenu();
