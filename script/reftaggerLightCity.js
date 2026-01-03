@@ -672,9 +672,8 @@ function contextMenu_Remove(e) {
     if ((e.target.closest('#context_menu') && !e.target.closest('.closebtn, .cmenu_closebtn')) || e.target.matches(`:is(.verse,.verse_compare) .cmenu_closebtn, .crossrefs span:not(.context_menu .crossrefs span), #pageEditNsaveBtns, #pageEditNsaveBtns *`) || (e.type !== 'click' && e.key !== 'Escape') ||(e.key === 'Escape' && document.querySelector('#pageEditNsaveBtns'))) { return; }
 
     const cm = document.getElementById('context_menu');
-    console.log({eType:e.type, eKey:e.key});
 
-    // Exit fullscreen first
+	// Exit fullscreen first
     if (cm && cm.classList.contains('fillscreen') && e.key === 'Escape') {
         cmenu_filling_screen = cm.classList.contains('fillscreen');
         cm.classList.remove('fillscreen');
