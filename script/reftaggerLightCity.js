@@ -655,6 +655,10 @@ function cmenuprvNxtverse(e, prvNxt) {
     cmenu_goToPrevOrNextVerse(prvNxt,undefined,e.shiftKey,e.target);
     cmenuChangeOfHeightAnimation(oldcMenuHeight)
 }
+document.addEventListener('click', contextMenu_Remove);
+document.addEventListener('keydown', contextMenu_Remove);
+document.addEventListener('dblclick', mainBibleVersion);
+document.addEventListener('contextmenu', mainBibleVersion);
 function mainBibleVersion(e){
     if(e.target.matches('button.compare_withinsearchresult_button')){
         bversionName = e.target.getAttribute('b_version');
@@ -691,18 +695,10 @@ function add_cMenuNavigationByKeys(e) {
     remove_cMenuNavigationByKeys(e)
     e.target.classList.add('keydownready')
     document.addEventListener('keydown', cMenuNavigationByKeys);
-    document.addEventListener('click', contextMenu_Remove);
-    document.addEventListener('keydown', contextMenu_Remove);
-    document.addEventListener('dblclick', mainBibleVersion);
-    document.addEventListener('contextmenu', mainBibleVersion);
 }
 function remove_cMenuNavigationByKeys(e) {
     e?.target?.classList.remove('keydownready')
     document.removeEventListener('keydown', cMenuNavigationByKeys);
-    document.removeEventListener('click', contextMenu_Remove);
-    document.removeEventListener('keydown', contextMenu_Remove);
-    document.removeEventListener('dblclick', mainBibleVersion);
-    document.removeEventListener('contextmenu', mainBibleVersion);
 }
 function cMenuNavigationByKeys(e) {
     cmenu_navnclose_btns = typeof context_menu != 'undefined' ? context_menu.querySelector('.cmenu_navnclose_btns'): null;
