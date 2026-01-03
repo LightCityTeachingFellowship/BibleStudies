@@ -851,6 +851,7 @@ body.middleContextMenu:has(#context_menu.fillscreen) button.middle_cmenu {
 }
 body.middleContextMenu:has(#context_menu.fillscreen) #context_menu.fillscreen {
     min-height:0!important;
+    height: max-content!important;
     margin-top: auto;
     top: 50%!important;
     transform: translateY(-50%)!important;
