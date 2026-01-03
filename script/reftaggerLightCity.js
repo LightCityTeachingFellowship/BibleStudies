@@ -69,7 +69,7 @@ document.addEventListener('keyup', function(e){
     const docActElm = document.activeClickedElement;
     if (e.code=='Digit1' && document.querySelector('#context_menu.slideintoview')) {
         e.preventDefault();
-        context_menu.classList.toggle('fillscreen')
+        toggleCMenu_fillscreen(this.closest('#context_menu'))
     }
     else if (e.key=='/' && document.querySelector('#context_menu.fillscreen.slideintoview')) {
         e.preventDefault();
@@ -100,6 +100,17 @@ function preventContextMenu(e) {if (prevntDefault_cMenu) {e.preventDefault();}}
 /* ******* ******* *** ******* ***** ************* ** ************** ******* */
 /* ******* ******* *** ******* ***** ************* ** ************** ******* */
 let rightMouseDownTime = null;
+let cmenu_filling_screen = false;
+let cmenuWidthHeigh_b4_FillScreen = {};
+function toggleCMenu_fillscreen(cm) {
+    if (cm.classList.contains('fillscreen')) {
+        cm.classList.remove('fillscreen');
+    } else {
+        cmenuWidthHeigh_b4_FillScreen.width = cm.offsetWidth;
+        cmenuWidthHeigh_b4_FillScreen.height = cm.offsetHeight;
+        cm.classList.add('fillscreen');
+    }
+}
 document.addEventListener("mousedown", (e) => {if(e.button===2){rightMouseDownTime=Date.now();}});
 async function contextMenu_CreateNAppend(e,fill_screen) {
     // Right click will only work in a BibleNode page if it is called on a [ref] or [strnum] inside a context_menu.
@@ -145,6 +156,8 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
 	// }
     parentIsContextMenu = 0;
     let oldcMenuHeight = null;
+    cmenu_filling_screen = document.getElementById('context_menu')?.classList.contains('fillscreen');
+	
     let newCmenu = createNewContextMenu();
     await ifForStrongsNumberORforCrossRef();
     await appendORpositionContextMenu();
@@ -291,17 +304,17 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
                 } else {
                     menu_inner = `${xlitNlemma}<hr>${originalWord.trim()}`;
                 }
-                context_menu.innerHTML = `<div class="cmtitlebar">${menu_inner}<div class="cmenu_navnclose_btns"><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="context_menu.classList.toggle('fillscreen')"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div>${newStrongsDef}`;
+                context_menu.innerHTML = `<div class="cmtitlebar">${menu_inner}<div class="cmenu_navnclose_btns"><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div>${newStrongsDef}`;
                 // console.log('01');
             } else if ([contextMenu_touch].includes(e.type) /*|| (e.type=='click' && document.body.matches('.node_graph, body:has(#bibleNodesHeader)'))*/) { // For strongs number in verseNote
                 let _img=``;// `<img src="images/${searchicon}" alt="&#128270;">`;
                 let _srchBtn = '';// `<button class="cmenusrchbtn" onmouseup="searchInputsValueChange(event,'${arrOfStrnums}')">${_img}</button>`
                 let srchBtn = `<code>${_srchBtn}<button class="cmenucopyhbtn" onmouseup="api.copyTextSelection('(${getsStrongsLemmanNxLit(arrOfStrnums).lemma}, ${getsStrongsLemmanNxLit(arrOfStrnums).xlit}, ${arrOfStrnums})')"></button>${arrOfStrnums} (${getsStrongsLemmanNxLit(arrOfStrnums).lemma}, ${getsStrongsLemmanNxLit(arrOfStrnums).xlit})</code>`;
-                context_menu.innerHTML = `<div class="cmtitlebar">${srchBtn}<div class="cmenu_navnclose_btns"><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="context_menu.classList.toggle('fillscreen')"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div>${newStrongsDef}</div>`;
+                context_menu.innerHTML = `<div class="cmtitlebar">${srchBtn}<div class="cmenu_navnclose_btns"><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div>${newStrongsDef}</div>`;
             }
             if (strnum = e.target.getAttribute('strnum')) {
                 context_menu.setAttribute('strnum', strnum);
-                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="context_menu.classList.toggle('fillscreen')"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div>`
+                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div>`
             } else {
                 context_menu.removeAttribute('strnum')
             }
@@ -367,7 +380,7 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
                 }
                 
                 cmtitletext = `<div class="refholder">${cmtitletext} [${bversionName}]</div>`;
-                cmtitlebar.innerHTML = cmtitletext + `<div class="cmenu_navnclose_btns"><button class="prv_verse" onclick="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onclick="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="context_menu.classList.toggle('fillscreen')"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div>`;
+                cmtitlebar.innerHTML = cmtitletext + `<div class="cmenu_navnclose_btns"><button class="prv_verse" onclick="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onclick="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div>`;
                 context_menu.append(cmtitlebar);
             }
             
@@ -384,7 +397,7 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
                 context_menu.setAttribute('strnum', strnum);
             } else {
                 context_menu.removeAttribute('strnum');
-                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="prv_verse" onclick="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onclick="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="context_menu.classList.toggle('fillscreen')"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div></div>`;
+                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="prv_verse" onclick="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onclick="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu()" title="[Escape]"></button></div></div></div>`;
             }
             transliterateAllStoredWords()
             // Indicate If Verse Has Note (Must be the last operation on verse so that it is not changed before it is updated)
@@ -398,8 +411,10 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
     async function appendORpositionContextMenu() {
         if (currentContextMenu_style) { return; }
         if (!e.target.matches('#context_menu, #context_menu *')) {
-            let menuWidth = context_menu.offsetWidth;
-            let menuHeight = context_menu.offsetHeight;
+            let menuWidth = cmenuWidthHeigh_b4_FillScreen.width;
+            let menuHeight = cmenuWidthHeigh_b4_FillScreen.height;
+            menuWidth = menuWidth ? menuWidth : context_menu.offsetWidth;
+            menuHeight = menuHeight ? menuHeight : context_menu.offsetHeight;
             const windowHeight = document.documentElement.clientHeight;
             const windowWidth = document.documentElement.clientWidth;
 
@@ -412,11 +427,10 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
                 menuWidth = windowWidth - 20;
                 context_menu.style.width = menuWidth + 'px';
             }
-
             positionContextMenu(e, menuWidth, menuHeight);
         }
     }
-
+    
     function positionContextMenu(event, menuWidth, menuHeight) {
         const clickedElement = event.target;
         const rect = getClickedClientRect(clickedElement, event)?.rect;
@@ -460,7 +474,7 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
                 }
             }
         }
-        
+                
         // ✅ FIXED: Determine horizontal position
         let left;
         
@@ -497,8 +511,8 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
         context_menu.style.position = 'absolute';
         context_menu.style.visibility = 'visible';
         
-        // Handle special cases (shift key, middle click, fill screen)
-        if (event.ctrlKey || event.shiftKey || event.button == 1 || fill_screen || (event.buttons & 1)) {
+        // Handle special cases (shift key, middle click, fill screen)        
+        if (event.ctrlKey || event.shiftKey || event.button == 1 || fill_screen || (event.buttons & 1) || cmenu_filling_screen) {
             event.preventDefault();
             context_menu.classList.add('fillscreen');
         }
@@ -655,14 +669,16 @@ function contextMenu_Remove(e) {
     if (e.target.matches(`:is(.verse,.verse_compare) .cmenu_closebtn, .crossrefs span:not(.context_menu .crossrefs span), #pageEditNsaveBtns, #pageEditNsaveBtns *`) || (e.type !== 'click' && e.key !== 'Escape') ||(e.key === 'Escape' && document.querySelector('#pageEditNsaveBtns'))) { return; }
     const cm = document.getElementById('context_menu');
     // Exit fullscreen first
-    if (cm && cm.classList.contains('fillscreen') && e.key === 'Escape') { cm.classList.remove('fillscreen'); return; }
+    if (cm && cm.classList.contains('fillscreen') && e.key === 'Escape') { cm.classList.remove('fillscreen'); cmenu_filling_screen = false; return; }
     // Remove context menu
     if ( cm && ( e.key === 'Escape' || ( e.type === 'click' && ( e.target.matches('.cmenu_navnclose_btns .cmenu_closebtn') || !e.target.closest('#context_menu') ) ) ) ) {
         showingXref = cm.classList.contains('showingXref');
+		cmenu_filling_screen = cm.classList.contains('fillscreen');
         localStorage.setItem('showingXref', showingXref);
         cm.remove();
         context_menu = null;
-        remove_cMenuNavigationByKeys();
+		cmenuWidthHeigh_b4_FillScreen = {};
+		remove_cMenuNavigationByKeys();
     }
 }
 function add_cMenuNavigationByKeys(e) {
