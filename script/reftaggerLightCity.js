@@ -105,7 +105,10 @@ let cmenuWidthHeigh_b4_FillScreen = {};
 function toggleCMenu_fillscreen(cm) {
     if (cm.classList.contains('fillscreen')) {
         cm.classList.remove('fillscreen');
+        // reset saved width & height before on removing .fillscreen
+        cmenuWidthHeigh_b4_FillScreen = {}
     } else {
+        // save width & height before .fillscreen
         cmenuWidthHeigh_b4_FillScreen.width = cm.offsetWidth;
         cmenuWidthHeigh_b4_FillScreen.height = cm.offsetHeight;
         cm.classList.add('fillscreen');
