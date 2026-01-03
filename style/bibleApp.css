@@ -2743,7 +2743,7 @@ button.compare_withinsearchresult_button:hover{
     content:var(--arrow-up-content);
     transform:rotate(90deg);
 }
-.darkmode :is(h1,h2,h3,h4,h5,h6):not(:is(td, summary, #homeBodyContent, body > footer :is(h1,h2,h3,h4,h5,h6))):not(:only-child)::before {
+.darkmode :is(h1,h2,h3,h4,h5,h6):not(:is(td, summary, #homeBodyContent, body > footer) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before {
     content:var(--arrow-up-content);
     transform:rotate(180deg);
 }
