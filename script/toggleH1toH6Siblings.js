@@ -217,12 +217,12 @@ function toggleH1to6siblings(e, eTarget, mustMatch){
             if(hElmSibling){
                 hElmSibTagName = hElmSibling.tagName.toUpperCase();
                 if((h1to6arr.includes(hElmSibTagName) && (h1to6arr.indexOf(hElmSibTagName) < hIndx))){
-                    sc ? setTimeout(() => {hElm.scrollIntoViewAvoidCover('#cke_editing_page', {behavior:'smooth',block:'start'})}, 200) : null;
+                    // sc ? setTimeout(() => {hElm.scrollIntoViewAvoidCover('#cke_editing_page', {behavior:'smooth',block:'start'})}, 200) : null;
                     return
                 }
             }
         }        
-        sc ? setTimeout(() => {hElm.scrollIntoViewAvoidCover('#cke_editing_page', {behavior:'smooth',block:'start'})}, 200) : null;
+        // sc ? setTimeout(() => {hElm.scrollIntoViewAvoidCover('#cke_editing_page', {behavior:'smooth',block:'start'})}, 200) : null;
     }
 }
 function wasMarkerClicked(e,clicked_elm) {
@@ -281,6 +281,7 @@ function closestScrollableAncestors(element,limit) {
     }
     return { elm:scrollableAncestor, x: scrollableAncestorX, y: scrollableAncestorY };
 }
+
 
 
 
