@@ -158,13 +158,16 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
             context_menu_replacement.id = 'context_menu';
             context_menu_replacement.classList.add('context_menu');
             context_menu_replacement.classList.add('slideintoview');
-            showingXref==true?context_menu_replacement.classList.add('showingXref'):null;
             context_menu_replacement.style.display = 'block';
             document.body.prepend(context_menu_replacement);
             document.body.appendChild(context_menu);
-            return true
+            context_menu = context_menu_replacement;
+            showingXref==true ? toggleCMenuTSK() : null;
+            return context_menu
+        } else {
+            context_menu = document.querySelector('#context_menu');
+            return context_menu
         }
-        return false
     }
     /* ********************************** */
     /* ** WHERE TO APPEND CONTEXT-MENU ** */
@@ -639,16 +642,15 @@ function contextMenu_Remove(e) {
         context_menu.matches('.showingXref')?showingXref=true:showingXref=false;
         localStorage.setItem('showingXref',showingXref)
         document.querySelector('#context_menu')?.remove();
-		// remove_cMenuNavigationByKeys();
+        remove_cMenuNavigationByKeys();
     }
 }
 function add_cMenuNavigationByKeys(e) {
-    // e?.target?.classList.add('keydownready')
-	 e.target.classList.add('keydownready')
+    e.target.classList.add('keydownready')
     document.addEventListener('keydown', cMenuNavigationByKeys);
 }
 function remove_cMenuNavigationByKeys(e) {
-    e.target.classList.remove('keydownready')
+    e?.target?.classList.remove('keydownready');
     document.removeEventListener('keydown', cMenuNavigationByKeys);
 }
 function cMenuNavigationByKeys(e) {
@@ -3938,7 +3940,7 @@ async function getAllRefsInHighlight(event, selector) {
             // Filter elements that are partially/fully in the selection
             const elementsInSelection = allElements.filter(el => selection.containsNode(el, true));
             
-            return elementsInSelection;
+            return elementsInSelection.length > 1 ? elementsInSelection : null;
         }
     }
     return null; // Right-click not in selection
