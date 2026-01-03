@@ -5,6 +5,7 @@ let isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMo
 let contextMenu_touch="contextmenu";
 let bibleversions_Array = ['KJV','ESV','NIV84','ABP-gr','NETplus'];
 if(localStorage.getItem("bversionName") == 'NIV’84'){localStorage.setItem("bversionName", "NIV84")}
+document.body.classList.add('middleContextMenu');// make .fillscreen vertically centered by default
 	
 document.head.querySelectorAll('#lightCityReftaggerContextMenuStyleInHead').forEach(l => {l.remove()})
 
