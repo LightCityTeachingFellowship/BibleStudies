@@ -151,23 +151,21 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
     if (!e.hasOwnProperty('truecontextmenu')) {e.preventDefault();}
     
     // Create Context Menu if Not available
-    function createNewContextMenu(){
-        // If there isn't a contextMenu already, create one
-        if (!document.querySelector('#context_menu')) {
-            let context_menu_replacement = document.createElement('div');
-            context_menu_replacement.id = 'context_menu';
-            context_menu_replacement.classList.add('context_menu');
-            context_menu_replacement.classList.add('slideintoview');
-            context_menu_replacement.style.display = 'block';
-            document.body.prepend(context_menu_replacement);
-            document.body.appendChild(context_menu);
-            context_menu = context_menu_replacement;
-            showingXref==true ? toggleCMenuTSK() : null;
-            return context_menu
-        } else {
-            context_menu = document.querySelector('#context_menu');
-            return context_menu
-        }
+    function createNewContextMenu() {
+        // Try to find an existing DOM element
+        let cm = document.getElementById('context_menu');
+        // If found and connected, reuse it
+        if (cm && cm.isConnected) { context_menu = cm; return context_menu; }
+        // Otherwise create a new one
+        const context_menu_replacement = document.createElement('div');
+        context_menu_replacement.id = 'context_menu';
+        context_menu_replacement.classList.add('context_menu', 'slideintoview');
+        context_menu_replacement.style.display = 'block';
+        document.body.prepend(context_menu_replacement);
+        context_menu = context_menu_replacement;
+
+        if (showingXref === true) {toggleCMenuTSK();}
+        return context_menu;
     }
     /* ********************************** */
     /* ** WHERE TO APPEND CONTEXT-MENU ** */
@@ -634,14 +632,17 @@ function mainBibleVersion(e){
 }
 function hideRightClickContextMenu() {if(_cm = document.querySelector('#context_menu')){contextMenu_Remove({'type':'click','key':'Escape','target':_cm})}}
 function contextMenu_Remove(e) {
-    //Don't remove the cmenu if it is a strong's number
-    if(e.target.matches(`:is(.verse,.verse_compare) .cmenu_closebtn, .crossrefs span:not(.context_menu .crossrefs span), #pageEditNsaveBtns, #pageEditNsaveBtns *`)||(e.type!='click' && e.key !== 'Escape')||(e.key=='Escape' && document.querySelector('#pageEditNsaveBtns'))){return}
-    
-    if ((xmenu=document.querySelector('.context_menu.fillscreen')) && e.key == 'Escape') {xmenu.classList.remove('fillscreen');}
-    else if (typeof context_menu!='undefined' && ((e.key=='Escape') || (e.type=='click' && (e.target.matches('.cmenu_navnclose_btns .cmenu_closebtn') || !e.target.closest('#context_menu'))))) {
-        context_menu.matches('.showingXref')?showingXref=true:showingXref=false;
-        localStorage.setItem('showingXref',showingXref)
-        document.querySelector('#context_menu')?.remove();
+    // Do not remove in these cases
+    if (e.target.matches(`:is(.verse,.verse_compare) .cmenu_closebtn, .crossrefs span:not(.context_menu .crossrefs span), #pageEditNsaveBtns, #pageEditNsaveBtns *`) || (e.type !== 'click' && e.key !== 'Escape') ||(e.key === 'Escape' && document.querySelector('#pageEditNsaveBtns'))) { return; }
+    const cm = document.getElementById('context_menu');
+    // Exit fullscreen first
+    if (cm && cm.classList.contains('fillscreen') && e.key === 'Escape') { cm.classList.remove('fillscreen'); return; }
+    // Remove context menu
+    if ( cm && ( e.key === 'Escape' || ( e.type === 'click' && ( e.target.matches('.cmenu_navnclose_btns .cmenu_closebtn') || !e.target.closest('#context_menu') ) ) ) ) {
+        showingXref = cm.classList.contains('showingXref');
+        localStorage.setItem('showingXref', showingXref);
+        cm.remove();
+        context_menu = null;
         remove_cMenuNavigationByKeys();
     }
 }
