@@ -419,14 +419,14 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
 
     function positionContextMenu(event, menuWidth, menuHeight) {
         const clickedElement = event.target;
-        const rect = getClickedClientRect(clickedElement,event)?.rect; // clickedElement.getBoundingClientRect();
+        const rect = getClickedClientRect(clickedElement, event)?.rect;
         
         // Use viewport-relative coordinates from getBoundingClientRect
-        // These already account for all scrolling (window + container scrolling)
         const elementTop = rect.top;
         const elementLeft = rect.left;
         const elementBottom = rect.bottom;
         const elementRight = rect.right;
+        const elementWidth = rect.width;
         
         const windowHeight = document.documentElement.clientHeight;
         const windowWidth = document.documentElement.clientWidth;
@@ -436,8 +436,8 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
         // Calculate available space
         const spaceBelow = windowHeight - elementBottom;
         const spaceAbove = elementTop;
-        const spaceRight = windowWidth - elementRight;
-        const spaceLeft = elementLeft;
+        const spaceRight = windowWidth - elementLeft; // Space from LEFT edge of element
+        const spaceLeft = elementRight; // Space from RIGHT edge of element
         
         // Determine vertical position
         let top;
@@ -461,17 +461,34 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
             }
         }
         
-        // Determine horizontal position
+        // ✅ FIXED: Determine horizontal position
         let left;
+        
+        // Default: align menu's LEFT edge with element's LEFT edge
         if (spaceRight >= menuWidth + 10) {
-            // Position to the right of cursor/element
+            // Enough space to the right - start from left edge of target
             left = elementLeft + window.scrollX;
-        } else if (spaceLeft >= menuWidth + 10) {
-            // Position to the left of cursor/element
-            left = elementLeft + window.scrollX - menuWidth;
-        } else {
-            // Not enough space, position as far right as possible
-            left = Math.max(0, windowWidth - menuWidth - scrollBarWidth + window.scrollX);
+        } 
+        // If not enough space to the right, try aligning menu's RIGHT edge with element's RIGHT edge
+        else if (spaceLeft >= menuWidth + 10) {
+            // Enough space to the left - align right edges
+            left = elementRight + window.scrollX - menuWidth;
+        } 
+        // If neither works, position to avoid viewport overflow
+        else {
+            // Not enough space on either side
+            // Try to keep some part visible, prefer right side
+            if (spaceRight > spaceLeft) {
+                // More space on right, align left
+                left = elementLeft + window.scrollX;
+            } else {
+                // More space on left, align right
+                left = elementRight + window.scrollX - menuWidth;
+            }
+            
+            // Ensure menu doesn't overflow viewport
+            const maxLeft = windowWidth - menuWidth - scrollBarWidth + window.scrollX;
+            left = Math.max(10 + window.scrollX, Math.min(left, maxLeft));
         }
         
         // Apply the calculated position
@@ -481,8 +498,8 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
         context_menu.style.visibility = 'visible';
         
         // Handle special cases (shift key, middle click, fill screen)
-        if (e.ctrlKey||e.shiftKey||e.button==1||fill_screen||(e.buttons & 1)) {
-            e.preventDefault();
+        if (event.ctrlKey || event.shiftKey || event.button == 1 || fill_screen || (event.buttons & 1)) {
+            event.preventDefault();
             context_menu.classList.add('fillscreen');
         }
     }
@@ -594,9 +611,11 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
     /* For Height Animation */
     oldcMenuHeight?cmenuChangeOfHeightAnimation(oldcMenuHeight):null;
     /* Temporary solution for the top of cmenu being off visible area */
-    const elementRect = context_menu.getBoundingClientRect();
-    const isInView = (elementRect.top >= 0 && elementRect.bottom <= (window.innerHeight || document.documentElement.clientHeight));
-    if (!isInView) {context_menu.scrollIntoView({ behavior: 'smooth', block:'nearest'})}
+    setTimeout(() => {
+        const elementRect = context_menu.getBoundingClientRect();
+        const isInView = (elementRect.top >= 0 && elementRect.bottom <= (window.innerHeight || document.documentElement.clientHeight));
+        if (!isInView) {context_menu.scrollIntoView({ behavior: 'smooth', block:'nearest'})}
+    }, 500);
 }
 
 function cmenuChangeOfHeightAnimation(oldcMenuHeight) {
