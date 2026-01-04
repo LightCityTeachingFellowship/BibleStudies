@@ -170,16 +170,24 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
     // Create Context Menu if Not available
     function createNewContextMenu(){
         // If there isn't a contextMenu already, create one
-        if (!document.querySelector('#context_menu')) {
+        let cm = document.querySelector('#context_menu');
+        let cmenu_inDOM_butNotReachable = (typeof context_menu == 'object' && context_menu instanceof Element && !context_menu.isConnected);
+        if (!cm) {
             let context_menu_replacement = document.createElement('div');
             context_menu_replacement.id = 'context_menu';
             context_menu_replacement.classList.add('context_menu');
             context_menu_replacement.classList.add('slideintoview');
             showingXref==true?context_menu_replacement.classList.add('showingXref'):null;
             context_menu_replacement.style.display = 'block';
+            context_menu = context_menu_replacement;
             document.body.prepend(context_menu_replacement);
-            document.body.appendChild(context_menu);
+            // document.body.appendChild(context_menu_replacement);
             return true
+        }
+        else if (cmenu_inDOM_butNotReachable){
+            context_menu.remove();
+            context_menu = null;
+            return createNewContextMenu();
         }
         return false
     }
@@ -3503,6 +3511,7 @@ function cmenu_goBackFront(x){
     }
     const prvScrollPosition = cmenu_backwards_navigation_arr[indx].scrollTop;
     cMenuParent.replaceChild(cmenu_backwards_navigation_arr[indx].menu, context_menu);
+    context_menu = cmenu_backwards_navigation_arr[indx].menu;
     context_menu.scrollTop = prvScrollPosition;
     context_menu.setAttribute('style',currentContextMenu_style);
     context_menu.querySelector('.cmtitlebar').setAttribute('data-x',cmenu_cmt_dX);
