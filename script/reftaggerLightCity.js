@@ -168,21 +168,20 @@ async function contextMenu_CreateNAppend(e,fill_screen) {
     if (!e.hasOwnProperty('truecontextmenu')) {e.preventDefault();}
     
     // Create Context Menu if Not available
-    function createNewContextMenu() {
-        // Try to find an existing DOM element
-        let cm = document.getElementById('context_menu');
-        // If found and connected, reuse it
-        if (cm && cm.isConnected) { context_menu = cm; return context_menu; }
-        // Otherwise create a new one
-        const context_menu_replacement = document.createElement('div');
-        context_menu_replacement.id = 'context_menu';
-        context_menu_replacement.classList.add('context_menu', 'slideintoview');
-        context_menu_replacement.style.display = 'block';
-        document.body.prepend(context_menu_replacement);
-        context_menu = context_menu_replacement;
-
-        if (showingXref === true) {toggleCMenuTSK();}
-        return context_menu;
+    function createNewContextMenu(){
+        // If there isn't a contextMenu already, create one
+        if (!document.querySelector('#context_menu')) {
+            let context_menu_replacement = document.createElement('div');
+            context_menu_replacement.id = 'context_menu';
+            context_menu_replacement.classList.add('context_menu');
+            context_menu_replacement.classList.add('slideintoview');
+            showingXref==true?context_menu_replacement.classList.add('showingXref'):null;
+            context_menu_replacement.style.display = 'block';
+            document.body.prepend(context_menu_replacement);
+            document.body.appendChild(context_menu);
+            return true
+        }
+        return false
     }
     /* ********************************** */
     /* ** WHERE TO APPEND CONTEXT-MENU ** */
