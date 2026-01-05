@@ -47,9 +47,32 @@ document.addEventListener('mousedown', function(e) {
     }
 })
 
+document.addEventListener('click', contextMenu_Remove);
+document.addEventListener('keydown', contextMenu_Remove);
+document.addEventListener('dblclick', mainBibleVersion);
+document.addEventListener('contextmenu', mainBibleVersion);
+
 //click calls contexMenu in BibleNodes pages
-// if (document.body.matches('.node_graph, body:has(#bibleNodesHeader)')) {document.addEventListener('click', contextMenu_CreateNAppend);}
 document.addEventListener('contextmenu', contextMenu_CreateNAppend);
+// On touch screens, click will act as contextmenu for refs and strnums
+document.addEventListener('click', function (e) {
+    // On touch screens, click will act as contextmenu for refs and strnums
+    if (e.pointerType == 'touch') {
+        // Capture selection BEFORE preventDefault collapses it
+        const selection = window.getSelection();
+        const range = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+        
+        e.preventDefault();
+        
+        // Temporarily restore selection for contextMenu_CreateNAppend to read
+        if (range) {
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        
+        contextMenu_CreateNAppend(e, null, 'contextmenu');
+    }
+});
 // For Running ContextMenu with Enter or Spacebar when [ref] or [strnum] is focused
 document.addEventListener('keydown',function(e){
     /* Enter and Spacebar */
@@ -118,17 +141,11 @@ function toggleCMenu_fillscreen(cm) {
     }
 }
 document.addEventListener("mousedown", (e) => {if(e.button===2){rightMouseDownTime=Date.now();}});
-async function contextMenu_CreateNAppend(e,fill_screen) {
-    // Right click will only work in a BibleNode page if it is called on a [ref] or [strnum] inside a context_menu.
-    // if (document.body.matches('.node_graph, body:has(#bibleNodesHeader)')) {
-    //     if(e.type=='contextmenu' && !e.target.closest('.context_menu')){return}
-    //     else if(e.type=='click' && e.target.closest('.context_menu')){return}
-    //     //only click should call context_menu for the match
-    // }
+async function contextMenu_CreateNAppend(e,fill_screen,eType=e.type) {
     let recognizeRightClick = false;
     if (e.button === 2) {
         if (rightMouseDownTime !== null) {
-            const heldDuration = Date.now() - rightMouseDownTime;            
+            const heldDuration = Date.now() - rightMouseDownTime;
             const threshold = 300; // milliseconds
             if (heldDuration < threshold) {
                 // Short right-click detected
@@ -663,10 +680,7 @@ function cmenuprvNxtverse(e, prvNxt) {
     cmenu_goToPrevOrNextVerse(prvNxt,undefined,e.shiftKey,e.target);
     cmenuChangeOfHeightAnimation(oldcMenuHeight)
 }
-document.addEventListener('click', contextMenu_Remove);
-document.addEventListener('keydown', contextMenu_Remove);
-document.addEventListener('dblclick', mainBibleVersion);
-document.addEventListener('contextmenu', mainBibleVersion);
+
 function mainBibleVersion(e){
     if(e.target.matches('button.compare_withinsearchresult_button')){
         bversionName = e.target.getAttribute('b_version');
@@ -3671,7 +3685,7 @@ async function checkAndIndicateThatVerseHasNote(bookName, chNumInBk, vNumInChpt,
             }
         }
     }
-    if ('markers' in allReferencesWithNotes) {
+    if (allReferencesWithNotes && typeof allReferencesWithNotes=='object' && 'markers' in allReferencesWithNotes) {
         if (allReferencesWithNotes.hasOwnProperty.call(allReferencesWithNotes,'markers')) {
             markersForVerse = allReferencesWithNotes['markers'][bookName];
             if(markersForVerse && markersForVerse[chNumInBk] && (mrks = markersForVerse[chNumInBk][vNumInChpt])){
