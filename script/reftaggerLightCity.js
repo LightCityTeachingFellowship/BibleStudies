@@ -2489,6 +2489,73 @@ function wheelDirection(e) {
         else if(e.deltaY>0){cmenu_goToPrevOrNextVerse('next',targetVerseInsearchWindow,eShitKeyOrMouseDown, e.target)}
     }
 }
+// Add touch event listeners
+document.body.addEventListener('touchstart', handleTouchStart, { passive: false });
+function handleTouchStart(ev) {
+    if (!ev.target.matches('code[ref]')) return;
+    
+    ev.preventDefault(); // Prevent any default behavior
+    
+    // Track touch position
+    const throttleDelay = 100; // adjust as needed
+    let lastExecution = 0;
+    let isTouching = true;
+    let isProcessing = true; // Flag to track if wheelDirection is working
+    let touchStartY = ev.touches[0].clientY;
+    let lastTouchY = touchStartY;
+    
+    // Store the original target to maintain context
+    const originalTargetParent = ev.target.closest('.verses_section');
+    const targetElms = originalTargetParent.getElementsByTagName('code');
+    
+    document.body.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.body.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    function handleTouchMove(e) {
+        // Always prevent default to stop scrolling
+        e.preventDefault();
+        
+        if (!isTouching) return;
+        
+        const currentY = e.touches[0].clientY;
+        const deltaY = lastTouchY - currentY;
+        
+        // Minimum movement to trigger action
+        if (Math.abs(deltaY) > 10) {
+            // Throttle continuous triggers
+            const now = Date.now();
+            if (now - lastExecution >= throttleDelay) {
+                // Create a synthetic event object similar to wheel event
+                const syntheticEvent = {
+                    // target: originalTargetParent.querySelector('code[ref]'), // Use original target, not e.target
+                    target: targetElms[0], // Use original target, not e.target
+                    deltaY: deltaY,
+                    buttons: 0,
+                    shiftKey: false,
+                    preventDefault: () => {}
+                };
+                // console.log('MOVING');
+                // console.log(originalTargetParent);
+                console.log(syntheticEvent.target);
+                wheelDirection(syntheticEvent);
+                lastExecution = now;
+                lastTouchY = currentY; // Update for next movement
+            }
+        }
+    }
+    
+    function handleTouchEnd(e) {
+        e.preventDefault();
+        console.log('END');
+        
+        isTouching = false;
+        isProcessing = false;
+        
+        // Clean up listeners immediately
+        document.body.removeEventListener('touchmove', handleTouchMove);
+        document.body.removeEventListener('touchend', handleTouchEnd);
+    }
+}
 /* ************************** */
 /* FOR VERSE COMPARE CLOSEBTN */
 /* ************************** */
