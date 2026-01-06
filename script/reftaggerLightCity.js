@@ -2490,70 +2490,71 @@ function wheelDirection(e) {
     }
 }
 // Add touch event listeners
-document.body.addEventListener('touchstart', handleTouchStart, { passive: false });
+document.addEventListener('pointerdown', handleTouchStart);
 function handleTouchStart(ev) {
-    if (!ev.target.matches('code[ref]')) return;
-    
+    if (ev.target.matches('.verses code[ref]')) return;
     ev.preventDefault(); // Prevent any default behavior
+    let originalPointerType = ev.pointerType;//'touch', 'mouse', 'pen'
+
+    const taStyle = document.createElement('style');
+    taStyle.id = 'disable-touch-action';
+    taStyle.textContent = `* { touch-action: none !important; }`;
+    document.head.appendChild(taStyle);
     
     // Track touch position
     const throttleDelay = 100; // adjust as needed
     let lastExecution = 0;
-    let isTouching = true;
-    let isProcessing = true; // Flag to track if wheelDirection is working
-    let touchStartY = ev.touches[0].clientY;
+    let touchStartX = ev.clientX;
+    let touchStartY = ev.clientY;
+    let lastTouchX = touchStartX;
     let lastTouchY = touchStartY;
     
     // Store the original target to maintain context
     const originalTargetParent = ev.target.closest('.verses_section');
     const targetElms = originalTargetParent.getElementsByTagName('code');
-    
-    document.body.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.body.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+    document.addEventListener('pointermove', handleTouchMove);
+    document.addEventListener('pointerup', handleTouchEnd);
     
     function handleTouchMove(e) {
         // Always prevent default to stop scrolling
+        if (e.pointerType !== originalPointerType) {handleTouchEnd(e); return};
+
         e.preventDefault();
-        
-        if (!isTouching) return;
-        
-        const currentY = e.touches[0].clientY;
-        const deltaY = lastTouchY - currentY;
+        const currentX = e.clientX;
+        const currentY = e.clientY;
+        const deltaX = Math.abs(currentX - lastTouchX);
+        const deltaY = Math.abs(lastTouchY - currentY);
         
         // Minimum movement to trigger action
-        if (Math.abs(deltaY) > 10) {
+        if (deltaY > 10 /* || deltaX > 15 */) {
             // Throttle continuous triggers
             const now = Date.now();
             if (now - lastExecution >= throttleDelay) {
+                // Determine if movement is more horizontal than vertical
+                const isHorizontal = deltaX*1.5 > deltaY;
+                
                 // Create a synthetic event object similar to wheel event
                 const syntheticEvent = {
-                    // target: originalTargetParent.querySelector('code[ref]'), // Use original target, not e.target
-                    target: targetElms[0], // Use original target, not e.target
-                    deltaY: deltaY,
+                    target: targetElms[0],
+                    deltaY: (lastTouchY - currentY) * -1,
                     buttons: 0,
-                    shiftKey: false,
+                    shiftKey: isHorizontal,
                     preventDefault: () => {}
                 };
-                // console.log('MOVING');
-                // console.log(originalTargetParent);
-                console.log(syntheticEvent.target);
                 wheelDirection(syntheticEvent);
                 lastExecution = now;
+                lastTouchX = currentX;
                 lastTouchY = currentY; // Update for next movement
             }
         }
     }
     
     function handleTouchEnd(e) {
-        e.preventDefault();
-        console.log('END');
-        
-        isTouching = false;
-        isProcessing = false;
-        
-        // Clean up listeners immediately
-        document.body.removeEventListener('touchmove', handleTouchMove);
-        document.body.removeEventListener('touchend', handleTouchEnd);
+        e?.preventDefault();
+        document.getElementById('disable-touch-action')?.remove();
+        document.removeEventListener('pointermove', handleTouchMove);
+        document.removeEventListener('pointerup', handleTouchEnd);
     }
 }
 /* ************************** */
