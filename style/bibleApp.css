@@ -3096,29 +3096,27 @@ div > table:only-child{
 /* @media screen and (min-width: 912px) {body {padding-left:2em; padding-right:2em;}} */
 
 /* CENTER CONTEXT_MENU */
-button.middle_cmenu {display:none;}
-body.middleContextMenu button.middle_cmenu {
-    border-radius:0.2em!important;
-    height:0.8em!important;
-}
-body:has(#context_menu.fillscreen) button.middle_cmenu {
+button.middle_cmenu {
     display:flex;
     margin-top:auto!important;
     margin-bottom:auto!important;
     margin-right:0.3em!important;
-}
-body:not(.middleContextMenu) button.middle_cmenu {
-    border-radius:10em!important;
-    height:0.5em;
+    padding-left:0.05em!important;
+    padding-right:0.0em!important;
     background: #673624!important;
 }
-body.middleContextMenu:has(#context_menu.fillscreen) button.middle_cmenu {
+body.middleContextMenu button.middle_cmenu {
     background: #795548!important;
     height:0.75em;
     min-width:0.5em!important;
     max-width:0.5em!important;
     margin: 0.125em 0.2em 0.1em -0.2em !important;
 }
+body:not(.middleContextMenu) button.middle_cmenu {
+    border-radius:10em!important;
+    height:0.5em;
+}
+.fillscreen {min-height:100vh;min-width:100vh;}
 body:not(.newDocTinyMCE) .hidingsibs{margin-top:2px;margin-bottom:2px;}
 body:not(.newDocTinyMCE) :is(h1,h2,h3,h4,h5,h6):not(.context_menu *):not(header *):not(body > footer *):not(#Contact-section *):not(#homeBodyContent *, body > footer *) {
     top:0;
