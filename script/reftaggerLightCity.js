@@ -2490,16 +2490,19 @@ function wheelDirection(e) {
     }
 }
 // Add touch event listeners
+// Add touch event listeners
 document.addEventListener('pointerdown', handleTouchStart);
 function handleTouchStart(ev) {
-    if (ev.target.matches('.verses code[ref]')) return;
+    if ([1,2].includes(ev.button) || !ev.target.matches('.verse code[ref]')) return;
     ev.preventDefault(); // Prevent any default behavior
     let originalPointerType = ev.pointerType;//'touch', 'mouse', 'pen'
-
-    const taStyle = document.createElement('style');
-    taStyle.id = 'disable-touch-action';
-    taStyle.textContent = `* { touch-action: none !important; }`;
-    document.head.appendChild(taStyle);
+    
+    if (!document.getElementById('disable-touch-action')) {
+        const taStyle = document.createElement('style');
+        taStyle.id = 'disable-touch-action';
+        taStyle.textContent = `* { touch-action: none !important; }`;
+        document.head.appendChild(taStyle);
+    }
     
     // Track touch position
     const throttleDelay = 100; // adjust as needed
