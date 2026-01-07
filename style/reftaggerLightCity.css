@@ -855,7 +855,7 @@ body.middleContextMenu:has(#context_menu.fillscreen) #context_menu.fillscreen {
     margin-top: auto;
     top: 50%!important;
     transform: translateY(-50%)!important;
-    box-shadow:0px 1px 50px 5px black, 0px 0px 10px 0px black, 0px 0px 0px 100vh color-mix(in srgb, #ffffff 0%, var(--ref-img) 90%) !important;
+    box-shadow: 0px 3px 6px 0px black, 2px 6px 12px -7px black, 0px 3px 5px 100vh var(--transparent-ref-img)!important;
 }
 .fillscreen {min-height:100vh;min-width:100vh;}
 .darkmode.middleContextMenu :is(#main,#searchPreviewWindowFixed,#scriptureCompareWindow,*) #context_menu.fillscreen {
