@@ -6,11 +6,14 @@ body{
     background-color:var(--DM-light-gray)!important;
     color:var(--DM-black);
 }
+.darkmode :is(h1,h2,h3,h4,h5,h6) {
+    color: black!important;
+}
 :is(h1,h2,h3,h4,h5,h6) {
     --shd4: rgba(0, 0, 0, 0.8);
-    color: black!important;
     box-shadow: var(--shd4) 0px 12px 8px -11px, var(--shd4) 0px -10px 2px -10px, var(--shd4) 0px 13px 2px -11px!important;
 }
+
 /* PRELOAD CSS */
 .loader-bg{
     background:var(--bgColor-smoke-white)!important;}
@@ -273,6 +276,7 @@ span.translated:not(.win2_noteholder blockquote .verse:not(.verse:hover) span.tr
     box-shadow:inset 0 1px 4px var(--black);}
 .crossrefs h1::before, .crossrefs h2::before, .crossrefs h3::before, .crossrefs h4::before, .crossrefs h5::before, .crossrefs h6::before,.crossrefs .hidingsibs::before{
     content:var(--img-arrow-up-dark);}
+
 
 
 
