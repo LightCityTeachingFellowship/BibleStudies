@@ -55,23 +55,76 @@ document.addEventListener('contextmenu', mainBibleVersion);
 //click calls contexMenu in BibleNodes pages
 document.addEventListener('contextmenu', contextMenu_CreateNAppend);
 // On touch screens, click will act as contextmenu for refs and strnums
-document.addEventListener('click', function (e) {
-    // On touch screens, click will act as contextmenu for refs and strnums
-    if (e.pointerType == 'touch' && e.target && e.target.closest('[ref],[strnum]')) {
-        // Capture selection BEFORE preventDefault collapses it
-        const selection = window.getSelection();
-        const range = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+(function () {
+    const DOUBLE_TAP_THRESHOLD = 450; // ms — 400–500 works well on most devices
+    let pendingContextMenu = null; // {event, timeoutId} or null
+    let lastTapTarget = null;
+    let selection;
+    let range;
+
+    function captureSelection() {
+        selection = window.getSelection();
+        range = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+    }
+
+    function cancelPendingContextMenu() {
+        if (pendingContextMenu) {
+            clearTimeout(pendingContextMenu.timeoutId);
+            pendingContextMenu = null;
+        }
+    }
+    document.addEventListener('mousedown', function (e) {captureSelection()})
+
+    document.addEventListener('click', function (e) {
+        // Only touch-initiated events
+        if (e.pointerType !== 'touch') return;
+        const target = e.target?.closest('[ref],[strnum]');
+        if (!target) return;
+        const now = performance.now();
+        const isStrnum = target.hasAttribute('strnum');
         
+        //1. If this is a very quick second tap → block everything
+        if (isStrnum && lastTapTarget === target && pendingContextMenu && (now - pendingContextMenu.event.timeStamp) < DOUBLE_TAP_THRESHOLD ) {
+            // quick second tap → cancel & block context menu
+            cancelPendingContextMenu();
+            e.preventDefault();
+            e.stopPropagation();
+            lastTapTarget = null;   // reset so next single tap works again
+            return;
+        }
+        
+        // 2. Remember this tap (used to detect same-element double tap)
+        lastTapTarget = target;
+        // 3. Cancel any previous pending menu (old single-tap wait)
+        cancelPendingContextMenu();
+        
+        // 4. [ref] but not [strnum] → immediate context menu
+        if (!isStrnum) {
+            // non-[strnum] → immediate context menu
+            showContextMenu(e);
+            return;
+        }
+        // 5. [strnum] → first tap → schedule context menu after delay (will be cancelled if second tap arrives quickly)
+        const timeoutId = setTimeout(() => {
+            // delay passed → showing context menu (was single tap)
+            showContextMenu(pendingContextMenu.event);
+            pendingContextMenu = null;
+        }, DOUBLE_TAP_THRESHOLD);
+        pendingContextMenu = {event: e, timeoutId: timeoutId};
+        // Prevent immediate context menu / selection collapse
         e.preventDefault();
-        
-        // Temporarily restore selection for contextMenu_CreateNAppend to read
+        e.stopPropagation();
+    }, { passive: false });
+
+    function showContextMenu(e) {
+        // Restore selection so context menu handler can read it
         if (range) {
             selection.removeAllRanges();
             selection.addRange(range);
         }
         contextMenu_CreateNAppend(e, null, 'contextmenu');
     }
-});
+})();
 // For Running ContextMenu with Enter or Spacebar when [ref] or [strnum] is focused
 document.addEventListener('keydown',function(e){
     /* Enter and Spacebar */
