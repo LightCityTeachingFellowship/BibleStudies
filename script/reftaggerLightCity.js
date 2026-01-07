@@ -57,7 +57,7 @@ document.addEventListener('contextmenu', contextMenu_CreateNAppend);
 // On touch screens, click will act as contextmenu for refs and strnums
 document.addEventListener('click', function (e) {
     // On touch screens, click will act as contextmenu for refs and strnums
-    if (e.pointerType == 'touch') {
+    if (e.pointerType == 'touch' && e.target && e.target.closest('[ref],[strnum]')) {
         // Capture selection BEFORE preventDefault collapses it
         const selection = window.getSelection();
         const range = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
@@ -69,7 +69,6 @@ document.addEventListener('click', function (e) {
             selection.removeAllRanges();
             selection.addRange(range);
         }
-        
         contextMenu_CreateNAppend(e, null, 'contextmenu');
     }
 });
