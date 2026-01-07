@@ -31,6 +31,7 @@
     --darkmode-bg1color:#202124;
     --darkmode-border:#736b5e;
     --darkslategray: rgb(107,84,0);
+    --transparent-ref-img: color-mix(in srgb, var(--darkmode-bg1color) 95%, transparent);
     --copysvg:url(../images/copy-svgrepo-com-DarkMode.svg) center no-repeat!important;
     --expandarrows:url(../images/arrow-expand-1-svgrepo-com-DarkMode.svg) center no-repeat!important;
     --compressarrows:url(../images/arrow-compress-1-svgrepo-com-DarkMode.svg) center no-repeat!important;
