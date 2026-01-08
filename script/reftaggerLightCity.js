@@ -2578,7 +2578,8 @@ function handleTouchStart(ev) {
         e.preventDefault();
         const currentX = e.clientX;
         const currentY = e.clientY;
-        const deltaX = Math.abs(currentX - lastTouchX);
+        // const deltaX = Math.abs(currentX - lastTouchX);
+        const deltaX = 0;
         const deltaY = Math.abs(lastTouchY - currentY);
         
         // Minimum movement to trigger action
