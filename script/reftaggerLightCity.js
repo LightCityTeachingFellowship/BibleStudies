@@ -78,7 +78,7 @@ document.addEventListener('contextmenu', contextMenu_CreateNAppend);
     document.addEventListener('click', function (e) {
         // Only touch-initiated events
         if (e.pointerType !== 'touch') return;
-        const target = e.target?.closest('[ref],[strnum]');
+        const target = e.target?.closest('[ref],[strnum],.crossrefs [tabindex]');
         if (!target) return;
         const now = performance.now();
         const isStrnum = target.hasAttribute('strnum');
