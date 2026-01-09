@@ -7,7 +7,7 @@ body{
     color:var(--DM-black);
 }
 .darkmode :is(h1,h2,h3,h4,h5,h6):not(header *) {
-    color: black!important;
+    color: white!important;
 }
 :is(h1,h2,h3,h4,h5,h6) {
     --shd4: rgba(0, 0, 0, 0.8);
@@ -276,6 +276,7 @@ span.translated:not(.win2_noteholder blockquote .verse:not(.verse:hover) span.tr
     box-shadow:inset 0 1px 4px var(--black);}
 .crossrefs h1::before, .crossrefs h2::before, .crossrefs h3::before, .crossrefs h4::before, .crossrefs h5::before, .crossrefs h6::before,.crossrefs .hidingsibs::before{
     content:var(--img-arrow-up-dark);}
+
 
 
 
