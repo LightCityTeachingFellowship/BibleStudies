@@ -25,7 +25,7 @@
 	</main>
 </article>
 <div class="homeResources-grid-containter bg-color leftRight-space-16 bottom-space-20 topBorderRadius-0">
-	<div class="categoryNavigation leftRight-space-16 bottom-space-20">
+	<div class="categoryNavigation leftRight-space-16">
 		<span>Category:</span>
 		<span class="all-links">
 		{% if page %}
@@ -44,7 +44,7 @@
 		{% endfor %}
 		</span>
 	</div>
-	<div class="PageNavigation leftRight-space-16 bottom-space-20">
+	<div class="PageNavigation leftRight-space-16 top-space-20">
 		{% assign sorted_post_pages = site.pages | sort: 'date' %}
 		{% assign my_array = "" | split: ',' %}
 		{% for page in sorted_post_pages %}
