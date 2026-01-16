@@ -392,10 +392,10 @@ th:first-child{ border-right:2.5px solid var(--grey);}
 .PageNavigation li::before{
     content:"";
     padding:0;}
-.PageNavigation .all-links{
+/* .PageNavigation .all-links{
     margin:0 0 20px;
     width:100%;
-}
+} */
 .prev-link{grid-area:1 / 1 / 2 / 2;}
 .next-link{grid-area:1 / 2 / 2 / 3;}
 /* .prev-link a, .prev-link span{
