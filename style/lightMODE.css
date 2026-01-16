@@ -182,7 +182,9 @@ h1>nav, h2>nav, h3>nav, h4>nav, h5>nav, h6>nav{
     background-color:var(--bgColor-emphasize);}
 blockquote{ 
     background:var(--bgColor-blockquote);
-    border-left:10px solid var(--light-purple);}
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-left:10px solid var(--light-purple)!important;
+    border-right:2px solid var(--light-purple)!important;}
 blockquote:before{color:var(--light-purple);}
 .sidenote{ 
     color:var(--black);
