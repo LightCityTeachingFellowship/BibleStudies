@@ -56,7 +56,7 @@
 span[strnum]:not(.context_menu span[strnum]), span[ref]:not(.verse){
     cursor: pointer;
     /* text-decoration:underline; */
-    color: rgb(0, 106, 168);
+    color: rgb(0, 106, 168)!important;
 }
 span[ref]:not(.verse):hover{text-decoration:underline dotted;}
 .displaynone {display:none !important;}
@@ -531,7 +531,7 @@ body.darkmode #context_menu .strngsdefinition :is(h1,h2,h3,h4,h5,h6) {
 .darkmode #context_menu .strngsdefinition :is(h1,h2,h3,h4,h5,h6), .darkmode #context_menu .strngsdefinition h6 {
     background-color: var(--darkslategray);
 }
-.darkmode span[strnum]:not(.context_menu span[strnum]),.darkmode span[ref]:not(.verse){color:#f0ddae!important;}
+.darkmode span[strnum]:not(.context_menu span[strnum]),.darkmode span[ref]:not(.verse){color:#f0ddae}
 .darkmode span[strnum]:not(.context_menu span[strnum]){text-shadow:-0.03em -0.03em 0.02em black,0.03em -0.03em 0.02em black,-0.03em  0.03em 0.02em black,0.03em  0.03em 0.02em black;}
 .darkmode #context_menu.context_menu .verse span[strnum]:not(:hover){color:#ffdf75;/*#a6ebe1*/}
 .darkmode #context_menu code:not(.cmtitlebar code):not(code.updated_refs):hover, .darkmode #context_menu .crossrefs span:hover,

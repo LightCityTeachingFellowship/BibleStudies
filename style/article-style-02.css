@@ -36,4 +36,3 @@ h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5{
 @media only screen and (max-width:300px){
 h1.H0, h2.H1, h3.H2, h4.H3, h5.H4, h6.H5{
     grid-template-columns:18% 82%;}}
-

@@ -2713,7 +2713,7 @@ button.compare_withinsearchresult_button:hover{
     cursor:pointer;
 }
 :is(.hidby_H1,.hidby_H2,.hidby_H3,.hidby_H4,.hidby_H5,.hidby_H6):not(.forcedDisplay):not(*:has(.current_search_marker)):not(.bottombar)  {display:none!important}
-:is(h1,h2,h3,h4,h5,h6):not(:is(#homeBodyContent, body > footer, summary) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before, .hidingsibs::before {
+:is(h1,h2,h3,h4,h5,h6):not(:is(#homeBodyContent, #categories *,body > footer, summary) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before, .hidingsibs::before {
     margin:0 0.5em;
     width:1em;
     height:1em;
@@ -2721,12 +2721,12 @@ button.compare_withinsearchresult_button:hover{
     flex-grow:0;
     flex-shrink:0;
 }
-:is(h1,h2,h3,h4,h5,h6):not(#homeBodyContent *, body > footer *):not(:only-child)::before {
+:is(h1,h2,h3,h4,h5,h6):not(#homeBodyContent *, #categories *, body > footer *):not(:only-child)::before {
     display:inline-block;
     content:var(--arrow-up-content);
     transform:rotate(180deg);
 }
-.darkmode :is(h1,h2,h3,h4,h5,h6):not(:is(td, summary, #homeBodyContent, body > footer) :is(h1,h2,h3,h4,h5,h6))::before {
+.darkmode :is(h1,h2,h3,h4,h5,h6):not(:is(td, summary, #homeBodyContent, #categories *, body > footer) :is(h1,h2,h3,h4,h5,h6))::before {
     content:var(--arrow-up-content);
 }
 .hidingsibs::before {
@@ -2743,7 +2743,7 @@ button.compare_withinsearchresult_button:hover{
     content:var(--arrow-up-content);
     transform:rotate(90deg);
 }
-.darkmode :is(h1,h2,h3,h4,h5,h6):not(:is(td, summary, #homeBodyContent, body > footer) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before {
+.darkmode :is(h1,h2,h3,h4,h5,h6):not(:is(td, summary, #homeBodyContent, #categories *,body > footer) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before {
     content:var(--arrow-up-content);
     transform:rotate(180deg);
 }
@@ -2820,10 +2820,10 @@ body:not(body.darkmode) .mce-container-body button:hover{
     border-radius:2px;
     font-weight:normal!important;
 }
-:is(h1,h2,h3,h4,h5,h6):not(:is(.strngsdefinition > summary, #homeBodyContent, body > footer) :is(h1,h2,h3,h4,h5,h6)):not(:only-child) {
+:is(h1,h2,h3,h4,h5,h6):not(:is(.strngsdefinition > summary, #homeBodyContent, #categories *,body > footer) :is(h1,h2,h3,h4,h5,h6)):not(:only-child) {
     padding-left:0.75em;/*1.5em*/
 }
-:is(h1,h2,h3,h4,h5,h6):not(:is(.strngsdefinition > summary, #homeBodyContent, body > footer) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before {
+:is(h1,h2,h3,h4,h5,h6):not(:is(.strngsdefinition > summary, #homeBodyContent, #categories *, body > footer) :is(h1,h2,h3,h4,h5,h6)):not(:only-child)::before {
     margin-left:-1.5em!important;
     margin-right:0.25em!important;
     border:1px solid;
@@ -3118,7 +3118,7 @@ body:not(.middleContextMenu) button.middle_cmenu {
 }
 .fillscreen {min-height:100vh;min-width:100vh;}
 body:not(.newDocTinyMCE) .hidingsibs{margin-top:2px;margin-bottom:2px;}
-body:not(.newDocTinyMCE) :is(h1,h2,h3,h4,h5,h6):not(.context_menu *):not(header *):not(body > footer *):not(#Contact-section *):not(#homeBodyContent *, body > footer *) {
+body:not(.newDocTinyMCE) :is(h1,h2,h3,h4,h5,h6):not(.context_menu *):not(header *):not(body > footer *):not(#Contact-section *):not(#homeBodyContent *, #categories *, body > footer *) {
     top:0;
     background: var(--chpt)!important;
     box-shadow: grey -1px 0 0px, grey 1px 0 0px;

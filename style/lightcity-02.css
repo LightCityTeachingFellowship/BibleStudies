@@ -91,6 +91,16 @@ body *{
 .box-container{ 
     margin-top:20px;}}
 /* custom CSS */
+.top-space-20{ 
+    margin-top:20px!important;}
+.bottom-space-20{ 
+    margin-bottom:20px!important;}
+.topBorderRadius-0{
+    border-top-right-radius: 0px!important;
+    border-top-left-radius: 0px!important;}
+.bottomBorderRadius-0{
+    border-bottom-right-radius: 0px!important;
+    border-bottom-left-radius: 0px!important;}
 #mobileHeader{ 
     display:none;
     position:fixed;
@@ -98,34 +108,23 @@ body *{
     width:100%;
     z-index:1100;}
 a{text-decoration:none!important;}
-h1,h2,h3,h4,h5,h6{ 
-    font-weight:700;
-    line-height:1.25;
-    letter-spacing:.03em;
-    margin:0;
-    border-bottom:none;}
-h1.titles,h2.titles,h3.titles,h4.titles,h5.titles,h6.titles{padding:8px 0px;}
+.titles{
+    margin-bottom:15px!important;}
 h1.titles{ 
-    margin:0;
     border-bottom:1px solid #989898;
-    border-bottom:none;}
+    border-bottom:none;
+    margin: 0;}
 h2.titles{margin:0;}
 h3.titles{ 
-    margin:0;
     border-bottom:none!important;}
 h5.titles{ 
     border-bottom:none;
     padding-top:1em;
     padding-bottom:2em;
-    margin:0;}
+    box-shadow: none !important;}
 h6.titles{ 
     padding-bottom:1em;
     border-bottom:none;}
-.titles-inner{
-    border-radius:10px;
-    padding:22px 22px!important;
-    margin-bottom:-20px!important;}
-.titles-inner p{margin:0;}
 @media only screen and (min-width:760px){ 
 .order-lg-1{ 
     -ms-flex-order:1;
@@ -148,12 +147,14 @@ h2.titles{font-size:calc(22px + (24 - 16)*((100vw - 320px) / (1920 - 320)));}
 h3.titles{font-size:calc(18px + (24 - 16)*((100vw - 320px) / (1920 - 320)));}
 h4.titles{font-size:calc(16px + (24 - 16)*((100vw - 320px) / (1920 - 320)));}
 h5.titles,h6.titles{font-size:calc(14px + (24 - 16)*((100vw - 320px) / (1920 - 320)));}
-h1.titlesTwo{font-size:calc(22px + (24 - 16)*((100vw - 320px) / (1920 - 320)));}
+h1.titlesTwo{font-size:calc(26px + (24 - 16)*((100vw - 320px) / (1920 - 320)));}
 h2.titlesTwo{font-size:calc(18px + (24 - 16)*((100vw - 320px) / (1920 - 320)));}
-h1.titles,h1.titlesTwo,h2.titles,h2.titlesTwo,h3.titles,h4.titles,h5.titles,h6.titles{line-height:1.15;}
+h1.titles,h1.titlesTwo,h2.titles,h2.titlesTwo,h3.titles,h4.titles,h5.titles,h6.titles{
+    line-height:1.15;
+    padding:5px 0;}
 .fonts{ 
-    font-family:-system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     font-family:'Nunito Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-family:-system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
     font-size:1.1em;
     font-weight:400;
     line-height:1.45;
@@ -173,11 +174,13 @@ h1.titles,h1.titlesTwo,h2.titles,h2.titlesTwo,h3.titles,h4.titles,h5.titles,h6.t
     display:flex;
     place-items:center;
     gap:0;
-    margin-top:24px;
+    margin:0;
+    margin-top:18px;
     font-size:calc(10px + (24 - 16)*((100vw - 320px) / (1920 - 320)))!important;}
 .categories span{color:var(--grey)!important;}
 .categories span:hover{color:var(--grey)!important;}
 .cat-list{
+    display:flex;
     overflow:auto;
     white-space:nowrap;}
 .cat-list::-webkit-scrollbar{ 
@@ -185,8 +188,8 @@ h1.titles,h1.titlesTwo,h2.titles,h2.titlesTwo,h3.titles,h4.titles,h5.titles,h6.t
 a.cat-link{ 
     text-decoration:none;
     font-weight:600;
-    padding:0 7px;
-    border-right:1px solid;
+    padding:0 10px;
+    border-right:2px solid;
     white-space:nowrap;
     /* color:var(--black)!important;
     background-color:var(--vivid-orange);
@@ -249,14 +252,13 @@ hr{
 @media only screen and (max-width:1025px){ 
 #Doctrines-section-inner, #Intro-to-the-Website, #categories{
     margin-top:20px;}}
-#categories p{
-    margin:0;}
 /* SIDEBAR CSS */
 .visible-titles{ 
     display:grid;
     grid-template-columns:80% 17%;
     height:-webkit-fill-available;
     border-radius:10px;
+    border-radius:6px;
     padding:5px 0;
     font-size:22px!important;}
 .visible-titles.active{
@@ -278,11 +280,13 @@ hr{
     border:none;
     outline:none;
     font-size:15px;}
-.sidebar{padding:0 10px 20px;}
-.sidebar-wrapper-header h2, .sidebar-wrapper h3{
+.sidebar{
+    /* padding:0 10px 20px; */
+    margin-top:20px;}
+/* .sidebar-wrapper-header h2, .sidebar-wrapper h3{
     padding:20px 0 0;
-    margin:0;
-    border-bottom:none;}
+    margin: 15px 0 0;
+    border-bottom:none;} */
 .sidebar-wrapper-header h3>a{
     border-bottom:none;}
 .sidebar li:before{ 
@@ -290,7 +294,7 @@ hr{
     display:block;
     padding-right:0;}
 ul.recentposts{ 
-    padding:0 0 10px 0;
+    padding:0 0 15px 0;
     list-style:none;
     margin:0;}
 .recentposts li{ 

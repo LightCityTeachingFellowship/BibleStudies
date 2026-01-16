@@ -1,0 +1,41 @@
+h1>span[strnum]:not(.context_menu span[strnum]), h1>span[ref]:not(.verse),
+h2>span[strnum]:not(.context_menu span[strnum]), h2>span[ref]:not(.verse),
+h3>span[strnum]:not(.context_menu span[strnum]), h3>span[ref]:not(.verse),
+h4>span[strnum]:not(.context_menu span[strnum]), h4>span[ref]:not(.verse),
+h5>span[strnum]:not(.context_menu span[strnum]), h5>span[ref]:not(.verse),
+h6>span[strnum]:not(.context_menu span[strnum]), h6>span[ref]:not(.verse),
+h1>a>span[strnum]:not(.context_menu span[strnum]), h1>a>span[ref]:not(.verse),
+h2>a>span[strnum]:not(.context_menu span[strnum]), h2>a>span[ref]:not(.verse),
+h3>a>span[strnum]:not(.context_menu span[strnum]), h3>a>span[ref]:not(.verse),
+h4>a>span[strnum]:not(.context_menu span[strnum]), h4>a>span[ref]:not(.verse),
+h5>a>span[strnum]:not(.context_menu span[strnum]), h5>a>span[ref]:not(.verse),
+h6>a>span[strnum]:not(.context_menu span[strnum]), h6>a>span[ref]:not(.verse),
+small>span[strnum]:not(.context_menu span[strnum]), small>span[ref]:not(.verse),
+ul.footerLinks-lists a>span[strnum]:not(.context_menu span[strnum]), ul.footerLinks-lists a>span[ref]:not(.verse),
+.all-links a>span[strnum]:not(.context_menu span[strnum]), .all-links a>span[ref]:not(.verse) {
+    cursor: pointer;
+    color: inherit !important;
+    display: inline;
+}
+h1>[ref]:not(.context_menu [ref]),
+h2>[ref]:not(.context_menu [ref]),
+h3>[ref]:not(.context_menu [ref]),
+h4>[ref]:not(.context_menu [ref]),
+h5>[ref]:not(.context_menu [ref]),
+h6>[ref]:not(.context_menu [ref]),
+h1>a>[ref]:not(.context_menu [ref]),
+h2>a>[ref]:not(.context_menu [ref]),
+h3>a>[ref]:not(.context_menu [ref]),
+h4>a>[ref]:not(.context_menu [ref]),
+h5>a>[ref]:not(.context_menu [ref]),
+h6>a>[ref]:not(.context_menu [ref]),
+small>[ref]:not(.context_menu [ref]),
+ul.footerLinks-lists a>[ref]:not(.context_menu [ref]),
+.all-links a>[ref]:not(.context_menu [ref]) {
+    font-weight: inherit !important;
+    text-decoration: none !important;
+}
+.visible-titles > :is(h1, h2, h3, h4, h5, h6):not(:only-child) {
+    box-shadow: none!important;
+    border-radius:0px!important;
+}

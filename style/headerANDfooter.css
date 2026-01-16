@@ -72,7 +72,7 @@ textarea{
     display:block;}
 .container-fluid{ 
     padding:0 16px 0;}
-.container-fluid-inner{ 
+.leftRight-space-16{ 
     margin:0 16px 0;}
 img{ 
     vertical-align:middle;
@@ -81,11 +81,15 @@ img{
 a{ 
     text-decoration:none!important;
     border-bottom:none!important;}
-.homeResources-grid-containter{
+.homeResources-grid-containter,.homeResources-grid-containter2{
     border-radius:10px;
-    padding:22px 22px;
+    border-radius:6px;
+    position:relative;
+    padding:20px 20px;}
+/* .Resources-grid{
+    border-radius:10px;
     margin-bottom:20px;
-    position:relative;}
+    position:relative;} */
 #categories ol,#homeBodyContent ol{
     column-gap:5em;
     column-width:15em;
@@ -162,7 +166,7 @@ a{
 .myDropdown{ 
     position:absolute;
     visibility:hidden;
-    z-index:1;
+    z-index:999;
     left:0;
     top:0;
     width:100%;}
