@@ -4,14 +4,14 @@ title: Archive
 permalink: /archive/
 ---
 
-<section id="categories" class="archive homeBody-section container-fluid-inner">
-	<div class="titles-inner">
+<section id="categories" class="archive homeBody-section leftRight-space-16 bottom-space-20">
+	<div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
 		<h1 class="titles">{{ page.title }}</h1>
-		<p>Archives, all in one place.</p>
+		<p>All Archives in One Place.</p>
 	</div>
 	{% assign postsByYearMonth = site.posts | group_by_exp:"post", "post.date | date: '%Y %b'" %}
 	{% for yearMonth in postsByYearMonth %}
-	<div class="homeResources-grid-containter">
+	<div class="homeResources-grid-containter bg-color bottom-space-20">
 		<h2 class="titles">{{ yearMonth.name }}</h2>
 		<ol>
 			{% for post in yearMonth.items %}

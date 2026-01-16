@@ -4,13 +4,13 @@ title: Categories
 permalink: /categories/
 ---
 
-<section id="categories" class="homeBody-section flex1 order-lg-1">
-	<div class="visible-titles hover bg-image collapsible container-fluid-inner">
-		<h4 class="container-fluid-inner caretText">Latest Archives</h4>
+<section id="categories" class="homeBody-section flex1 order-lg-1 bottom-space-20">
+	<div class="visible-titles collapsible leftRight-space-16 homeResources-grid-containter bg-color leftRight-space-16">
+		<h4 class="leftRight-space-16 caretText">Latest Archives</h4>
 		<i class="caret fas fa-solid fa-caret-right"></i>
 	</div>
 	<aside class="col-lg-3 order-lg-2 content">
-		<div class="sidebar container-fluid-inner homeResources-grid-containter">
+		<div class="sidebar leftRight-space-16 homeResources-grid-containter bg-color">
 			<div class="sidebar-wrapper">
 				<div class="sidebar-wrapper-header">
 					<h2 class="titles" title="Click me for all Links in Archive">
@@ -22,7 +22,7 @@ permalink: /categories/
 				</div>
 				{% assign postsByYearMonth = site.posts | group_by_exp:"post", "post.date | date: '%Y %b'" | slice:0, 1	%}
 				{% for yearMonth in postsByYearMonth %}
-				<h3 class="titles">{{ yearMonth.name }}</h3>
+				<h4 class="titles">{{ yearMonth.name }}</h4>
 				<ul class="recentposts">
 					{% for post in yearMonth.items %}
 					<li>
@@ -35,7 +35,7 @@ permalink: /categories/
 				{% endfor %}
 				<small title="Click me for all Links in Archive">
 					{% for post in site.posts %}{% if post.title contains "Archive" %}
-					<a class="titles-links" href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}">
+					<a class="titles-links bottom-space-20" href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}">
 						<span>More archives</span>
 					</a>{% endif %}{% endfor %}
 				</small>
@@ -80,14 +80,14 @@ permalink: /categories/
 		</div>
 	</aside>
 	<div id="categories" class="col-lg-6">
-	<div class="postCategories container-fluid-inner">
-		<div class="titles-inner">
-			<h1 class="titles">{{ page.title }}</h1>
-			<p>Categories, all in one place.</p>
+	<div class="postCategories leftRight-space-16">
+		<div class="homeResources-grid-containter2 bg-color" style="margin-bottom: -30px;">
+			<h1 class="titles">Summary {{ page.title }}</h1>
+			<p>All Categories in One Place.</p>
 		</div>
 		{% for tag in site.tags %}
 			{% capture tag_name %}{{ tag | first }}{% endcapture %}
-			<div class="homeResources-grid-containter">
+			<div class="homeResources-grid-containter bg-color bottom-space-20">
 				<h2 class="titles ArtSumCatName">{{ tag_name }}</h2>
 				<ol>
 					{% for post in site.tags[tag_name] %}
@@ -99,6 +99,5 @@ permalink: /categories/
 				</ol>
 			</div>
 		{% endfor %}
-	</div>
 	</div>
 </section>
