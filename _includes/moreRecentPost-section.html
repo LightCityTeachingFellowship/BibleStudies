@@ -1,6 +1,8 @@
-<section id="homeBodyContent" class="container-fluid-inner">
-	<div id="Resources-section" class="Resources-grid">
-		<h1 class="titles titles-inner">More Latest Posts</h1>
+<section id="homeBodyContent" class="leftRight-space-16 bottom-space-20">
+	<div id="Resources-section">
+		<div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
+			<h1 class="titles">More Latest Posts</h1>
+		</div>
 		<div class="homeResources-grid">
 			{% assign sorted-pages = site.pages | sort: 'date' | reverse %}
 			{% assign my_array = "" | split: ',' %}
@@ -10,7 +12,7 @@
 			{% endif %}
 			{% endfor %}
 			{% for page in my_array limit:30 %}
-			<div class="homeResources-grid-containter">
+			<div class="homeResources-grid-containter bg-color bottom-space-20">
 			<small class="archive-date">{{ page.date | date_to_string }}.</small>
 			<h2 class="titles">
 				<a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">

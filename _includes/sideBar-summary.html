@@ -1,5 +1,5 @@
 <aside class="col-lg-3 order-lg-2 content">
-    <div class="sidebar container-fluid-inner homeResources-grid-containter">
+    <div class="sidebar leftRight-space-16 homeResources-grid-containter bg-color">
         <div class="sidebar-wrapper">
             <div class="sidebar-wrapper-header">
                 <h2 class="titles" title="Click me for More Latest Summaries">
@@ -51,7 +51,7 @@
               </ul>              
             <small title="Click me for all Links in Categories">
                 {% for post in site.posts %}{% if post.title contains "Categories" %}
-                <a class="titles-links" href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}"
+                <a class="titles-links bottom-space-20" href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}"
                     style="text-decoration: none!important;">
                     <span>More categories</span>
                 </a>{% endif %}{% endfor %}
@@ -67,7 +67,7 @@
             </div>
             {% assign postsByYearMonth = site.posts | group_by_exp:"post", "post.date | date: '%Y %b'" | slice:0, 1 %}
             {% for yearMonth in postsByYearMonth %}
-            <h3 class="titles">{{ yearMonth.name }}</h3>
+            <h4 class="titles">{{ yearMonth.name }}</h4>
             <ul class="recentposts">
                 {% for post in yearMonth.items %}
                 <li>

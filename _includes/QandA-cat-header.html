@@ -1,4 +1,4 @@
-<div id="cat-headerbar" class="container-fluid-inner">
+<div id="cat-headerbar" class="leftRight-space-16">
     <div class="churchLOGO">
         {% for page in site.pages %}{% if page.title contains "LightCity-Teaching-Fellowship" %}
         <a class="iconLink transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">

@@ -1,7 +1,7 @@
 <div class="header-container">
     <header id="mobileHeader">
         <div class="bg-color bg-image">
-            <div class="mobileHeaderNav container-fluid-inner">
+            <div class="mobileHeaderNav leftRight-space-16">
                 <div class="mobileLogoSize">
                     {% for page in site.pages %}{% if page.title contains "LightCity-Teaching-Fellowship" %}
                     <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
@@ -82,7 +82,7 @@
 
     <header id="desktopHeader">
         <div id="homeHeader" class="bg-color bg-image">
-            <div class="container-fluid-inner">
+            <div class="leftRight-space-16">
                 <nav class="homeHeaderNav">
                     <div class="churchLOGO">
                         {% for page in site.pages %}{% if page.title contains "LightCity-Teaching-Fellowship" %}

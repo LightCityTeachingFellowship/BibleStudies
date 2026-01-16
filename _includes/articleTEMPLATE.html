@@ -1,4 +1,4 @@
-<div id="expandANDdate" class="container-fluid-inner">
+<div id="expandANDdate" class="leftRight-space-16">
 	<div class="toggleAllHeaders">
 		<p></p>
 		<div onclick="hideOrShowAllHnum()">
@@ -18,50 +18,71 @@
 		<p id="moon-icon">D</p>
 	</span>
 </label> 
-<article class="homeResources-grid-containter container-fluid-inner">
-	<small id="archive-date" class="archive-date" style="margin: 1em 0;">{{ page.date | date: "%a, %b %d, %y." }}</small>
+<article class="homeResources-grid-containter bg-color leftRight-space-16 bottomBorderRadius-0">
+	<small id="archive-date" class="archive-date">{{ page.date | date: "%a, %b %d, %y." }}</small>
 	<main>
 		{{content}}
 	</main>
 </article>
-<div class="PageNavigation container-fluid-inner">
-	{% assign sorted_post_pages = site.pages | sort: 'date' %}
-	{% assign my_array = "" | split: ',' %}
-	{% for page in sorted_post_pages %}
-	{% if page.date and page.date != "" and page.date != nil %}
-		{% assign my_array = my_array | push: page %}
-	{% endif %}
-	{% endfor %}
-	{% assign current_page = page %}
-	{% assign previous_page = nil %}
-	{% assign next_page = nil %}
-	{% assign found_current_page = false %}
-	{% for page in my_array %}
-	{% if page == current_page %}
-		{% assign found_current_page = true %}
-	{% elsif found_current_page %}
-		{% assign next_page = page %}
-		{% break %}
-	{% else %}
-		{% assign previous_page = page %}
-	{% endif %}
-	{% endfor %}
-	{% if previous_page != nil %}
-	<div class="all-links prev-link">
-		<a href="{% if site.baseurl == "" %}{{previous_page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{previous_page.url}}{% endif %}">
-			<p>&laquo; Previous article</p>
-			{{ previous_page.title }}		
-		</a>
+<div class="homeResources-grid-containter bg-color leftRight-space-16 bottom-space-20 topBorderRadius-0">
+	<div class="categoryNavigation leftRight-space-16 bottom-space-20">
+		<span>Category:</span>
+		<span class="all-links">
+		{% if page %}
+		{% assign categories = page.categories %}
+		{% else %}
+		{% assign categories = post.categories %}
+		{% endif %}
+		{% for category in categories %}
+		{% capture category_name %}{{ category | prepend: 'HomePageArticle-' }}{% endcapture %}
+		{% assign caty = category_name %}
+		{% for page in site.pages %}
+		{% if page.categories contains caty %}
+			<a class="cat-link ArtSumCatName" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">{{category}}</a>
+		{% unless forloop.last %}{% endunless %}
+		{% endif %}{% endfor %}
+		{% endfor %}
+		</span>
 	</div>
-	{% endif %}
-	{% if next_page != nil %}
-	<div class="all-links next-link">
-		<a href="{% if site.baseurl == "" %}{{next_page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{next_page.url}}{% endif %}">
-			<p>Next article &raquo;</p>
-			{{ next_page.title }}			
-		</a>
+	<div class="PageNavigation leftRight-space-16 bottom-space-20">
+		{% assign sorted_post_pages = site.pages | sort: 'date' %}
+		{% assign my_array = "" | split: ',' %}
+		{% for page in sorted_post_pages %}
+		{% if page.date and page.date != "" and page.date != nil %}
+			{% assign my_array = my_array | push: page %}
+		{% endif %}
+		{% endfor %}
+		{% assign current_page = page %}
+		{% assign previous_page = nil %}
+		{% assign next_page = nil %}
+		{% assign found_current_page = false %}
+		{% for page in my_array %}
+		{% if page == current_page %}
+			{% assign found_current_page = true %}
+		{% elsif found_current_page %}
+			{% assign next_page = page %}
+			{% break %}
+		{% else %}
+			{% assign previous_page = page %}
+		{% endif %}
+		{% endfor %}
+		{% if previous_page != nil %}
+		<div class="all-links prev-link">
+			<a href="{% if site.baseurl == "" %}{{previous_page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{previous_page.url}}{% endif %}">
+				<span>&laquo; Previous article</span>
+				{{ previous_page.title }}		
+			</a>
+		</div>
+		{% endif %}
+		{% if next_page != nil %}
+		<div class="all-links next-link">
+			<a href="{% if site.baseurl == "" %}{{next_page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{next_page.url}}{% endif %}">
+				<span>Next article &raquo;</span>
+				{{ next_page.title }}			
+			</a>
+		</div>
+		{% endif %}
 	</div>
-	{% endif %}
 </div>
 {% include contact-section.html %}
 <script type="text/javascript" src="../script/victorScripts/lightANDdarkmode.js"></script>

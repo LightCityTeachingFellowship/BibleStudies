@@ -15,7 +15,7 @@
         {% include QandA-cat-settings.html %}
         <audio id="categorySound" src="../audio/categorySound.mp3" loop="true"></audio>
         <audio id="clickSound" src="../audio/clickSound.mp3"></audio>
-        <div id="cat-headerbar" class="container-fluid-inner">
+        <div id="cat-headerbar" class="leftRight-space-16">
             <div class="churchLOGO">
                 {% for page in site.pages %}{% if page.title contains "LightCity-Teaching-Fellowship" %}
                 <a class="iconLink transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
@@ -40,7 +40,7 @@
             </div>
             <button id="catSettings" class="catSettings" style="position: relative;" onclick="showCatSettings()" title="general settings"><img src="../images/settings-svgrepo-com.svg" alt="&#9881;"></button>
         </div>
-        <section id="cat-bibleQuiz-inner" class="container-fluid-inner">
+        <section id="cat-bibleQuiz-inner" class="leftRight-space-16">
             <h1>About Quiz</h1>
                 <h5>Welcome to lightCity Bible Quiz.</h5>
                 <div class="aboutRules">

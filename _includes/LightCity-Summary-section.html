@@ -1,19 +1,20 @@
-<section id="Resources-section">
-	<div class="Resources-grid">
-		<h1 class="titles titles-inner" title="Click me for More Latest Summaries">
+<section id="Resources-section" class="bottom-space-20">
+	<div class="homeResources-grid-containter bg-color topBorderRadius-0" style="margin-bottom: -30px;">
+		<h1 class="titles" title="Click me for More Latest Summaries">
 			{% for page in site.pages %}{% if page.title contains "More Recent Summaries" %}
 			<a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}"
 				style="text-decoration: none!important;border-bottom: none;">
 				<span>Latest Summaries</span>
 			</a>{% endif %}{% endfor %}
 		</h1>
+	</div>
 		<div class="homeResources-grid">
 			{% assign sorted-posts = site.posts | sort: 'date' | reverse %} {% assign my_array = "" | split: ',' %} {%
 			for posts in sorted-posts %} {% if posts.date And posts.date != "" And posts.date != nil %} {% assign
 			my_array = my_array | push: posts %} {% endif %}
 			{% endfor %}
 			{% for page in my_array limit:5 %}
-			<div class="homeResources-grid-containter">
+			<div class="homeResources-grid-containter bg-color bottom-space-20 topBorderRadius-0">
 			<small class="archive-date">{{ page.date | date: "%a, %b %d, %y." }}</small>
 			<h2 class="titles"><a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">{{ page.title }}</a></h2>
 			<p class="prayer-text">
@@ -26,7 +27,7 @@
 			</p>
 			<small><a class="titles-links" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">Read more</a></small>
 			<div class="prayer-text">
-				<p class="categories">
+				<div class="categories">
 					<span>category:</span>
 					<span class="cat-list">
 					{% if post %}
@@ -40,20 +41,19 @@
 					{% for post in site.posts %}
 					{% if post.categories contains sumcaty %}
 					<a class="cat-link ArtSumCatName" href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}">{{category}}</a>
-					{% unless forloop.last %}&nbsp;{% endunless %}
+					{% unless forloop.last %}{% endunless %}
 					{% endif %}{% endfor %}
 					{% endfor %}
 					</span>
-				</p>
+				</div>
 			</div>
 		</div>
 			{% endfor %}
-			<h5 class="titles" title="Click me for More Latest Summaries">
+			<h5 class="titles all-links" title="Click me for More Latest Summaries">
 				{% for page in site.pages %}{% if page.title contains "More Recent Summaries" %}
 				<a class="titles-links" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
 					<span>More Latest Summaries</span>
 				</a>{% endif %}{% endfor %}
 			</h5>
 		</div>
-	</div>
 </section>
