@@ -14,6 +14,14 @@ body *{
     -o-transition:all 0.1s ease-in-out;
     transition:all 0.1s ease-in-out;}
 .leftRight-space-16{margin: 0 16px 0;}
+.bottom-space-20{margin-bottom:20px!important;}
+.top-space-20{margin-top:20px!important;}
+.topBorderRadius-0{
+    border-top-right-radius: 0px!important;
+    border-top-left-radius: 0px!important;}
+.bottomBorderRadius-0{
+    border-bottom-right-radius: 0px!important;
+    border-bottom-left-radius: 0px!important;}
 #expandANDdate{min-height:32px;}
 .archive-date, .archive-date-summary{ 
     display:inline;
@@ -27,7 +35,7 @@ body *{
 article {
     display:block!important;
     /* min-height:100vh; */
-    margin-bottom:20px!important;
+    /* margin-bottom:20px!important; */
 }
 article img {margin-top:10px;}
 main{
@@ -68,15 +76,33 @@ p,li,#context_menu *:not(h1):not(h2):not(h3):not(h4):not(h5):not(h6){
 #context_menu .cmtitlebar{
     font-size:16px!important;}
 /* blockquote,blockquote>p,blockquote>p>em{font-size:calc(16px + (18 - 6)*((100vw - 320px)/(1920 - 320)))!important;} */
-blockquote * {font-size:2rem!important;}
+blockquote * {font-size:1em!important;}
 article>main>header{
-    display:grid;
-    grid-template-columns:10px auto;}
-small, article>main>header{
-    margin-left: 15px!important;}
+    display: grid;
+    grid-template-columns: 10px 1fr;
+    grid-template-rows: auto auto;
+    /* column-gap: 0.3rem; */
+    row-gap: 0.3rem;
+    align-items: start;
+}
+article>main>header{
+    margin-left:16px!important;
+    margin-bottom:30px!important;}
+main > :is(h1:first-of-type),
+main > :is(ol:first-of-type),
+main > :is(ul:first-of-type),
+main > :is(blockquote:first-of-type),
+main > :is(p:first-of-type) {
+    margin-top:30px!important;
+}
+article>main>header>small {
+    margin-left: 10px!important;}
 .leftBorderForArticleTitle{
     border-radius:40px;
-    width:10px;}
+    width:10px;
+    height:102%;
+    grid-row: 1 / span 2; /* occupies date + title rows */
+    grid-column: 1;}
 header>h1:first-of-type, div>h1:first-of-type{ 
     font-family:'Bitter', serif;
     font-family:"Times New Roman", Times, serif;
@@ -84,6 +110,18 @@ header>h1:first-of-type, div>h1:first-of-type{
     padding-left:.10em;
     margin:0;
     border-bottom:none!important;}
+article :is(h1,h2,h3,h4,h5,h6), p {
+    padding-left:1em!important;
+    padding-right:1em!important;
+}
+header :is(h1,h2,h3,h4,h5,h6):before {
+    display:none!important;
+}
+header > :is(h1,h2,h3,h4,h5,h6) {
+    padding-left:0.25em!important;
+    padding-left:0!important;
+    margin-left:0.25em!important;
+}
 .displayNone{word-break:break-word;}
 h1:not(header > h1), h2, h3, h4, h5, h6{
     font-family: 'Times New Roman', Times, serif;
@@ -339,9 +377,10 @@ th:first-child{ border-right:2.5px solid var(--grey);}
     display:grid;
     grid-template-columns:48% 48%;
     gap:4%;}
-.PageNavigation, .categoryNavigation{
+.PageNavigation, .categoryNavigation, .PageNavigation a, .categoryNavigation a{
     font-family:'Nunito Sans'!important;
-    margin-bottom:20px;}
+    font-family: Sanchez, Georgia, "Times New Roman", Times, serif !important;
+    font-weight: bold!important;}
 .categoryNavigation .all-links{
     display: flex;
     flex-wrap: wrap;}
@@ -352,7 +391,6 @@ th:first-child{ border-right:2.5px solid var(--grey);}
 .categoryNavigation a:last-child {
     border: none!important;}
 .PageNavigation a, .categoryNavigation a{
-    font-family:'Nunito Sans'!important;
     font-size:calc(16px + (18 - 6)*((100vw - 320px)/(1920 - 320)))!important;
     border-radius:0px !important;
     border-bottom:none!important;
@@ -377,6 +415,7 @@ th:first-child{ border-right:2.5px solid var(--grey);}
     text-align:right;}
 .categoryNavigation span, .prev-link span, .next-link span, .category-link span{
     font-size:calc(12px + (18 - 6)*((100vw - 320px)/(1920 - 320)))!important;
+    font-weight: bold;
     margin:0.5em 0;
 	padding: 0;}
 .prev-link span, .next-link span{
@@ -403,18 +442,8 @@ th:first-child{ border-right:2.5px solid var(--grey);}
     margin-top:20px;
     width:-webkit-fill-available!important;
 }
-article :is(h1,h2,h3,h4,h5,h6), p {
-    padding-left:1em!important;
-    padding-right:1em!important;
-}
 .darkmode #context_menu :is(h1,h2,h3,h4,h5,h6) {
     color: black;
-}
-header :is(h1,h2,h3,h4,h5,h6):before {
-    display:none!important;
-}
-header > :is(h1,h2,h3,h4,h5,h6) {
-    padding-left:0.25em!important;
 }
 .darkmode :is(blockquote, blockquote *) {color: white!important;}
 :is(header, #Contact-section) :is(h1,h2,h3,h4,h5,h6):before {display:none;}
