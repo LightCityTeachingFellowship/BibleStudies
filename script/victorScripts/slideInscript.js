@@ -1,10 +1,6 @@
 // const leftBorderForArticleTitle = document.createElement('div');
 // leftBorderForArticleTitle.classList.add('leftBorderForArticleTitle');
 // document.querySelector('article>main>header').prepend(leftBorderForArticleTitle);
-// const addClassToElement = (selector, className) => {
-//   const element = document.querySelector(selector);
-//   if (element) element.classList.add(className);
-// };
 
 // create left border (This code is for the left border next to the article/summary title)
 const leftBorderForArticleTitle = document.createElement('div');
@@ -19,6 +15,10 @@ if (archiveDate && leftBorderForArticleTitle) {
   leftBorderForArticleTitle.after(archiveDate);
 }
 
+const addClassToElement = (selector, className) => {
+  const element = document.querySelector(selector);
+  if (element) element.classList.add(className);
+};
 const handleAnimation = () => {
   // Apply animations to specific elements
   addClassToElement('#archive-date', 'slideInFromTop');
