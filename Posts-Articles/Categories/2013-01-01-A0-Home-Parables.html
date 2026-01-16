@@ -5,8 +5,8 @@ permalink: /Parable/
 categories: ["HomePageArticle-Parables"]
 ---
 
-<div id="categories" class="homeBody-section container-fluid-inner">
-	<div class="titles-inner">
+<div id="categories" class="homeBody-section leftRight-space-16 bottom-space-20">
+	<div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
 		<h1 class="titles">Parables</h1>
 		<p>A collection of Useful Resources on Parables.</p>
 	</div>
@@ -16,7 +16,7 @@ categories: ["HomePageArticle-Parables"]
 	{% for page in site.pages %}
 	{% if page.categories contains "Parables" %}
 	{% if page.subsection contains subcat %}
-	<div class="homeResources-grid-containter">
+	<div class="homeResources-grid-containter bg-color bottom-space-20">
 		{% for page in site.pages %}
 		{% if page.categories contains "Parables" %}
 		{% if page.subsection contains subcat %}

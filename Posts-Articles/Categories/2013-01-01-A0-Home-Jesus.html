@@ -5,8 +5,8 @@ permalink: /Jesus/
 categories: ["HomePageArticle-Jesus"]
 ---
 
-<div id="categories" class="homeBody-section container-fluid-inner">
-	<div class="titles-inner">
+<div id="categories" class="homeBody-section leftRight-space-16 bottom-space-20">
+	<div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
 		<h1 class="titles">Jesus</h1>
 		<p>A collection of Useful Resources on Jesus.</p>
 	</div>
@@ -16,7 +16,7 @@ categories: ["HomePageArticle-Jesus"]
 		{% for page in site.pages %}
 		{% if page.categories contains "Jesus" %}
 		{% if page.subsection contains subcat %}
-	<div class="homeResources-grid-containter">
+	<div class="homeResources-grid-containter bg-color bottom-space-20">
 		{% for page in site.pages %}
 		{% if page.categories contains "Jesus" %}
 		{% if page.subsection contains subcat %}

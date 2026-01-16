@@ -5,8 +5,8 @@ permalink: /Angel Of Yahweh/
 categories: ["HomePageArticle-Angel-of-Yahweh"]
 ---
 
-<div id="categories" class="homeBody-section container-fluid-inner">
-	<div class="titles-inner">
+<div id="categories" class="homeBody-section leftRight-space-16 bottom-space-20">
+	<div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
 		<h1 class="titles">Angel of Yahweh</h1>
 		<p>A collection of our Study on the Angel of Yahweh.</p>
 	</div>
@@ -17,7 +17,7 @@ categories: ["HomePageArticle-Angel-of-Yahweh"]
 	{% for page in site.pages %}
 	{% if page.categories contains "Angel-of-Yahweh" %}
 	{% if page.subsection contains subcat %}
-	<div class="homeResources-grid-containter">
+	<div class="homeResources-grid-containter bg-color bottom-space-20">
 		{% for page in site.pages %}
 		{% if page.categories contains "Angel-of-Yahweh" %}
 		{% if page.subsection contains subcat %}
