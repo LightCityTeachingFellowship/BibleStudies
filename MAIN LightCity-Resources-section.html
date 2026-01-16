@@ -5,21 +5,25 @@ permalink: /Study-Resources/
 categories: [""]
 ---
 
-<section id="homeBodyContent">
-    <div class="container-fluid-inner">
-        <div class="titles-inner">
-            <h1 class="titles">LightCity Teaching Resources</h1>
-            <p>Categories, all in one place.</p>
-        </div>
-            {% assign catarray = "Angel-of-Yahweh,Bible-Commentaries,BibleTimelines,Fall-of-Man,General-Resources,Jesus,New-Covenant,Parables,Tests,The-LAW"|split:',' %}
+<section id="homeBodyContent" class="leftRight-space-16 bottom-space-20">
+    <div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
+        <h1 class="titles">LightCity Teaching Resources</h1>
+        <p>All Categories in one place.</p>
+    </div>
+            {% assign catarray = "Angel-of-Yahweh,Bible-Commentaries,BibleTimelines,Fall-of-Man,General-Resources,Jesus,New-Covenant,Parables,Pauline,Tests,The-LAW"|split:',' %}
 
             {% for cat in catarray %}
             {% for page in site.pages %}
             {% if page.categories contains cat %}
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 {% for page in site.pages %}
                 {% if page.categories contains cat %}
                 <h2 class="titles ArtSumCatName">{{ cat }}</h2>
+                <!-- <h2 class="titles ArtSumCatName">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-" | append: cat %}
+                    <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                        {{ cat }}
+                    </a>{% endif %}{% endfor %}
+                </h2> -->
                 {% break %}
                 {% endif %}
                 {% endfor %}
@@ -38,6 +42,4 @@ categories: [""]
             {% endif %}
             {% endfor %}
             {% endfor %}
-        </div>
-    </div>
 </section>

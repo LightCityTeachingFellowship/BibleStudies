@@ -8,19 +8,19 @@ categories: [""]
     ol{padding-left:25px;}
     .all-links{margin:0;}
 </style>
-<section id="homeBodyContent" class="flex1 order-lg-1">
-    <div class="visible-titles hover bg-image collapsible container-fluid-inner">
-        <h4 class="container-fluid-inner caretText">Latest Posts</h4>
+<section id="homeBodyContent" class="flex1 order-lg-1 bottom-space-20">
+    <div class="visible-titles collapsible homeResources-grid-containter bg-color leftRight-space-16">
+        <h4 class="leftRight-space-16 caretText">Latest Posts</h4>
         <i class="caret fas fa-solid fa-caret-right"></i>
     </div>
     {% include sideBar.html %}
     <div class="col-lg-6">
-        <div id="Doctrines-section-inner" class="container-fluid-inner">
-            <div class="titles-inner">
+        <div id="Doctrines-section-inner" class="leftRight-space-16 bottom-space-20">
+            <div class="homeResources-grid-containter bg-color bottomBorderRadius-0" style="margin-bottom: -30px;">
                 <h1 class="titles">LightCity Doctrines</h1>
                 <p>Here is a list of Doctrines we treated thus far.</p>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20 topBorderRadius-0">
                 <h2 class="titles">Instruction</h2>
                 <ol>
                     <li>Obedience</li>
@@ -39,7 +39,7 @@ categories: [""]
                     <li>It is the Glory of God to Conceal a Matter</li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">Book/Chapter Studies</h2>
                 <ol>
                     <li>Isaiah 40</li>
@@ -51,7 +51,7 @@ categories: [""]
                     </li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">The Supernatural / Miraculous</h2>
                 <ol>
                     <li>The Children&rsquo;s Bread</li>
@@ -63,36 +63,48 @@ categories: [""]
                     </li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">The Christian Response to Worldly Events</h2>
                 <ol>
                     <li>The Truth about the One-World Government</li>
                     <li>The Christian Response to the #EndSARS Protest</li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles all-links">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-Jesus" %}
                     <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">{{page.title}}
                     </a>{% endif %}{% endfor %}</h2>
                 <ol>
                     <li>The Law of Christ</li>
                     <li>Jesus as the Christ</li>
-                    <li>The Deity of Christ</li>
+                    <li class="all-links">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-Jesus" %}
+                        <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                            The Deity of Christ
+                        </a>{% endif %}{% endfor %}
+                    </li>
                     <li>Jesus the Lampstand</li>
                     <li>Jesus Fulfils the Law of Moses</li>
                     <li>When Jesus Became God&rsquo;s Son</li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles all-links">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-Parables" %}
                     <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">Parables
                     </a>{% endif %}{% endfor %}</h2>
                 <ol>
-                    <li>Parables of Jesus</li>
-                    <li>Parables of Jacob</li>
+                    <li class="all-links">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-Parables" %}
+                        <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                            Parables of Jesus
+                        </a>{% endif %}{% endfor %}
+                    </li>
+                    <li class="all-links">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-Parables" %}
+                        <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                            Parables of Jacob
+                        </a>{% endif %}{% endfor %}
+                    </li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">Meaning of Biblical Expressions</h2>
                 <ol>
                     <li>Hayah Asher Hayah</li>
@@ -100,7 +112,7 @@ categories: [""]
                     <li>I Desire Mercy and Not Sacrifice</li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">Spiritual Concepts</h2>
                 <ol>
                     <li class="all-links">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-Parables" %}
@@ -108,14 +120,22 @@ categories: [""]
                         </a>{% endif %}{% endfor %}</li>
                     <li>Salvation</li>
                     <li>Prophecy</li>
-                    <li>Shaping Reality</li>
+                    <li class="all-links">{% for page in site.pages %}{% if page.title contains "Shaping Reality" %}
+                        <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                            Shaping Reality
+                        </a>{% endif %}{% endfor %}
+                    </li>
                     <li>Spiritual Hierarchy</li>
                     <li>Division of Nations</li>
-                    <li>The Sure Mercies of David</li>
+                    <li class="all-links">{% for page in site.pages %}{% if page.title contains "Sure Mercies of David" %}
+                        <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                            The Sure Mercies of David
+                        </a>{% endif %}{% endfor %}
+                    </li>
                     <li>The Resurrection/Immortality</li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles all-links">{% for page in site.pages %}{% if page.categories contains "HomePageArticle-The-LAW" %}
                     <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
                         The LAW of Moses
@@ -125,7 +145,7 @@ categories: [""]
                     <li>The Law of the Sabbath</li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">Angels and Supernatural Beings</h2>
                 <ol>
                     <li class="all-links">
@@ -136,7 +156,7 @@ categories: [""]
                     </li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">Biblical Events and Places</h2>
                 <ol>
                     <li>Eden</li>
@@ -152,7 +172,7 @@ categories: [""]
                     </li>
                 </ol>
             </div>
-            <div class="homeResources-grid-containter">
+            <div class="homeResources-grid-containter bg-color bottom-space-20">
                 <h2 class="titles">Biblical Questions</h2>
                 <ol>
                     <li class="all-links">{% for page in site.pages %}{% if page.title contains "Is Swearing A Sin" %}
