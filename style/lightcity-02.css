@@ -313,7 +313,8 @@ aside.content{
 .min-height{ 
     min-height:0;}
 .sidebar{ 
-    margin-left:0!important;}
+    margin-left:0!important;
+    margin-top:0px!important;}
 .visible-titles{display:none;}
 .flex1{ 
     display:flex;}
