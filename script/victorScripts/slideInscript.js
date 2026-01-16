@@ -1,10 +1,23 @@
+// const leftBorderForArticleTitle = document.createElement('div');
+// leftBorderForArticleTitle.classList.add('leftBorderForArticleTitle');
+// document.querySelector('article>main>header').prepend(leftBorderForArticleTitle);
+// const addClassToElement = (selector, className) => {
+//   const element = document.querySelector(selector);
+//   if (element) element.classList.add(className);
+// };
+// create left border
 const leftBorderForArticleTitle = document.createElement('div');
 leftBorderForArticleTitle.classList.add('leftBorderForArticleTitle');
-document.querySelector('article>main>header').prepend(leftBorderForArticleTitle);
-const addClassToElement = (selector, className) => {
-  const element = document.querySelector(selector);
-  if (element) element.classList.add(className);
-};
+const header = document.querySelector('article > main > header');
+if (header) {
+  header.prepend(leftBorderForArticleTitle);
+}
+// move archive date AFTER the left border
+const archiveDate = document.querySelector('#archive-date');
+if (archiveDate && leftBorderForArticleTitle) {
+  leftBorderForArticleTitle.after(archiveDate);
+}
+
 const handleAnimation = () => {
   // Apply animations to specific elements
   addClassToElement('#archive-date', 'slideInFromTop');
