@@ -1,18 +1,18 @@
 ---
 layout: cat-homepageTEMPLATE-summary
-title: "UTS Program"
-permalink: /Program/
-categories: ["HomePage-Program"]
+title: "Matthew"
+permalink: /Matthew/
+categories: ["HomePage-Matthew"]
 ---
 
-<div id="categories" class="homeBody-section container-fluid-inner">
-	<div class="titles-inner">
+<div id="categories" class="homeBody-section leftRight-space-16 bottom-space-20">
+	<div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
 		<h1 class="titles">{{ page.title }}</h1>
-		<p>A collection of our Teaching Summaries for UTS Program.</p>
+		<p>A collection of our Teaching Summaries for the Book of Matthew.</p>
 	</div>
-	<div class="homeResources-grid-containter">
+	<div class="homeResources-grid-containter bg-color">
 		<ol>
-			{% for post in site.categories.Program %}
+			{% for post in site.categories.Matthew %}
 			<li class="all-links">
 				<a href="{% if site.baseurl == "" %}{{post.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{post.url}}{% endif %}">{{ post.title }}</a> &nbsp; <small class="archive-date-summary">{{ post.date | date: "%a, %b %d, %y" }}.</small>
 			</li>
