@@ -53,7 +53,7 @@
         videoIds.forEach(videoId => {
             // Create the necessary elements
             const ionCard = document.createElement('div');
-            ionCard.className = 'video-box homeResources-grid-containter';    
+            ionCard.className = 'video-box homeResources-grid-containter bg-color';    
             const divContainer = document.createElement('div');
             divContainer.className = 'iframe-container';    
             const lazyLoad = document.createElement('lite-youtube');
@@ -485,3 +485,4 @@ function videoCloneToOtherTabs() {
         });
     }
 } setTimeout(videoCloneToOtherTabs, 3500);
+
