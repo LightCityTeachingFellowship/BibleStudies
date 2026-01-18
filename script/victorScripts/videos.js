@@ -71,8 +71,8 @@ const allTabs = document.querySelectorAll(".videotab-content");
         const paddingPerSide = availablePadding / 2;
 
         buttons.forEach(button => {
-            button.style.paddingLeft = `${paddingPerSide - 20}px`;
-            button.style.paddingRight = `${paddingPerSide - 20}px`;
+            button.style.paddingLeft = `${paddingPerSide - 15}px`;
+            button.style.paddingRight = `${paddingPerSide - 15}px`;
         });
     }
 }
