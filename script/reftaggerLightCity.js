@@ -744,7 +744,9 @@ function cmenuprvNxtverse(e, prvNxt) {
     if (!cmenuprvNxtverse.clickState) {
         cmenuprvNxtverse.clickState = { timer: null, count: 0, lastEvent: null };
     }
-    const state = cmenuprvNxtverse.clickState;
+	
+    let clickInterval = 280;
+	const state = cmenuprvNxtverse.clickState;
     state.lastEvent = e;
     state.count++;
 
@@ -775,7 +777,7 @@ function cmenuprvNxtverse(e, prvNxt) {
         state.timer = null;
         state.lastEvent = null;
 
-    }, 280);
+    }, clickInterval);
 }
 
 
