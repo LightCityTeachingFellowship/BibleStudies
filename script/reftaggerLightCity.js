@@ -460,7 +460,7 @@ async function contextMenu_CreateNAppend(e,fill_screen,eType=e.type) {
                 }
                 
                 cmtitletext = `<div class="refholder">${cmtitletext} [${bversionName}]</div>`;
-                cmtitlebar.innerHTML = cmtitletext + `<div class="cmenu_navnclose_btns"><button class="prv_verse" onmouseup="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onmouseup="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div>`;
+                cmtitlebar.innerHTML = cmtitletext + `<div class="cmenu_navnclose_btns"><button class="prv_verse" onkeyup="cmenuprvNxtverse(event, 'prv')" onmouseup="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onkeyup="cmenuprvNxtverse(event, 'next')" onmouseup="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div>`;
                 context_menu.append(cmtitlebar);
             }
             
@@ -477,7 +477,7 @@ async function contextMenu_CreateNAppend(e,fill_screen,eType=e.type) {
                 context_menu.setAttribute('strnum', strnum);
             } else {
                 context_menu.removeAttribute('strnum');
-                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="prv_verse" onmouseup="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onmouseup="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div></div>`;
+                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="prv_verse" onkeyup="cmenuprvNxtverse(event, 'prv')" onmouseup="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onkeyup="cmenuprvNxtverse(event, 'next')" onmouseup="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div></div>`;
             }
             transliterateAllStoredWords()
             // Indicate If Verse Has Note (Must be the last operation on verse so that it is not changed before it is updated)
@@ -733,11 +733,17 @@ function cmenuChangeOfHeightAnimation(oldcMenuHeight) {
 //     cmenuChangeOfHeightAnimation(oldcMenuHeight)
 // }
 function cmenuprvNxtverse(e, prvNxt) {
+    if(e.code) {
+        if(['Enter', 'NumpadEnter', 'Space'].includes(e.code)) {
+            cmenu_goToPrevOrNextVerse(prvNxt, undefined, e.shiftKey);
+        }
+        return
+    }
+	
     // Self-contained click state on the function
     if (!cmenuprvNxtverse.clickState) {
         cmenuprvNxtverse.clickState = { timer: null, count: 0, lastEvent: null };
     }
-
     const state = cmenuprvNxtverse.clickState;
     state.lastEvent = e;
     state.count++;
