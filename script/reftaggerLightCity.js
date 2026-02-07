@@ -460,7 +460,7 @@ async function contextMenu_CreateNAppend(e,fill_screen,eType=e.type) {
                 }
                 
                 cmtitletext = `<div class="refholder">${cmtitletext} [${bversionName}]</div>`;
-                cmtitlebar.innerHTML = cmtitletext + `<div class="cmenu_navnclose_btns"><button class="prv_verse" onclick="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onclick="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div>`;
+                cmtitlebar.innerHTML = cmtitletext + `<div class="cmenu_navnclose_btns"><button class="prv_verse" onmouseup="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onmouseup="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div>`;
                 context_menu.append(cmtitlebar);
             }
             
@@ -477,7 +477,7 @@ async function contextMenu_CreateNAppend(e,fill_screen,eType=e.type) {
                 context_menu.setAttribute('strnum', strnum);
             } else {
                 context_menu.removeAttribute('strnum');
-                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="prv_verse" onclick="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onclick="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div></div>`;
+                context_menu.innerHTML += `<div class="bottombar" style="width: 100%;"><div class="cmenu_navnclose_btns"><button class="prv_verse" onmouseup="cmenuprvNxtverse(event, 'prev')"></button><button class="nxt_verse" onmouseup="cmenuprvNxtverse(event, 'next')"></button><button class="cmenu_tsk ${cmenu_tsk_display}" onclick="toggleCMenuTSK(this)">TSK</button><button class="prv" ${prv_indx} ${prv_title} onclick="cmenu_goBackFront(this)" ${dzabled}></button><button class="nxt" onclick="cmenu_goBackFront(this)" disabled></button><button class="middle_cmenu" onclick="document.body.classList.toggle('middleContextMenu')"></button><button class="fillscreen_btn" onclick="toggleCMenu_fillscreen(this.closest('#context_menu'))"></button><button class="closebtn cmenu_closebtn" onclick="hideRightClickContextMenu(this)" title="[Escape]"></button></div></div></div>`;
             }
             transliterateAllStoredWords()
             // Indicate If Verse Has Note (Must be the last operation on verse so that it is not changed before it is updated)
@@ -727,11 +727,51 @@ function cmenuChangeOfHeightAnimation(oldcMenuHeight) {
         setTimeout(() => {document.body.style.pointerEvents='';}, 330);
     }, 100);
 }
+// function cmenuprvNxtverse(e, prvNxt) {
+//     let oldcMenuHeight = context_menu.getBoundingClientRect().height;
+//     cmenu_goToPrevOrNextVerse(prvNxt,undefined,e.shiftKey,e.target);
+//     cmenuChangeOfHeightAnimation(oldcMenuHeight)
+// }
 function cmenuprvNxtverse(e, prvNxt) {
-    let oldcMenuHeight = context_menu.getBoundingClientRect().height;
-    cmenu_goToPrevOrNextVerse(prvNxt,undefined,e.shiftKey,e.target);
-    cmenuChangeOfHeightAnimation(oldcMenuHeight)
+    // Self-contained click state on the function
+    if (!cmenuprvNxtverse.clickState) {
+        cmenuprvNxtverse.clickState = { timer: null, count: 0, lastEvent: null };
+    }
+
+    const state = cmenuprvNxtverse.clickState;
+    state.lastEvent = e;
+    state.count++;
+
+    // Clear previous timer
+    if (state.timer) {clearTimeout(state.timer);}
+	
+    // Triple click and above will register as single clicks
+    if((e.detail && e.detail > 2) || state.count > 2) { clickInterval = 0; };
+    if((e.detail && e.detail == 3) || state.count == 3) {
+        cmenu_goToPrevOrNextVerse( prvNxt, undefined, false );
+        cmenu_goToPrevOrNextVerse( prvNxt, undefined, false );
+    };
+
+    state.timer = setTimeout(() => {
+        const wasDoubleClick = state.count >= 2;
+        const firstEvent = state.lastEvent;
+
+        // Decide intent based on the initiating event (usually the first click)
+        const isRightClick   = firstEvent.button === 2 || firstEvent.type === 'contextmenu';
+        const isShiftPressed = firstEvent.shiftKey;
+        const shouldUseSpecialBehavior = isRightClick || isShiftPressed || wasDoubleClick;
+
+        // Your actual navigation logic
+        cmenu_goToPrevOrNextVerse( prvNxt, undefined, shouldUseSpecialBehavior );
+		
+        // Reset
+        state.count = 0;
+        state.timer = null;
+        state.lastEvent = null;
+
+    }, 280);
 }
+
 
 function mainBibleVersion(e){
     if(e.target.matches('button.compare_withinsearchresult_button')){
