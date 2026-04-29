@@ -92,8 +92,7 @@ main > :is(ol:first-of-type),
 main > :is(ul:first-of-type),
 main > :is(blockquote:first-of-type),
 main > :is(p:first-of-type) {
-    margin-top:1em!important;
-	margin-bottom:1em!important;
+    margin-top:30px!important;
 }
 article>main>header>small {
     margin-left: 10px!important;}
@@ -180,22 +179,18 @@ header~h3:before{
 article ol,article ul{
     padding-left:38px;
     list-style-type:decimal;
-    margin:0;}
+    margin:1em 0;}
 ol>li>ol{ 
 	padding-left:20px;
+    margin:0;
     list-style-type:lower-roman;
     list-style-type:lower-alpha;}
 ol>li>ol>li>ol, ol>li>ol>li>ol>li>ol, ol>li>ol>li>ul, ol>li>ol>li>ul>li>ul {
-    list-style-type:lower-roman;
-}
-ol>li>ol>li>ol { 
-    list-style-type:decimal-leading-zero;
-    list-style-type:lower-roman;
-}
-ol>li>ol>li>ol>li>ol { 
+    margin:0;
     list-style-type:lower-roman;
 }
 ol>li>ol>li>ol>li>ol>li>ol { 
+    margin:0;
     list-style-type:lower-roman;
 }
 ol>li>ol>li>ol>li>ol>li>ol>li>ol { 
