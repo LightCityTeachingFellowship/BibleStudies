@@ -92,7 +92,8 @@ main > :is(ol:first-of-type),
 main > :is(ul:first-of-type),
 main > :is(blockquote:first-of-type),
 main > :is(p:first-of-type) {
-    margin-top:30px!important;
+    margin-top:1em!important;
+	margin-bottom:1em!important;
 }
 article>main>header>small {
     margin-left: 10px!important;}
