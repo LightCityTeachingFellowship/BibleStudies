@@ -1,0 +1,23 @@
+---
+layout: cat-homepageTEMPLATE
+title: "The Holy Spirit"
+permalink: /The Holy Spirit/
+categories: ["HomePageArticle-Holy-Spirit"]
+---
+
+<div id="categories" class="homeBody-section leftRight-space-16 bottom-space-20">
+	<div class="homeResources-grid-containter bg-color" style="margin-bottom: -30px;">
+		<h1 class="titles">The Holy Spirit</h1>
+		<p style="margin: 0">A collection of Useful Resources on The Holy Spirit</p>
+	</div>
+	<div class="homeResources-grid-containter bg-color bottom-space-20">
+		<ol>
+			{% for page in site.pages %}{% if page.categories contains "Holy-Spirit" %}
+			<li class="all-links">
+				<a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">{{ page.title }}</a> &nbsp; <small class="archive-date-summary">{{ page.date | date: "%a, %b %d, %y" }}.</small>
+			</li>
+			{% endif %}
+			{% endfor %}
+		</ol>
+	</div>
+</div>
