@@ -1,0 +1,1 @@
+.lc-app-controls{position:relative;z-index:10;padding:12px 16px;background:#322348;color:#fff;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font:14px system-ui}.lc-app-controls button{background:#fff;color:#322348;border:0;border-radius:6px;padding:10px 14px;cursor:pointer}.lc-app-controls button:disabled{opacity:.6}.lc-app-controls p{margin:0;flex:1;min-width:180px}
