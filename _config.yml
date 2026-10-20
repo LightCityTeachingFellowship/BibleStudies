@@ -23,12 +23,12 @@ email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   This site is for the study of the Bible.
 #baseurl: "LightCityBibleStudies" # for my personal github site
-baseurl: "BibleStudies" # for LightCityTeachingFellowship github group
-#baseurl: "" # for the local host (the subpath of your site, e.g. /blog)
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+# baseurl: "BibleStudies" # for LightCityTeachingFellowship github group
+baseurl: "BibleStudies"
+url: "https://lightcityteachingfellowship.github.io"
 permalink: /:categories/:year/:month/:day/:title:output_ext
 twitter_username: jekyllrb
-github_username:  SamAwo
+github_username:  LightCity
 
 # Build settings
 theme: minima
@@ -54,3 +54,12 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+
+# Private and development files must not be published.
+exclude:
+  - tools/
+  - Service-Account-Key/
+  - OAuth client/
+  - service-account-key.json
+  - fetchVideos.js
+  - webpack.config.js

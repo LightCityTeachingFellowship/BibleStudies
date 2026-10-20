@@ -1,105 +1,49 @@
-const VERSION = 'v03::';
-
-// const cacheName = 'lightcity';
-const APP_CACHE_NAME = 'lightcity-app';
-const STATIC_CACHE_NAME = 'lightcity-static';
-
-console.log(`installing service-worker.js`);
-
-const CACHE_STATIC = [
-    '../images/LightCityLOGO.png',
-    '/images/LightCityLOGO.png',
-    '../images/preload.svg',
-    '/images/preload.svg',
-    '../images/Trophy7.svg',
-    '../images/Trophy10.svgg',
-    '../images/Trophy8Silver.svg',
-    '../images/Trophy11.svg',
-    '../images/sadEmoji.svg',
-    '../images/Hint17.svg',
-    '../images/correct-gif2.gif',    
-    '../images/wrong-gif3.gif',
-    '../style/lightcity-02.css',    
-    '/style/lightcity-02.css',    
-    '../style/article-style.css',    
-    '../style/bibleQuizAnimation.css',    
-    '../style/bibleQuizNoBG.css',    
-    '../style/bibleQuizBG-darkpurple.css',    
-    '../style/bibleQuizBG-antiquewhite.css',    
-    '../style/bibleQuizBG-blackpearl.css',    
-    '../style/bibleQuizBG-copperrose.css',    
-    '../style/bibleQuizBG-crimson.css',    
-    '../style/bibleQuizBG-darkcyan.css',    
-    '../style/bibleQuizBG-darkcyan.css',    
-    '/style/bibleQuizNoBG.css',    
-    '/style/bibleQuizBG-darkpurple.css',    
-    '/style/bibleQuizBG-antiquewhite.css',    
-    '/style/bibleQuizBG-blackpearl.css',    
-    '/style/bibleQuizBG-copperrose.css',    
-    '/style/bibleQuizBG-crimson.css',    
-    '/style/bibleQuizBG-darkcyan.css',    
-    '/style/bibleQuizBG-darkcyan.css',    
- ];
-
- const CACHE_APP = [
-    '/',
-    '/index.html',
-    '/about/',
-    '/contact/',
-    '/events/',
-    '/code-of-conduct/',
-    '/merch/',
-    '/welcome-to-slack/',
- ];
-
-self.addEventListener('install',function(e){
-    e.waitUntil(
-        Promise.all([
-            caches.open(STATIC_CACHE_NAME),
-            caches.open(APP_CACHE_NAME),
-            self.skipWaiting()
-          ]).then(function(storage){
-            var static_cache = storage[0];
-            var app_cache = storage[1];
-            return Promise.all([
-              static_cache.addAll(CACHE_STATIC),
-              app_cache.addAll(CACHE_APP)]);
-        })
-    );
+---
+layout: null
+---
+const BASE = new URL('./', self.location.href);
+const CACHE = 'lightcity-pwa-v1-' + BASE.pathname;
+const offline = new URL('offline.html', BASE).href;
+self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(c => c.addAll([offline])).then(() => self.skipWaiting())));
+self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('lightcity-pwa-') && (k.endsWith(BASE.pathname) || k.endsWith(BASE.pathname+'-assets')) && k !== CACHE && k !== CACHE+'-assets').map(k => caches.delete(k)))).then(() => self.clients.claim())));
+self.addEventListener('fetch', event => {
+ const request = event.request, url = new URL(request.url);
+ if (request.method !== 'GET' || url.origin !== BASE.origin || !url.pathname.startsWith(BASE.pathname)) return;
+ if (['style','script','image','font'].includes(request.destination) && !url.pathname.endsWith('pwa-config.js')) {
+  event.respondWith(fetch(request).then(async response => {
+   if (response.ok && !response.headers.get('content-type')?.includes('text/html')) {
+    const c=await caches.open(CACHE+'-assets'); await c.put(request,response.clone());
+    const keys=await c.keys(); if(keys.length>150) await c.delete(keys[0]);
+   }
+   return response;
+  }).catch(async()=> (await caches.match(request)) || Response.error()));
+  return;
+ }
+ if (request.mode === 'navigate') event.respondWith(fetch(request).then(async response => {
+  if (response.ok) { const c = await caches.open(CACHE); await c.put(request, response.clone()); const keys = await c.keys(); const pages = keys.filter(k => k.url !== offline); if (pages.length > 40) await c.delete(pages[0]); }
+  return response;
+ }).catch(async () => (await caches.match(request)) || caches.match(offline)));
+});
+self.addEventListener('notificationclick', event => {
+ // Let Firebase handle notifications it displays automatically.
+ if (!event.notification.data?.lightcity) return;
+ event.stopImmediatePropagation();
+ event.notification.close();
+ let target = new URL(event.notification.data?.url || 'LightCity-Teaching-Fellowship/', BASE);
+ if (target.origin !== BASE.origin || !target.pathname.startsWith(BASE.pathname)) target = new URL('LightCity-Teaching-Fellowship/', BASE);
+ event.waitUntil(self.clients.openWindow(target.href));
 });
 
-self.addEventListener('activate', function(e) {
-    e.waitUntil(
-        Promise.all([
-            self.clients.claim(),
-            caches.keys().then(function(cacheNames) {
-                return Promise.all(
-                    cacheNames.map(function(cacheName) {
-                        if (cacheName !== APP_CACHE_NAME && cacheName !== STATIC_CACHE_NAME) {
-                            console.log('deleting',cacheName);
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            })
-        ])
-    );
-});
-
-this.addEventListener('fetch', function(event) {
-  var response;
-  event.respondWith(caches.match(event.request)
-    .then(function (match) {
-      return match || fetch(event.request);
-    }).catch(function() {
-      return fetch(event.request);
-    })
-    .then(function(r) {
-      response = r;
-      caches.open(cacheName).then(function(cache) {
-        cache.put(event.request, response);
-      });
-      return response.clone();
-    })
-  );
-});
+// Firebase initializes background delivery only after the public config is completed.
+importScripts(new URL('pwa-config.js', BASE).href);
+if (self.LIGHTCITY_PUSH?.enabled) {
+ importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
+ importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
+ firebase.initializeApp(self.LIGHTCITY_PUSH.firebase);
+ firebase.messaging().onBackgroundMessage(payload => {
+  // Firebase automatically displays messages containing a notification payload.
+  if (payload.notification) return;
+  const data = payload.data || {};
+  return self.registration.showNotification(data.title || 'LightCity', {body: data.body || 'New teaching available', icon: new URL('images/pwa-192.png', BASE).href, tag:data.id, data:{url:data.url,lightcity:true}});
+ });
+}
