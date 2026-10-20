@@ -1,0 +1,39 @@
+name: Notify web subscribers
+on:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Validate setup or record existing content without sending alerts'
+        type: choice
+        options: [validate, baseline]
+        default: validate
+permissions:
+  contents: read
+concurrency:
+  group: lightcity-web-push
+  cancel-in-progress: false
+jobs:
+  notify:
+    if: ${{ github.event_name == 'workflow_dispatch' || (vars.WEB_PUSH_ENABLED == 'true' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --omit=dev
+        working-directory: tools/push
+      - run: npm run send
+        working-directory: tools/push
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'validate' }}
+          BASELINE_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'baseline' }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
