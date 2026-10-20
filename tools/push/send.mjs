@@ -40,7 +40,19 @@ const data={id:latest.key,title:pending.length===1?latest.title:`${pending.lengt
 let failed=false;
 for(let i=0;i<subscribers.docs.length;i+=500){
  const docs=subscribers.docs.slice(i,i+500);
- const result=await messaging.sendEachForMulticast({tokens:docs.map(d=>d.data().token),data,webpush:{headers:{TTL:'86400'}}});
+ // A notification payload lets Firebase display background alerts directly,
+ // using the same mechanism as Firebase Console test messages.
+ const result=await messaging.sendEachForMulticast({
+  tokens:docs.map(d=>d.data().token),
+  notification:{title:data.title,body:data.body},
+  data,
+  webpush:{
+   headers:{TTL:'86400',Urgency:'high'},
+   notification:{icon:new URL('images/pwa-192.png',origin).href,tag:data.id},
+   fcmOptions:{link:data.url}
+  }
+ });
+ console.log(`Push batch: ${result.responses.filter(r=>!r.error).length} accepted, ${result.responses.filter(r=>r.error).length} rejected. Acceptance does not confirm device display.`);
  for(let j=0;j<result.responses.length;j++){
   const error=result.responses[j].error;
   if(error && ['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)) await docs[j].ref.delete();
