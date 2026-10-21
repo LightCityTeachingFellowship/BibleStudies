@@ -8,6 +8,31 @@ const dryRun = process.env.DRY_RUN === 'true';
 const baselineOnly = process.env.BASELINE_ONLY === 'true';
 initializeApp({credential:cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))});
 const db=getFirestore(), messaging=getMessaging();
+
+function notificationMessage(data) {
+ return {
+  notification:{title:data.title,body:data.body},
+  data,
+  webpush:{
+   headers:{TTL:'86400',Urgency:'high'},
+   notification:{icon:new URL('images/pwa-192.png',origin).href,tag:data.id},
+   fcmOptions:{link:data.url}
+  }
+ };
+}
+if(process.env.TEST_MODE === 'true') {
+ const uid=(process.env.TEST_SUBSCRIBER_ID || '').trim();
+ if(!/^[A-Za-z0-9_-]{1,128}$/.test(uid)) throw Error('Enter the Firestore subscription document ID, not its token.');
+ const subscriber=await db.doc('webPushSubscribers/'+uid).get();
+ if(!subscriber.exists || !subscriber.data().token) throw Error('Subscription document missing or has no token.');
+ const id='device-test-'+Date.now();
+ const data={id,title:'LightCity device test',body:'Sent using the same format as automatic publishing alerts.',url:new URL('LightCity-Teaching-Fellowship/',origin).href};
+ await messaging.send({token:subscriber.data().token,...notificationMessage(data)});
+ console.log('Single-device test accepted by Firebase. This does not confirm device display.');
+ console.log('Publication history was not changed; no other subscribers were targeted.');
+ process.exit(0);
+}
+
 const response=await fetch(new URL('publication-feed.json',origin),{cache:'no-store'});
 if(!response.ok) throw Error(`Feed returned ${response.status}`);
 const feed=await response.json();
@@ -44,13 +69,7 @@ for(let i=0;i<subscribers.docs.length;i+=500){
  // using the same mechanism as Firebase Console test messages.
  const result=await messaging.sendEachForMulticast({
   tokens:docs.map(d=>d.data().token),
-  notification:{title:data.title,body:data.body},
-  data,
-  webpush:{
-   headers:{TTL:'86400',Urgency:'high'},
-   notification:{icon:new URL('images/pwa-192.png',origin).href,tag:data.id},
-   fcmOptions:{link:data.url}
-  }
+  ...notificationMessage(data)
  });
  console.log(`Push batch: ${result.responses.filter(r=>!r.error).length} accepted, ${result.responses.filter(r=>r.error).length} rejected. Acceptance does not confirm device display.`);
  for(let j=0;j<result.responses.length;j++){

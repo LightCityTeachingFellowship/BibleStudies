@@ -7,10 +7,14 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: 'Validate setup or record existing content without sending alerts'
+        description: 'Validate, record baseline, or test one subscription'
         type: choice
-        options: [validate, baseline]
+        options: [validate, baseline, test]
         default: validate
+      subscriber_id:
+        description: 'For test only: document ID in Firestore webPushSubscribers (not token)'
+        type: string
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -36,4 +40,6 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'validate' }}
           BASELINE_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'baseline' }}
+          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'test' }}
+          TEST_SUBSCRIBER_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.subscriber_id || '' }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
