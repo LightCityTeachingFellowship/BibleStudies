@@ -27,6 +27,39 @@
  const params=new URLSearchParams({autoplay:'1',playsinline:'1',controls:'1',rel:'0',origin:location.origin});
  player.src=`https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
  container.appendChild(player);
+ // Fullscreen and screen orientation are separate browser capabilities.
+ // A cross-origin player exposes its iframe as the fullscreen element here.
+ const orientation=globalThis.screen?.orientation;
+ let landscapeRequested=false;
+ function playerIsFullscreen() {
+  const active=document.fullscreenElement || document.webkitFullscreenElement;
+  return !!active && (active===player || active===container || container.contains(active));
+ }
+ function releaseLandscape() {
+  if(!landscapeRequested) return;
+  landscapeRequested=false;
+  try { orientation?.unlock?.(); } catch {}
+ }
+ async function updateFullscreenOrientation() {
+  if(!playerIsFullscreen()) {
+   releaseLandscape();
+   return;
+  }
+  if(landscapeRequested || typeof orientation?.lock!=='function') return;
+  landscapeRequested=true;
+  try {
+   await orientation.lock('landscape');
+   // The user may have exited fullscreen while the request was pending.
+   if(!playerIsFullscreen()) {
+    landscapeRequested=false;
+    orientation.unlock?.();
+   }
+  } catch {
+   // Unsupported or denied rotation must not interrupt video playback.
+  }
+ }
+ document.addEventListener('fullscreenchange',updateFullscreenOrientation);
+ document.addEventListener('webkitfullscreenchange',updateFullscreenOrientation);
  container.hidden=false;
  help.hidden=false;
  status.textContent='';
