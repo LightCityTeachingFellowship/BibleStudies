@@ -20,6 +20,41 @@ function notificationMessage(data) {
   }
  };
 }
+// YouTube hqdefault is 4:3 and can contain black letterboxing.
+// Check actual JPEG dimensions: unavailable variants may return a tiny placeholder.
+function jpegDimensions(bytes) {
+ if(bytes.length<4 || bytes[0]!==0xff || bytes[1]!==0xd8) return null;
+ let offset=2;
+ while(offset+3<bytes.length) {
+  if(bytes[offset++]!==0xff) return null;
+  while(bytes[offset]===0xff) offset++;
+  const marker=bytes[offset++];
+  if(marker===0xd9 || marker===0xda) return null;
+  if(marker===0x01 || (marker>=0xd0 && marker<=0xd7)) continue;
+  if(offset+1>=bytes.length) return null;
+  const length=(bytes[offset]<<8)|bytes[offset+1];
+  if(length<2 || offset+length>bytes.length) return null;
+  if([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) {
+   if(length<7) return null;
+   return {height:(bytes[offset+3]<<8)|bytes[offset+4],width:(bytes[offset+5]<<8)|bytes[offset+6]};
+  }
+  offset+=length;
+ }
+ return null;
+}
+async function widescreenThumbnail(videoId) {
+ for(const variant of ['maxresdefault','mqdefault']) {
+  const url=`https://i.ytimg.com/vi/${videoId}/${variant}.jpg`;
+  try {
+   const response=await fetch(url,{signal:AbortSignal.timeout(10000)});
+   if(!response.ok) continue;
+   const size=jpegDimensions(new Uint8Array(await response.arrayBuffer()));
+   if(size && size.width>=320 && size.height>0 && Math.abs(size.width/size.height-16/9)<0.02) return url;
+  } catch { /* Try the smaller widescreen version if the first is unavailable. */ }
+ }
+ console.warn(`No widescreen thumbnail available for ${videoId}; sending the title without an image.`);
+ return null;
+}
 // Use the same public metadata source as the website; no YouTube API key required.
 async function videoNotificationData(item) {
  const videoId=item.id.replace(/^video:/,'');
@@ -39,7 +74,8 @@ async function videoNotificationData(item) {
    if(attempt===2) throw Error(`Cannot prepare video ${videoId}: ${error.message}. It has not been marked as announced.`);
   }
  }
- return {id:item.key,title:'Video',body:metadata.title.trim(),url:item.url,image:`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`};
+ const image=await widescreenThumbnail(videoId);
+ return {id:item.key,title:'Video',body:metadata.title.trim(),url:item.url,...(image ? {image} : {})};
 }
 if(process.env.TEST_MODE === 'true') {
  const uid=(process.env.TEST_SUBSCRIBER_ID || '').trim();
