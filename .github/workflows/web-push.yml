@@ -15,6 +15,10 @@ on:
         description: 'For test only: document ID in Firestore webPushSubscribers (not token)'
         type: string
         required: false
+      video_id:
+        description: 'Optional for test: YouTube video ID to preview its real title and thumbnail'
+        type: string
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -43,4 +47,5 @@ jobs:
           TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && (inputs.operation == 'test' || inputs.operation == 'test-basic') }}
           TEST_BASIC: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'test-basic' }}
           TEST_SUBSCRIBER_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.subscriber_id || '' }}
+          TEST_VIDEO_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.video_id || '' }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

@@ -11,14 +11,35 @@ const db=getFirestore(), messaging=getMessaging();
 
 function notificationMessage(data) {
  return {
-  notification:{title:data.title,body:data.body},
+  notification:{title:data.title,body:data.body,...(data.image ? {imageUrl:data.image} : {})},
   data,
   webpush:{
    headers:{TTL:'86400',Urgency:'high'},
-   notification:{icon:new URL('images/pwa-192.png',origin).href,tag:data.id},
+   notification:{icon:new URL('images/pwa-192.png',origin).href,tag:data.id,...(data.image ? {image:data.image} : {})},
    fcmOptions:{link:data.url}
   }
  };
+}
+// Use the same public metadata source as the website; no YouTube API key required.
+async function videoNotificationData(item) {
+ const videoId=item.id.replace(/^video:/,'');
+ if(!/^[A-Za-z0-9_-]{11}$/.test(videoId)) throw Error('Invalid YouTube video ID: '+videoId);
+ const endpoint=new URL('https://www.youtube.com/oembed');
+ endpoint.searchParams.set('url','https://www.youtube.com/watch?v='+videoId);
+ endpoint.searchParams.set('format','json');
+ let metadata;
+ for(let attempt=0;attempt<3;attempt++) {
+  try {
+   const response=await fetch(endpoint,{signal:AbortSignal.timeout(10000)});
+   if(!response.ok) throw Error('YouTube metadata HTTP '+response.status);
+   metadata=await response.json();
+   if(typeof metadata.title!=='string' || !metadata.title.trim()) throw Error('YouTube returned no video title');
+   break;
+  } catch(error) {
+   if(attempt===2) throw Error(`Cannot prepare video ${videoId}: ${error.message}. It has not been marked as announced.`);
+  }
+ }
+ return {id:item.key,title:'Video',body:metadata.title.trim(),url:item.url,image:`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`};
 }
 if(process.env.TEST_MODE === 'true') {
  const uid=(process.env.TEST_SUBSCRIBER_ID || '').trim();
@@ -26,8 +47,12 @@ if(process.env.TEST_MODE === 'true') {
  const subscriber=await db.doc('webPushSubscribers/'+uid).get();
  if(!subscriber.exists || !subscriber.data().token) throw Error('Subscription document missing or has no token.');
  const id='device-test-'+Date.now();
- const data={id,title:'LightCity device test',body:'Sent using the same format as automatic publishing alerts.',url:new URL('LightCity-Teaching-Fellowship/',origin).href};
+ let data={id,title:'LightCity device test',body:'Sent using the same format as automatic publishing alerts.',url:new URL('LightCity-Teaching-Fellowship/',origin).href};
  const minimal=process.env.TEST_BASIC === 'true';
+ if(!minimal && process.env.TEST_VIDEO_ID?.trim()) {
+  const videoId=process.env.TEST_VIDEO_ID.trim();
+  data=await videoNotificationData({id:'video:'+videoId,key:id,url:new URL('Videos/',origin).href});
+ }
  const payload=minimal
   ? {notification:{title:'LightCity basic test',body:'Title and message only, sent by GitHub.'}}
   : notificationMessage(data);
@@ -63,26 +88,34 @@ if(baselineOnly){console.log('Baseline already exists. No notifications sent and
 const pending=[];
 for(const item of entries) if(!(await db.doc('webPushSent/'+item.key).get()).exists) pending.push(item);
 if(!pending.length){console.log('No new publications.');process.exit(0);}
-// A digest prevents notification floods when several items are published together.
-const subscribers=await db.collection('webPushSubscribers').get();
-const latest=pending.at(-1);
-const data={id:latest.key,title:pending.length===1?latest.title:`${pending.length} new LightCity resources`,body:pending.length===1?`A new ${latest.kind || 'resource'} is available.`:'New articles, summaries or videos are available.',url:pending.length===1?latest.url:new URL('LightCity-Teaching-Fellowship/',origin).href};
-let failed=false;
-for(let i=0;i<subscribers.docs.length;i+=500){
- const docs=subscribers.docs.slice(i,i+500);
- // A notification payload lets Firebase display background alerts directly,
- // using the same mechanism as Firebase Console test messages.
- const result=await messaging.sendEachForMulticast({
-  tokens:docs.map(d=>d.data().token),
-  ...notificationMessage(data)
- });
- console.log(`Push batch: ${result.responses.filter(r=>!r.error).length} accepted, ${result.responses.filter(r=>r.error).length} rejected. Acceptance does not confirm device display.`);
- for(let j=0;j<result.responses.length;j++){
-  const error=result.responses[j].error;
-  if(error && ['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)) await docs[j].ref.delete();
-  else if(error){failed=true;console.error(error.code);}
- }
+// Each video gets its own real title and thumbnail. Text resources retain a digest.
+// Resolve every video before sending, so a metadata failure cannot silently
+// replace a real title with generic text or mark that video as announced.
+const plans=[];
+const textItems=pending.filter(item=>item.kind!=='video');
+if(textItems.length) {
+ const latest=textItems.at(-1);
+ plans.push({items:textItems,data:{id:latest.key,title:textItems.length===1?latest.title:`${textItems.length} new LightCity resources`,body:textItems.length===1?`A new ${latest.kind || 'resource'} is available.`:'New articles or summaries are available.',url:textItems.length===1?latest.url:new URL('LightCity-Teaching-Fellowship/',origin).href}});
 }
-if(failed) throw Error('Some deliveries failed. Inspect before retrying; a retry can repeat successful deliveries.');
-for(let i=0;i<pending.length;i+=400){const batch=db.batch();for(const item of pending.slice(i,i+400))batch.set(db.doc('webPushSent/'+item.key),{sentAt:FieldValue.serverTimestamp()});await batch.commit();}
-console.log(`Announced ${pending.length} publications to ${subscribers.size} subscriptions.`);
+for(const item of pending.filter(item=>item.kind==='video')) plans.push({items:[item],data:await videoNotificationData(item)});
+const subscribers=await db.collection('webPushSubscribers').get();
+for(const plan of plans) {
+ let failed=false;
+ for(let i=0;i<subscribers.docs.length;i+=500) {
+  const docs=subscribers.docs.slice(i,i+500);
+  const result=await messaging.sendEachForMulticast({tokens:docs.map(d=>d.data().token),...notificationMessage(plan.data)});
+  console.log(`Push batch: ${result.responses.filter(r=>!r.error).length} accepted, ${result.responses.filter(r=>r.error).length} rejected. Acceptance does not confirm device display.`);
+  for(let j=0;j<result.responses.length;j++) {
+   const error=result.responses[j].error;
+   if(error && ['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)) await docs[j].ref.delete();
+   else if(error){failed=true;console.error(error.code);}
+  }
+ }
+ if(failed) throw Error('Some deliveries failed. Inspect before retrying; a retry can repeat successful deliveries.');
+ for(let i=0;i<plan.items.length;i+=400) {
+  const batch=db.batch();
+  for(const item of plan.items.slice(i,i+400)) batch.set(db.doc('webPushSent/'+item.key),{sentAt:FieldValue.serverTimestamp()});
+  await batch.commit();
+ }
+ console.log(`Announced ${plan.items.length} publications to ${subscribers.size} subscriptions.`);
+}
