@@ -14,8 +14,10 @@ title: Watch a video
   <link rel="stylesheet" href="{{ '/style/root.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/style/headerANDfooter.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/style/lightcity-02.css' | relative_url }}">
-  <link id="watch-theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}" data-light="{{ '/style/lightMODE.css' | relative_url }}" data-dark="{{ '/style/darkMODE.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/style/darkMODE.css' | relative_url }}">
+  <link id="theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}">
+  <script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script>
   <script defer src="{{ '/script/video-watch.js' | relative_url }}"></script>
 </head>
 <body class="fonts">
@@ -37,13 +39,20 @@ title: Watch a video
       </div>
     </header>
   </div>
-  <main class="watch-main">
-    <h1 id="watch-title">LightCity video</h1>
+  <main class="watch-main leftRight-space-16">
+    <h3 id="watch-title" class="watch-title">LightCity video</h3>
     <p id="watch-status" role="status">Loading your video…</p>
     <div id="watch-player" class="watch-player" hidden></div>
     <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
     <p><a id="watch-youtube" hidden target="_blank" rel="noopener noreferrer">Watch on YouTube</a></p>
     <noscript>Enable JavaScript to play this video, or browse <a href="{{ '/Videos/' | relative_url }}">all videos</a>.</noscript>
   </main>
+      <label class="switch" id="theme-toggle-container">
+        <input type="checkbox" id="theme-toggle" aria-label="Dark mode" />
+        <span class="slider round">
+            <p id="sun-icon">L</p>
+            <p id="moon-icon">D</p>
+        </span>
+    </label> 
 </body>
 </html>
