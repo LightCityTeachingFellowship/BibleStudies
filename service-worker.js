@@ -44,6 +44,6 @@ if (self.LIGHTCITY_PUSH?.enabled) {
   // Firebase automatically displays messages containing a notification payload.
   if (payload.notification) return;
   const data = payload.data || {};
-  return self.registration.showNotification(data.title || 'LightCity', {body: data.body || 'New teaching available', icon: new URL('images/pwa-192.png', BASE).href, tag:data.id, data:{url:data.url,lightcity:true}});
+  return self.registration.showNotification(data.title || 'LightCity', {body: data.body || 'New teaching available', icon: new URL('images/pwa-192.png', BASE).href, badge: new URL('images/notification-badge.png', BASE).href, tag:data.id, data:{url:data.url,lightcity:true}});
  });
 }
