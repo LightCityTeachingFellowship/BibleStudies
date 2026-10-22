@@ -27,7 +27,12 @@ if(process.env.TEST_MODE === 'true') {
  if(!subscriber.exists || !subscriber.data().token) throw Error('Subscription document missing or has no token.');
  const id='device-test-'+Date.now();
  const data={id,title:'LightCity device test',body:'Sent using the same format as automatic publishing alerts.',url:new URL('LightCity-Teaching-Fellowship/',origin).href};
- await messaging.send({token:subscriber.data().token,...notificationMessage(data)});
+ const minimal=process.env.TEST_BASIC === 'true';
+ const payload=minimal
+  ? {notification:{title:'LightCity basic test',body:'Title and message only, sent by GitHub.'}}
+  : notificationMessage(data);
+ await messaging.send({token:subscriber.data().token,...payload});
+ console.log(`Test format: ${minimal ? 'basic title/body only' : 'automatic publishing format'}.`);
  console.log('Single-device test accepted by Firebase. This does not confirm device display.');
  console.log('Publication history was not changed; no other subscribers were targeted.');
  process.exit(0);

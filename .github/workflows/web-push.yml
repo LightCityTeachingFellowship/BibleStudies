@@ -9,7 +9,7 @@ on:
       operation:
         description: 'Validate, record baseline, or test one subscription'
         type: choice
-        options: [validate, baseline, test]
+        options: [validate, baseline, test, test-basic]
         default: validate
       subscriber_id:
         description: 'For test only: document ID in Firestore webPushSubscribers (not token)'
@@ -40,6 +40,7 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'validate' }}
           BASELINE_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'baseline' }}
-          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'test' }}
+          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && (inputs.operation == 'test' || inputs.operation == 'test-basic') }}
+          TEST_BASIC: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'test-basic' }}
           TEST_SUBSCRIBER_ID: ${{ github.event_name == 'workflow_dispatch' && inputs.subscriber_id || '' }}
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
