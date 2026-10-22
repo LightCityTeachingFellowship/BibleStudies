@@ -1,4 +1,13 @@
 (() => {
+ // Share the theme preference used by the rest of the website.
+ const themeStylesheet=document.getElementById('watch-theme-stylesheet');
+ if(themeStylesheet) {
+  let preference;
+  try { preference=localStorage.getItem('theme'); } catch {}
+  const dark=preference==='darkMODE' || (!preference && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  themeStylesheet.href=dark ? themeStylesheet.dataset.dark : themeStylesheet.dataset.light;
+  document.body.classList.toggle('darkmode',dark);
+ }
  const videoId=new URLSearchParams(location.search).get('v') || '';
  const title=document.getElementById('watch-title');
  const status=document.getElementById('watch-status');

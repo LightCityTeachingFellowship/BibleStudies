@@ -11,16 +11,34 @@ title: Watch a video
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Watch a video | LightCity Teaching Fellowship</title>
   {% include pwa-head.html %}
+  <link rel="stylesheet" href="{{ '/style/root.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/style/headerANDfooter.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/style/lightcity-02.css' | relative_url }}">
+  <link id="watch-theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}" data-light="{{ '/style/lightMODE.css' | relative_url }}" data-dark="{{ '/style/darkMODE.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}">
   <script defer src="{{ '/script/video-watch.js' | relative_url }}"></script>
 </head>
-<body>
-  <header class="watch-header">
-    <a class="watch-brand" href="{{ '/LightCity-Teaching-Fellowship/' | relative_url }}"><img src="{{ '/images/pwa-192.png' | relative_url }}" alt="" width="40" height="40">LightCity Teaching Fellowship</a>
-    <a href="{{ '/Videos/' | relative_url }}">All videos</a>
-  </header>
+<body class="fonts">
+  <div class="header-container">
+    <header>
+      <div id="homeHeader" class="bg-color bg-image">
+        <div class="leftRight-space-16">
+          <nav class="homeHeaderNav" aria-label="Video navigation">
+            <div class="churchLOGO">
+              <a class="iconLink transition" title="LightCity home" href="{{ '/LightCity-Teaching-Fellowship/' | relative_url }}">
+                <img class="churchLOGO-img" src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" height="40" alt="LightCity Teaching Fellowship">
+              </a>
+            </div>
+            <div class="headerUL">
+              <a class="moreButton transition" href="{{ '/Videos/' | relative_url }}">All videos <span aria-hidden="true">→</span></a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </header>
+  </div>
   <main class="watch-main">
-    <h1 id="watch-title">LightCity video</h1>
+    <h1 id="watch-title" class="titles">LightCity video</h1>
     <p id="watch-status" role="status">Loading your video…</p>
     <div id="watch-player" class="watch-player" hidden></div>
     <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
