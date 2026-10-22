@@ -1,0 +1,31 @@
+---
+layout: null
+permalink: /Watch/
+title: Watch a video
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Watch a video | LightCity Teaching Fellowship</title>
+  {% include pwa-head.html %}
+  <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}">
+  <script defer src="{{ '/script/video-watch.js' | relative_url }}"></script>
+</head>
+<body>
+  <header class="watch-header">
+    <a class="watch-brand" href="{{ '/LightCity-Teaching-Fellowship/' | relative_url }}"><img src="{{ '/images/pwa-192.png' | relative_url }}" alt="" width="40" height="40">LightCity Teaching Fellowship</a>
+    <a href="{{ '/Videos/' | relative_url }}">All videos</a>
+  </header>
+  <main class="watch-main">
+    <h1 id="watch-title">LightCity video</h1>
+    <p id="watch-status" role="status">Loading your video…</p>
+    <div id="watch-player" class="watch-player" hidden></div>
+    <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
+    <p><a id="watch-youtube" hidden target="_blank" rel="noopener noreferrer">Watch on YouTube</a></p>
+    <noscript>Enable JavaScript to play this video, or browse <a href="{{ '/Videos/' | relative_url }}">all videos</a>.</noscript>
+  </main>
+</body>
+</html>

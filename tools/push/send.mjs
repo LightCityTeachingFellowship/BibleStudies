@@ -75,7 +75,9 @@ async function videoNotificationData(item) {
   }
  }
  const image=await widescreenThumbnail(videoId);
- return {id:item.key,title:'Video',body:metadata.title.trim(),url:item.url,...(image ? {image} : {})};
+ const watchUrl=new URL('Watch/',origin);
+ watchUrl.searchParams.set('v',videoId);
+ return {id:item.key,title:'Video',body:metadata.title.trim(),url:watchUrl.href,...(image ? {image} : {})};
 }
 if(process.env.TEST_MODE === 'true') {
  const uid=(process.env.TEST_SUBSCRIBER_ID || '').trim();
