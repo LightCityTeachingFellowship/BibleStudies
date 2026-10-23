@@ -3,6 +3,18 @@ layout:  404TEMPLATE
 title: 404.html
 ---
 
+{% if site.baseurl == '' %}
+<script>
+// Preserve shared links that still contain the former GitHub project prefix.
+if (location.pathname === '/BibleStudies' || location.pathname.startsWith('/BibleStudies/')) {
+  const destination = new URL(location.href);
+  destination.pathname = location.pathname.slice('/BibleStudies'.length) || '/Home/';
+  if (destination.pathname === '/') destination.pathname = '/Home/';
+  location.replace(destination.href);
+}
+</script>
+{% endif %}
+
 <style type="text/css" media="screen">
   .container {
     margin: 50px auto;
@@ -28,7 +40,7 @@ title: 404.html
     <p>The requested page could not be found.</p>
     <p>Please click:</p>
     <span class="all-links">
-      <a href="https://lightcityteachingfellowship.github.io/BibleStudies/Home/">https://lightcityteachingfellowship.github.io/BibleStudies/</a>
+      <a href="{{ '/Home/' | relative_url }}">Return to the LightCity homepage</a>
     </span>
 </div>
 </div>
