@@ -2,8 +2,7 @@
 	<div class="homeResources-grid-containter bg-color">
 		<h1 class="titles">Intro to the Website</h1>
 		<div class="prayer-text">
-			<p style="margin-bottom: 0;">This is the official Bible Study Website of LightCity Teaching Fellowship. Please see the 
-				<span class="all-links">
+			<p style="margin-bottom: 0;">This is the official Bible Study (Articles) Page of LightCity Teaching Fellowship. Please see the <span class="all-links">
 					{% for page in site.pages %}
 					{% if page.title contains "About-us" %} 
 					<a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">About Us </a>
