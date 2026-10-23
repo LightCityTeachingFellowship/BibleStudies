@@ -8,7 +8,7 @@ title: "Videos"
     <div class="videos-container leftRight-space-16">
         <div class="homeResources-grid-containter bg-color videos-header">
             <h1 class="titles">LightCity Videos</h1>
-            <div class="videos-header-cont">
+            <div id="video-category-tabs" class="videos-header-cont" data-public-only="{% if site.video_visibility_enabled == true %}true{% else %}false{% endif %}"{% if site.video_visibility_enabled == true %} hidden{% endif %}>
                 <div class="videos-header-btns-cont">
                     <button id="All-Tab" class="videos-header-btns" title="All Videos" videoCategory-btn="All">All</button>
                     <button id="Sunday-Tab" class="videos-header-btns" title="Sunday Fellowship" videoCategory-btn="Sunday">Sunday Fellowship</button>

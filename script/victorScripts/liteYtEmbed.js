@@ -127,6 +127,14 @@ videoCategories.forEach(category => {
 });
 function renderAudienceVideos() {
     const library = globalThis.LightCityMembers?.library;
+    const tabs = document.getElementById('video-category-tabs');
+    if (tabs) {
+        const hideTabs = tabs.dataset.publicOnly === 'true' && !Array.isArray(library);
+        if (tabs.hidden !== hideTabs) {
+            tabs.hidden = hideTabs;
+            window.dispatchEvent(new Event('resize'));
+        }
+    }
     const ids = Array.isArray(library) ? library.map(video => video.id) : publicVideoIds;
     const signature = ids.join(',');
     if (signature === renderedAudience) return;

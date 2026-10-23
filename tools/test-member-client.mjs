@@ -1,7 +1,7 @@
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-const source = readFileSync('script/members.js', 'utf8').replace('import(root + file)', 'mockImport(file)');
+const source = readFileSync('script/members.js', 'utf8').replace('import(root + file)', 'mockImport(file)').replace("import(new URL('../pwa-config.js', import.meta.url).href)", 'mockLoadConfig()');
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 async function settle() { for (let i = 0; i < 6; i++) await tick(); }
 class Element {
@@ -9,7 +9,7 @@ class Element {
   setAttribute(key, value) { this.attributes[key] = value; }
   addEventListener(name, fn) { this.events[name] = fn; }
 }
-function setup(enabled = true) {
+function setup(enabled = true, configMode = 'ready') {
   const nodes = new Map(), get = name => { if (!nodes.has(name)) nodes.set(name, new Element()); return nodes.get(name); };
   const page = get('member-page'); page.querySelectorAll = () => [...nodes.values()];
   const callbacks = new Map(), events = new Map(), announcements = [], calls = [];
@@ -54,7 +54,13 @@ function setup(enabled = true) {
   const context = vm.createContext({
     document: { getElementById: get, querySelector: () => ({ dataset: { enabled: String(enabled) } }) },
     window: { addEventListener: (name, callback) => { events.set(name, [...events.get(name) || [], callback]); }, dispatchEvent: event => { announcements.push(event); for (const callback of events.get(event.type) || []) callback(event); } },
-    LIGHTCITY_PUSH: { firebase: {} }, mockImport: async file => modules[file],
+    ...(configMode === 'ready' ? { LIGHTCITY_PUSH: { firebase: { apiKey: 'test-public-key', projectId: 'test-project' } } } : {}),
+    mockLoadConfig: async () => {
+      await tick();
+      if (configMode === 'failed') throw Error('Config request failed');
+      context.LIGHTCITY_PUSH = { firebase: { apiKey: 'test-public-key', projectId: 'test-project' } };
+    },
+    mockImport: async file => modules[file],
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } }, console
   });
   vm.runInContext(source, context);
@@ -110,3 +116,15 @@ app.get('member-google').onclick(); await settle();
 assert.match(app.get('member-status').textContent, /Allow pop-ups/);
 assert.equal(app.api.library, null);
 console.log('PASS: Google first registration, wrong code, returning membership, popup failure and preserved notification identity.');
+
+app = setup(true, 'delayed'); await app.api.ready;
+app.get('member-google').onclick(); await settle();
+assert.equal(app.api.user.email, 'member@example.com', 'Sign-in waits for the shared configuration');
+assert.equal(app.api.library, null);
+app = setup(true, 'failed'); await app.api.ready;
+assert.match(app.get('member-status').textContent, /Sign-in settings could not be loaded/);
+assert.equal(app.calls.length, 0);
+app.get('member-google').onclick(); await settle();
+assert.match(app.get('member-status').textContent, /Please reload the page/);
+assert.equal(app.api.library, null);
+console.log('PASS: delayed configuration load and friendly configuration failure without partial sign-in.');

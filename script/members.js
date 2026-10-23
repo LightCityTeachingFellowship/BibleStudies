@@ -60,10 +60,17 @@ async function checkAccess() {
 async function bootstrap() {
   if (!api.enabled) { renderPage(); return; }
   try {
+    // Module and deferred classic scripts can finish loading in different orders.
+    // Explicitly load the shared public config when it is not available yet.
+    if (!globalThis.LIGHTCITY_PUSH?.firebase) {
+      try { await import(new URL('../pwa-config.js', import.meta.url).href); }
+      catch { throw Error('Sign-in settings could not be loaded. Please reload the page and try again.'); }
+    }
+    const config = globalThis.LIGHTCITY_PUSH?.firebase;
+    if (!config?.apiKey || !config?.projectId) throw Error('Sign-in settings are unavailable. Please reload the page and try again.');
     const root = 'https://www.gstatic.com/firebasejs/10.14.1/';
     const [app, auth, fn] = await Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-functions.js'].map(file => import(root + file)));
     sdk = { app, auth, functions: fn };
-    const config = globalThis.LIGHTCITY_PUSH.firebase;
     const deviceApp = app.getApps().find(item => item.name === '[DEFAULT]') || app.initializeApp(config);
     const memberApp = app.getApps().find(item => item.name === 'lightcity-members') || app.initializeApp(config, 'lightcity-members');
     memberAuth = auth.getAuth(memberApp); deviceAuth = auth.getAuth(deviceApp);
@@ -90,7 +97,7 @@ window.addEventListener('pageshow', event => {
 async function action(task) {
   if (busy || !api.enabled) return;
   busy = true; notice = ''; api.error = null; renderPage();
-  try { await api.ready; if (!sdk) throw Error('Member access is unavailable. Please try again shortly.'); await task(); }
+  try { await api.ready; if (!sdk || !memberAuth || !functions) throw Error('Member access is unavailable. Please reload the page and try again.'); await task(); }
   catch (error) {
     const authFailure = ['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password'].includes(error.code);
     const messages = {

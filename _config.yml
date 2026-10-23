@@ -27,8 +27,8 @@ description: >- # this means to ignore newlines until "baseurl:"
 baseurl: "BibleStudies"
 url: "https://lightcityteachingfellowship.github.io"
 # Keep existing church access until the visibility list and member access are ready.
-video_visibility_enabled: false
-members_enabled: false
+video_visibility_enabled: true
+members_enabled: true
 permalink: /:categories/:year/:month/:day/:title:output_ext
 twitter_username: jekyllrb
 github_username:  LightCity

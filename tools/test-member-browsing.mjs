@@ -5,22 +5,30 @@ const videoSource = readFileSync('script/victorScripts/liteYtEmbed.js', 'utf8');
 const start = videoSource.indexOf('function renderAudienceVideos()');
 const stop = videoSource.indexOf("\nwindow.addEventListener('lightcity-members-changed'", start);
 const tabs = new Map(['Sunday', 'Program'].map(name => [name + '-Tab-content', { innerHTML: 'private card' }]));
+const categoryTabs = { hidden: true, dataset: { publicOnly: 'true' } };
+tabs.set('video-category-tabs', categoryTabs);
 const calls = [], memberState = { library: null };
 const active = new Map();
 const controls = ['All-Tab', 'Sunday-Tab', 'All-Tab-content', 'Sunday-Tab-content'].map(id => ({ id, classList: { toggle: (name, value) => active.set(id, value) } }));
 const context = vm.createContext({
+  window: { dispatchEvent() {} }, Event: class {},
   LightCityMembers: memberState, publicVideoIds: ['abcdefghijk'], publicVideoCategories: { abcdefghijk: 'Program' },
   videoIds: [], savedVideoCategories: {}, videoCategories: ['Sunday', 'Program'], renderedAudience: null,
   document: { getElementById: id => tabs.get(id), querySelectorAll: selector => controls.filter(control => selector === '.videos-header-btns' ? !control.id.endsWith('-content') : control.id.endsWith('-content')) }, createVideoCards: ids => calls.push([...ids])
 });
 vm.runInContext(videoSource.slice(start, stop), context);
 context.renderAudienceVideos(); assert.deepEqual(calls.at(-1), ['abcdefghijk']);
+assert.equal(categoryTabs.hidden, true, 'Public-only visitors have no category tabs');
 memberState.library = [{ id: 'lmnopqrstuv', category: 'Sunday' }, { id: 'abcdefghijk', category: 'Program' }];
 context.renderAudienceVideos(); assert.deepEqual(calls.at(-1), ['lmnopqrstuv', 'abcdefghijk']);
+assert.equal(categoryTabs.hidden, false, 'Full member library restores category tabs');
 tabs.forEach(tab => { tab.innerHTML = 'member card'; });
 memberState.library = null; context.renderAudienceVideos();
 assert.deepEqual(calls.at(-1), ['abcdefghijk']);
-assert.ok([...tabs.values()].every(tab => tab.innerHTML === ''));
+assert.ok([...tabs.entries()].filter(([id]) => id !== 'video-category-tabs').every(([, tab]) => tab.innerHTML === ''));
+assert.equal(categoryTabs.hidden, true, 'Signing out hides category tabs');
+categoryTabs.dataset.publicOnly = 'false'; context.renderAudienceVideos();
+assert.equal(categoryTabs.hidden, false, 'Legacy unfiltered library retains tabs even with identical IDs');
 assert.equal(context.savedVideoCategories.lmnopqrstuv, undefined);
 assert.equal(active.get('All-Tab'), true); assert.equal(active.get('Sunday-Tab-content'), false);
 

@@ -5,6 +5,7 @@
 .videos-header{
     overflow-x:auto;
     margin-bottom:0!important;}
+.videos-header-cont[hidden]{display:none!important;}
 .videos-header-cont{
     display:flex;
     place-content:center;
