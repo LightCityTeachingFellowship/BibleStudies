@@ -39,21 +39,28 @@
 
 // function videoIds() {
     const ImportvideoIdsString = document.getElementById('videoIDS');
+    const videoCategoryData = document.getElementById('video-category-data');
+    const savedVideoCategories = videoCategoryData ? JSON.parse(videoCategoryData.textContent) : {};
+    const publicVideoCategories = { ...savedVideoCategories };
     const videoIdsString = ImportvideoIdsString.textContent;
     // Convert the string to an array of video IDs
     // const videoIds = videoIdsString.split(',').map(id => id.trim());
 
     // Convert the multiline string to an array
-    const videoIds = videoIdsString.trim().split(/\s+/);   
+    const publicVideoIds = videoIdsString.trim().split(/\s+/).filter(id => /^[\w-]{11}$/.test(id));
+    const videoIds = [...publicVideoIds];
+    let renderedAudience = null;
     // Function to create and append video cards
     function createVideoCards(videoIds) {
         const container = document.getElementById('All-Tab-content');   
         // Clear the container before appending new video cards
         container.innerHTML = '';    
-        videoIds.forEach(videoId => {
+        videoIds.forEach((videoId, index) => {
             // Create the necessary elements
             const ionCard = document.createElement('div');
             ionCard.className = 'video-box homeResources-grid-containter bg-color';    
+            ionCard.setAttribute('data-video-id', videoId);
+            ionCard.setAttribute('data-video-order', index);
             const divContainer = document.createElement('div');
             divContainer.className = 'iframe-container';    
             const lazyLoad = document.createElement('lite-youtube');
@@ -67,7 +74,7 @@
     }
     // Initial call to create the video cards
     setTimeout(() => {
-      createVideoCards(videoIds);
+      renderAudienceVideos();
     }, 1);    
     // Function to add a new video ID and update the structure
     function addVideoId(newVideoId) {
@@ -87,6 +94,27 @@ buttons.forEach((button, index) => {
         }
     }
 });
+// Keep the existing tab priority, with Programs covering titles that match no tab.
+function getVideoCategory(title, categoryTitle = title) {
+    const match = text => videoCategories.find(word => String(text).toLowerCase().includes(word.toLowerCase()));
+    return match(categoryTitle) || match(title) || 'Program';
+}
+
+function syncVideoCategoryTab(videoBox) {
+    const category = videoBox.getAttribute('videoCategoryTab');
+    const target = document.getElementById(`${category}-Tab-content`);
+    if (!target) return; // Metadata may still be loading; do not guess its visibility.
+    const id = videoBox.getAttribute('data-video-id');
+    // Refresh an earlier copy instead of duplicating it when metadata loads late.
+    videoCategories.forEach(name => {
+        const tab = document.getElementById(`${name}-Tab-content`);
+        if (tab) Array.from(tab.children).filter(child => child.getAttribute('data-video-id') === id).forEach(child => child.remove());
+    });
+    const clone = videoBox.cloneNode(true);
+    const order = Number(videoBox.getAttribute('data-video-order'));
+    const next = Array.from(target.children).find(child => Number(child.getAttribute('data-video-order')) > order);
+    target.insertBefore(clone, next || null);
+}
 // Select the container element where the divs will be appended
 const videoTabContainer = document.getElementById('videotab-container');
 
@@ -97,6 +125,21 @@ videoCategories.forEach(category => {
     div.classList.add('videotab-content');
     videoTabContainer.appendChild(div);
 });
+function renderAudienceVideos() {
+    const library = globalThis.LightCityMembers?.library;
+    const ids = Array.isArray(library) ? library.map(video => video.id) : publicVideoIds;
+    const signature = ids.join(',');
+    if (signature === renderedAudience) return;
+    renderedAudience = signature;
+    videoIds.splice(0, videoIds.length, ...ids);
+    Object.keys(savedVideoCategories).forEach(id => delete savedVideoCategories[id]);
+    Object.assign(savedVideoCategories, Array.isArray(library) ? Object.fromEntries(library.map(video => [video.id, video.category])) : publicVideoCategories);
+    videoCategories.forEach(category => { document.getElementById(category + '-Tab-content').innerHTML = ''; });
+    document.querySelectorAll('.videos-header-btns').forEach(button => button.classList.toggle('active', button.id === 'All-Tab'));
+    document.querySelectorAll('.videotab-content').forEach(tab => tab.classList.toggle('videotab-content--active', tab.id === 'All-Tab-content'));
+    createVideoCards(videoIds);
+}
+window.addEventListener('lightcity-members-changed', renderAudienceVideos);
  // Function to strip HTML tags from a string
  function stripHtmlTags(html) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -124,7 +167,7 @@ function runFirstPartOfCode() {
             const oEmbedURL = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoURL)}&format=json`;
             
             // Ensure hasFetchedVideoInfo is in the correct scope and check its value
-            if (!this.hasFetchedVideoInfo) {
+            if (!this.hasFetchedVideoInfo && this.closest('#All-Tab-content .video-box')) {
                 fetch(oEmbedURL)
                     .then(response => {
                         if (response.status === 200) {
@@ -156,6 +199,7 @@ function runFirstPartOfCode() {
                         videoTitleElement.classList.add('video-title');
                         videoTitleElement.append(data.title);
                         videoBoxElement.append(videoTitleElement);
+                        videoBoxElement.setAttribute('video-title', data.title);
             
                         // Extract date from video title
                         if (videoTitleElement) {
@@ -206,10 +250,6 @@ function runFirstPartOfCode() {
                                     videoBoxElement.setAttribute('video-category', stripHtmlTags(videoTitleJustCategory.innerHTML));
                                     videoBoxElement.setAttribute('date-posted', stripHtmlTags(videoDateElement.innerHTML));
             
-                                    const matchedCategory = videoCategories.find(word => videoTitleJustCategory.textContent.includes(word));
-                                    if (matchedCategory) {
-                                        videoBoxElement.setAttribute('videoCategoryTab', matchedCategory);
-                                    }
                                 } else {
                                     console.error('Invalid date object:', dateObject);
                                 }
@@ -217,6 +257,9 @@ function runFirstPartOfCode() {
                                 console.error('No date match found');
                             }
                         }
+
+                        // Classification is independent of the optional date/title formatting.
+                        videoBoxElement.setAttribute('videoCategoryTab', savedVideoCategories[this.videoId] || getVideoCategory(data.title, videoTitleJustCategory?.textContent || data.title));
 
                         // Fetch additional video details from YouTube Data API v3
                         // const apiKey = 'AIzaSyBQjKp7Xt5hFJHYwPCjM1wBXg6KBBZrayo';
@@ -270,6 +313,7 @@ function runFirstPartOfCode() {
                         //     console.error('Failed to fetch video details:', error);
                         // });            
                     this.hasFetchedVideoInfo = true; // Set the flag to true after processing
+                    syncVideoCategoryTab(videoBoxElement);
                     })
                     .catch(error => {
                         console.error(error);
@@ -415,26 +459,17 @@ setTimeout(runFirstPartOfCode, 1);
 
 function videoCloneToOtherTabs() {
     // Get all video boxes
-    const videoBoxes = document.querySelectorAll('.video-box');
+    const videoBoxes = document.querySelectorAll('#All-Tab-content .video-box');
     
     // Loop through each video box to clone it into the appropriate category tab
-    videoBoxes.forEach(function(videoBox) {
-        const videoCategoryTabAtt = videoBox.getAttribute('videoCategoryTab');
-        const targetCategoryDivId = `${videoCategoryTabAtt}-Tab-content`;
-        const targetCategoryDiv = document.getElementById(targetCategoryDivId);
-        
-        if (targetCategoryDiv) {
-            const clonedVideoBox = videoBox.cloneNode(true);
-            targetCategoryDiv.appendChild(clonedVideoBox);
-        }
-    });
+    videoBoxes.forEach(syncVideoCategoryTab);
     // Array to store the latest video box from each tab by date and arrange their corresponding tab button accordingly 
     const videoBoxArray = [];
     Array.from(allTabs).slice(1).forEach((tab) => {
         const linkId = tab.id;
         const videoBox = document.querySelector(`#${linkId} .video-box`);        
         if (videoBox) {
-            const dateAttribute = videoBox.getAttribute('date-posted');
+            const dateAttribute = videoBox.getAttribute('date-posted') || '';
             const currentDate = new Date(dateAttribute.replace(/(\d{1,2})(st|nd|rd|th)?/, '$1'));
 
             videoBoxArray.push({ date: currentDate, videoBox, tab });

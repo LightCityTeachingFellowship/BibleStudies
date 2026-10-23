@@ -2,6 +2,10 @@ import {initializeApp,cert} from 'firebase-admin/app';
 import {getFirestore,FieldValue} from 'firebase-admin/firestore';
 import {getMessaging} from 'firebase-admin/messaging';
 import {createHash} from 'node:crypto';
+import {getAuth} from 'firebase-admin/auth';
+import {fileURLToPath} from 'node:url';
+import {loadVideoLibrary} from '../video-library.mjs';
+import {memberDeviceIds,recipients} from './audiences.mjs';
 const origin=new URL(process.env.SITE_URL);
 if(origin.protocol !== 'https:' || !origin.pathname.endsWith('/') || origin.search || origin.hash) throw Error('SITE_URL must be an HTTPS base URL ending in /');
 const dryRun = process.env.DRY_RUN === 'true';
@@ -105,7 +109,9 @@ const response=await fetch(new URL('publication-feed.json',origin),{cache:'no-st
 if(!response.ok) throw Error(`Feed returned ${response.status}`);
 const feed=await response.json();
 if(!Array.isArray(feed.posts)||!Array.isArray(feed.videos)) throw Error('Invalid publication feed');
-const entries=[...new Map([...feed.posts,...feed.videos].map(item=>[item.id,item])).values()].map(item=>{
+const visibilityEnabled=feed.videoVisibilityEnabled===true;
+const videoEntries=visibilityEnabled ? (await loadVideoLibrary(fileURLToPath(new URL('../..',import.meta.url)))).map(video=>({id:'video:'+video.id,title:video.title||'New LightCity video',url:new URL('Watch/?v='+video.id,origin).href,kind:'video',visibility:video.visibility==='public'?'public':'members'})) : feed.videos;
+const entries=[...new Map([...feed.posts,...videoEntries].map(item=>[item.id,item])).values()].map(item=>{
  if(!item.id||!item.title||!item.url) throw Error('Invalid publication');
  const url=new URL(item.url,origin);
  if(url.origin!==origin.origin || !url.pathname.startsWith(origin.pathname)) throw Error('Publication outside website');
@@ -135,12 +141,14 @@ if(textItems.length) {
  const latest=textItems.at(-1);
  plans.push({items:textItems,data:{id:latest.key,title:textItems.length===1?latest.title:`${textItems.length} new LightCity resources`,body:textItems.length===1?`A new ${latest.kind || 'resource'} is available.`:'New articles or summaries are available.',url:textItems.length===1?latest.url:new URL('Teaching-Articles/',origin).href}});
 }
-for(const item of pending.filter(item=>item.kind==='video')) plans.push({items:[item],data:await videoNotificationData(item)});
+for(const item of pending.filter(item=>item.kind==='video')) plans.push({items:[item],audience:visibilityEnabled?item.visibility:'public',data:await videoNotificationData(item)});
 const subscribers=await db.collection('webPushSubscribers').get();
+const approvedDevices=visibilityEnabled ? await memberDeviceIds(db,getAuth(),subscribers.docs) : new Set();
 for(const plan of plans) {
  let failed=false;
- for(let i=0;i<subscribers.docs.length;i+=500) {
-  const docs=subscribers.docs.slice(i,i+500);
+ const targets=recipients(subscribers.docs,plan.audience,approvedDevices);
+ for(let i=0;i<targets.length;i+=500) {
+  const docs=targets.slice(i,i+500);
   const result=await messaging.sendEachForMulticast({tokens:docs.map(d=>d.data().token),...notificationMessage(plan.data)});
   console.log(`Push batch: ${result.responses.filter(r=>!r.error).length} accepted, ${result.responses.filter(r=>r.error).length} rejected. Acceptance does not confirm device display.`);
   for(let j=0;j<result.responses.length;j++) {
@@ -155,5 +163,5 @@ for(const plan of plans) {
   for(const item of plan.items.slice(i,i+400)) batch.set(db.doc('webPushSent/'+item.key),{sentAt:FieldValue.serverTimestamp()});
   await batch.commit();
  }
- console.log(`Announced ${plan.items.length} publications to ${subscribers.size} subscriptions.`);
+ console.log(`Announced ${plan.items.length} publications to ${targets.length} subscriptions (${plan.audience||'public'}).`);
 }

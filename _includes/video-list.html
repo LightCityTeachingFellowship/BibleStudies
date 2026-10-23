@@ -1,0 +1,26 @@
+{%- comment -%}Plain pasted IDs determine inclusion and visibility. Saved metadata is only a cache.{%- endcomment -%}
+{%- capture public_id_text -%}{% include video-ids-public.txt %}{%- endcapture -%}
+{%- capture member_id_text -%}{% include video-ids-members.txt %}{%- endcapture -%}
+{%- assign public_video_ids = public_id_text | normalize_whitespace | split: ' ' | uniq -%}
+{%- assign member_video_ids = member_id_text | normalize_whitespace | split: ' ' | uniq -%}
+{%- assign pasted_video_ids = public_video_ids | concat: member_video_ids | uniq -%}
+{%- assign cached_video_ids = site.data.videos | map: 'id' -%}
+{%- comment -%}Uncached additions come first; existing videos keep their original mixed order.{%- endcomment -%}
+{%- capture ordered_id_csv -%}
+{%- for id in pasted_video_ids -%}{%- unless cached_video_ids contains id -%}{{ id }},{%- endunless -%}{%- endfor -%}
+{%- for id in cached_video_ids -%}{%- if pasted_video_ids contains id -%}{{ id }},{%- endif -%}{%- endfor -%}
+{%- endcapture -%}
+{%- assign ordered_video_ids = ordered_id_csv | split: ',' | uniq -%}
+{%- assign allowed_id_characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-' -%}
+{%- capture visible_id_csv -%}
+{%- for id in ordered_video_ids -%}
+  {%- assign valid_video_id = true -%}
+  {%- if id.size != 11 -%}{%- assign valid_video_id = false -%}{%- endif -%}
+  {%- assign id_characters = id | split: '' -%}
+  {%- for character in id_characters -%}{%- unless allowed_id_characters contains character -%}{%- assign valid_video_id = false -%}{%- endunless -%}{%- endfor -%}
+  {%- assign id_visibility = 'members' -%}
+  {%- if public_video_ids contains id -%}{%- unless member_video_ids contains id -%}{%- assign id_visibility = 'public' -%}{%- endunless -%}{%- endif -%}
+  {%- if valid_video_id -%}{%- if site.video_visibility_enabled != true or id_visibility == 'public' -%}{{ id }},{%- endif -%}{%- endif -%}
+{%- endfor -%}
+{%- endcapture -%}
+{%- assign visible_video_ids = visible_id_csv | split: ',' | uniq -%}

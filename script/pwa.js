@@ -6,6 +6,7 @@
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const config = globalThis.LIGHTCITY_PUSH;
+  const allowInvitations = !document.getElementById('member-page');
   const canNotify = config?.enabled && 'Notification' in window && 'PushManager' in window && !(ios && !standalone);
   const read = (storage, key) => { try { return storage.getItem(key); } catch { return null; } };
   const write = (storage, key, value) => { try { value == null ? storage.removeItem(key) : storage.setItem(key, value); } catch {} };
@@ -99,9 +100,9 @@
     const eligible = !installed && !dismissed && engaged && Boolean(prompt || ios);
     const busy = permissionBusy || document.hidden || Boolean(document.querySelector('dialog[open]'));
     const notificationsSnoozed = Number(read(localStorage, 'lc-notification-snooze-until')) > Date.now() || Number(read(sessionStorage, 'lc-notification-snooze-until')) > Date.now();
-    notificationPopup.hidden = notificationCard.node.hidden = !canNotify || Notification.permission === 'denied' || active || !notificationEngaged || notificationsSnoozed || busy;
-    installPopup.hidden = installCard.node.hidden = !eligible || busy || installPaused || !notificationPopup.hidden;
-    if ((eligible || notificationEngaged) && busy && !document.hidden) retryPopup = setTimeout(render, 5000);
+    notificationPopup.hidden = notificationCard.node.hidden = !allowInvitations || !canNotify || Notification.permission === 'denied' || active || !notificationEngaged || notificationsSnoozed || busy;
+    installPopup.hidden = installCard.node.hidden = !allowInvitations || !eligible || busy || installPaused || !notificationPopup.hidden;
+    if (allowInvitations && (eligible || notificationEngaged) && busy && !document.hidden) retryPopup = setTimeout(render, 5000);
     settings.hidden = !canNotify || !active;
     area.hidden = settings.hidden;
   }
@@ -158,6 +159,7 @@
     const token = await m.msg.getToken(m.messaging, { vapidKey: config.vapidKey, serviceWorkerRegistration: registration });
     if (!token) throw Error('Could not enable notifications. Please try again.');
     await m.db.setDoc(m.db.doc(m.store, 'webPushSubscribers', user.uid), { token, updatedAt: m.db.serverTimestamp() });
+    window.dispatchEvent(new Event('lightcity-push-ready'));
     return m;
   }
   notify.onclick = async () => {

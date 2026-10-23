@@ -133,8 +133,18 @@ function applyStyles() {
 // Enhance the featured home video without affecting other content pages.
 (() => {
   const video = document.querySelector('.home-featured[data-video-id]');
-  const id = video?.dataset.videoId;
-  if (!/^[\w-]{11}$/.test(id || '')) return;
+  if (!video) return;
+  const initial = { id: video.dataset.videoId, title: video.querySelector('.home-video-title').textContent, url: video.href };
+  let controller;
+  function updateFeatured(item = initial) {
+  const id = item.id;
+  controller?.abort();
+  if (!/^[\w-]{11}$/.test(id || '')) { video.hidden = true; return; }
+  const changed = video.dataset.videoId !== id;
+  video.hidden = false;
+  video.dataset.videoId = id;
+  const link = new URL(initial.url, location.href); link.searchParams.set('v', id); video.href = link.href;
+  video.querySelector('.home-video-title').textContent = item.title || 'LightCity’s latest teaching';
   // YouTube can return a small placeholder instead of an HTTP error for a
   // missing HD thumbnail. Check its actual width before keeping that source.
   const thumbnail = video.querySelector('.home-video-image');
@@ -145,23 +155,27 @@ function applyStyles() {
       if (variant >= variants.length - 1) return;
       thumbnail.src = 'https://i.ytimg.com/vi/' + id + '/' + variants[++variant] + '.jpg';
     }
-    thumbnail.addEventListener('error', useNextThumbnail);
-    thumbnail.addEventListener('load', () => {
+    thumbnail.onerror = useNextThumbnail;
+    thumbnail.onload = () => {
       if (thumbnail.naturalWidth < 320) useNextThumbnail();
-    });
+    };
+    if (changed) thumbnail.src = 'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg';
     if (thumbnail.complete && thumbnail.naturalWidth < 320) useNextThumbnail();
   }
-  const controller = new AbortController();
+  controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
   fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id) + '&format=json', { signal: controller.signal })
     .then(response => { if (!response.ok) throw new Error('Video metadata unavailable'); return response.json(); })
     .then(data => {
-      if (typeof data.title === 'string' && data.title.trim()) {
+      if (video.dataset.videoId === id && typeof data.title === 'string' && data.title.trim()) {
         video.querySelector('.home-video-title').textContent = data.title;
       }
     })
     .catch(() => { /* Keep the direct video link usable when metadata is unavailable. */ })
     .finally(() => clearTimeout(timeout));
+  }
+  updateFeatured(globalThis.LightCityMembers?.library?.[0] || initial);
+  window.addEventListener('lightcity-members-changed', () => updateFeatured(globalThis.LightCityMembers?.library?.[0] || initial));
 })();
 
 const categories = document.getElementsByClassName('postCategories')[0];
@@ -189,7 +203,7 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
   const scope = ['Video', 'Article', 'Summary'].includes(dialog.dataset.scope) ? dialog.dataset.scope : 'All';
   const includeVideos = scope === 'All' || scope === 'Video';
   const normalize = text => String(text || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
-  let items = [], kind = scope, limit = 30, loading = false, loadPromise, pendingVideos = 0;
+  let items = [], kind = scope, limit = 30, loading = false, loadPromise, pendingVideos = 0, loadVersion = 0;
   let problems = [];
   const key = 'lightcity-video-search-v1';
   const videoCache = new Map();
@@ -260,41 +274,52 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
     if (!response.ok) throw new Error('Search data unavailable');
     return response.json();
   }
-  async function updateMissing(ids) {
+  async function updateMissing(ids, current, publicIds) {
     const missing = ids.filter(id => !videoCache.has(id));
     pendingVideos = missing.length;
     let failed = 0;
     await Promise.all(Array.from({ length: Math.min(4, missing.length) }, async () => {
       while (missing.length) {
+        if (current !== loadVersion) return;
         const id = missing.shift();
         try {
           const data = await json('https://www.youtube.com/oembed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id) + '&format=json');
+          if (current !== loadVersion) return;
           if (typeof data.title !== 'string' || !data.title.trim()) throw new Error('Missing title');
           videoCache.set(id, { id, title: data.title });
           items.push(videoItem({ id, title: data.title }));
         } catch { failed++; }
+        if (current !== loadVersion) return;
         pendingVideos--;
         if (dialog.open) render();
       }
     }));
-    try { localStorage.setItem(key, JSON.stringify(ids.flatMap(id => videoCache.has(id) ? [videoCache.get(id)] : []))); } catch {}
+    if (current !== loadVersion) return;
+    // Member metadata stays in memory and is never written to the persistent search cache.
+    try { localStorage.setItem(key, JSON.stringify(publicIds.flatMap(id => videoCache.has(id) ? [videoCache.get(id)] : []))); } catch {}
     if (failed) problems.push('Some video titles could not be loaded. Retry when you are online.');
     if (dialog.open) render();
   }
   async function load() {
     if (loadPromise) return loadPromise;
+    const current = ++loadVersion;
     loading = true;
     problems = [];
     render();
     loadPromise = (async () => {
       const fetched = await Promise.allSettled([json(dialog.dataset.index), includeVideos ? json(dialog.dataset.videos) : Promise.resolve([])]);
+      if (current !== loadVersion) return;
       const main = fetched[0].status === 'fulfilled' ? fetched[0].value : null;
       const catalogue = fetched[1].status === 'fulfilled' ? fetched[1].value : null;
       if (Array.isArray(catalogue)) catalogue.forEach(item => {
         if (/^[\w-]{11}$/.test(item.id) && typeof item.title === 'string') videoCache.set(item.id, item);
       });
       const validMain = main && Array.isArray(main.publications) && Array.isArray(main.videoIds);
-      const ids = includeVideos ? [...new Set(validMain ? main.videoIds.filter(id => /^[\w-]{11}$/.test(id)) : [...videoCache.keys()])] : [];
+      // Fall back only to the current catalogue, never to old cached member IDs.
+      const publicIds = includeVideos ? [...new Set(validMain ? main.videoIds.filter(id => /^[\w-]{11}$/.test(id)) : (Array.isArray(catalogue) ? catalogue.filter(item => /^[\w-]{11}$/.test(item.id)).map(item => item.id) : []))] : [];
+      const memberLibrary = includeVideos && Array.isArray(globalThis.LightCityMembers?.library) ? globalThis.LightCityMembers.library : null;
+      if (memberLibrary) memberLibrary.forEach(item => { if (/^[\w-]{11}$/.test(item.id) && typeof item.title === 'string') videoCache.set(item.id, item); });
+      const ids = memberLibrary ? memberLibrary.map(item => item.id) : publicIds;
       items = validMain ? main.publications.flatMap(item => {
         const url = localLink(item.url);
         return url && typeof item.title === 'string' && ['Article', 'Summary'].includes(item.kind) && (scope === 'All' || item.kind === scope) ? [prepare({ ...item, url })] : [];
@@ -303,7 +328,8 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
       items.push(...ids.flatMap(id => videoCache.has(id) ? [videoItem(videoCache.get(id))] : []));
       loading = false;
       render();
-      if (includeVideos) await updateMissing(ids);
+      if (includeVideos) await updateMissing(ids, current, publicIds);
+      if (current !== loadVersion) return;
       if (includeVideos && !catalogue && !ids.length) problems.push('Videos could not be loaded. Retry when you are online.');
       if (dialog.open) render();
     })();
@@ -338,4 +364,9 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
   }));
   more.addEventListener('click', () => { limit += 30; render(); });
   retry.addEventListener('click', () => { loadPromise = null; void load(); });
+  window.addEventListener('lightcity-members-changed', () => {
+    ++loadVersion; loadPromise = null; items = []; pendingVideos = 0; loading = false; problems = [];
+    videoCache.clear(); render();
+    if (dialog.open) void load();
+  });
 })();

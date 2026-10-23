@@ -59,3 +59,22 @@
 @media(max-width:540px) {
   .lc-device-prompts.lc-install-popup,.lc-device-prompts.lc-notification-popup {left:20px; right:20px; width:auto; max-width:none;}
 }
+
+/* The member page shares the home palette and typography. */
+.lc-member-page {--member-surface:var(--white); --member-text:var(--black); --member-border:var(--borderColor-default); --member-input-border:var(--borderColor-default); max-width:650px; margin:auto; padding:24px 20px 48px; font:400 16px/1.6 'Outfit','Segoe UI',sans-serif; color:var(--member-text); box-sizing:border-box;}
+.darkmode .lc-member-page {--member-surface:var(--DM-bgColor-smoke-white); --member-text:var(--DM-black); --member-border:var(--DM-grayTwo); --member-input-border:var(--DM-gray);}
+.lc-member-card {padding:28px; border:1px solid var(--member-border); border-radius:20px; background:var(--member-surface); box-shadow:0 6px 24px var(--bgColor-blockquote);}
+.lc-member-page #member-title {font:700 clamp(28px,5vw,38px)/1.15 'Outfit','Segoe UI',sans-serif; letter-spacing:-.025em; text-transform:none!important; color:var(--member-text)!important; margin:12px 0 20px; padding:0; box-shadow:none!important; text-shadow:none!important; background:none!important; border:0;}
+.lc-member-page p {font:inherit; letter-spacing:normal; margin:12px 0; padding:0;}
+.lc-member-card label {display:block; margin:18px 0 6px; font-weight:500;}
+.lc-member-card input {display:block; width:100%; padding:12px 14px; font:inherit; color:var(--member-text); background:var(--member-surface); border:1px solid var(--member-input-border); border-radius:10px; box-sizing:border-box;}
+.lc-member-page button,.lc-member-page .lc-member-primary {display:inline-block; font:500 16px/1.4 'Outfit','Segoe UI',sans-serif; padding:11px 16px; margin:12px 8px 0 0; border:1px solid var(--member-border); border-radius:24px; background:var(--member-surface); color:var(--member-text); cursor:pointer; text-decoration:none;}
+.lc-member-page .lc-member-primary,.lc-member-tabs button[aria-pressed="true"] {background:var(--vivid-orange); color:var(--black); border-color:var(--vivid-orange);}
+.lc-member-page input:focus-visible,.lc-member-page button:focus-visible,.lc-member-page a:focus-visible {outline:2px solid var(--vivid-orange); outline-offset:3px;}
+.lc-member-page button:disabled,.lc-member-page input:disabled {opacity:.65; cursor:default;}
+.lc-member-page [hidden] {display:none!important;}
+.lc-member-page .lc-member-home {display:inline-block; margin-top:24px; color:var(--member-text);}
+@media(max-width:400px) {.lc-member-card {padding:20px;}}
+
+.lc-member-page .lc-member-google {display:block; width:100%; margin:20px 0 0; font-weight:600; border-radius:12px;}
+.lc-member-page .lc-member-divider {text-align:center; margin:16px 0;}

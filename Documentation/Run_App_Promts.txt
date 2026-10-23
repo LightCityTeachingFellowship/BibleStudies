@@ -1,0 +1,8 @@
+Open the VS Code terminal in your website’s project folder
+C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub
+
+For a public video, run:
+node tools/prepare-video-visibility.mjs --add VIDEO_ID --visibility public
+
+For a members-only video, run:
+node tools/prepare-video-visibility.mjs --add VIDEO_ID --visibility members

@@ -1,0 +1,6 @@
+// Merge into the existing rules. Do not replace rules used by the Flutter app.
+// Remove overlapping wildcard grants for these collections: matching rules are ORed.
+match /churchMembers/{document} { allow read, write: if false; }
+match /churchDevices/{document} { allow read, write: if false; }
+match /churchRateLimits/{document} { allow read, write: if false; }
+match /churchVideoLibrary/{document} { allow read, write: if false; }

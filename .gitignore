@@ -6,6 +6,7 @@ _site/
 .bundle/
 vendor/
 node_modules/
+firebase-debug*.log
 
 # Private configuration and credentials
 .env

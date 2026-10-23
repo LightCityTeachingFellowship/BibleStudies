@@ -1,0 +1,50 @@
+---
+layout: null
+title: Church members
+permalink: /members/
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Members | LightCity Teaching Fellowship</title>
+  {% include pwa-head.html %}
+  {% include browse-head.html %}
+  <link rel="stylesheet" href="{{ '/style/root.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/style/headerANDfooter.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/style/lightcity-02.css' | relative_url }}">
+  <link id="theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}">
+  <script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script>
+</head>
+<body class="app-home">
+  <main id="member-page" class="lc-member-page">
+    <div class="home-brand-row"><a class="home-brand" href="{{ '/Home/' | relative_url }}"><img class="home-brand-logo" src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" alt="LightCity Teaching Fellowship"></a>{% include theme-toggle.html position='home' %}</div>
+    <section class="lc-member-card" aria-labelledby="member-title">
+      <p class="home-eyebrow">CHURCH MEMBERS</p>
+      <h1 id="member-title">Welcome to the family.</h1>
+      <p id="member-status" role="status" aria-live="polite">Loading member access…</p>
+      <div id="member-account" hidden><p>Signed in as <strong id="member-email-display"></strong></p><button type="button" id="member-refresh">Refresh access</button><button type="button" id="member-signout">Sign out</button></div>
+      <div id="member-google-option"><button id="member-google" class="lc-member-google" type="button" disabled>Continue with Google</button><p class="lc-member-divider">or use your email</p></div>
+      <form id="member-google-form" hidden>
+        <label for="member-google-code">Church registration code</label><input id="member-google-code" name="church-code" type="password" autocomplete="off" maxlength="128" required disabled>
+        <p>Enter the code shared with the church to activate your membership.</p>
+        <button class="lc-member-primary" type="submit" disabled>Activate membership</button>
+      </form>
+      <form id="member-form">
+        <div class="lc-member-tabs" role="group" aria-label="Account action"><button type="button" id="member-tab-signin" aria-pressed="true" disabled>Sign in</button><button type="button" id="member-tab-signup" aria-pressed="false" disabled>Create account</button></div>
+        <label for="member-email">Email address</label><input id="member-email" name="email" type="email" autocomplete="email" maxlength="254" required disabled>
+        <label for="member-password">Password</label><input id="member-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required disabled>
+        <div id="member-code-row" hidden><label for="member-code">Church registration code</label><input id="member-code" name="code" type="password" autocomplete="off" maxlength="128" disabled><p>Use the code shared with the church.</p></div>
+        <button id="member-submit" class="lc-member-primary" type="submit" disabled>Sign in</button>
+        <button id="member-reset" type="button" disabled>Forgot password?</button>
+      </form>
+      <div id="member-verification" hidden><p>Open the verification link in your email, then return here.</p><button id="member-check-email" class="lc-member-primary" type="button">I’ve verified my email</button><button id="member-resend" type="button">Resend verification email</button></div>
+      <a id="member-library-link" class="lc-member-primary" href="{{ '/Videos/' | relative_url }}" hidden>Explore all videos →</a>
+    </section>
+    <a class="lc-member-home" href="{{ '/Home/' | relative_url }}">← Back to LightCity</a>
+    <noscript>Please enable JavaScript to sign in.</noscript>
+  </main>
+</body>
+</html>

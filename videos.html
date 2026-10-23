@@ -25,5 +25,6 @@ title: "Videos"
                 {% include videosALL.html %}
             </div>
         </div>
+        <script type="application/json" id="video-category-data">{% include video-list.html %}{ {% for video_id in visible_video_ids %}{% assign video = site.data.videos | where: 'id', video_id | first %}{{ video_id | jsonify }}:{{ video.category | jsonify }}{% unless forloop.last %},{% endunless %}{% endfor %} }</script>
     </div>
 </section>

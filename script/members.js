@@ -1,0 +1,156 @@
+// Member identity is separate from anonymous device identity used by web push.
+const settings = document.querySelector('script[data-lightcity-members]');
+const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, user: null, error: null };
+let sdk, memberAuth, deviceAuth, functions, version = 0;
+const page = document.getElementById('member-page');
+let busy = false, signup = false, notice = '';
+const field = id => document.getElementById(id);
+function publish(videos) {
+  api.library = videos;
+  window.dispatchEvent(new CustomEvent('lightcity-members-changed', { detail: { videos } }));
+}
+function renderPage() {
+  if (!page) return;
+  const signedIn = api.user && !api.user.isAnonymous;
+  const verifiedAccess = Array.isArray(api.library);
+  const verify = signedIn && api.error?.code === 'functions/failed-precondition';
+  field('member-account').hidden = !signedIn;
+  field('member-email-display').textContent = signedIn ? api.user.email : '';
+  const googleAccount = signedIn && api.user.providerData?.some(provider => provider.providerId === 'google.com');
+  field('member-form').hidden = verifiedAccess || verify || googleAccount;
+  field('member-google-option').hidden = !!signedIn;
+  field('member-google-form').hidden = !googleAccount || verifiedAccess || verify;
+  field('member-verification').hidden = !verify;
+  field('member-library-link').hidden = !verifiedAccess;
+  field('member-code-row').hidden = !signup;
+  field('member-code').required = signup;
+  field('member-password').autocomplete = signup ? 'new-password' : 'current-password';
+  field('member-submit').textContent = busy ? 'Please wait…' : signup ? 'Create account' : 'Sign in';
+  field('member-tab-signin').setAttribute('aria-pressed', String(!signup));
+  field('member-tab-signup').setAttribute('aria-pressed', String(signup));
+  page.querySelectorAll('.lc-member-card button,.lc-member-card input').forEach(node => { node.disabled = busy || !api.enabled; });
+  // Account tabs are safe to preview even before the backend is activated.
+  field('member-tab-signin').disabled = field('member-tab-signup').disabled = busy;
+  field('member-status').textContent = !api.enabled ? 'Member access is being prepared. Please check back soon.' : notice || api.error?.message || (verifiedAccess ? 'You have access to the full video library.' : 'Sign in, or create an account using the code shared with the church.');
+}
+async function call(name, data = {}) { return (await sdk.functions.httpsCallable(functions, name)(data)).data; }
+async function linkDevice() {
+  if (!Array.isArray(api.library) || !deviceAuth.currentUser) return;
+  await call('linkChurchDevice', { deviceToken: await deviceAuth.currentUser.getIdToken() });
+}
+async function checkAccess() {
+  const current = ++version;
+  api.user = memberAuth.currentUser;
+  api.error = null;
+  if (!api.user || api.user.isAnonymous) { publish(null); renderPage(); return; }
+  try {
+    const data = await call('getChurchLibrary');
+    if (current !== version) return;
+    if (!Array.isArray(data.videos) || data.videos.some(video => !/^[\w-]{11}$/.test(video.id))) throw Error('The video library could not be loaded. Please try again.');
+    const seen = new Set();
+    publish(data.videos.filter(video => !seen.has(video.id) && seen.add(video.id)));
+    try { await linkDevice(); } catch { notice = 'Video access is ready. Refresh access to finish setting up member notifications.'; }
+  } catch (error) {
+    if (current !== version) return;
+    api.error = error;
+    publish(null);
+  }
+  if (current === version) renderPage();
+}
+async function bootstrap() {
+  if (!api.enabled) { renderPage(); return; }
+  try {
+    const root = 'https://www.gstatic.com/firebasejs/10.14.1/';
+    const [app, auth, fn] = await Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-functions.js'].map(file => import(root + file)));
+    sdk = { app, auth, functions: fn };
+    const config = globalThis.LIGHTCITY_PUSH.firebase;
+    const deviceApp = app.getApps().find(item => item.name === '[DEFAULT]') || app.initializeApp(config);
+    const memberApp = app.getApps().find(item => item.name === 'lightcity-members') || app.initializeApp(config, 'lightcity-members');
+    memberAuth = auth.getAuth(memberApp); deviceAuth = auth.getAuth(deviceApp);
+    functions = fn.getFunctions(memberApp, 'us-central1');
+    await Promise.all([memberAuth.authStateReady(), deviceAuth.authStateReady()]);
+    await new Promise(resolve => {
+      let initial = true;
+      auth.onAuthStateChanged(memberAuth, async () => { await checkAccess(); if (initial) { initial = false; resolve(); } });
+    });
+    auth.onAuthStateChanged(deviceAuth, () => { void linkDevice().catch(() => {}); });
+  } catch (error) { api.error = error; publish(null); renderPage(); }
+}
+api.ready = bootstrap();
+api.refresh = async () => {
+  await api.ready;
+  if (!memberAuth) throw Error('Member access is unavailable. Please try again shortly.');
+  if (memberAuth.currentUser) { await sdk.auth.reload(memberAuth.currentUser); await memberAuth.currentUser.getIdToken(true); }
+  await checkAccess();
+};
+window.addEventListener('lightcity-push-ready', () => { void linkDevice().catch(() => {}); });
+window.addEventListener('pageshow', event => {
+  if (event.persisted && api.enabled) { ++version; publish(null); void api.refresh().catch(() => {}); }
+});
+async function action(task) {
+  if (busy || !api.enabled) return;
+  busy = true; notice = ''; api.error = null; renderPage();
+  try { await api.ready; if (!sdk) throw Error('Member access is unavailable. Please try again shortly.'); await task(); }
+  catch (error) {
+    const authFailure = ['auth/invalid-credential', 'auth/user-not-found', 'auth/wrong-password'].includes(error.code);
+    const messages = {
+      'auth/popup-blocked': 'Your browser blocked Google sign-in. Allow pop-ups for this site, then try again.',
+      'auth/popup-closed-by-user': 'Google sign-in was cancelled. You can try again.',
+      'auth/cancelled-popup-request': 'Google sign-in was cancelled. You can try again.',
+      'auth/operation-not-allowed': 'This sign-in method is not enabled yet. Please contact the church.',
+      'auth/unauthorized-domain': 'Google sign-in is not configured for this website address yet.',
+      'auth/account-exists-with-different-credential': 'This email already uses another sign-in method. Please sign in using that method.'
+    };
+    api.error = { code: error.code, message: messages[error.code] || (authFailure ? 'The email or password is incorrect. Please try again.' : error.message || 'Please try again shortly.') };
+  }
+  finally { busy = false; renderPage(); }
+}
+if (page) {
+  field('member-google').onclick = () => void action(async () => {
+    const provider = new sdk.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    await sdk.auth.signInWithPopup(memberAuth, provider);
+    await checkAccess();
+  });
+  field('member-google-form').addEventListener('submit', event => {
+    event.preventDefault();
+    void action(async () => {
+      await call('registerGoogleChurchMember', { code: field('member-google-code').value });
+      field('member-google-code').value = '';
+      await checkAccess();
+    });
+  });
+  field('member-tab-signin').onclick = () => { signup = false; notice = ''; renderPage(); };
+  field('member-tab-signup').onclick = () => { signup = true; notice = ''; renderPage(); };
+  field('member-form').addEventListener('submit', event => {
+    event.preventDefault();
+    void action(async () => {
+      const email = field('member-email').value.trim(), password = field('member-password').value;
+      if (signup) {
+        if (!memberAuth.currentUser) await sdk.auth.signInAnonymously(memberAuth);
+        const result = await call('registerChurchMember', { email, password, code: field('member-code').value });
+        const credentials = await sdk.auth.signInWithEmailAndPassword(memberAuth, email, password);
+        if (result.verificationRequired) await sdk.auth.sendEmailVerification(credentials.user);
+      } else await sdk.auth.signInWithEmailAndPassword(memberAuth, email, password);
+      field('member-password').value = ''; field('member-code').value = '';
+      await checkAccess();
+    });
+  });
+  field('member-reset').onclick = () => void action(async () => {
+    const email = field('member-email').value.trim();
+    if (!email) throw Error('Enter your email address first.');
+    try { await sdk.auth.sendPasswordResetEmail(memberAuth, email); }
+    catch (error) { if (error.code !== 'auth/user-not-found') throw error; }
+    notice = 'If an account exists for this email, a password reset link has been sent.';
+  });
+  field('member-resend').onclick = () => void action(async () => { await sdk.auth.sendEmailVerification(memberAuth.currentUser); notice = 'Verification email sent. Please check your inbox and spam folder.'; });
+  field('member-refresh').onclick = () => void action(() => api.refresh());
+  field('member-check-email').onclick = () => void action(() => api.refresh());
+  field('member-signout').onclick = () => void action(async () => {
+    ++version; publish(null);
+    if (deviceAuth.currentUser) await call('unlinkChurchDevice', { deviceToken: await deviceAuth.currentUser.getIdToken() });
+    await sdk.auth.signOut(memberAuth);
+    notice = 'You are signed out. Public content is still available.';
+  });
+  renderPage();
+}

@@ -8,7 +8,7 @@ class Element {
   setAttribute(key, value) { this.attributes[key] = value; }
 }
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
-function setup({ enabled = true, supported = true, permission = 'default', subscribed = false, ios = false, standalone = false, serviceWorker = true, subscriptionFails = false, pageViews = 1, snoozeUntil = 0 } = {}) {
+function setup({ enabled = true, supported = true, permission = 'default', subscribed = false, ios = false, standalone = false, serviceWorker = true, subscriptionFails = false, pageViews = 1, snoozeUntil = 0, memberPage = false } = {}) {
   const body = new Element('body'), events = {}, state = { permissionRequests: 0, saved: 0, deleted: 0, tokenDeleted: 0, tokens: 0, placedBeforeNav: false };
   const cache = new Map(subscribed ? [['lc-push-enabled', 'yes']] : []);
   if (snoozeUntil) cache.set('lc-install-snooze-until', String(snoozeUntil));
@@ -16,7 +16,7 @@ function setup({ enabled = true, supported = true, permission = 'default', subsc
   const timers = new Map(); let timerId = 0;
   const storage = map => ({ getItem: key => map.get(key), setItem: (key, value) => map.set(key, value), removeItem: key => map.delete(key) });
   const notification = { permission, requestPermission: async () => { state.permissionRequests++; notification.permission = 'granted'; return 'granted'; } };
-  const window = { addEventListener: (name, handler) => { events[name] = handler; } };
+  const window = { addEventListener: (name, handler) => { events[name] = handler; }, dispatchEvent: event => { events[event.type]?.(event); } };
   if (supported) { window.Notification = notification; window.PushManager = function () {}; }
   const navigator = { userAgent: ios ? 'iPhone' : 'Chrome', platform: '', maxTouchPoints: 0, standalone };
   if (serviceWorker) navigator.serviceWorker = { register: async () => ({ scope: '/BibleStudies/' }) };
@@ -27,8 +27,8 @@ function setup({ enabled = true, supported = true, permission = 'default', subsc
     'firebase-messaging.js': { isSupported: async () => true, getMessaging: () => ({}), getToken: async () => { state.tokens++; return 'device-token'; }, deleteToken: async () => { state.tokenDeleted++; } }
   };
   vm.runInNewContext(source, {
-    document: { currentScript: { dataset: { base: '/BibleStudies/' } }, body, createElement: tag => new Element(tag), querySelector: selector => selector === 'dialog[open]' ? (state.dialogOpen ? {} : null) : ({ before: node => { body.append(node); state.placedBeforeNav = true; } }), addEventListener: (name, handler) => { events[name] = handler; } },
-    navigator, window, Notification: supported ? notification : undefined,
+    document: { currentScript: { dataset: { base: '/BibleStudies/' } }, body, getElementById: id => memberPage && id === 'member-page' ? {} : null, createElement: tag => new Element(tag), querySelector: selector => selector === 'dialog[open]' ? (state.dialogOpen ? {} : null) : ({ before: node => { body.append(node); state.placedBeforeNav = true; } }), addEventListener: (name, handler) => { events[name] = handler; } },
+    navigator, window, Event, Notification: supported ? notification : undefined,
     matchMedia: () => ({ matches: standalone }), location: { origin: 'https://example.com' }, URL,
     LIGHTCITY_PUSH: { enabled, firebase: {}, vapidKey: 'public-key' },
     localStorage: storage(cache), sessionStorage: storage(session),
@@ -100,3 +100,6 @@ app.events.keydown({ key: 'Escape' }); assert.equal(app.notificationPopup.hidden
 app = setup(); app.advance(10000); app.notify.children[1].children[2].onclick(); assert.equal(app.notificationPopup.hidden, true);
 app = setup({ permission: 'granted', subscribed: true }); app.advance(10000); assert.equal(app.notificationPopup.hidden, true);
 console.log('PASS: notification pop-up delay, unchanged wording, dismissal, subscriber hiding, search-dialog deferral and separation from installation.');
+app = setup({ memberPage: true }); app.events.beforeinstallprompt({ preventDefault() {} }); app.advance(10000); app.advance(20000);
+assert.equal(app.popup.hidden, true); assert.equal(app.notificationPopup.hidden, true);
+console.log('PASS: install and notification invitations do not interrupt member sign-in.');

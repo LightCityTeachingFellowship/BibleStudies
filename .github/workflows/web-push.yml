@@ -9,7 +9,7 @@ on:
       operation:
         description: 'Validate, record baseline, or test one subscription'
         type: choice
-        options: [validate, baseline, test, test-basic]
+        options: [validate, baseline, test, test-basic, sync-members]
         default: validate
       subscriber_id:
         description: 'For test only: document ID in Firestore webPushSubscribers (not token)'
@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   notify:
-    if: ${{ github.event_name == 'workflow_dispatch' || (vars.WEB_PUSH_ENABLED == 'true' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || ((vars.WEB_PUSH_ENABLED == 'true' || vars.CHURCH_MEMBERS_ENABLED == 'true') && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'master') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -38,7 +38,14 @@ jobs:
           node-version: '22'
       - run: npm install --omit=dev
         working-directory: tools/push
+      - name: Update the protected member video library
+        if: ${{ vars.CHURCH_MEMBERS_ENABLED == 'true' && (github.event_name == 'workflow_run' || inputs.operation == 'sync-members') }}
+        run: node sync-members.mjs
+        working-directory: tools/push
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       - run: npm run send
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.operation != 'sync-members') || (github.event_name == 'workflow_run' && vars.WEB_PUSH_ENABLED == 'true') }}
         working-directory: tools/push
         env:
           SITE_URL: ${{ vars.SITE_URL }}

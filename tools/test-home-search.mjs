@@ -17,7 +17,7 @@ class Element {
   close() { this.open = false; this.dispatch('close'); }
 }
 const settle = () => new Promise(resolve => setTimeout(resolve, 160));
-function setup({ failIndex = false, missingVideo = false, manyResults = false, scope = 'All' } = {}) {
+function setup({ failIndex = false, failCatalogue = false, staleCache = false, missingVideo = false, manyResults = false, scope = 'All' } = {}) {
   const nodes = new Map(['dialog', 'desktop', 'query', 'results', 'status', 'warning', 'retry', 'more'].map(name => [name, new Element()]));
   const get = name => nodes.get(name);
   const form = new Element(), mobile = new Element(), close = new Element();
@@ -42,8 +42,10 @@ function setup({ failIndex = false, missingVideo = false, manyResults = false, s
     createElement: () => new Element()
   };
   const storage = new Map();
+  const events = {}, memberState = { library: null };
+  if (staleCache) storage.set('lightcity-video-search-v1', JSON.stringify([{ id: 'zyxwvutsrqp', title: 'Old members-only video' }]));
   vm.runInNewContext(source, {
-    document, location: { href: 'https://example.com/BibleStudies/Home/', origin: 'https://example.com' },
+    document, window: { addEventListener: (name, handler) => { events[name] = handler; } }, LightCityMembers: memberState, location: { href: 'https://example.com/BibleStudies/Home/', origin: 'https://example.com' },
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     URL, AbortSignal, setTimeout, clearTimeout,
     fetch: async url => {
@@ -52,11 +54,14 @@ function setup({ failIndex = false, missingVideo = false, manyResults = false, s
         if (failIndex) throw new Error('Offline');
         return { ok: true, json: async () => ({ publications, videoIds: missingVideo ? ['abcdefghijk', 'lmnopqrstuv'] : ['abcdefghijk'] }) };
       }
-      if (url.includes('catalog')) return { ok: true, json: async () => titles };
+      if (url.includes('catalog')) {
+        if (failCatalogue) throw Error('Offline');
+        return { ok: true, json: async () => titles };
+      }
       return { ok: true, json: async () => ({ title: 'New video prayer' }) };
     }
   });
-  return { get, form, mobile, close, filters, calls, storage };
+  return { get, form, mobile, close, filters, calls, storage, memberState, events };
 }
 let app = setup();
 app.get('desktop').value = 'prayer'; app.get('desktop').dispatch('input'); await settle();
@@ -101,3 +106,17 @@ for (const scope of ['Video', 'Article', 'Summary']) {
 }
 console.log('PASS: mixed search, content matching, type filters, direct video links, mobile open/close, accent matching, safe text/URLs, empty results, one-time loading, failure/retry state, new-video metadata and cache.');
 console.log('PASS: video/article/summary scope restrictions, no cross-section results, and no video loading for article/summary searches.');
+app = setup({ failIndex: true, failCatalogue: true, staleCache: true });
+app.get('desktop').value = 'members-only'; app.get('desktop').dispatch('input'); await settle();
+assert.equal(app.get('results').children.length, 0, 'Failed requests must not expose old cached members-only videos');
+assert.ok(!app.calls.some(url => url.includes('oembed')), 'Cached private IDs must not trigger metadata requests');
+console.log('PASS: unavailable public indexes cannot fall back to stale member search data.');
+app = setup();
+app.memberState.library = [{ id: 'abcdefghijk', title: 'Prayer Meeting' }, { id: 'lmnopqrstuv', title: 'Church private teaching' }];
+app.get('desktop').value = 'private'; app.get('desktop').dispatch('input'); await settle();
+assert.equal(app.get('results').children.length, 1);
+assert.ok(![...app.storage.values()].some(value => value.includes('Church private teaching')), 'Private metadata must not enter persistent search storage');
+app.memberState.library = null; app.events['lightcity-members-changed']();
+assert.equal(app.get('results').children.length, 0, 'Signing out immediately removes private results');
+await settle(); assert.equal(app.get('results').children.length, 0);
+console.log('PASS: member search results stay in memory and disappear immediately on sign-out.');
