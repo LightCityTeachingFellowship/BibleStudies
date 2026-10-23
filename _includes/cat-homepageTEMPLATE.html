@@ -5,9 +5,10 @@
 <link type="text/css" href="../style/darkMODE.css" rel="stylesheet">
 <link id="theme-stylesheet" type="text/css" href="../style/lightMODE.css" rel="stylesheet">
 <link type="text/css" href="../style/root.css" rel="stylesheet">
-<link type="text/css" href="../style/lightcity-02.css" rel="stylesheet">
+<link type="text/css" href="../style/lightcity-02.css?v=browse-2" rel="stylesheet">
 <link type="text/css" href="../style/bibleApp-override.css" rel="stylesheet">
 <script src="https://kit.fontawesome.com/4c38acae5e.js" crossorigin="anonymous"></script>
+{% include browse-head.html %}
 </head>
 <style>
 footer{
@@ -85,21 +86,13 @@ h1.H0,h2.H1,h3.H2,h4.H3,h5.H4,h6.H5{
 h1>p:first-child,h2>p:first-child,h3>p:first-child,h4>p:first-child,h5>p:first-child,h6>p:first-child{
     left:-14px;}}
 </style>
-<body class="fonts">
+<body class="fonts app-home site-browse">
     <div class="loader-bg">
         <div class="loader"></div>
     </div>
     {% include cat-Header-section.html %} 
-    <div id="search-container" class="homeResources-grid-containter bg-color" style="margin: 20px 16px;padding: 16px;">
-        {% include search-articles.html %}
-    </div>
-    <label class="switch" id="theme-toggle-container">
-        <input type="checkbox" id="theme-toggle" />
-        <span class="slider round">
-            <p id="sun-icon">L</p>
-            <p id="moon-icon">D</p>
-        </span>
-    </label> 
+    {% include site-search.html scope='Article' %}
+    {% include theme-toggle.html %}
     {{ content }}
     {% include contact-section.html %}
     <script type="text/javascript" src="../script/victorScripts/lightANDdarkmode.js"></script>

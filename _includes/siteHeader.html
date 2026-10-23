@@ -14,7 +14,7 @@
                 <div class="homeHeaderNav align-items">
                     <div class="churchLOGO">
                         {% for page in site.pages %}{% if page.title contains "LightCity Teaching Fellowship" %}
-                            <a class="iconLink transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                            <a class="iconLink transition" href="{{ '/Home/' | relative_url }}">
                                 <img class="churchLOGO-img" src="../images/LightCityLOGO.jpg" alt="lightcity-LOGO">
                             </a>{% endif %}{% endfor %}
                     </div>

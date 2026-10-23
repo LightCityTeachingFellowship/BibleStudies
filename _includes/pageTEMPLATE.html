@@ -11,13 +11,7 @@
 		</div>
 	</div>
 </div>
-<label class="switch" id="theme-toggle-container">
-	<input type="checkbox" id="theme-toggle" />
-	<span class="slider round">
-		<p id="sun-icon">L</p>
-		<p id="moon-icon">D</p>
-	</span>
-</label> 
+{% include theme-toggle.html %}
 <article class="homeResources-grid-containter leftRight-space-16">
 	<small id="archive-date" class="archive-date">{{ page.date | date: "%a, %b %d, %y." }}</small>
 	<main>

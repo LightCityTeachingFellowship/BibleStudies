@@ -5,26 +5,19 @@
 <link type="text/css" href="../style/darkMODE.css" rel="stylesheet">
 <link id="theme-stylesheet" type="text/css" href="../style/lightMODE.css" rel="stylesheet">
 <link type="text/css" href="../style/root.css" rel="stylesheet">
-<link type="text/css" href="../style/lightcity-02.css" rel="stylesheet">
+<link type="text/css" href="../style/lightcity-02.css?v=browse-2" rel="stylesheet">
 <link type="text/css" href="../style/bibleApp-override.css" rel="stylesheet">
 <script src="https://kit.fontawesome.com/4c38acae5e.js" crossorigin="anonymous"></script>
+{% include browse-head.html %}
 </head>
 
-<body class="fonts">
+<body class="fonts app-home site-browse">
     <div class="loader-bg">
         <div class="loader"></div>
     </div>
     {% include cat-Header-section-summary.html %} 
-    <div id="search-container" class="homeResources-grid-containter bg-color" style="margin: 20px 16px;padding: 16px;">
-        {% include search-summaries.html %}
-    </div>
-    <label class="switch" id="theme-toggle-container">
-        <input type="checkbox" id="theme-toggle" />
-        <span class="slider round">
-            <p id="sun-icon">L</p>
-            <p id="moon-icon">D</p>
-        </span>
-    </label> 
+    {% include site-search.html scope='Summary' %}
+    {% include theme-toggle.html %}
     {{ content }}
     {% include contact-section-summary.html %}
     <script type="text/javascript" src="../script/victorScripts/lightANDdarkmode.js"></script>

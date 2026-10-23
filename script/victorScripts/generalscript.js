@@ -128,8 +128,42 @@ function applyStyles() {
       }
       searchResultsContainerInner.style.maxHeight = maxHeight;
   }
-  
+
 //Reverse the arrangement of summary categories (could not achive this with Jekyll at this time)
+// Enhance the featured home video without affecting other content pages.
+(() => {
+  const video = document.querySelector('.home-featured[data-video-id]');
+  const id = video?.dataset.videoId;
+  if (!/^[\w-]{11}$/.test(id || '')) return;
+  // YouTube can return a small placeholder instead of an HTTP error for a
+  // missing HD thumbnail. Check its actual width before keeping that source.
+  const thumbnail = video.querySelector('.home-video-image');
+  if (thumbnail) {
+    const variants = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault'];
+    let variant = 0;
+    function useNextThumbnail() {
+      if (variant >= variants.length - 1) return;
+      thumbnail.src = 'https://i.ytimg.com/vi/' + id + '/' + variants[++variant] + '.jpg';
+    }
+    thumbnail.addEventListener('error', useNextThumbnail);
+    thumbnail.addEventListener('load', () => {
+      if (thumbnail.naturalWidth < 320) useNextThumbnail();
+    });
+    if (thumbnail.complete && thumbnail.naturalWidth < 320) useNextThumbnail();
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id) + '&format=json', { signal: controller.signal })
+    .then(response => { if (!response.ok) throw new Error('Video metadata unavailable'); return response.json(); })
+    .then(data => {
+      if (typeof data.title === 'string' && data.title.trim()) {
+        video.querySelector('.home-video-title').textContent = data.title;
+      }
+    })
+    .catch(() => { /* Keep the direct video link usable when metadata is unavailable. */ })
+    .finally(() => clearTimeout(timeout));
+})();
+
 const categories = document.getElementsByClassName('postCategories')[0];
 const categoriesChildrenToRev = categories ? Array.from(categories?.getElementsByClassName('homeResources-grid-containter')) : [];
 categoriesChildrenToRev?.reverse();
@@ -139,3 +173,169 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
 }
 
 
+
+// Homepage search: one accessible panel for every content type.
+(() => {
+  const dialog = document.getElementById('home-search-dialog');
+  if (!dialog) return;
+  const desktop = document.getElementById('home-search-desktop');
+  const query = document.getElementById('home-search-query');
+  const results = document.getElementById('home-search-results');
+  const status = document.getElementById('home-search-status');
+  const warning = document.getElementById('home-search-warning');
+  const retry = document.getElementById('home-search-retry');
+  const more = document.getElementById('home-search-more');
+  const filters = [...dialog.querySelectorAll('[data-kind]')];
+  const scope = ['Video', 'Article', 'Summary'].includes(dialog.dataset.scope) ? dialog.dataset.scope : 'All';
+  const includeVideos = scope === 'All' || scope === 'Video';
+  const normalize = text => String(text || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  let items = [], kind = scope, limit = 30, loading = false, loadPromise, pendingVideos = 0;
+  let problems = [];
+  const key = 'lightcity-video-search-v1';
+  const videoCache = new Map();
+  try {
+    const cached = JSON.parse(localStorage.getItem(key) || '[]');
+    if (Array.isArray(cached)) cached.forEach(item => {
+      if (/^[\w-]{11}$/.test(item.id) && typeof item.title === 'string') videoCache.set(item.id, item);
+    });
+  } catch {}
+  function prepare(item) {
+    return { ...item, titleKey: normalize(item.title), metadataKey: normalize((item.categories || '') + ' ' + (item.tags || '')), textKey: normalize(item.text) };
+  }
+  function localLink(value) {
+    try {
+      const link = new URL(value, location.href);
+      return link.origin === location.origin && /^https?:$/.test(link.protocol) ? link.href : null;
+    } catch { return null; }
+  }
+  function videoItem(item) {
+    const link = new URL(dialog.dataset.watch, location.href);
+    link.searchParams.set('v', item.id);
+    return prepare({ title: item.title, url: link.href, kind: 'Video', text: '' });
+  }
+  function addText(parent, tag, text, className) {
+    const node = document.createElement(tag);
+    node.textContent = text;
+    if (className) node.className = className;
+    parent.appendChild(node);
+    return node;
+  }
+  function render() {
+    const term = normalize(query.value);
+    const tokens = term.split(' ').filter(Boolean);
+    results.replaceChildren();
+    more.hidden = true;
+    warning.hidden = problems.length === 0;
+    warning.textContent = problems.join(' ');
+    retry.hidden = problems.length === 0 || loading;
+    if (!tokens.length) {
+      status.textContent = dialog.dataset.description || 'Search video titles, articles and summaries.';
+      return;
+    }
+    const matches = items.filter(item => (scope === 'All' || item.kind === scope) && (kind === 'All' || item.kind === kind))
+      .filter(item => tokens.every(token => (item.titleKey + ' ' + item.metadataKey + ' ' + item.textKey).includes(token)))
+      .map(item => ({ item, score: (item.titleKey === term ? 100 : 0) + (item.titleKey.includes(term) ? 30 : 0) + tokens.reduce((score, token) => score + (item.titleKey.includes(token) ? 8 : item.metadataKey.includes(token) ? 3 : 0), 0) }))
+      .sort((a, b) => b.score - a.score);
+    status.textContent = loading && !items.length ? 'Loading search…' : matches.length + (matches.length === 1 ? ' result' : ' results') + (loading ? ' · Loading…' : pendingVideos ? ' · Updating video titles…' : '');
+    if (!matches.length && !loading) status.textContent = pendingVideos ? 'No matches yet. Updating video titles…' : scope === 'All' ? 'No matches found. Try another word or choose All.' : 'No matches found. Try another word.';
+    for (const { item } of matches.slice(0, limit)) {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = item.url;
+      addText(link, 'span', item.kind, 'home-result-kind');
+      addText(link, 'strong', item.title);
+      const text = String(item.text || '').replace(/\s+/g, ' ').trim();
+      if (text) {
+        const index = text.toLowerCase().indexOf(query.value.trim().toLowerCase());
+        const start = Math.max(0, index - 45);
+        addText(link, 'span', (start ? '…' : '') + text.slice(start, start + 170) + (text.length > start + 170 ? '…' : ''), 'home-result-excerpt');
+      }
+      li.appendChild(link);
+      results.appendChild(li);
+    }
+    more.hidden = matches.length <= limit;
+  }
+  async function json(url) {
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new Error('Search data unavailable');
+    return response.json();
+  }
+  async function updateMissing(ids) {
+    const missing = ids.filter(id => !videoCache.has(id));
+    pendingVideos = missing.length;
+    let failed = 0;
+    await Promise.all(Array.from({ length: Math.min(4, missing.length) }, async () => {
+      while (missing.length) {
+        const id = missing.shift();
+        try {
+          const data = await json('https://www.youtube.com/oembed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id) + '&format=json');
+          if (typeof data.title !== 'string' || !data.title.trim()) throw new Error('Missing title');
+          videoCache.set(id, { id, title: data.title });
+          items.push(videoItem({ id, title: data.title }));
+        } catch { failed++; }
+        pendingVideos--;
+        if (dialog.open) render();
+      }
+    }));
+    try { localStorage.setItem(key, JSON.stringify(ids.flatMap(id => videoCache.has(id) ? [videoCache.get(id)] : []))); } catch {}
+    if (failed) problems.push('Some video titles could not be loaded. Retry when you are online.');
+    if (dialog.open) render();
+  }
+  async function load() {
+    if (loadPromise) return loadPromise;
+    loading = true;
+    problems = [];
+    render();
+    loadPromise = (async () => {
+      const fetched = await Promise.allSettled([json(dialog.dataset.index), includeVideos ? json(dialog.dataset.videos) : Promise.resolve([])]);
+      const main = fetched[0].status === 'fulfilled' ? fetched[0].value : null;
+      const catalogue = fetched[1].status === 'fulfilled' ? fetched[1].value : null;
+      if (Array.isArray(catalogue)) catalogue.forEach(item => {
+        if (/^[\w-]{11}$/.test(item.id) && typeof item.title === 'string') videoCache.set(item.id, item);
+      });
+      const validMain = main && Array.isArray(main.publications) && Array.isArray(main.videoIds);
+      const ids = includeVideos ? [...new Set(validMain ? main.videoIds.filter(id => /^[\w-]{11}$/.test(id)) : [...videoCache.keys()])] : [];
+      items = validMain ? main.publications.flatMap(item => {
+        const url = localLink(item.url);
+        return url && typeof item.title === 'string' && ['Article', 'Summary'].includes(item.kind) && (scope === 'All' || item.kind === scope) ? [prepare({ ...item, url })] : [];
+      }) : [];
+      if (!validMain && scope !== 'Video') problems.push((scope === 'All' ? 'Articles and summaries' : scope === 'Article' ? 'Articles' : 'Summaries') + ' could not be loaded. Retry when you are online.');
+      items.push(...ids.flatMap(id => videoCache.has(id) ? [videoItem(videoCache.get(id))] : []));
+      loading = false;
+      render();
+      if (includeVideos) await updateMissing(ids);
+      if (includeVideos && !catalogue && !ids.length) problems.push('Videos could not be loaded. Retry when you are online.');
+      if (dialog.open) render();
+    })();
+    return loadPromise;
+  }
+  function openSearch(value = '') {
+    query.value = value;
+    limit = 30;
+    if (!dialog.open) dialog.showModal();
+    query.focus();
+    query.setSelectionRange?.(query.value.length, query.value.length);
+    render();
+    void load();
+  }
+  desktop.addEventListener('input', () => openSearch(desktop.value));
+  desktop.closest('form').addEventListener('submit', event => { event.preventDefault(); openSearch(desktop.value); });
+  document.querySelector('.home-search-mobile').addEventListener('click', () => openSearch(desktop.value));
+  dialog.querySelector('.home-search-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('close', () => { desktop.value = query.value; });
+  let debounce;
+  query.addEventListener('input', () => {
+    desktop.value = query.value;
+    limit = 30;
+    clearTimeout(debounce);
+    debounce = setTimeout(render, 120);
+  });
+  filters.forEach(button => button.addEventListener('click', () => {
+    kind = scope === 'All' ? button.dataset.kind : scope;
+    limit = 30;
+    filters.forEach(filter => filter.setAttribute('aria-pressed', String(filter === button)));
+    render();
+  }));
+  more.addEventListener('click', () => { limit += 30; render(); });
+  retry.addEventListener('click', () => { loadPromise = null; void load(); });
+})();

@@ -1,4 +1,4 @@
-<footer>
+<footer class="site-footer">
     <section id="Contact-section">
         <div class="">
             <div class="Contact-section-inner leftRight-space-16">
@@ -62,7 +62,7 @@
                             <div class="min-height content">
                                 <ul class="footerLinks-lists active-link">
                                     <li>
-                                        {% for page in site.pages %}{% if page.title contains "church" %}
+                                        {% for page in site.pages %}{% if page.title contains "Teaching-Articles" %}
                                         <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
                                             <span>Articles</span>
                                         </a>{% endif %}{% endfor %}

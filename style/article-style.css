@@ -443,3 +443,17 @@ th:first-child{ border-right:2.5px solid var(--grey);}
 .toggleAllHeaders:has(input#toggleAllBtn:checked) p:first-child::after {
     content: 'Collapse All';
 }
+
+/* Keep long-form studies in a centred desktop reading column.
+   Scope this to the article/summary templates, not headers or Bible tools. */
+@media only screen and (min-width:960px) {
+    .reading-column {
+        box-sizing:border-box;
+        width:calc(100% - 64px);
+        max-width:90ch;
+        margin-left:auto;
+        margin-right:auto;
+    }
+    article.reading-column > main {min-width:0;}
+    article.reading-column > main img {max-width:100%; height:auto;}
+}

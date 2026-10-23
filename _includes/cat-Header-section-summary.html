@@ -4,7 +4,7 @@
             <div class="mobileHeaderNav leftRight-space-16">
                 <div class="mobileLogoSize">
                     {% for page in site.pages %}{% if page.title contains "Teaching-Summary" %}
-                    <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                    <a href="{{ '/Home/' | relative_url }}">
                         <img class="mobileLogo" src="../images/LightCityLOGO.jpg" alt="lightcity-LOGO">
                     </a>{% endif %}{% endfor %}
                 </div>
@@ -16,7 +16,7 @@
                             <div id="myDropdown" class="myDropdown transition">
                                 <div class="mobile-homeHeaderNav active-link">
                                     <div class="mobile-headerLinks transition">
-                                        {% for page in site.pages %}{% if page.title contains "LightCity-Teaching-Fellowship" %}
+                                        {% for page in site.pages %}{% if page.title contains "Teaching-Articles" %}
                                         <a class="linkTitle transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
                                             Articles
                                         </a>{% endif %}{% endfor %}
@@ -86,14 +86,14 @@
                 <nav class="homeHeaderNav">
                     <div class="churchLOGO">
                         {% for page in site.pages %}{% if page.title contains "Teaching-Summary" %}
-                        <a class="iconLink transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                        <a class="iconLink transition" href="{{ '/Home/' | relative_url }}">
                             <img class="churchLOGO-img" src="../images/LightCityLOGO.jpg" height=" 40" alt="lightcity-LOGO">
                         </a>{% endif %}{% endfor %}
                     </div>
                     <div class="headerUL">
                         <div class="header-links active-link">
                             <div class="header-links-li transition">
-                                {% for page in site.pages %}{% if page.title contains "LightCity-Teaching-Fellowship" %}
+                                {% for page in site.pages %}{% if page.title contains "Teaching-Articles" %}
                                 <a class="iconLink transition"
                                     href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
                                     <span>Articles</span>

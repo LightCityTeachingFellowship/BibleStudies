@@ -1,0 +1,18 @@
+{% assign dialog_scope = include.scope | default: 'All' %}
+{% case dialog_scope %}
+{% when 'Video' %}{% assign dialog_name = 'videos' %}{% assign dialog_description = 'Video titles' %}
+{% when 'Article' %}{% assign dialog_name = 'articles' %}{% assign dialog_description = 'Article titles, text and categories' %}
+{% when 'Summary' %}{% assign dialog_name = 'summaries' %}{% assign dialog_description = 'Summary titles, text and categories' %}
+{% else %}{% assign dialog_name = 'LightCity' %}{% assign dialog_description = 'Videos, articles and summaries' %}
+{% endcase %}
+  <dialog id="home-search-dialog" aria-labelledby="home-search-heading" data-scope="{{ dialog_scope }}" data-description="{{ dialog_description }}" data-index="{{ '/search-home.json' | relative_url }}" data-videos="{{ '/search-video-catalog.json' | relative_url }}" data-watch="{{ '/Watch/' | relative_url }}">
+    <div class="home-search-heading-row"><h2 id="home-search-heading">Search {{ dialog_name }}</h2><button type="button" class="home-search-close" aria-label="Close search">×</button></div>
+    <label class="home-search-label" for="home-search-query">{{ dialog_description }}</label>
+    <input id="home-search-query" type="search" placeholder="Search…" autocomplete="off">
+    {% if dialog_scope == 'All' %}<div class="home-search-filters" role="group" aria-label="Filter results"><button type="button" data-kind="All" aria-pressed="true">All</button><button type="button" data-kind="Video" aria-pressed="false">Videos</button><button type="button" data-kind="Article" aria-pressed="false">Articles</button><button type="button" data-kind="Summary" aria-pressed="false">Summaries</button></div>{% endif %}
+    <p id="home-search-status" role="status" aria-live="polite">Type to search.</p>
+    <p id="home-search-warning" hidden></p>
+    <button id="home-search-retry" type="button" hidden>Retry loading</button>
+    <ul id="home-search-results" aria-label="Search results"></ul>
+    <button id="home-search-more" type="button" hidden>Show more results</button>
+  </dialog>

@@ -10,19 +10,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com">
 <script src="https://kit.fontawesome.com/4c38acae5e.js" crossorigin="anonymous"></script>
 <style>main>h1,main>h2,main>h3,main>h4,main>h5,main>h6{padding: 5px 15px!important;}</style>
+{% include browse-head.html %}
 </head>
 
 <body class="fonts">
     <div class="loader-bg">
         <div class="loader"></div>
     </div>
-    <div class="header-container">
+    <div class="header-container reading-chrome reading-header">
         <header id="mobileHeader">
             <div id="homeHeader" class="bg-color bg-image">
                 <nav class="mobileHeaderNav leftRight-space-16">
                     <div class="mobileLogoSize">
                         {% for page in site.pages %}{% if page.title contains "Teaching-Summary" %}
-                        <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                        <a href="{{ '/Home/' | relative_url }}">
                             <img class="mobileLogo" src="../images/LightCityLOGO.jpg" alt="lightcity-LOGO">
                         </a>{% endif %}{% endfor %}
                     </div>
@@ -60,7 +61,7 @@
                                         </a>{% endif %}{% endfor %}
                                     </div>
                                     <div class="mobile-headerLinks transition">
-                                        {% for page in site.pages %} {% if page.title contains "LightCity-Teaching-Fellowship" %}
+                                        {% for page in site.pages %} {% if page.title contains "Teaching-Articles" %}
                                         <a class="linkTitle transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
                                             <span>Articles</span>
                                         </a>{% endif %}{% endfor %}
@@ -104,7 +105,7 @@
                     <nav class="homeHeaderNav">
                         <div class="mobileLogoSize">
                             {% for page in site.pages %}{% if page.title contains "Teaching-Summary" %}
-                            <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
+                            <a href="{{ '/Home/' | relative_url }}">
                                 <img class="mobileLogo" src="../images/LightCityLOGO.jpg" alt="lightcity-LOGO">
                             </a>{% endif %}{% endfor %}
                         </div>
@@ -138,7 +139,7 @@
                                     </a>{% endif %}{% endfor %}
                                 </div>
                                 <div class="header-links-li transition">
-                                    {% for page in site.pages %} {% if page.title contains "LightCity-Teaching-Fellowship" %}
+                                    {% for page in site.pages %} {% if page.title contains "Teaching-Articles" %}
                                     <a class="iconLink transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
                                         Articles
                                     </a>{% endif %}{% endfor %}

@@ -85,7 +85,7 @@ if(process.env.TEST_MODE === 'true') {
  const subscriber=await db.doc('webPushSubscribers/'+uid).get();
  if(!subscriber.exists || !subscriber.data().token) throw Error('Subscription document missing or has no token.');
  const id='device-test-'+Date.now();
- let data={id,title:'LightCity device test',body:'Sent using the same format as automatic publishing alerts.',url:new URL('LightCity-Teaching-Fellowship/',origin).href};
+ let data={id,title:'LightCity device test',body:'Sent using the same format as automatic publishing alerts.',url:new URL('Teaching-Articles/',origin).href};
  const minimal=process.env.TEST_BASIC === 'true';
  if(!minimal && process.env.TEST_VIDEO_ID?.trim()) {
   const videoId=process.env.TEST_VIDEO_ID.trim();
@@ -133,7 +133,7 @@ const plans=[];
 const textItems=pending.filter(item=>item.kind!=='video');
 if(textItems.length) {
  const latest=textItems.at(-1);
- plans.push({items:textItems,data:{id:latest.key,title:textItems.length===1?latest.title:`${textItems.length} new LightCity resources`,body:textItems.length===1?`A new ${latest.kind || 'resource'} is available.`:'New articles or summaries are available.',url:textItems.length===1?latest.url:new URL('LightCity-Teaching-Fellowship/',origin).href}});
+ plans.push({items:textItems,data:{id:latest.key,title:textItems.length===1?latest.title:`${textItems.length} new LightCity resources`,body:textItems.length===1?`A new ${latest.kind || 'resource'} is available.`:'New articles or summaries are available.',url:textItems.length===1?latest.url:new URL('Teaching-Articles/',origin).href}});
 }
 for(const item of pending.filter(item=>item.kind==='video')) plans.push({items:[item],data:await videoNotificationData(item)});
 const subscribers=await db.collection('webPushSubscribers').get();

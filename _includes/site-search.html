@@ -1,0 +1,10 @@
+{% assign search_scope = include.scope | default: 'Article' %}
+{% case search_scope %}{% when 'Video' %}{% assign search_name = 'videos' %}{% when 'Summary' %}{% assign search_name = 'summaries' %}{% else %}{% assign search_name = 'articles' %}{% endcase %}
+<div class="browse-search">
+  <form class="home-search-preview" role="search" aria-label="Search {{ search_name }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>
+    <input id="home-search-desktop" type="search" placeholder="Search {{ search_name }}…" aria-label="Search {{ search_name }}" autocomplete="off">
+    <button id="site-search-open" class="home-search-mobile" type="button" aria-label="Open search" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
+  </form>
+</div>
+{% include site-search-dialog.html scope=search_scope %}

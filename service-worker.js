@@ -29,8 +29,8 @@ self.addEventListener('notificationclick', event => {
  if (!event.notification.data?.lightcity) return;
  event.stopImmediatePropagation();
  event.notification.close();
- let target = new URL(event.notification.data?.url || 'LightCity-Teaching-Fellowship/', BASE);
- if (target.origin !== BASE.origin || !target.pathname.startsWith(BASE.pathname)) target = new URL('LightCity-Teaching-Fellowship/', BASE);
+ let target = new URL(event.notification.data?.url || 'Teaching-Articles/', BASE);
+ if (target.origin !== BASE.origin || !target.pathname.startsWith(BASE.pathname)) target = new URL('Teaching-Articles/', BASE);
  event.waitUntil(self.clients.openWindow(target.href));
 });
 
