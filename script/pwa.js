@@ -149,7 +149,16 @@
       const authentication = auth.getAuth(instance);
       await authentication.authStateReady();
       user = authentication.currentUser || (await auth.signInAnonymously(authentication)).user;
-      return { db, msg, store: db.getFirestore(instance), messaging: msg.getMessaging(instance) };
+      const messaging = msg.getMessaging(instance);
+      msg.onMessage(messaging, payload => {
+        if (!active || Notification.permission !== 'granted') return;
+        // One service worker coordinates displays across all open LightCity tabs.
+        void ready.then(async registration => {
+          const worker = registration.active || (await navigator.serviceWorker.ready).active;
+          worker?.postMessage({ type: 'LIGHTCITY_FOREGROUND_PUSH', payload });
+        }).catch(console.error);
+      });
+      return { db, msg, store: db.getFirestore(instance), messaging };
     })().catch(error => { modulesPromise = null; throw error; });
     return modulesPromise;
   }

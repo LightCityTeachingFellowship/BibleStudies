@@ -19,12 +19,12 @@ function setup({ enabled = true, supported = true, permission = 'default', subsc
   const window = { addEventListener: (name, handler) => { events[name] = handler; }, dispatchEvent: event => { events[event.type]?.(event); } };
   if (supported) { window.Notification = notification; window.PushManager = function () {}; }
   const navigator = { userAgent: ios ? 'iPhone' : 'Chrome', platform: '', maxTouchPoints: 0, standalone };
-  if (serviceWorker) navigator.serviceWorker = { register: async () => ({ scope: '/BibleStudies/' }) };
+  if (serviceWorker) navigator.serviceWorker = { register: async () => ({ scope: '/BibleStudies/', active: { postMessage: message => { state.foregroundMessage = message; } } }) };
   const modules = {
     'firebase-app.js': { initializeApp: () => ({}) },
     'firebase-auth.js': { getAuth: () => ({ authStateReady: async () => {}, currentUser: { uid: 'device-user' } }) },
     'firebase-firestore.js': { getFirestore: () => ({}), doc: (...args) => args, serverTimestamp: () => 123, setDoc: async () => { if (subscriptionFails) throw Error('Offline'); state.saved++; }, deleteDoc: async () => { state.deleted++; } },
-    'firebase-messaging.js': { isSupported: async () => true, getMessaging: () => ({}), getToken: async () => { state.tokens++; return 'device-token'; }, deleteToken: async () => { state.tokenDeleted++; } }
+    'firebase-messaging.js': { onMessage: (messaging, callback) => { state.onMessage = callback; }, isSupported: async () => true, getMessaging: () => ({}), getToken: async () => { state.tokens++; return 'device-token'; }, deleteToken: async () => { state.tokenDeleted++; } }
   };
   vm.runInNewContext(source, {
     document: { currentScript: { dataset: { base: '/BibleStudies/' } }, body, getElementById: id => memberPage && id === 'member-page' ? {} : null, createElement: tag => new Element(tag), querySelector: selector => selector === 'dialog[open]' ? (state.dialogOpen ? {} : null) : ({ before: node => { body.append(node); state.placedBeforeNav = true; } }), addEventListener: (name, handler) => { events[name] = handler; } },
@@ -103,3 +103,13 @@ console.log('PASS: notification pop-up delay, unchanged wording, dismissal, subs
 app = setup({ memberPage: true }); app.events.beforeinstallprompt({ preventDefault() {} }); app.advance(10000); app.advance(20000);
 assert.equal(app.popup.hidden, true); assert.equal(app.notificationPopup.hidden, true);
 console.log('PASS: install and notification invitations do not interrupt member sign-in.');
+
+app = setup({ permission: 'granted', subscribed: true }); await tick();
+app.state.onMessage({ messageId: 'foreground-1', data: { title: 'New teaching', url: '/BibleStudies/Watch/?v=abcdefghijk' } }); await tick();
+assert.equal(app.state.foregroundMessage.type, 'LIGHTCITY_FOREGROUND_PUSH');
+assert.equal(app.state.foregroundMessage.payload.messageId, 'foreground-1');
+await app.settings.children[1].onclick();
+app.state.foregroundMessage = null;
+app.state.onMessage({ messageId: 'disabled-message' }); await tick();
+assert.equal(app.state.foregroundMessage, null, 'Opted-out subscribers must not show foreground notifications');
+console.log('PASS: foreground messages reach the service worker and respect notification opt-out.');

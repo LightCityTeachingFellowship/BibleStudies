@@ -34,6 +34,36 @@ self.addEventListener('notificationclick', event => {
  event.waitUntil(self.clients.openWindow(target.href));
 });
 
+// Multiple visible tabs can receive the same foreground message.
+const displayedMessages = new Map();
+async function showLightCityNotification(payload) {
+ const data = payload?.data || {}, notification = payload?.notification || {};
+ const key = payload?.messageId;
+ const now = Date.now();
+ for (const [id, time] of displayedMessages) if (now - time > 300000) displayedMessages.delete(id);
+ if (key && displayedMessages.has(key)) return;
+ if (key) {
+  displayedMessages.set(key, now);
+  if (displayedMessages.size > 128) displayedMessages.delete(displayedMessages.keys().next().value);
+ }
+ const image = data.image || notification.image;
+ try {
+  await self.registration.showNotification(data.title || notification.title || 'LightCity', {
+   body: data.body || notification.body || 'New teaching available',
+   icon: new URL('images/pwa-192.png', BASE).href,
+   badge: new URL('images/notification-badge.png', BASE).href,
+   ...(image ? { image } : {}), tag: data.id || key,
+   data: { url: data.url || payload?.fcmOptions?.link, lightcity: true }
+  });
+ } catch (error) { if (key) displayedMessages.delete(key); throw error; }
+}
+self.addEventListener('message', event => {
+ if (event.data?.type !== 'LIGHTCITY_FOREGROUND_PUSH' || !event.source?.url) return;
+ const source = new URL(event.source.url);
+ if (source.origin !== BASE.origin || !source.pathname.startsWith(BASE.pathname)) return;
+ event.waitUntil(showLightCityNotification(event.data.payload));
+});
+
 // Firebase initializes background delivery only after the public config is completed.
 importScripts(new URL('pwa-config.js', BASE).href);
 if (self.LIGHTCITY_PUSH?.enabled) {
@@ -43,7 +73,6 @@ if (self.LIGHTCITY_PUSH?.enabled) {
  firebase.messaging().onBackgroundMessage(payload => {
   // Firebase automatically displays messages containing a notification payload.
   if (payload.notification) return;
-  const data = payload.data || {};
-  return self.registration.showNotification(data.title || 'LightCity', {body: data.body || 'New teaching available', icon: new URL('images/pwa-192.png', BASE).href, badge: new URL('images/notification-badge.png', BASE).href, tag:data.id, data:{url:data.url,lightcity:true}});
+  return showLightCityNotification(payload);
  });
 }
