@@ -40,6 +40,7 @@ permalink: /Home/
     </div>
     <section class="home-welcome" aria-labelledby="home-welcome-title"><p class="home-eyebrow">A CITY ON A HILL</p><h1 id="home-welcome-title">Grow in the Word.</h1><p class="home-intro">Enjoy overflowing grace from the Throne of God.</p></section>
     <a class="home-featured" data-video-id="{{ latest_video | escape }}" href="{{ '/Watch/' | relative_url }}?v={{ latest_video | uri_escape }}">
+      <span class="lc-member-loading" role="status" aria-live="polite"><span class="lc-member-load-normal">Loading your library…</span><span class="lc-member-load-slow">Still loading your library. Check your connection or reload the page.</span></span>
       <div class="home-video-art"><img class="home-video-image" src="https://i.ytimg.com/vi/{{ latest_video | escape }}/maxresdefault.jpg" alt="" fetchpriority="high"><span class="home-play" aria-hidden="true">▶</span></div>
       <div class="home-featured-copy"><span class="home-eyebrow">LATEST VIDEO</span><strong class="home-video-title">LightCity’s latest video title</strong><p>Watch the latest video</p><span class="home-watch-button">Watch now <span aria-hidden="true">↗</span></span></div>
     </a>

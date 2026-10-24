@@ -1,7 +1,28 @@
+{% if site.members_enabled == true %}
+<script>
+// Set before the first paint; authentication is still verified by Firebase.
+document.documentElement.classList.add('lc-member-restoring');
+setTimeout(() => {
+  if (document.documentElement.classList.contains('lc-member-restoring')) document.documentElement.classList.add('lc-member-restore-slow');
+}, 15000);
+</script>
+{% endif %}
+<style>
+.lc-member-loading {display:none!important;}
+.lc-member-restoring .home-featured > :not(.lc-member-loading),
+.lc-member-restoring #video-category-tabs,
+.lc-member-restoring #videotab-container {visibility:hidden;}
+.lc-member-restoring .home-featured {position:relative; pointer-events:none;}
+.lc-member-restoring .home-featured > .lc-member-loading {display:flex!important; position:absolute; inset:0; align-items:center; justify-content:center; padding:24px; text-align:center;}
+.lc-member-restoring .videos-container > .lc-member-loading {display:flex!important; min-height:35vh; align-items:center; justify-content:center; text-align:center;}
+.lc-member-load-slow {display:none;}
+.lc-member-restore-slow .lc-member-load-normal {display:none;}
+.lc-member-restore-slow .lc-member-load-slow {display:inline;}
+</style>
 <meta name="theme-color" content="#322348">
 <link rel="manifest" href="{{ '/manifest.webmanifest' | relative_url }}">
 <link rel="apple-touch-icon" href="{{ '/images/pwa-192.png' | relative_url }}">
-<link rel="stylesheet" href="{{ '/style/pwa.css' | relative_url }}?v=members-4">
+<link rel="stylesheet" href="{{ '/style/pwa.css' | relative_url }}?v=members-5">
 <script defer src="{{ '/pwa-config.js' | relative_url }}"></script>
-<script defer src="{{ '/script/pwa.js' | relative_url }}?v=members-4" data-base="{{ '/' | relative_url }}"></script>
-<script type="module" src="{{ '/script/members.js' | relative_url }}?v=members-4" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
+<script defer src="{{ '/script/pwa.js' | relative_url }}?v=members-5" data-base="{{ '/' | relative_url }}"></script>
+<script type="module" src="{{ '/script/members.js' | relative_url }}?v=members-5" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>

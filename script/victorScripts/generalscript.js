@@ -174,8 +174,12 @@ function applyStyles() {
     .catch(() => { /* Keep the direct video link usable when metadata is unavailable. */ })
     .finally(() => clearTimeout(timeout));
   }
-  updateFeatured(globalThis.LightCityMembers?.library?.[0] || initial);
-  window.addEventListener('lightcity-members-changed', () => updateFeatured(globalThis.LightCityMembers?.library?.[0] || initial));
+  function renderFeaturedAudience() {
+    if (globalThis.LightCityMembers?.loading) return;
+    updateFeatured(globalThis.LightCityMembers?.library?.[0] || initial);
+  }
+  renderFeaturedAudience();
+  window.addEventListener('lightcity-members-changed', renderFeaturedAudience);
 })();
 
 const categories = document.getElementsByClassName('postCategories')[0];
@@ -307,6 +311,8 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
     problems = [];
     render();
     loadPromise = (async () => {
+      if (includeVideos) await globalThis.LightCityMembers?.ready;
+      if (current !== loadVersion) return;
       const fetched = await Promise.allSettled([json(dialog.dataset.index), includeVideos ? json(dialog.dataset.videos) : Promise.resolve([])]);
       if (current !== loadVersion) return;
       const main = fetched[0].status === 'fulfilled' ? fetched[0].value : null;

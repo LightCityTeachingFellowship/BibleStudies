@@ -126,6 +126,7 @@ videoCategories.forEach(category => {
     videoTabContainer.appendChild(div);
 });
 function renderAudienceVideos() {
+    if (globalThis.LightCityMembers?.loading) return;
     const library = globalThis.LightCityMembers?.library;
     const tabs = document.getElementById('video-category-tabs');
     if (tabs) {

@@ -17,6 +17,9 @@ const context = vm.createContext({
   document: { getElementById: id => tabs.get(id), querySelectorAll: selector => controls.filter(control => selector === '.videos-header-btns' ? !control.id.endsWith('-content') : control.id.endsWith('-content')) }, createVideoCards: ids => calls.push([...ids])
 });
 vm.runInContext(videoSource.slice(start, stop), context);
+memberState.loading = true; context.renderAudienceVideos();
+assert.equal(calls.length, 0, 'Do not render a public library while saved membership is loading');
+memberState.loading = false;
 context.renderAudienceVideos(); assert.deepEqual(calls.at(-1), ['abcdefghijk']);
 assert.equal(categoryTabs.hidden, true, 'Public-only visitors have no category tabs');
 memberState.library = [{ id: 'lmnopqrstuv', category: 'Sunday' }, { id: 'abcdefghijk', category: 'Program' }];

@@ -1,13 +1,21 @@
 // Member identity is separate from anonymous device identity used by web push.
 const settings = document.querySelector('script[data-lightcity-members]');
-const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, user: null, error: null };
+const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
 let sdk, memberAuth, deviceAuth, functions, version = 0;
 const page = document.getElementById('member-page');
 let busy = false, signup = false, notice = '';
 const field = id => document.getElementById(id);
 function publish(videos) {
+  api.loading = false;
   api.library = videos;
-  window.dispatchEvent(new CustomEvent('lightcity-members-changed', { detail: { videos } }));
+  const reveal = () => {
+    if (api.loading) return;
+    // Deferred page scripts must render the chosen audience before it is visible.
+    window.dispatchEvent(new CustomEvent('lightcity-members-changed', { detail: { videos: api.library } }));
+    document.documentElement?.classList.remove('lc-member-restoring', 'lc-member-restore-slow');
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', reveal, { once: true });
+  else reveal();
 }
 function renderPage() {
   if (!page) return;
@@ -58,7 +66,7 @@ async function checkAccess() {
   if (current === version) renderPage();
 }
 async function bootstrap() {
-  if (!api.enabled) { renderPage(); return; }
+  if (!api.enabled) { api.loading = false; renderPage(); return; }
   try {
     // Module and deferred classic scripts can finish loading in different orders.
     // Explicitly load the shared public config when it is not available yet.
@@ -92,7 +100,13 @@ api.refresh = async () => {
 };
 window.addEventListener('lightcity-push-ready', () => { void linkDevice().catch(() => {}); });
 window.addEventListener('pageshow', event => {
-  if (event.persisted && api.enabled) { ++version; publish(null); void api.refresh().catch(() => {}); }
+  if (event.persisted && api.enabled) {
+    ++version; api.loading = true; api.library = null;
+    document.documentElement?.classList.add('lc-member-restoring');
+    // refresh() captures the previous ready promise before we replace it.
+    api.ready = api.refresh().catch(error => { api.error = error; publish(null); });
+    window.dispatchEvent(new CustomEvent('lightcity-members-changed', { detail: { videos: null } }));
+  }
 });
 async function action(task) {
   if (busy || !api.enabled) return;

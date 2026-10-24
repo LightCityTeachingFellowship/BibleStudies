@@ -9,13 +9,13 @@ class Element {
   setAttribute(key, value) { this.attributes[key] = value; }
   addEventListener(name, fn) { this.events[name] = fn; }
 }
-function setup(enabled = true, configMode = 'ready') {
+function setup(enabled = true, configMode = 'ready', startup = {}) {
   const nodes = new Map(), get = name => { if (!nodes.has(name)) nodes.set(name, new Element()); return nodes.get(name); };
   const page = get('member-page'); page.querySelectorAll = () => [...nodes.values()];
   const callbacks = new Map(), events = new Map(), announcements = [], calls = [];
-  const state = { verified: false, approved: false, hold: null, waiting: null, emails: 0, googleError: null };
+  const state = { verified: !!startup.verified, approved: !!startup.approved, hold: startup.hold || null, waiting: null, emails: 0, googleError: null };
   const makeUser = anonymous => ({ uid: anonymous ? 'member-anonymous' : 'member-account', isAnonymous: anonymous, email: anonymous ? null : 'member@example.com', getIdToken: async () => 'member-proof' });
-  const memberAuth = { currentUser: null, authStateReady: async () => {} };
+  const memberAuth = { currentUser: startup.signedIn ? { ...makeUser(false), providerData: [{ providerId: 'google.com' }] } : null, authStateReady: async () => {} };
   const deviceAuth = { currentUser: { uid: 'notification-device', getIdToken: async () => 'device-proof' }, authStateReady: async () => {} };
   const emit = auth => { for (const callback of callbacks.get(auth) || []) void callback(auth.currentUser); };
   const apps = [];
@@ -51,8 +51,10 @@ function setup(enabled = true, configMode = 'ready') {
       return { data: {} };
     } }
   };
+  const rootClasses = new Set(enabled ? ['lc-member-restoring'] : []);
+  let domReady;
   const context = vm.createContext({
-    document: { getElementById: get, querySelector: () => ({ dataset: { enabled: String(enabled) } }) },
+    document: { readyState: startup.domLoading ? 'loading' : 'complete', addEventListener: (name, callback) => { if (name === 'DOMContentLoaded') domReady = callback; }, documentElement: { classList: { add: (...names) => names.forEach(name => rootClasses.add(name)), remove: (...names) => names.forEach(name => rootClasses.delete(name)) } }, getElementById: get, querySelector: () => ({ dataset: { enabled: String(enabled) } }) },
     window: { addEventListener: (name, callback) => { events.set(name, [...events.get(name) || [], callback]); }, dispatchEvent: event => { announcements.push(event); for (const callback of events.get(event.type) || []) callback(event); } },
     ...(configMode === 'ready' ? { LIGHTCITY_PUSH: { firebase: { apiKey: 'test-public-key', projectId: 'test-project' } } } : {}),
     mockLoadConfig: async () => {
@@ -64,7 +66,7 @@ function setup(enabled = true, configMode = 'ready') {
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } }, console
   });
   vm.runInContext(source, context);
-  return { get, api: context.LightCityMembers, state, calls, deviceAuth, announcements };
+  return { get, api: context.LightCityMembers, state, calls, deviceAuth, announcements, rootClasses, events, fireDomReady: () => domReady?.() };
 }
 let app = setup(false); await app.api.ready;
 assert.equal(app.get('member-submit').disabled, true); assert.equal(app.calls.length, 0);
@@ -128,3 +130,34 @@ app.get('member-google').onclick(); await settle();
 assert.match(app.get('member-status').textContent, /Please reload the page/);
 assert.equal(app.api.library, null);
 console.log('PASS: delayed configuration load and friendly configuration failure without partial sign-in.');
+
+app = setup(true, 'ready', { signedIn: true, approved: true, verified: true, hold: true, domLoading: true });
+await settle();
+assert.equal(app.api.loading, true);
+assert.equal(app.rootClasses.has('lc-member-restoring'), true);
+assert.equal(app.api.library, null, 'Pending access never restores a cached private library');
+app.state.waiting({ data: { videos: [{ id: 'abcdefghijk', title: 'Restored member teaching' }] } });
+await app.api.ready;
+assert.equal(app.api.library.length, 1);
+assert.equal(app.rootClasses.has('lc-member-restoring'), true, 'Wait for deferred renderers before revealing the selected audience');
+app.fireDomReady();
+assert.equal(app.rootClasses.has('lc-member-restoring'), false);
+assert.equal(app.announcements.at(-1).detail.videos[0].title, 'Restored member teaching');
+app = setup(); await app.api.ready;
+assert.equal(app.api.loading, false);
+assert.equal(app.rootClasses.has('lc-member-restoring'), false, 'Signed-out visitors are released to the public view');
+app = setup(true, 'failed'); await app.api.ready;
+assert.equal(app.rootClasses.has('lc-member-restoring'), false, 'A failed bootstrap does not leave the page masked');
+console.log('PASS: slow restored member sessions stay masked until access and renderers are ready; guest and failed startup release the loading state.');
+
+app = setup(true, 'ready', { signedIn: true, approved: true, verified: true }); await app.api.ready;
+app.state.hold = true;
+app.events.get('pageshow')[0]({ persisted: true }); await settle();
+assert.equal(app.api.loading, true);
+assert.equal(app.api.library, null);
+assert.equal(app.rootClasses.has('lc-member-restoring'), true);
+app.state.waiting({ data: { videos: [{ id: 'abcdefghijk', title: 'Revalidated member teaching' }] } });
+await app.api.ready;
+assert.equal(app.api.loading, false);
+assert.equal(app.rootClasses.has('lc-member-restoring'), false);
+console.log('PASS: back/forward cache restores recheck membership without showing the public library.');

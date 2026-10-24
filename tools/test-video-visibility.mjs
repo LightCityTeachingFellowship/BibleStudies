@@ -2,10 +2,11 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { validateLibrary, publicVideos, visibility, parseVideoIds, libraryFromLists } from './video-library.mjs';
+import { validateLibrary, publicVideos, visibility, parseVideoIds, libraryFromLists, loadVideoLibrary } from './video-library.mjs';
 const require = createRequire(import.meta.url);
 const { Liquid } = require('./visibility-qa/node_modules/liquidjs');
 const videos = validateLibrary(JSON.parse(await readFile('_data/videos.json', 'utf8')));
+const currentLibrary = await loadVideoLibrary();
 let engine = new Liquid({ root: '_includes', dynamicPartials: false });
 engine.registerFilter('jsonify', value => JSON.stringify(value ?? null));
 engine.registerFilter('relative_url', value => '/BibleStudies' + value);
@@ -13,7 +14,7 @@ engine.registerFilter('normalize_whitespace', value => String(value).replace(/\s
 const source = async path => (await readFile(path, 'utf8')).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
 for (const enabled of [false, true]) {
   const site = { data: { videos }, pages: [], posts: [], video_visibility_enabled: enabled };
-  const expected = enabled ? publicVideos(videos) : videos;
+  const expected = enabled ? publicVideos(currentLibrary) : currentLibrary;
   const render = async path => engine.parseAndRender(await source(path), { site });
   const catalogue = JSON.parse(await render('search-video-catalog.json'));
   assert.deepEqual(catalogue.map(video => video.id), expected.map(video => video.id));
@@ -26,7 +27,7 @@ for (const enabled of [false, true]) {
   assert.deepEqual(Object.keys(categoryData), expected.map(video => video.id));
   const home = (await source('home.html')).split('<!doctype html>')[0] + '{{ latest_video }}';
   assert.equal((await engine.parseAndRender(home, { site })).trim(), expected[0].id);
-  if (enabled) for (const video of videos.filter(video => visibility(video) === 'members')) {
+  if (enabled) for (const video of currentLibrary.filter(video => visibility(video) === 'members')) {
     assert.ok(!catalogue.some(item => item.id === video.id));
     assert.ok(!page.includes(video.id));
   }
@@ -35,7 +36,7 @@ assert.equal(visibility({}), 'members');
 assert.equal(publicVideos([{ id: 'x' }, { id: 'y', visibility: 'members' }]).length, 0);
 assert.throws(() => validateLibrary([{ ...videos[0], visibility: 'publci' }]));
 assert.throws(() => validateLibrary([videos[0], videos[0]]));
-console.log(`PASS: all ${videos.length} records validated; legacy mode retains every video; public mode filters listings, search data, homepage and publication feed to ${publicVideos(videos).length} public entries. Missing visibility stays Members.`);
+console.log(`PASS: all ${videos.length} cached records validated; legacy mode retains all ${currentLibrary.length} pasted videos; public mode filters listings, search data, homepage and publication feed to ${publicVideos(currentLibrary).length} public entries. Missing visibility stays Members.`);
 
 // A paste must work without updating JSON or running any preparation command.
 const originalRead = engine.options.fs.readFile;
