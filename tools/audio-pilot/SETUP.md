@@ -1,6 +1,16 @@
 # Public and member listening pilot
 
-Five member recordings use the preserved AAC 128 kbps stereo audio. The bucket stays private. The separate `/audio-pilot/` page is not linked in navigation. Visitors can list and play recordings explicitly marked `public` in the server catalogue without signing in. Additional member recordings require approved, verified church membership. All five current uploads remain members-only; a public recording still needs to be prepared and added before public listening can be tested live.
+Five member recordings and one public recording use the preserved AAC 128 kbps stereo audio. The bucket stays private. Visitors can list and play recordings explicitly marked `public` in the server catalogue without signing in. Additional member recordings require approved, verified church membership. The user confirmed member playback, phone background/lock-screen playback, and guest playback of `R42uVd9spDw`. See `PUBLIC-RECORDING.md`.
+
+## Main website integration
+
+Video cards, the featured homepage teaching, and the Watch page offer Watch/Listen mode buttons for recordings with available audio. The same viewport changes between a visible YouTube player and a native audio player. Switching pauses the outgoing source, transfers its current content timestamp and supported speed, and preserves playing/paused state. YouTube is controlled through the official IFrame API (`getCurrentTime`, `pauseVideo`, `seekTo`, `playVideo`); it stays paused while audio plays. Rapid changes cancel stale loads. Category copies contain previews, not duplicated active players or audio sources.
+
+`/Listen/?v=VIDEO_ID` selects the matching accessible recording in the audio library. Its Watch/Listen toggle also works inside the same viewport. The homepage links to this library for browsing. Availability and audio links are fetched from the server for the current audience; signed URLs and private catalogue metadata are not written to persistent storage. Only listening position and rate are saved. Signing out clears member controls and playback; late responses cannot restore them. Playback continues with the screen locked in audio mode, subject to browser support, but navigating to another page still ends that page's player.
+
+Audio copies must align with the YouTube content timeline: these six files are untrimmed stream copies. Future recordings with trimmed intros or edited versions need an explicit time mapping before mode synchronization is enabled. YouTube seeking can land at a nearby keyframe; this is not frame-accurate editing synchronization.
+
+These are website changes: sync through the usual GitHub Pages workflow. No Firebase deployment is needed for this integration alone. Future audio catalogue changes still require deploying `getChurchAudio`. The original `/audio-pilot/` remains available for comparison.
 
 ## Connect storage
 

@@ -111,6 +111,14 @@ function syncVideoCategoryTab(videoBox) {
         if (tab) Array.from(tab.children).filter(child => child.getAttribute('data-video-id') === id).forEach(child => child.remove());
     });
     const clone = videoBox.cloneNode(true);
+    // Category copies start as previews, never as duplicate active players.
+    clone.querySelectorAll('.lc-inline-audio').forEach(panel => panel.remove());
+    clone.querySelectorAll('.lc-media-viewport').forEach(viewport => viewport.classList.remove('lc-media-viewport', 'lc-audio-mode'));
+    clone.querySelectorAll('lite-youtube').forEach(lite => {
+        lite.hidden = false; lite.classList.remove('lyt-activated');
+        lite.querySelectorAll('iframe').forEach(frame => frame.remove());
+    });
+    clone.querySelectorAll('.lc-video-actions').forEach(holder => { delete holder.dataset.audioSignature; holder.replaceChildren(); });
     const order = Number(videoBox.getAttribute('data-video-order'));
     const next = Array.from(target.children).find(child => Number(child.getAttribute('data-video-order')) > order);
     target.insertBefore(clone, next || null);
@@ -432,17 +440,17 @@ function runFirstPartOfCode() {
             });
         }
 
-        async addIframe(){
+        async addIframe(request = {}){
             if (this.classList.contains('lyt-activated')) return;
             this.classList.add('lyt-activated');
 
             const params = new URLSearchParams(this.getAttribute('params') || []);
-            params.append('autoplay', '1');
+            const autoplay = request.autoplay !== false;
+            params.set('autoplay', autoplay ? '1' : '0');
             params.append('playsinline', '1');
 
-            if (this.needsYTApiForAutoplay) {
-                return this.addYTPlayerIframe(params);
-            }
+            params.set('enablejsapi', '1');
+            params.set('origin', location.origin);
 
             const iframeEl = document.createElement('iframe');
             iframeEl.width = 560;
@@ -455,6 +463,7 @@ function runFirstPartOfCode() {
             // https://stackoverflow.com/q/64959723/89484
             iframeEl.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(this.videoId)}?${params.toString()}`;
             this.append(iframeEl);
+            globalThis.LightCityMedia?.trackYouTube(iframeEl, { autoplay }).catch(() => {});
 
             // Set focus for a11y
             iframeEl.focus();

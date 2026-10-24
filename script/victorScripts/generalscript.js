@@ -134,7 +134,7 @@ function applyStyles() {
 (() => {
   const video = document.querySelector('.home-featured[data-video-id]');
   if (!video) return;
-  const initial = { id: video.dataset.videoId, title: video.querySelector('.home-video-title').textContent, url: video.href };
+  const initial = { id: video.dataset.videoId, title: video.querySelector('.home-video-title').textContent, url: video.dataset.watchUrl || video.href };
   let controller;
   function updateFeatured(item = initial) {
   const id = item.id;
@@ -144,6 +144,8 @@ function applyStyles() {
   video.hidden = false;
   video.dataset.videoId = id;
   const link = new URL(initial.url, location.href); link.searchParams.set('v', id); video.href = link.href;
+  video.dataset.watchUrl = link.href;
+  video.querySelectorAll?.('[data-featured-watch]').forEach(anchor => { anchor.href = link.href; });
   video.querySelector('.home-video-title').textContent = item.title || 'LightCity’s latest teaching';
   // YouTube can return a small placeholder instead of an HTTP error for a
   // missing HD thumbnail. Check its actual width before keeping that source.

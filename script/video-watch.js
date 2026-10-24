@@ -15,9 +15,10 @@
  player.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';
  player.allowFullscreen=true;
  player.referrerPolicy='strict-origin-when-cross-origin';
- const params=new URLSearchParams({autoplay:'1',playsinline:'1',controls:'1',rel:'0',origin:location.origin});
+ const params=new URLSearchParams({autoplay:'1',playsinline:'1',controls:'1',rel:'0',enablejsapi:'1',origin:location.origin});
  player.src=`https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
  container.appendChild(player);
+ globalThis.LightCityMedia?.trackYouTube(player, { autoplay: true }).catch(() => {});
  // Fullscreen and screen orientation are separate browser capabilities.
  // A cross-origin player exposes its iframe as the fullscreen element here.
  const orientation=globalThis.screen?.orientation;

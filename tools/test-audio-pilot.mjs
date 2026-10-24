@@ -4,7 +4,8 @@ import vm from 'node:vm';
 import { createMemberHandlers } from './members/functions/core.mjs';
 import { createAudioSigner, checkAudioLink, AUDIO_LINK_SECONDS } from './members/functions/audio.mjs';
 class Failure extends Error { constructor(code, message) { super(message); this.code = code; } }
-const catalog = JSON.parse(readFileSync(new URL('./members/functions/audio-catalog.json', import.meta.url)));
+const productionCatalog = JSON.parse(readFileSync(new URL('./members/functions/audio-catalog.json', import.meta.url)));
+const catalog = productionCatalog.filter(item => item.visibility === 'members');
 let active = true, verified = true, disabled = false, signed = [];
 const handlers = createMemberHandlers({
   auth: { getUser: async () => ({ emailVerified: verified, disabled }) },
@@ -69,6 +70,20 @@ active = true;
 assert.equal((await handlers.getChurchAudio(request)).recordings.length, 6);
 catalog.pop();
 console.log('PASS: guest public listing/playback, protected member recordings, approval/verification/revocation, catalogue allowlist and offline R2 signing.');
+const publicIds = new Set(readFileSync(new URL('../_includes/video-ids-public.txt', import.meta.url), 'utf8').split(/\s+/));
+const publicEntries = productionCatalog.filter(item => item.visibility === 'public');
+assert.ok(publicEntries.some(item => item.videoId === 'R42uVd9spDw'));
+assert.ok(publicEntries.every(item => publicIds.has(item.videoId)), 'Public audio must also be public in the authoritative video list');
+const guestHandlers = createMemberHandlers({
+  auth: { getUser: async () => { throw Error('Guest public audio must not require account lookup'); } },
+  db: {}, fail: Failure,
+  audio: { catalog: productionCatalog, sign: async key => ({ url: 'test-url-for:' + key, expiresAt: 123 }) }
+});
+assert.deepEqual((await guestHandlers.getChurchAudio({ data: {} })).recordings.map(item => item.videoId), publicEntries.map(item => item.videoId));
+const guestAudio = await guestHandlers.getChurchAudio({ data: { videoId: 'R42uVd9spDw' } });
+assert.equal(guestAudio.url, 'test-url-for:audio/R42uVd9spDw.m4a');
+await assert.rejects(() => guestHandlers.getChurchAudio({ data: { videoId: catalog[0].videoId } }), { code: 'unauthenticated' });
+console.log('PASS: actual public pilot recording is available to guests; all five existing member recordings retain their protection.');
 
 class Element {
   constructor() { this.children = []; this.events = {}; this.dataset = {}; this.attributes = {}; this.value = '1'; this.currentTime = 0; this.playbackRate = 1; }

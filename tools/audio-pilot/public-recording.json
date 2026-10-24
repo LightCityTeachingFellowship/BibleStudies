@@ -1,0 +1,17 @@
+{
+  "videoId": "R42uVd9spDw",
+  "title": "Mark 10-11 Reading and Commentary.",
+  "objectKey": "audio/R42uVd9spDw.m4a",
+  "durationSeconds": 5125.921088,
+  "bytes": 82899707,
+  "visibility": "public",
+  "file": "output/reference/R42uVd9spDw.m4a",
+  "uploadStatus": "uploaded-user-confirmed",
+  "guestPlayback": "confirmed-by-user",
+  "codec": "aac",
+  "bitrateKbps": 128,
+  "channels": 2,
+  "sampleRate": 44100,
+  "encodedAudioHash": "SHA256=46cbb4f8954d112349aa14eed2fb6a873a42838184305e938053f0406c0f9335",
+  "referencePacketHashVerified": true
+}

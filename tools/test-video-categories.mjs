@@ -9,7 +9,7 @@ const begin = source.indexOf('.then(data => {') + '.then(data => {'.length;
 const last = 'syncVideoCategoryTab(videoBoxElement);';
 const metadata = source.slice(begin, source.indexOf(last, begin) + last.length);
 class Element {
-  constructor(tag = 'div') { this.tag = tag; this.attributes = {}; this.children = []; this.ownText = ''; this.classList = { add() {} }; }
+  constructor(tag = 'div') { this.tag = tag; this.attributes = {}; this.children = []; this.ownText = ''; this.className = ''; this.dataset = {}; this.classList = { add: (...names) => { this.className = [...new Set([...this.className.split(/\s+/), ...names])].join(' '); }, remove: (...names) => { this.className = this.className.split(/\s+/).filter(name => !names.includes(name)).join(' '); } }; }
   setAttribute(key, value) { this.attributes[key] = String(value); }
   getAttribute(key) { return this.attributes[key] ?? null; }
   set textContent(value) { this.ownText = String(value); this.children = []; }
@@ -21,7 +21,9 @@ class Element {
   prepend(child) { child.parentNode = this; this.children.unshift(child); }
   insertBefore(child, next) { child.parentNode = this; const index = next ? this.children.indexOf(next) : this.children.length; this.children.splice(index, 0, child); }
   remove() { this.parentNode.children.splice(this.parentNode.children.indexOf(this), 1); }
-  cloneNode() { const copy = new Element(this.tag); copy.attributes = { ...this.attributes }; copy.textContent = this.textContent; return copy; }
+  replaceChildren() { this.children = []; }
+  querySelectorAll(selector) { return this.children.flatMap(child => [...((selector.startsWith('.') ? child.className.split(/\s+/).includes(selector.slice(1)) : child.tag === selector) ? [child] : []), ...child.querySelectorAll(selector)]); }
+  cloneNode() { const copy = new Element(this.tag); copy.attributes = { ...this.attributes }; copy.className = this.className; copy.dataset = { ...this.dataset }; copy.hidden = this.hidden; copy.ownText = this.ownText; this.children.forEach(child => copy.appendChild(child.cloneNode(true))); return copy; }
 }
 const categories = ['Sunday', 'Meeting', 'Study', 'Program', 'Excerpts', 'Ceremonies'];
 const tabs = new Map(categories.map(name => [`${name}-Tab-content`, new Element()]));
@@ -63,6 +65,19 @@ assert.deepEqual(programs.children.map(box => box.getAttribute('data-video-id'))
 boxes[1].setAttribute('videoCategoryTab', 'Study'); context.syncVideoCategoryTab(boxes[1]);
 assert.equal(programs.children.length, 2); assert.equal(tabs.get('Study-Tab-content').children.length, 1);
 console.log('PASS: matching categories, Programs fallback, titles without dates, late metadata, stable order and no duplicate copies.');
+const playingBox = new Element(); playingBox.setAttribute('data-video-id', 'playing'); playingBox.setAttribute('videoCategoryTab', 'Program');
+const viewport = new Element(); viewport.className = 'lc-media-viewport lc-audio-mode';
+const lite = new Element('lite-youtube'); lite.hidden = true; lite.className = 'lyt-activated'; lite.appendChild(new Element('iframe'));
+const audioPanel = new Element(); audioPanel.className = 'lc-inline-audio'; audioPanel.appendChild(new Element('audio'));
+const controls = new Element(); controls.className = 'lc-video-actions'; controls.dataset.audioSignature = 'playing:inline-1'; controls.appendChild(new Element('button'));
+viewport.append(lite, audioPanel); playingBox.append(viewport, controls); context.syncVideoCategoryTab(playingBox);
+const preview = tabs.get('Program-Tab-content').children.find(box => box.getAttribute('data-video-id') === 'playing');
+assert.equal(preview.querySelectorAll('iframe').length, 0); assert.equal(preview.querySelectorAll('audio').length, 0);
+assert.equal(preview.querySelectorAll('lite-youtube')[0].hidden, false);
+assert.equal(preview.querySelectorAll('.lyt-activated').length, 0);
+assert.equal(preview.querySelectorAll('.lc-video-actions')[0].dataset.audioSignature, undefined);
+assert.equal(playingBox.querySelectorAll('iframe').length, 1, 'Creating a preview does not disturb the active original');
+console.log('PASS: category copies do not clone active video/audio players or signed audio sources.');
 
 // Verify the migration against the actual UI metadata handler, not a second copy of its rules.
 const library = JSON.parse(readFileSync('_data/videos.json', 'utf8'));

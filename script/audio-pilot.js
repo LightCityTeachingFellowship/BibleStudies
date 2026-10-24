@@ -6,6 +6,9 @@
     const player = el('pilot-audio'), status = el('audio-status'), panel = el('audio-player-panel');
     const list = el('audio-recordings'), retry = el('audio-retry'), speed = el('audio-speed');
     let generation = 0, selection = 0, current = null, expiresAt = 0, lastSaved = 0;
+    const requestedId = new URL(globalThis.location?.href || 'https://example.invalid/').searchParams.get('v');
+    let requestedApplied = false;
+    let inlinePlayer;
     let diagnosing = 0;
     async function playbackFailure(ticket) {
       if (ticket !== selection || !current) return;
@@ -60,13 +63,17 @@
     }
     function clear() {
       save(); ++selection; current = null; expiresAt = 0;
+      inlinePlayer?.dispose(); inlinePlayer = null;
       player.pause(); player.removeAttribute('src'); player.load();
       list.replaceChildren(); panel.hidden = true; retry.hidden = true;
       el('audio-now-playing').textContent = 'Choose a teaching below';
+      const watchLink = el('audio-watch');
+      if (watchLink) { watchLink.hidden = true; watchLink.removeAttribute('href'); watchLink.onclick = null; }
       if (navigator.mediaSession) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; }
     }
     async function choose(recording, resume) {
       save(); const ticket = ++selection, access = generation;
+      inlinePlayer?.dispose(); inlinePlayer = null;
       player.pause(); player.removeAttribute('src'); player.load(); current = recording; retry.hidden = true;
       status.textContent = 'Preparing your audio…';
       const progress = stored(recording.videoId);
@@ -77,6 +84,12 @@
         if (url.protocol !== 'https:' || !/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/.test(url.hostname) || result.videoId !== recording.videoId || !(result.expiresAt > Date.now())) throw Error('Invalid playback link');
         expiresAt = result.expiresAt;
         el('audio-now-playing').textContent = recording.title;
+        const watchLink = el('audio-watch');
+        if (watchLink?.dataset.watchBase) {
+          const watchUrl = new URL(watchLink.dataset.watchBase, location.href);
+          watchUrl.searchParams.set('v', recording.videoId); watchLink.href = watchUrl.href; watchLink.hidden = false;
+          watchLink.textContent = 'Watch this teaching instead →';
+        }
         for (const button of list.children) button.setAttribute('aria-pressed', String(button.dataset.videoId === recording.videoId));
         player.onloadedmetadata = () => {
           if (ticket !== selection) return;
@@ -87,6 +100,14 @@
           speed.value = String(player.playbackRate); position();
         };
         player.src = url.href;
+        const inlineViewport = el('audio-mode-viewport');
+        if (inlineViewport && globalThis.LightCityMedia) {
+          inlinePlayer = globalThis.LightCityMedia.mount({ viewport: inlineViewport, videoId: recording.videoId, title: recording.title, audio: player, expiresAt, onState: (mode, text) => {
+            if (watchLink) watchLink.textContent = mode === 'video' ? 'Listen to this teaching instead →' : 'Watch this teaching instead →';
+            status.textContent = text || (mode === 'video' ? 'Video mode. Switch back to Listen at any time.' : 'Audio mode. You can switch apps or lock your screen.');
+          } });
+          if (watchLink) watchLink.onclick = event => { event.preventDefault(); void inlinePlayer.switchTo(inlinePlayer.mode === 'audio' ? 'video' : 'audio'); };
+        }
         if (navigator.mediaSession && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({ title: recording.title, artist: 'LightCity Teaching Fellowship' });
         status.textContent = 'Ready to listen. You can switch apps or lock your screen.';
         try { await player.play(); } catch (error) {
@@ -117,10 +138,16 @@
         }
         panel.hidden = result.recordings.length === 0;
         status.textContent = result.recordings.length ? 'Choose a teaching to start listening.' : approved ? 'No audio recordings are available yet.' : 'Public audio recordings are being prepared. Members can sign in for additional recordings.';
-      } catch { if (access === generation) status.textContent = 'The audio pilot is not connected yet. Please try again once setup is complete.'; }
+        if (requestedId && !requestedApplied) {
+          const requested = result.recordings.find(item => item.videoId === requestedId);
+          if (requested) { requestedApplied = true; void choose(requested); }
+          else status.textContent = approved ? 'Audio is not available for that teaching. Choose another recording below.' : 'That recording is not available in the public audio library. Sign in for member recordings, or choose a public teaching below.';
+        }
+      } catch { if (access === generation) status.textContent = 'The audio library could not be loaded. Please check your connection and reload the page.'; }
     }
     retry.addEventListener('click', () => { if (current) void choose(current, player.currentTime || stored(current.videoId).seconds); });
     speed.addEventListener('change', () => { player.playbackRate = Number(speed.value); save(); position(); });
+    player.addEventListener('ratechange', () => { speed.value = String(player.playbackRate); });
     player.addEventListener('timeupdate', () => { position(); if (Date.now() - lastSaved > 5000) { lastSaved = Date.now(); save(); } });
     player.addEventListener('pause', () => { save(); if (navigator.mediaSession) navigator.mediaSession.playbackState = 'paused'; });
     player.addEventListener('play', () => {
@@ -139,5 +166,5 @@
     await window.LightCityMembers?.ready;
     await refresh();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => void start()); else void start();
+  if (document.readyState !== 'complete') document.addEventListener('DOMContentLoaded', () => void start(), { once: true }); else void start();
 })();
