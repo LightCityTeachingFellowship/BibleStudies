@@ -92,10 +92,10 @@ async function bootstrap() {
   } catch (error) { api.error = error; publish(null); renderPage(); }
 }
 api.ready = bootstrap();
-api.getAudio = async videoId => {
+api.getAudio = async (videoId, diagnose = false) => {
   await api.ready;
   if (!memberAuth || !functions) throw Error('Member sign-in is unavailable. Please reload the page.');
-  return call('getChurchAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId });
+  return call('getChurchAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId, diagnose });
 };
 api.refresh = async () => {
   await api.ready;

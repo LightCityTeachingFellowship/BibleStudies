@@ -81,7 +81,14 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
       const recording = audio.catalog.find(item => item.videoId === videoId);
       if (!recording) throw new fail('not-found', 'This recording is not available in the audio pilot.');
       if (recording.visibility !== 'public') await member(request);
-      try { return { videoId, title: recording.title, durationSeconds: recording.durationSeconds, ...await audio.sign(recording.objectKey) }; }
+      try {
+        const signed = await audio.sign(recording.objectKey);
+        if (request.data?.diagnose === true) {
+          const [diagnostic, credentials] = await Promise.all([audio.check(signed.url), audio.credentials(recording.objectKey)]);
+          return { diagnostic: { ...diagnostic, credentials } };
+        }
+        return { videoId, title: recording.title, durationSeconds: recording.durationSeconds, ...signed };
+      }
       catch { throw new fail('unavailable', 'Audio access could not be prepared. Please try again shortly.'); }
     },
     async getChurchLibrary(request) {

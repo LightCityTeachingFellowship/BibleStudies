@@ -6,6 +6,47 @@
     const player = el('pilot-audio'), status = el('audio-status'), panel = el('audio-player-panel');
     const list = el('audio-recordings'), retry = el('audio-retry'), speed = el('audio-speed');
     let generation = 0, selection = 0, current = null, expiresAt = 0, lastSaved = 0;
+    let diagnosing = 0;
+    async function playbackFailure(ticket) {
+      if (ticket !== selection || !current) return;
+      retry.hidden = false;
+      status.textContent = 'The audio file could not be loaded. Checking the storage connection…';
+      if (diagnosing === ticket) return;
+      diagnosing = ticket;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        // Read only one byte. Never display or persist the signed URL or response body.
+        const response = await fetch(player.src, { headers: { Range: 'bytes=0-0' }, signal: controller.signal, credentials: 'omit' });
+        let detail = '';
+        if (!response.ok) {
+          const reader = response.body?.getReader();
+          if (reader) {
+            const chunk = await reader.read();
+            const code = new TextDecoder().decode(chunk.value?.slice(0, 4096)).match(/<Code>([A-Za-z0-9]+)<\/Code>/)?.[1];
+            await reader.cancel();
+            if (code) detail = ', ' + code;
+          }
+        } else await response.body?.cancel();
+        if (ticket !== selection) return;
+        status.textContent = response.ok
+          ? 'Storage is reachable, but the browser could not play the audio. Please report this message so we can check the file and format.'
+          : 'Storage rejected the audio request (HTTP ' + response.status + detail + '). Please report this message so we can correct the connection.';
+      } catch {
+        if (ticket !== selection) return;
+        status.textContent = 'The browser could not read the storage response. Checking from the server…';
+        try {
+          const { diagnostic } = await window.LightCityMembers.getAudio(current.videoId, true);
+          if (ticket !== selection) return;
+          if (!diagnostic || typeof diagnostic.ok !== 'boolean') throw Error('Diagnostic unavailable');
+          const code = /^[A-Za-z0-9]{1,80}$/.test(diagnostic.code) ? diagnostic.code : '';
+          const credentials = /^[A-Za-z0-9]{1,80}$/.test(diagnostic.credentials) ? ' Direct credential check: ' + diagnostic.credentials + '.' : '';
+          status.textContent = diagnostic.ok
+            ? 'The server can read the audio, but the browser cannot. Please check the bucket CORS policy and any browser or network blocking.'
+            : 'Audio storage check: HTTP ' + Number(diagnostic.status || 0) + (code ? ' (' + code + ')' : '') + '.' + credentials + ' Please report this message.';
+        } catch { if (ticket === selection) status.textContent = 'The storage check could not finish. Please confirm the latest getChurchAudio function is deployed, then retry.'; }
+      } finally { clearTimeout(timeout); if (diagnosing === ticket) diagnosing = 0; }
+    }
     const stored = id => { try { return JSON.parse(localStorage.getItem('lc-audio-progress:' + id)) || {}; } catch { return {}; } };
     function save() {
       if (!current || !Number.isFinite(player.currentTime)) return;
@@ -48,7 +89,11 @@
         player.src = url.href;
         if (navigator.mediaSession && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({ title: recording.title, artist: 'LightCity Teaching Fellowship' });
         status.textContent = 'Ready to listen. You can switch apps or lock your screen.';
-        try { await player.play(); } catch { if (ticket === selection) status.textContent = 'Your audio is ready. Tap Play on the player to begin.'; }
+        try { await player.play(); } catch (error) {
+          if (ticket !== selection) return;
+          if (error.name === 'NotAllowedError' && !player.error) status.textContent = 'Your audio is ready. Tap Play on the player to begin.';
+          else if (error.name !== 'AbortError') void playbackFailure(ticket);
+        }
       } catch {
         if (ticket !== selection || access !== generation) return;
         status.textContent = 'Audio could not be loaded. Check your connection, then retry. If this continues, the storage connection may need checking.';
@@ -82,7 +127,7 @@
       if (current && expiresAt && expiresAt <= Date.now()) { const seconds = player.currentTime; player.pause(); void choose(current, seconds); return; }
       if (navigator.mediaSession) navigator.mediaSession.playbackState = 'playing'; position();
     });
-    player.addEventListener('error', () => { if (current && player.getAttribute('src')) { status.textContent = 'Playback stopped. Check your connection and retry to resume.'; retry.hidden = false; } });
+    player.addEventListener('error', () => { if (current && player.getAttribute('src')) void playbackFailure(selection); });
     window.addEventListener('pagehide', save);
     if (navigator.mediaSession) {
       const seek = seconds => { if (Number.isFinite(player.duration)) player.currentTime = Math.max(0, Math.min(player.duration, seconds)); position(); };

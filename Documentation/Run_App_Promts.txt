@@ -6,3 +6,10 @@ node tools/prepare-video-visibility.mjs --add VIDEO_ID --visibility public
 
 For a members-only video, run:
 node tools/prepare-video-visibility.mjs --add VIDEO_ID --visibility members
+
+Serve Jekyll local site:
+cd C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub
+bundle exec jekyll serve --config _config.yml,_config.local.yml
+
+Deploy to firestore:
+C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub\tools\members
