@@ -1,0 +1,77 @@
+{
+  "status": "prepared-locally-not-uploaded",
+  "chosenProfile": "reference",
+  "totalBytes": 719999974,
+  "recordings": [
+    {
+      "videoId": "0xma1jqVwsg",
+      "title": "Day 26 - Prayer Meeting - LightCity Prayer Meeting || Thu, Oct 23, 2026.",
+      "visibility": "members",
+      "file": "output/reference/0xma1jqVwsg.m4a",
+      "objectKey": "audio/0xma1jqVwsg.m4a",
+      "contentType": "audio/mp4",
+      "bytes": 145787468,
+      "durationSeconds": 9014.520454,
+      "codec": "aac",
+      "bitrateKbps": 128,
+      "channels": 2,
+      "referencePacketHashVerified": true
+    },
+    {
+      "videoId": "3ugEmwCwEl4",
+      "title": "Day 25 - Prayer Meeting - LightCity Prayer Meeting || Thu, Oct 22, 2026.",
+      "visibility": "members",
+      "file": "output/reference/3ugEmwCwEl4.m4a",
+      "objectKey": "audio/3ugEmwCwEl4.m4a",
+      "contentType": "audio/mp4",
+      "bytes": 158072314,
+      "durationSeconds": 9774.13805,
+      "codec": "aac",
+      "bitrateKbps": 128,
+      "channels": 2,
+      "referencePacketHashVerified": true
+    },
+    {
+      "videoId": "bJnm0Sz4neM",
+      "title": "Day 24 - Prayer Meeting - LightCity Prayer Meeting || Wed, Oct 21, 2026.",
+      "visibility": "members",
+      "file": "output/reference/bJnm0Sz4neM.m4a",
+      "objectKey": "audio/bJnm0Sz4neM.m4a",
+      "contentType": "audio/mp4",
+      "bytes": 139607310,
+      "durationSeconds": 8632.34322,
+      "codec": "aac",
+      "bitrateKbps": 128,
+      "channels": 2,
+      "referencePacketHashVerified": true
+    },
+    {
+      "videoId": "Q1K2Edgtg4M",
+      "title": "Day 23 - Prayer Meeting - LightCity Prayer Meeting || Tue, Oct 20, 2026.",
+      "visibility": "members",
+      "file": "output/reference/Q1K2Edgtg4M.m4a",
+      "objectKey": "audio/Q1K2Edgtg4M.m4a",
+      "contentType": "audio/mp4",
+      "bytes": 133504585,
+      "durationSeconds": 8255.018957,
+      "codec": "aac",
+      "bitrateKbps": 128,
+      "channels": 2,
+      "referencePacketHashVerified": true
+    },
+    {
+      "videoId": "NpXFKPyiXFc",
+      "title": "Day 22 - Prayer Meeting (Communion) - LightCity Prayer Meeting || Mon, Oct 19, 2026.",
+      "visibility": "members",
+      "file": "output/reference/NpXFKPyiXFc.m4a",
+      "objectKey": "audio/NpXFKPyiXFc.m4a",
+      "contentType": "audio/mp4",
+      "bytes": 143028297,
+      "durationSeconds": 8843.900227,
+      "codec": "aac",
+      "bitrateKbps": 128,
+      "channels": 2,
+      "referencePacketHashVerified": true
+    }
+  ]
+}

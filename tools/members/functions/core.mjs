@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 
-export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Date.now(), now = () => Date.now() }) {
+export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Date.now(), now = () => Date.now(), audio = null }) {
   const uid = request => {
     if (!request.auth?.uid) throw new fail('unauthenticated', 'Please sign in first.');
     return request.auth.uid;
@@ -68,6 +68,21 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
       }
       await activate(id);
       return { verificationRequired: !record.emailVerified };
+    },
+    async getChurchAudio(request) {
+      if (!audio) throw new fail('unavailable', 'Audio listening is being prepared. Please try again shortly.');
+      const videoId = request.data?.videoId;
+      if (videoId === undefined) {
+        const includeMembers = request.data?.includeMembers === true;
+        if (includeMembers) await member(request);
+        return { recordings: audio.catalog.filter(item => item.visibility === 'public' || (includeMembers && item.visibility === 'members')).map(({ videoId, title, durationSeconds }) => ({ videoId, title, durationSeconds })) };
+      }
+      if (typeof videoId !== 'string' || !/^[\w-]{11}$/.test(videoId)) throw new fail('invalid-argument', 'Choose a recording from the pilot library.');
+      const recording = audio.catalog.find(item => item.videoId === videoId);
+      if (!recording) throw new fail('not-found', 'This recording is not available in the audio pilot.');
+      if (recording.visibility !== 'public') await member(request);
+      try { return { videoId, title: recording.title, durationSeconds: recording.durationSeconds, ...await audio.sign(recording.objectKey) }; }
+      catch { throw new fail('unavailable', 'Audio access could not be prepared. Please try again shortly.'); }
     },
     async getChurchLibrary(request) {
       await member(request);

@@ -92,6 +92,11 @@ async function bootstrap() {
   } catch (error) { api.error = error; publish(null); renderPage(); }
 }
 api.ready = bootstrap();
+api.getAudio = async videoId => {
+  await api.ready;
+  if (!memberAuth || !functions) throw Error('Member sign-in is unavailable. Please reload the page.');
+  return call('getChurchAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId });
+};
 api.refresh = async () => {
   await api.ready;
   if (!memberAuth) throw Error('Member access is unavailable. Please try again shortly.');

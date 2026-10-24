@@ -1,0 +1,35 @@
+---
+layout: null
+title: Audio listening pilot
+permalink: /audio-pilot/
+sitemap: false
+---
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Audio pilot | LightCity Teaching Fellowship</title>
+{% include pwa-head.html %}{% include browse-head.html %}
+<link rel="stylesheet" href="{{ '/style/root.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/style/headerANDfooter.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/style/lightcity-02.css' | relative_url }}">
+<link id="theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}">
+<script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script>
+<script defer src="{{ '/script/audio-pilot.js' | relative_url }}?v=audio-1"></script>
+</head><body class="app-home">
+<main class="lc-member-page lc-audio-pilot" id="audio-pilot-page">
+<div class="home-brand-row"><a class="home-brand" href="{{ '/Home/' | relative_url }}"><img class="home-brand-logo" src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" alt="LightCity Teaching Fellowship"></a>{% include theme-toggle.html position='home' %}</div>
+<section class="lc-member-card" aria-labelledby="member-title">
+<p class="home-eyebrow">LISTENING PILOT</p><h1 id="member-title">Keep listening.</h1>
+<p>Listen to public teachings, or sign in for additional member recordings. Choose a teaching, start playback, then try switching apps or locking your screen.</p>
+<p id="audio-status" role="status" aria-live="polite">Checking member access…</p>
+<a id="audio-signin" class="lc-member-primary" href="{{ '/members/' | relative_url }}" hidden>Sign in for member recordings</a>
+<div id="audio-player-panel" hidden>
+<h2 id="audio-now-playing">Choose a teaching below</h2>
+<audio id="pilot-audio" controls preload="none" crossorigin="anonymous"></audio>
+<label for="audio-speed">Playback speed</label><select id="audio-speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select>
+<button id="audio-retry" type="button" hidden>Retry playback</button>
+<p>Keep this page open while listening. You can switch apps or lock the screen; navigating to another page will stop this pilot player.</p>
+<div id="audio-recordings" aria-label="Available audio teachings"></div>
+</div></section><a class="lc-member-home" href="{{ '/Home/' | relative_url }}">← Back to LightCity</a>
+<noscript>Please enable JavaScript to use the audio pilot.</noscript>
+</main></body></html>

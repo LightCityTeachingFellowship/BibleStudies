@@ -1,0 +1,81 @@
+{
+  "purpose": "Latest 5 website videos: local audio pilot only",
+  "selectedOn": "2026-10-24",
+  "order": "Current authoritative website video-list order, newest first",
+  "profiles": [
+    {
+      "name": "speech",
+      "codec": "AAC",
+      "bitrateKbps": 64,
+      "channels": 1
+    },
+    {
+      "name": "balanced",
+      "codec": "AAC",
+      "bitrateKbps": 96,
+      "channels": 2
+    }
+  ],
+  "recordings": [
+    {
+      "id": "0xma1jqVwsg",
+      "title": "Day 26 - Prayer Meeting - LightCity Prayer Meeting || Thu, Oct 23, 2026.",
+      "category": null,
+      "visibility": "members",
+      "number": 1,
+      "sourceFile": "0xma1jqVwsg.mp4",
+      "studioUrl": "https://studio.youtube.com/video/0xma1jqVwsg/edit",
+      "watchUrl": "https://www.youtube.com/watch?v=0xma1jqVwsg"
+    },
+    {
+      "id": "3ugEmwCwEl4",
+      "title": "Day 25 - Prayer Meeting - LightCity Prayer Meeting || Thu, Oct 22, 2026.",
+      "category": "Meeting",
+      "visibility": "members",
+      "number": 2,
+      "sourceFile": "3ugEmwCwEl4.mp4",
+      "studioUrl": "https://studio.youtube.com/video/3ugEmwCwEl4/edit",
+      "watchUrl": "https://www.youtube.com/watch?v=3ugEmwCwEl4"
+    },
+    {
+      "id": "bJnm0Sz4neM",
+      "title": "Day 24 - Prayer Meeting - LightCity Prayer Meeting || Wed, Oct 21, 2026.",
+      "category": "Meeting",
+      "visibility": "members",
+      "number": 3,
+      "sourceFile": "bJnm0Sz4neM.mp4",
+      "studioUrl": "https://studio.youtube.com/video/bJnm0Sz4neM/edit",
+      "watchUrl": "https://www.youtube.com/watch?v=bJnm0Sz4neM"
+    },
+    {
+      "id": "Q1K2Edgtg4M",
+      "title": "Day 23 - Prayer Meeting - LightCity Prayer Meeting || Tue, Oct 20, 2026.",
+      "category": "Meeting",
+      "visibility": "members",
+      "number": 4,
+      "sourceFile": "Q1K2Edgtg4M.mp4",
+      "studioUrl": "https://studio.youtube.com/video/Q1K2Edgtg4M/edit",
+      "watchUrl": "https://www.youtube.com/watch?v=Q1K2Edgtg4M"
+    },
+    {
+      "id": "NpXFKPyiXFc",
+      "title": "Day 22 - Prayer Meeting (Communion) - LightCity Prayer Meeting || Mon, Oct 19, 2026.",
+      "category": "Meeting",
+      "visibility": "members",
+      "number": 5,
+      "sourceFile": "NpXFKPyiXFc.mp4",
+      "studioUrl": "https://studio.youtube.com/video/NpXFKPyiXFc/edit",
+      "watchUrl": "https://www.youtube.com/watch?v=NpXFKPyiXFc"
+    }
+  ],
+  "chosenAudio": {
+    "profile": "reference",
+    "codec": "AAC",
+    "container": "M4A",
+    "bitrateKbps": 128,
+    "channels": 2,
+    "reencode": false,
+    "decisionDate": "2026-10-24",
+    "scope": "Preserve the audio stream from the five downloaded source videos."
+  }
+}

@@ -24,3 +24,8 @@ OAuth client/
 # Local machine files
 .DS_Store
 Thumbs.db
+
+# Audio pilot recordings and generated audio (local only)
+tools/audio-pilot/input/
+tools/audio-pilot/output/
+tools/audio-pilot/runtime/
