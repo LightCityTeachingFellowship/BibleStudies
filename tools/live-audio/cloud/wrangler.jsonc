@@ -1,0 +1,9 @@
+{
+  "name": "lightcity-live-audio-test",
+  "main": "worker.mjs",
+  "account_id": "af76ef1278d731ac5487d733c0d44cd0",
+  "compatibility_date": "2026-10-24",
+  "workers_dev": true,
+  "observability": { "enabled": false },
+  "r2_buckets": [{ "binding": "AUDIO", "bucket_name": "lightcity-audio" }]
+}

@@ -1,4 +1,5 @@
 import { createModeSwitch } from './media-mode-core.mjs';
+import { mountLive } from './live-media.js';
 
 const framePlayers = new WeakMap(), frameOwners = new WeakMap(), youtubePlayers = new Set(), controllers = new Set();
 let apiPromise, activeAudio;
@@ -42,7 +43,8 @@ export function trackYouTube(frame, { autoplay = false } = {}) {
         if (frameOwners.get(frame)?.mode === 'audio') { event.target.pauseVideo(); return; }
         pauseOthers(null, event.target);
       },
-      onError: () => { clearTimeout(timer); reject(Error('Video unavailable')); }
+      onError: () => { clearTimeout(timer); reject(Error('Video unavailable')); },
+      onAutoplayBlocked: () => frameOwners.get(frame)?.onAutoplayBlocked?.()
     } });
   }));
   framePlayers.set(frame, ready);
@@ -75,8 +77,17 @@ function positionState(item) {
   if (activeAudio !== item || !navigator.mediaSession || !Number.isFinite(item.audio.duration) || item.audio.duration <= 0) return;
   try { navigator.mediaSession.setPositionState({ duration: item.audio.duration, position: Math.min(item.audio.currentTime, item.audio.duration), playbackRate: item.audio.playbackRate }); } catch {}
 }
-export function mount({ viewport, videoId, title, onState = () => {}, audio: existingAudio = null, expiresAt: initialExpiry = 0 }) {
+export function mount({ viewport, videoId, title, onState = () => {}, audio: existingAudio = null, expiresAt: initialExpiry = 0, recording = null }) {
   if (!/^[\w-]{11}$/.test(videoId)) throw Error('Invalid recording');
+  if (recording?.kind === 'live') {
+    const item = mountLive({ viewport, videoId, title, recording, onState, trackYouTube, pauseOthers, activate: session, position: positionState,
+      ownFrame: (frame, owner) => frameOwners.set(frame, owner),
+      releaseFrame: (frame, player) => { frameOwners.delete(frame); if (player) { youtubePlayers.delete(player); framePlayers.delete(frame); } },
+      clearSession: owner => { if (activeAudio === owner) { activeAudio = null; if (navigator.mediaSession) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; } } },
+      onDispose: owner => controllers.delete(owner)
+    });
+    controllers.add(item); return item;
+  }
   const audio = existingAudio || element('audio');
   const panel = element('div', 'lc-inline-audio'); panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Audio player');
   const kind = element('p', 'lc-inline-kind', '♫ AUDIO');

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { chooseTransport, availableAudioRanges } from './live-sync.mjs';
+const ranges = pairs => ({ length: pairs.length, start: i => pairs[i][0], end: i => pairs[i][1] });
+assert.equal(chooseTransport({ hlsSupported: true, nativeSupport: true }), 'hls', 'prefer hls.js when Chromium advertises native HLS too');
+assert.equal(chooseTransport({ hlsSupported: false, nativeSupport: true }), 'native');
+assert.equal(chooseTransport({ hlsSupported: false, nativeSupport: false }), null);
+const media = { readyState: 4, duration: Infinity, seekable: ranges([]), buffered: ranges([[1100, 1112]]) };
+assert.deepEqual(availableAudioRanges(media), [[1100, 1112]], 'a buffered native player must not stay locked out waiting for seekable');
+assert.deepEqual(availableAudioRanges(media, { fragments: [{ start: 0 }], edge: 1112 }), [[0, 1112]], 'hls.js EVENT history is fetchable before seekable is exposed');
+assert.deepEqual(availableAudioRanges({ ...media, readyState: 0 }, { fragments: [{ start: 0 }], edge: 1112 }), [], 'manifest alone is not decoded readiness');
+assert.deepEqual(availableAudioRanges({ ...media, seekable: ranges([[10, 20], [22, 30]]) }), [[10, 20], [22, 30]], 'respect real timeline gaps');
+assert.deepEqual(availableAudioRanges({ ...media, buffered: ranges([]) }), []);
+assert.deepEqual(availableAudioRanges({ ...media, buffered: ranges([]) }, { fragments: [{ start: 0 }], edge: Infinity }), [], 'never turn Infinity into a seekable interval');
+console.log('PASS: prefer MSE over ambiguous native HLS, buffered native readiness, finite playlist history, timeline gaps, and unloaded/infinite range rejection.');

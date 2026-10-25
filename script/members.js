@@ -97,6 +97,11 @@ api.getAudio = async (videoId, diagnose = false) => {
   if (!memberAuth || !functions) throw Error('Member sign-in is unavailable. Please reload the page.');
   return call('getChurchAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId, diagnose });
 };
+api.getLiveAudio = async videoId => {
+  await api.ready;
+  if (!memberAuth || !functions) throw Error('Live listening is unavailable.');
+  return call('getChurchLiveAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId });
+};
 api.refresh = async () => {
   await api.ready;
   if (!memberAuth) throw Error('Member access is unavailable. Please try again shortly.');

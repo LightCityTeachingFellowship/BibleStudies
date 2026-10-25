@@ -22,7 +22,7 @@
     }
     function actions(holder, id) {
       const valid = /^[\w-]{11}$/.test(id || '') && available.has(id);
-      const signature = (valid ? id : '') + ':inline-1';
+      const signature = (valid ? id + ':' + (available.get(id).session || 'recorded') : '') + ':inline-1';
       if (holder.dataset.audioSignature === signature) return;
       holder.dataset.audioSignature = signature; holder.dataset.videoId = id || ''; holder.replaceChildren();
       holder.setAttribute('role', 'group'); holder.setAttribute('aria-label', 'Playback mode');
@@ -48,7 +48,7 @@
         if (!globalThis.LightCityMedia) { feedback(holder, 'Playback controls are still loading. Please try again.'); return; }
         let controller = mounted.get(viewport);
         if (!controller) {
-          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, title: recording.title || 'LightCity teaching', onState: (mode, message) => {
+          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: recording.title || 'LightCity teaching', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
             feedback(holder, message);
             if (holder === watch) {
@@ -68,7 +68,12 @@
       if (watchButton) { event.preventDefault(); watchButton.click(); }
     });
     function render() {
-      for (const [viewport, controller] of mounted) if (viewport.isConnected === false || !available.has(controller.videoId) || (home && viewport === hero?.querySelector('.home-video-art') && controller.videoId !== hero.dataset.videoId)) { controller.dispose(); mounted.delete(viewport); }
+      for (const [viewport, controller] of mounted) {
+        const recording = available.get(controller.videoId);
+        const changedLive = (recording?.kind === 'live' && !controller.liveSession) || (controller.liveSession && (controller.liveSession !== recording?.session || controller.liveOffset !== recording?.offsetSeconds));
+        const changedFeatured = home && viewport === hero?.querySelector('.home-video-art') && controller.videoId !== hero.dataset.videoId;
+        if (viewport.isConnected === false || !recording || changedLive || changedFeatured) { controller.dispose(); mounted.delete(viewport); }
+      }
       if (grid) for (const card of grid.querySelectorAll('.video-box[data-video-id]')) {
         let holder = card.querySelector('.lc-video-actions');
         if (!holder && !available.has(card.dataset.videoId)) continue;
@@ -92,16 +97,23 @@
       try {
         await globalThis.LightCityMembers?.ready;
         if (current !== version) return;
-        const result = await globalThis.LightCityMembers.getAudio();
+        const [result, live] = await Promise.all([
+          globalThis.LightCityMembers.getAudio(),
+          globalThis.LightCityMembers.getLiveAudio?.().catch(error => ({ recordings: /permission-denied|unauthenticated|failed-precondition/.test(error?.code || '') ? [] : [...available.values()].filter(item => item.kind === 'live' && item.expiresAt > Date.now()) })) || Promise.resolve({ recordings: [] })
+        ]);
         if (current !== version) return;
         if (!Array.isArray(result.recordings)) throw Error('Audio catalogue unavailable');
         available = new Map(result.recordings.filter(item => /^[\w-]{11}$/.test(item.videoId)).map(item => [item.videoId, item]));
+        for (const item of live.recordings || []) if (item.kind === 'live' && /^[\w-]{11}$/.test(item.videoId) && /^session-\d{13}$/.test(item.session) && Number.isFinite(item.offsetSeconds)) available.set(item.videoId, item);
         render();
       } catch { if (current === version) reset(); }
     }
     window.addEventListener('lightcity-members-changed', () => void refresh());
     window.addEventListener('pagehide', () => { for (const controller of mounted.values()) controller.dispose(); mounted.clear(); });
     await refresh();
+    const liveRefresh = setInterval(() => { if (document.visibilityState !== 'hidden') void refresh(); }, 45000);
+    liveRefresh.unref?.();
+    window.addEventListener('pagehide', () => clearInterval(liveRefresh), { once: true });
   }
   // Deferred scripts can run at "interactive" before the mode module's imports finish.
   if (document.readyState !== 'complete') document.addEventListener('DOMContentLoaded', () => void start(), { once: true }); else void start();

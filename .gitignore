@@ -29,3 +29,7 @@ Thumbs.db
 tools/audio-pilot/input/
 tools/audio-pilot/output/
 tools/audio-pilot/runtime/
+
+# Bulk audio import sources, progress, and generated audio (local only)
+tools/audio-library/work/
+tools/live-audio/work/

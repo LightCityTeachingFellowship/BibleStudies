@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 
-export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Date.now(), now = () => Date.now(), audio = null }) {
+export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Date.now(), now = () => Date.now(), audio = null, live = null }) {
   const uid = request => {
     if (!request.auth?.uid) throw new fail('unauthenticated', 'Please sign in first.');
     return request.auth.uid;
@@ -47,6 +47,19 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
     });
   }
   return {
+    async getChurchLiveAudio(request) {
+      if (!live) throw new fail('unavailable', 'Live listening is not configured.');
+      const videoId = request.data?.videoId;
+      if (videoId !== undefined && (typeof videoId !== 'string' || !/^[\w-]{11}$/.test(videoId))) throw new fail('invalid-argument', 'Choose a live broadcast.');
+      if (request.data?.includeMembers === true) await member(request);
+      let catalog;
+      try { catalog = await live.catalog(); } catch { throw new fail('unavailable', 'Live listening is temporarily unavailable.'); }
+      if (videoId === undefined) return { recordings: catalog.filter(item => item.visibility === 'public' || request.data?.includeMembers === true).map(({ videoId, title, session, offsetSeconds, expiresAt }) => ({ kind: 'live', videoId, title, session, offsetSeconds, expiresAt })) };
+      const item = catalog.find(item => item.videoId === videoId);
+      if (!item) throw new fail('not-found', 'This broadcast is not available for live listening.');
+      if (item.visibility !== 'public') await member(request);
+      try { return await live.sign(item); } catch { throw new fail('unavailable', 'Live playback could not be prepared.'); }
+    },
     async registerGoogleChurchMember(request) {
       const id = uid(request);
       const record = await auth.getUser(id);

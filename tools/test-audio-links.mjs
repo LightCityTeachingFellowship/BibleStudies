@@ -24,13 +24,14 @@ const card = id => Object.assign(new Element(), { className: 'video-box', datase
 const publicCard = card(publicId), memberCard = card(memberId), missingCard = card('aaaaaaaaaaa');
 const cards = [publicCard, memberCard, missingCard], grid = new Element(); grid.querySelectorAll = () => cards; cards.forEach(card => grid.appendChild(card));
 const home = new Element(), watch = new Element(), hero = card(publicId), events = new Map(), observers = [];
-let mode = 'public', resolveLate;
+let mode = 'public', resolveLate, liveRows = [];
 const mountedPlayers = [];
 const media = { mount: options => {
-  const item = { videoId: options.videoId, viewport: options.viewport, mode: 'video', switchTo: async mode => { item.mode = mode; options.onState(mode, ''); }, dispose: () => { item.disposed = true; } };
+  const item = { videoId: options.videoId, liveSession: options.recording?.session, liveOffset: options.recording?.offsetSeconds, recording: options.recording, viewport: options.viewport, mode: 'video', switchTo: async mode => { item.mode = mode; options.onState(mode, ''); }, dispose: () => { item.disposed = true; } };
   mountedPlayers.push(item); return item;
 } };
 const api = { library: null, ready: Promise.resolve(), getAudio: async () => mode === 'hold' ? new Promise(resolve => { resolveLate = resolve; }) : { recordings: (mode === 'member' ? [publicId, memberId] : [publicId]).map(videoId => ({ videoId })) } };
+api.getLiveAudio = async () => ({ recordings: liveRows });
 const source = readFileSync('script/audio-links.js', 'utf8');
 let domReady, earlyReads = 0;
 vm.runInNewContext(source, { document: { readyState: 'interactive', addEventListener: (name, fn) => { assert.equal(name, 'DOMContentLoaded'); domReady = fn; }, querySelector: () => null, getElementById: () => { earlyReads++; return null; } } });
@@ -40,7 +41,7 @@ vm.runInNewContext(source, {
   document: { readyState: 'complete', querySelector: selector => selector.startsWith('script') ? { dataset: { base: '/BibleStudies/' } } : hero, getElementById: id => ({ 'videotab-container': grid, 'home-audio-choice': home, 'watch-audio-choice': watch })[id], createElement: () => new Element() },
   window: { addEventListener: (name, fn) => events.set(name, fn) }, LightCityMembers: api, LightCityMedia: media,
   location: { href: 'https://example.com/BibleStudies/Watch/?v=' + publicId, search: '?v=' + publicId },
-  URL, URLSearchParams, Set, queueMicrotask, MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} }
+  URL, URLSearchParams, Set, queueMicrotask, setInterval: () => ({ unref() {} }), clearInterval() {}, MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} }
 });
 const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 await settle();
@@ -71,6 +72,16 @@ assert.equal(clone.children.length, 1); assert.equal(clone.children[0].children.
 const title = new Element(); publicCard.appendChild(title); observers[0](); await settle();
 assert.equal(publicCard.lastElementChild.className, 'lc-video-actions', 'Choices remain below late-loading titles');
 console.log('PASS: Watch/Listen buttons switch the matching viewport without navigation, handle dynamic cards, hide unavailable/member audio, and reject stale responses.');
+liveRows = [{ kind: 'live', videoId: missingCard.dataset.videoId, title: 'Live teaching', session: 'session-1792874042803', offsetSeconds: 0, expiresAt: Date.now() + 3600000 }];
+events.get('lightcity-members-changed')(); await settle();
+assert.equal(missingCard.children[0].hidden, false, 'registered live broadcasts get same-page choices');
+grid.events.click({ target: missingCard.children[0].children[1], preventDefault() {}, stopPropagation() {} }); await settle();
+const liveController = mountedPlayers.at(-1);
+assert.equal(liveController.recording.kind, 'live'); assert.equal(liveController.liveSession, liveRows[0].session);
+liveRows = [{ ...liveRows[0], session: 'session-1792874042804' }]; events.get('lightcity-members-changed')(); await settle();
+assert.equal(liveController.disposed, true, 'a restarted session cannot retain the previous controller');
+liveRows = []; events.get('lightcity-members-changed')(); await settle();
+assert.equal(missingCard.children[0].hidden, true, 'ended/unregistered live sessions lose their choices');
 
 const playerSource = readFileSync('script/audio-pilot.js', 'utf8');
 async function playerFixture(selected, available) {

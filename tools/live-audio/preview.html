@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LightCity Live Audio Test</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f5f5f5;color:#272727;font:18px/1.6 system-ui,sans-serif}main{max-width:800px;margin:70px auto;padding:30px;background:white;border:1px solid #d0d7df;border-radius:24px}h1{font-size:36px;line-height:1.2;margin:12px 0 24px}.eyebrow{letter-spacing:.16em;font-size:13px;font-weight:bold}label{display:block;margin-top:24px}select,button{font:inherit;border:1px solid #ccd3da;border-radius:12px;padding:10px;background:white;color:inherit}select{width:100%;margin:8px 0 24px}audio{width:100%;margin:16px 0}button{cursor:pointer;background:#ffbf00;border-color:#ffbf00}.check{display:flex;gap:12px;align-items:center}.small{font-size:15px;color:#555}@media(max-width:700px){main{margin:20px 12px;padding:24px}h1{font-size:30px}}
+  </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.7.3/dist/hls.min.js"></script>
+  <script defer src="/preview.js"></script>
+</head>
+<body><main>
+  <div class="eyebrow">LIGHTCITY · LOCAL AUDIO TEST</div>
+  <h1>Listen to the test feed.</h1>
+  <p>This player uses the OBS test recordings on this computer. Start a new test feed to listen while it is streaming.</p>
+  <label for="session">Test recording</label><select id="session" aria-label="Test recording"><option value="">Waiting for an audio segment…</option></select>
+  <label class="check"><input id="follow" type="checkbox" checked> Follow the newest test feed</label>
+  <p id="status" role="status">Looking for test recordings…</p>
+  <audio id="audio" controls preload="metadata"></audio>
+  <button id="retry" type="button">Reload audio</button>
+  <p class="small">Use headphones when OBS is capturing desktop sound to avoid a feedback loop. This test player is available only on this computer.</p>
+</main></body></html>

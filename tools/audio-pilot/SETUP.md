@@ -1,5 +1,7 @@
 # Public and member listening pilot
 
+For bulk imports and future recordings, use [the audio library importer](../audio-library/README.md). It supports reviewed matching, resumable batches, preserved AAC extraction, verified private R2 uploads, and catalogue registration. This pilot remains the original comparison workflow.
+
 Five member recordings and one public recording use the preserved AAC 128 kbps stereo audio. The bucket stays private. Visitors can list and play recordings explicitly marked `public` in the server catalogue without signing in. Additional member recordings require approved, verified church membership. The user confirmed member playback, phone background/lock-screen playback, and guest playback of `R42uVd9spDw`. See `PUBLIC-RECORDING.md`.
 
 ## Main website integration
