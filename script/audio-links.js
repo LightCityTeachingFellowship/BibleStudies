@@ -8,6 +8,7 @@
     if (!grid && !hero && !watch) return;
     let available = new Map(), version = 0, scheduled = false, audience = null;
     const mounted = new Map();
+    let openAudio = new URLSearchParams(location.search).get('mode') === 'audio';
     function feedback(holder, message) {
       let node = holder.querySelector('.lc-mode-feedback');
       if (!node && message) { node = document.createElement('p'); node.className = 'lc-mode-feedback'; node.setAttribute('role', 'status'); holder.appendChild(node); }
@@ -22,14 +23,20 @@
     }
     function actions(holder, id) {
       const valid = /^[\w-]{11}$/.test(id || '') && available.has(id);
-      const signature = (valid ? id + ':' + (available.get(id).session || 'recorded') : '') + ':inline-1';
+      const signature = (holder === home ? 'home-links:' + id + ':' : '') + (valid ? id + ':' + (available.get(id).session || 'recorded') : '') + ':inline-1';
       if (holder.dataset.audioSignature === signature) return;
       holder.dataset.audioSignature = signature; holder.dataset.videoId = id || ''; holder.replaceChildren();
       holder.setAttribute('role', 'group'); holder.setAttribute('aria-label', 'Playback mode');
-      if (valid) {
+      if (holder === home && /^[\w-]{11}$/.test(id || '')) {
+        const url = new URL(hero.dataset.watchUrl || (settings?.dataset.base || '/') + 'Watch/', location.href);
+        url.searchParams.set('v', id); url.searchParams.delete('mode');
+        const link = document.createElement('a'); link.className = 'lc-mode-button'; link.textContent = 'Watch'; link.href = url.href; holder.appendChild(link);
+        if (valid) { const listen = document.createElement('a'); listen.className = 'lc-mode-button'; listen.textContent = 'Listen'; url.searchParams.set('mode', 'audio'); listen.href = url.href; holder.appendChild(listen); }
+        holder.setAttribute('aria-label', 'Open teaching');
+      } else if (valid) {
         add(holder, 'Watch', 'video'); add(holder, 'Listen', 'audio');
       }
-      holder.hidden = !valid;
+      holder.hidden = holder === home ? !/^[\w-]{11}$/.test(id || '') : !valid;
     }
     function viewportFor(holder) {
       if (holder === home) return hero.querySelector('.home-video-art');
@@ -58,15 +65,15 @@
           } });
           mounted.set(viewport, controller);
         }
-        void controller.switchTo(button.dataset.mediaMode);
+        const startPlayback = button.dataset.startPlayback === 'true';
+        void controller.switchTo(button.dataset.mediaMode).then(async () => {
+          if (startPlayback && controller.mode === 'audio' && mounted.get(viewport) === controller) {
+            try { await controller.audio.play(); } catch { feedback(holder, 'Tap Play on the audio player to begin listening.'); }
+          }
+        }).catch(() => feedback(holder, 'Playback could not start. Please try again.'));
       });
     }
-    delegate(grid); delegate(home); delegate(watch);
-    if (hero && home) hero.addEventListener('click', event => {
-      if (!event.target.closest?.('[data-featured-watch]') || !available.has(hero.dataset.videoId)) return;
-      const watchButton = home.querySelector('button[data-media-mode="video"]');
-      if (watchButton) { event.preventDefault(); watchButton.click(); }
-    });
+    delegate(grid); delegate(watch);
     function render() {
       for (const [viewport, controller] of mounted) {
         const recording = available.get(controller.videoId);
@@ -83,7 +90,13 @@
         if (card.lastElementChild !== holder) card.appendChild(holder);
       }
       if (home && hero) actions(home, hero.hidden ? '' : hero.dataset.videoId);
-      if (watch) actions(watch, new URLSearchParams(location.search).get('v'));
+      if (watch) {
+        actions(watch, new URLSearchParams(location.search).get('v'));
+        if (openAudio && !watch.hidden) {
+          openAudio = false;
+          watch.querySelectorAll('button[data-media-mode]').forEach(button => { if (button.dataset.mediaMode === 'audio') { button.dataset.startPlayback = 'true'; button.click(); delete button.dataset.startPlayback; } });
+        }
+      }
     }
     function schedule() { if (!scheduled) { scheduled = true; queueMicrotask(() => { scheduled = false; render(); }); } }
     if (grid) new MutationObserver(schedule).observe(grid, { childList: true, subtree: true });

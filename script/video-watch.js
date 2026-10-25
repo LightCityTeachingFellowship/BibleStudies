@@ -4,7 +4,7 @@
  const status=document.getElementById('watch-status');
  const container=document.getElementById('watch-player');
  const help=document.getElementById('watch-help');
- const youtube=document.getElementById('watch-youtube');
+ const startWithAudio=new URLSearchParams(location.search).get('mode')==='audio';
  if(!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
   title.textContent='Video unavailable';
   status.textContent='This video link is incomplete or invalid. Choose a video from All videos.';
@@ -15,10 +15,10 @@
  player.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';
  player.allowFullscreen=true;
  player.referrerPolicy='strict-origin-when-cross-origin';
- const params=new URLSearchParams({autoplay:'1',playsinline:'1',controls:'1',rel:'0',enablejsapi:'1',origin:location.origin});
+ const params=new URLSearchParams({autoplay:startWithAudio?'0':'1',playsinline:'1',controls:'1',rel:'0',enablejsapi:'1',origin:location.origin});
  player.src=`https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
  container.appendChild(player);
- globalThis.LightCityMedia?.trackYouTube(player, { autoplay: true }).catch(() => {});
+ globalThis.LightCityMedia?.trackYouTube(player, { autoplay: !startWithAudio }).catch(() => {});
  // Fullscreen and screen orientation are separate browser capabilities.
  // A cross-origin player exposes its iframe as the fullscreen element here.
  const orientation=globalThis.screen?.orientation;
@@ -56,10 +56,8 @@
  help.hidden=false;
  status.textContent='';
  status.hidden=true;
- youtube.href=`https://www.youtube.com/watch?v=${videoId}`;
- youtube.hidden=false;
  const endpoint=new URL('https://www.youtube.com/oembed');
- endpoint.searchParams.set('url',youtube.href);
+ endpoint.searchParams.set('url',`https://www.youtube.com/watch?v=${videoId}`);
  endpoint.searchParams.set('format','json');
  fetch(endpoint,{signal:AbortSignal.timeout(10000)}).then(response=> {
   if(!response.ok) throw Error('Video title unavailable');
