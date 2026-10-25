@@ -6,7 +6,7 @@ This importer extends the working Watch/Listen player. It does not download from
 
 Use [Google Takeout](https://takeout.google.com/) signed into the account that owns the channel. Deselect other products, select YouTube and YouTube Music, and include uploaded videos and accompanying video metadata. Choose a one-time export split into manageable ZIP archives. If the channel belongs to a Brand Account, ensure the export is for that channel. Google's export preparation and the downloads can take substantial time.
 
-Extract one archive/batch into a local folder. Keep metadata beside recordings and retain the original names. Do not put the exported media in a tracked website folder. The importer scans extracted files, not ZIP archives; it does not delete originals. You do not need all archives extracted at once, but keep each batch until its upload is verified.
+Extract one archive/batch into a local folder. Keep metadata beside recordings and retain the original names. Do not put the exported media in a tracked website folder. The importer scans extracted files, not ZIP archives. Import commands keep originals; the separate optional cleanup step is described below. You do not need all archives extracted at once, but keep each batch until its upload is verified.
 
 ## 2. Scan without changing playback
 
@@ -93,3 +93,44 @@ node tools/test-audio-library.mjs
 ```
 
 Tests cover ambiguous/conflicting matches, current public/member rules, real FFmpeg conversion and unchanged AAC packet hashes, interrupted-work resume, upload checks, rejection of remote conflicts, and registration gates. Cloudflare upload calls are simulated; a real new upload still needs the scoped write credential and an actual export batch.
+
+## Release local storage after publishing
+
+The input folder is temporary staging, not a permanent archive. Process manageable batches. Once each batch has been deployed, test Listen and seeking on the published site before confirming completion:
+
+```powershell
+node tools/audio-library/cleanup.mjs confirm-playback --id VIDEO_ID --playback-tested
+```
+
+Use `--all` instead of `--id VIDEO_ID` only after testing every prepared recording in this work folder. This records your confirmation; the tool cannot prove that you listened or that a deployment completed.
+
+Preview cleanup without deleting anything or entering credentials:
+
+```powershell
+& .\tools\audio-library\cleanup.ps1
+```
+
+Remove the generated local audio copies after a fresh R2 check:
+
+```powershell
+& .\tools\audio-library\cleanup.ps1 -Apply
+```
+
+Source recordings are kept by default. To explicitly remove those as well, first preview with `-DeleteSources`, then apply:
+
+```powershell
+& .\tools\audio-library\cleanup.ps1 -DeleteSources
+& .\tools\audio-library\cleanup.ps1 -Apply -DeleteSources
+```
+
+Add `-Id VIDEO_ID` to limit cleanup to one recording. Apply prompts privately for R2 credentials with read access to the bucket; existing importer write credentials also work. The tool never deletes or changes R2 objects. It checks current catalogue registration, timeline and playback confirmations, upload receipts, fresh remote size/checksum metadata, and unchanged local file hashes. A failed check keeps the affected recording's local files. It deletes only individual files recorded by this importer, never entire folders, metadata, or unrelated recordings.
+
+Keep `state.json` and the small reports. Interrupted cleanup can be rerun; already removed files are skipped. Sources can only be removed if they belong to the current input plan, so clean a completed batch before scanning the next input folder. Cleanup does not remove downloaded Takeout ZIPs, other archive copies, cloud-sync backups, or the computer's recycle bin. Deletion is permanent for the selected local files; keep a separate original backup if you need one. There is no background retention timer or unattended source deletion.
+
+For a separately uploaded video, add its ID to the normal site list and use a filename such as `VIDEO_ID.mp4` in a temporary input folder (for example `tools/audio-library/work/input`). Run plan → prepare → confirm timeline → upload → register → deploy, then test playback and clean the batch as above. Nothing needs to accumulate indefinitely on this computer. The importer does not watch the folder automatically.
+
+Cleanup checks:
+
+```powershell
+node tools/audio-library/test-cleanup.mjs
+```

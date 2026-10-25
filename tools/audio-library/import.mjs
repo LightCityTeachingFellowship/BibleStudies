@@ -17,7 +17,7 @@ export async function json(path, fallback) {
   try { return JSON.parse(await readFile(path, 'utf8')); }
   catch (error) { if (error.code === 'ENOENT' && fallback !== undefined) return fallback; throw error; }
 }
-async function save(path, value) {
+export async function save(path, value) {
   await mkdir(dirname(path), { recursive: true });
   const temp = path + '.tmp';
   await writeFile(temp, JSON.stringify(value, null, 2) + '\n');
@@ -108,6 +108,7 @@ export async function prepare(work = DEFAULT_WORK, { limit = 10, id } = {}) {
     if (processed >= limit) break;
     try {
       const previous = state[r.id];
+      if (previous?.cleaned && previous.source === r.source) { console.log(`${r.id}: completed import; local files already cleaned`); continue; }
       const sourceStat = await stat(r.source);
       const outputStat = previous?.output ? await stat(previous.output).catch(() => null) : null;
       if (previous?.sourceBytes === sourceStat.size && previous.sourceMtime === sourceStat.mtimeMs && outputStat?.size === previous.bytes) { console.log(`${r.id}: already prepared`); continue; }
@@ -159,7 +160,7 @@ export function mergeCatalog(current, state, library) {
   }
   return [...merged.values()];
 }
-async function client() {
+export async function client() {
   const require = createRequire(join(ROOT, 'tools/members/functions/package.json'));
   const sdk = require('@aws-sdk/client-s3');
   const account = process.env.R2_AUDIO_ACCOUNT_ID;
