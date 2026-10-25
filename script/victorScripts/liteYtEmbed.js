@@ -42,6 +42,8 @@
     const videoCategoryData = document.getElementById('video-category-data');
     const savedVideoCategories = videoCategoryData ? JSON.parse(videoCategoryData.textContent) : {};
     const publicVideoCategories = { ...savedVideoCategories };
+    const savedVideoTitles = JSON.parse(document.getElementById('video-title-data')?.textContent || '{}');
+    const publicVideoTitles = { ...savedVideoTitles };
     const videoIdsString = ImportvideoIdsString.textContent;
     // Convert the string to an array of video IDs
     // const videoIds = videoIdsString.split(',').map(id => id.trim());
@@ -51,26 +53,30 @@
     const videoIds = [...publicVideoIds];
     let renderedAudience = null;
     // Function to create and append video cards
+    let cardBuildVersion = 0;
     function createVideoCards(videoIds) {
-        const container = document.getElementById('All-Tab-content');   
-        // Clear the container before appending new video cards
-        container.innerHTML = '';    
-        videoIds.forEach((videoId, index) => {
-            // Create the necessary elements
-            const ionCard = document.createElement('div');
-            ionCard.className = 'video-box homeResources-grid-containter bg-color';    
-            ionCard.setAttribute('data-video-id', videoId);
-            ionCard.setAttribute('data-video-order', index);
-            const divContainer = document.createElement('div');
-            divContainer.className = 'iframe-container';    
-            const lazyLoad = document.createElement('lite-youtube');
-            lazyLoad.setAttribute('videoid', videoId); // already trimmed
-            lazyLoad.setAttribute('params', 'controls=1');    
-            // Append the elements to form the structure
-            divContainer.appendChild(lazyLoad);
-            ionCard.appendChild(divContainer);
-            container.appendChild(ionCard);
-        });
+        const generation = ++cardBuildVersion, ids = [...videoIds];
+        const container = document.getElementById('All-Tab-content');
+        container.innerHTML = '';
+        syncVideoCategoryTab.copies = new Map();
+        let index = 0;
+        function batch() {
+            if (generation !== cardBuildVersion) return;
+            const end = Math.min(index + 24, ids.length), fragment = document.createDocumentFragment();
+            for (; index < end; index++) {
+                const videoId = ids[index], card = document.createElement('div');
+                card.className = 'video-box homeResources-grid-containter bg-color';
+                card.setAttribute('data-video-id', videoId); card.setAttribute('data-video-order', index);
+                const viewport = document.createElement('div'); viewport.className = 'iframe-container';
+                const player = document.createElement('lite-youtube');
+                player.setAttribute('videoid', videoId); player.setAttribute('params', 'controls=1');
+                viewport.appendChild(player); card.appendChild(viewport); fragment.appendChild(card);
+            }
+            container.appendChild(fragment);
+            if (index < ids.length) setTimeout(batch, 0);
+            else videoCloneToOtherTabs();
+        }
+        batch();
     }
     // Initial call to create the video cards
     setTimeout(() => {
@@ -105,11 +111,9 @@ function syncVideoCategoryTab(videoBox) {
     const target = document.getElementById(`${category}-Tab-content`);
     if (!target) return; // Metadata may still be loading; do not guess its visibility.
     const id = videoBox.getAttribute('data-video-id');
-    // Refresh an earlier copy instead of duplicating it when metadata loads late.
-    videoCategories.forEach(name => {
-        const tab = document.getElementById(`${name}-Tab-content`);
-        if (tab) Array.from(tab.children).filter(child => child.getAttribute('data-video-id') === id).forEach(child => child.remove());
-    });
+    const copies = syncVideoCategoryTab.copies ||= new Map();
+    const previous = copies.get(id);
+    if (previous && Array.from(previous.parentNode?.children || []).includes(previous)) previous.remove();
     const clone = videoBox.cloneNode(true);
     // Category copies start as previews, never as duplicate active players.
     clone.querySelectorAll('.lc-inline-audio').forEach(panel => panel.remove());
@@ -120,8 +124,10 @@ function syncVideoCategoryTab(videoBox) {
     });
     clone.querySelectorAll('.lc-video-actions').forEach(holder => { delete holder.dataset.audioSignature; holder.replaceChildren(); });
     const order = Number(videoBox.getAttribute('data-video-order'));
-    const next = Array.from(target.children).find(child => Number(child.getAttribute('data-video-order')) > order);
+    const children = target.children;
+    const next = children.length && Number(children[children.length - 1].getAttribute('data-video-order')) > order ? Array.from(children).find(child => Number(child.getAttribute('data-video-order')) > order) : null;
     target.insertBefore(clone, next || null);
+    copies.set(id, clone);
 }
 // Select the container element where the divs will be appended
 const videoTabContainer = document.getElementById('videotab-container');
@@ -150,6 +156,8 @@ function renderAudienceVideos() {
     renderedAudience = signature;
     videoIds.splice(0, videoIds.length, ...ids);
     Object.keys(savedVideoCategories).forEach(id => delete savedVideoCategories[id]);
+    Object.keys(savedVideoTitles).forEach(id => delete savedVideoTitles[id]);
+    Object.assign(savedVideoTitles, Array.isArray(library) ? Object.fromEntries(library.map(video => [video.id, video.title])) : publicVideoTitles);
     Object.assign(savedVideoCategories, Array.isArray(library) ? Object.fromEntries(library.map(video => [video.id, video.category])) : publicVideoCategories);
     videoCategories.forEach(category => { document.getElementById(category + '-Tab-content').innerHTML = ''; });
     document.querySelectorAll('.videos-header-btns').forEach(button => button.classList.toggle('active', button.id === 'All-Tab'));
@@ -162,38 +170,31 @@ window.addEventListener('lightcity-members-changed', renderAudienceVideos);
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.body.textContent || "";
 }
-function runFirstPartOfCode() {
-    class LiteYTEmbed extends HTMLElement {
-        constructor() {
-            super();
-            this.hasFetchedVideoInfo = false;
-        }
-        connectedCallback() {
-            this.videoId = this.getAttribute('videoid');
+const videoWeekday = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+const metadataRequests = new Map(), metadataJobs = [];
+let metadataActive = 0;
+function pumpVideoMetadata() {
+    while (metadataActive < 4 && metadataJobs.length) {
+        const job = metadataJobs.shift(); metadataActive++;
+        fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + job.id) + '&format=json', { signal: AbortSignal.timeout(10000) })
+            .then(response => { if (!response.ok) throw Error('Title unavailable'); return response.json(); })
+            .then(data => { if (typeof data.title !== 'string' || !data.title.trim()) throw Error('Title unavailable'); return data; })
+            .then(job.resolve, job.reject).finally(() => { metadataActive--; pumpVideoMetadata(); });
+    }
+}
+function queueVideoMetadata(player) {
+    const card = player.closest('#All-Tab-content .video-box');
+    const heading = document.createElement('h3'); heading.className = 'video-title'; heading.textContent = 'LightCity teaching'; card.appendChild(heading);
+    let pending = metadataRequests.get(player.videoId);
+    if (!pending) {
+        pending = new Promise((resolve, reject) => metadataJobs.push({ id: player.videoId, resolve, reject }));
+        metadataRequests.set(player.videoId, pending); pumpVideoMetadata();
+    }
+    pending.then(data => { if (player.isConnected !== false) applyVideoMetadata.call(player, data); }).catch(() => {});
+}
 
-            let playBtnEl = this.querySelector('.lty-playbtn');
-            // A label for the button takes priority over a [playlabel] attribute on the custom-element
-            this.playLabel = (playBtnEl && playBtnEl.textContent.trim()) || this.getAttribute('playlabel') || 'Play';
+function applyVideoMetadata(data) {
 
-            if (!this.style.backgroundImage) {
-            this.style.backgroundImage = `url("https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg")`;
-            }
-
-            // Set up video title
-            const videoURL = `https://www.youtube.com/watch?v=${this.videoId}`;
-            const oEmbedURL = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoURL)}&format=json`;
-            
-            // Ensure hasFetchedVideoInfo is in the correct scope and check its value
-            if (!this.hasFetchedVideoInfo && this.closest('#All-Tab-content .video-box')) {
-                fetch(oEmbedURL)
-                    .then(response => {
-                        if (response.status === 200) {
-                            return response.json();
-                        } else {
-                            throw new Error("Failed to retrieve video information.");
-                        }
-                    })
-                    .then(data => {
                         let videoTitleElement;
                         let videoTitleNoDate;
                         let videoTitleJustCategory;
@@ -203,6 +204,7 @@ function runFirstPartOfCode() {
                         const videoBoxElement = this.closest(`#All-Tab-content .video-box`);
                         if (!videoBoxElement) { return }
             
+                        videoBoxElement.querySelector?.('.video-title')?.remove();
                         // Set up channel Logo
                         const channelLogoCon = document.createElement('div');
                         channelLogoCon.classList.add('channelLogo-container');
@@ -239,7 +241,7 @@ function runFirstPartOfCode() {
                             if (dateString) {
                                 dateObject = new Date(dateString);
                                 if (!isNaN(dateObject)) {
-                                    const dayOfWeek = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(dateObject);
+                                    const dayOfWeek = videoWeekday.format(dateObject);
                                     videoDateElement = document.createElement('span');
                                     videoDateElement.classList.add('video-date');
                                     videoDateElement.textContent = dayOfWeek + ', ' + dateString + '.';
@@ -264,79 +266,43 @@ function runFirstPartOfCode() {
                                     videoTitleElement.appendChild(videoDateElement);
             
                                     videoBoxElement.setAttribute('video-title', videoTitleOnly);
-                                    videoBoxElement.setAttribute('video-category', stripHtmlTags(videoTitleJustCategory.innerHTML));
-                                    videoBoxElement.setAttribute('date-posted', stripHtmlTags(videoDateElement.innerHTML));
+                                    videoBoxElement.setAttribute('video-category', videoTitleJustCategory.textContent);
+                                    videoBoxElement.setAttribute('date-posted', videoDateElement.textContent);
             
-                                } else {
-                                    console.error('Invalid date object:', dateObject);
                                 }
-                            } else {
-                                console.error('No date match found');
                             }
                         }
 
                         // Classification is independent of the optional date/title formatting.
                         videoBoxElement.setAttribute('videoCategoryTab', savedVideoCategories[this.videoId] || getVideoCategory(data.title, videoTitleJustCategory?.textContent || data.title));
 
-                        // Fetch additional video details from YouTube Data API v3
-                        // const apiKey = 'AIzaSyBQjKp7Xt5hFJHYwPCjM1wBXg6KBBZrayo';
-                        // const videoDetailsURL = `https://www.googleapis.com/youtube/v3/videos?id=${this.videoId}&part=snippet,contentDetails,liveStreamingDetails&key=${apiKey}`;            
-                        // fetch(videoDetailsURL, {
-                        //     headers: {
-                        //         'Referer': 'https://*.lightcityteachingfellowship.github.io/BibleStudies/' // Replace with your GitHub Pages URL
-                        //     }
-                        // })
-                        // .then(response => response.json())
-                        // .then(detailsData => {
-                        //     const duration = detailsData.items[0].contentDetails.duration;
-                        //     const liveBroadcastContent = detailsData.items[0].snippet.liveBroadcastContent;
-                            
-                        //     function parseDuration(duration) {
-                        //         const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-                        //         const hours = parseInt(match[1]) || 0;
-                        //         const minutes = parseInt(match[2]) || 0;
-                        //         const seconds = parseInt(match[3]) || 0;
-                        //         return `${hours > 0 ? hours + ':' : ''}${minutes > 0 ? (hours > 0 && minutes < 10 ? '0' + minutes : minutes) + ':' : '0:'}${seconds < 10 ? '0' + seconds : seconds}`;
-                        //     }
-                            
-                        //     if (liveBroadcastContent !== 'live') {
-                        //         const videoDurationElement = document.createElement('div');
-                        //         videoDurationElement.classList.add('video-duration');
-                        //         videoDurationElement.textContent = parseDuration(duration);
-                        //         this.append(videoDurationElement);
-                        //     }
-                        //     // Check if the video is live
-                        //     if (liveBroadcastContent === 'live') {
-                        //         videoBoxElement.setAttribute('live-status', 'live');
-                        //         const liveIndicator = document.createElement('div');
-                        //         liveIndicator.classList.add('live-indicator');
-                        //         liveIndicator.innerHTML = `
-                        //         <span class="live-icon">
-                        //             <svg viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope tp-yt-iron-icon" style="pointer-events: none; display: block; width: 100%; height: 100%;">
-                        //                 <g width="24" height="24" viewBox="0 0 24 24" class="style-scope tp-yt-iron-icon">
-                        //                     <path d="M14 11.9999C14 13.0999 13.1 13.9999 12 13.9999C10.9 13.9999 10 13.0999 10 11.9999C10 10.8999 10.9 9.99992 12 9.99992C13.1 9.99992 14 10.8999 14 11.9999ZM8.48 8.44992L7.77 7.74992C6.68 8.82992 6 10.3399 6 11.9999C6 13.6599 6.68 15.1699 7.77 16.2499L8.48 15.5399C7.57 14.6399 7 13.3899 7 11.9999C7 10.6099 7.57 9.35992 8.48 8.44992ZM16.23 7.74992L15.52 8.45992C16.43 9.35992 17 10.6099 17 11.9999C17 13.3899 16.43 14.6399 15.52 15.5499L16.23 16.2599C17.32 15.1699 18 13.6599 18 11.9999C18 10.3399 17.32 8.82992 16.23 7.74992ZM5.65 5.62992L4.95 4.91992C3.13 6.72992 2 9.23992 2 11.9999C2 14.7599 3.13 17.2699 4.95 19.0799L5.66 18.3699C4.02 16.7399 3 14.4899 3 11.9999C3 9.50992 4.02 7.25992 5.65 5.62992ZM19.05 4.91992L18.34 5.62992C19.98 7.25992 21 9.50992 21 11.9999C21 14.4899 19.98 16.7399 18.35 18.3699L19.06 19.0799C20.87 17.2699 22 14.7599 22 11.9999C22 9.23992 20.87 6.72992 19.05 4.91992Z" class="style-scope tp-yt-iron-icon"></path>
-                        //                 </g>
-                        //             </svg>
-                        //         </span>`;
-                        //         const liveText = document.createElement('span');
-                        //         liveText.classList.add('live-text');
-                        //         liveText.textContent = 'LIVE';
-
-                        //         liveIndicator.appendChild(liveText);
-                        //         this.append(liveIndicator);
-                        //     }
-                        // })
-                        // .catch(error => {
-                        //     console.error('Failed to fetch video details:', error);
-                        // });            
                     this.hasFetchedVideoInfo = true; // Set the flag to true after processing
                     syncVideoCategoryTab(videoBoxElement);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
+}
+
+function runFirstPartOfCode() {
+    class LiteYTEmbed extends HTMLElement {
+        constructor() {
+            super();
+            this.hasFetchedVideoInfo = false;
+        }
+        connectedCallback() {
+            if (this.initialized) { LiteYTEmbed.observeThumbnail(this); return; }
+            this.initialized = true;
+            this.videoId = this.getAttribute('videoid');
+
+            let playBtnEl = this.querySelector('.lty-playbtn');
+            // A label for the button takes priority over a [playlabel] attribute on the custom-element
+            this.playLabel = (playBtnEl && playBtnEl.textContent.trim()) || this.getAttribute('playlabel') || 'Play';
+
+            LiteYTEmbed.observeThumbnail(this);
+
+            if (!this.hasFetchedVideoInfo && this.closest('#All-Tab-content .video-box')) {
+                const title = savedVideoTitles[this.videoId];
+                if (title) applyVideoMetadata.call(this, { title });
+                else queueVideoMetadata(this);
             }
-            
+
             // Set up play button, and its visually hidden label
             if (!playBtnEl) {
                 playBtnEl = document.createElement('button');
@@ -354,6 +320,8 @@ function runFirstPartOfCode() {
 
             // On hover (or tap), warm up the TCP connections we're (likely) about to use.
             this.addEventListener('pointerover', LiteYTEmbed.warmConnections, {once: true});
+            this.addEventListener('pointerdown', LiteYTEmbed.warmConnections, {once: true});
+            this.addEventListener('focusin', LiteYTEmbed.warmConnections, {once: true});
 
             // Once the user clicks, add the real iframe and drop our play button
             // TODO: In the future we could be like amp-youtube and silently swap in the iframe during idle time
@@ -364,12 +332,23 @@ function runFirstPartOfCode() {
             // However Safari desktop and most/all mobile browsers do not successfully track the user gesture of clicking through the creation/loading of the iframe,
             // so they don't autoplay automatically. Instead we must load an additional 2 sequential JS files (1KB + 165KB) (un-br) for the YT Player API
             // TODO: Try loading the the YT API in parallel with our iframe and then attaching/playing it. #82
-            this.needsYTApiForAutoplay = navigator.vendor.includes('Apple') || navigator.userAgent.includes('Mobi');
+
         }
 
         /**
          * Add a <link rel={preload | preconnect} ...> to the head
          */
+        static observeThumbnail(player) {
+            if (player.style.backgroundImage) return;
+            const load = item => { item.style.backgroundImage = 'url("https://i.ytimg.com/vi/' + item.videoId + '/hqdefault.jpg")'; };
+            if (typeof IntersectionObserver === 'undefined') { load(player); return; }
+            if (!LiteYTEmbed.thumbnails) LiteYTEmbed.thumbnails = new IntersectionObserver(entries => {
+                for (const entry of entries) if (entry.isIntersecting) { load(entry.target); LiteYTEmbed.thumbnails.unobserve(entry.target); }
+            }, { rootMargin: '600px' });
+            LiteYTEmbed.thumbnails.observe(player);
+        }
+        disconnectedCallback() { LiteYTEmbed.thumbnails?.unobserve(this); }
+
         static addPrefetch(kind, url, as) {
             const linkEl = document.createElement('link');
             linkEl.rel = kind;
@@ -404,42 +383,6 @@ function runFirstPartOfCode() {
             LiteYTEmbed.preconnected = true;
         }
 
-        fetchYTPlayerApi() {
-            if (window.YT || (window.YT && window.YT.Player)) return;
-
-            this.ytApiPromise = new Promise((res, rej) => {
-                var el = document.createElement('script');
-                el.src = 'https://www.youtube.com/iframe_api';
-                el.async = true;
-                el.onload = _ => {
-                    YT.ready(res);
-                };
-                el.onerror = rej;
-                this.append(el);
-            });
-        }
-
-        async addYTPlayerIframe(params) {
-            this.fetchYTPlayerApi();
-            await this.ytApiPromise;
-
-            const videoPlaceholderEl = document.createElement('div')
-            this.append(videoPlaceholderEl);
-
-            const paramsObj = Object.fromEntries(params.entries());
-
-            new YT.Player(videoPlaceholderEl, {
-                width: '100%',
-                videoId: this.videoId,
-                playerVars: paramsObj,
-                events: {
-                    'onReady': event => {
-                        event.target.playVideo();
-                    }
-                }
-            });
-        }
-
         async addIframe(request = {}){
             if (this.classList.contains('lyt-activated')) return;
             this.classList.add('lyt-activated');
@@ -453,6 +396,8 @@ function runFirstPartOfCode() {
             params.set('origin', location.origin);
 
             const iframeEl = document.createElement('iframe');
+            iframeEl.referrerPolicy = 'strict-origin-when-cross-origin';
+            LiteYTEmbed.warmConnections();
             iframeEl.width = 560;
             iframeEl.height = 315;
             // No encoding necessary as [title] is safe. https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html#:~:text=Safe%20HTML%20Attributes%20include
@@ -466,7 +411,7 @@ function runFirstPartOfCode() {
             globalThis.LightCityMedia?.trackYouTube(iframeEl, { autoplay }).catch(() => {});
 
             // Set focus for a11y
-            iframeEl.focus();
+            if (autoplay) iframeEl.focus({ preventScroll: true });
         }
     }
     // Register custom element
@@ -477,13 +422,14 @@ setTimeout(runFirstPartOfCode, 1);
 
 function videoCloneToOtherTabs() {
     // Get all video boxes
-    const videoBoxes = document.querySelectorAll('#All-Tab-content .video-box');
+    const categoryTabs = document.querySelectorAll('.videotab-content');
+    const categoryButtons = document.querySelectorAll('.videos-header-btns-cont button');
     
     // Loop through each video box to clone it into the appropriate category tab
-    videoBoxes.forEach(syncVideoCategoryTab);
+    // Category previews are created once when their metadata is applied.
     // Array to store the latest video box from each tab by date and arrange their corresponding tab button accordingly 
     const videoBoxArray = [];
-    Array.from(allTabs).slice(1).forEach((tab) => {
+    Array.from(categoryTabs).slice(1).forEach((tab) => {
         const linkId = tab.id;
         const videoBox = document.querySelector(`#${linkId} .video-box`);        
         if (videoBox) {
@@ -499,7 +445,7 @@ function videoCloneToOtherTabs() {
     const previousVideoBoxes = sortedVideoBoxes.slice(1);
 
     let moved = false; // Flag to track whether the buttons have been moved
-    const btnArray = Array.from(allBtns);
+    const btnArray = Array.from(categoryButtons);
     // Iterate over buttons
     for (let elem of btnArray.slice(1)) {
         let btnId = elem.id;
@@ -537,5 +483,5 @@ function videoCloneToOtherTabs() {
             parentElement.appendChild(button);
         });
     }
-} setTimeout(videoCloneToOtherTabs, 3500);
+}
 

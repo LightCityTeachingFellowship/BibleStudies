@@ -6,6 +6,7 @@
     const watch = document.getElementById('watch-audio-choice');
     const home = document.getElementById('home-audio-choice');
     if (!grid && !hero && !watch) return;
+    let recordedAvailable = new Map(), liveAvailable = new Map();
     let available = new Map(), version = 0, scheduled = false, audience = null, liveCheckedAt = 0;
     const mounted = new Map();
     let openAudio = new URLSearchParams(location.search).get('mode') === 'audio';
@@ -17,14 +18,15 @@
     }
     function reset() {
       for (const controller of mounted.values()) controller.dispose(); mounted.clear();
-      available = new Map(); liveCheckedAt = 0; render();
+      recordedAvailable = new Map(); liveAvailable = new Map(); available = new Map(); liveCheckedAt = 0; render();
     }
     function add(parent, text, mode) {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'lc-mode-button'; button.textContent = text; button.dataset.mediaMode = mode; button.setAttribute('aria-pressed', String(mode === 'video')); parent.appendChild(button);
     }
     function actions(holder, id) {
       const valid = /^[\w-]{11}$/.test(id || '') && available.has(id);
-      const signature = (holder === home ? 'home-links:' + id + ':' : '') + (valid ? id + ':' + (available.get(id).session || 'recorded') : '') + ':inline-1';
+      const watchOnly = holder !== home && holder !== watch && /^[\w-]{11}$/.test(id || '');
+      const signature = (watchOnly ? id + ':' : '') + (holder === home ? 'home-links:' + id + ':' : '') + (valid ? id + ':' + (available.get(id).session || 'recorded') : '') + ':inline-1';
       if (holder.dataset.audioSignature === signature) return;
       holder.dataset.audioSignature = signature; holder.dataset.videoId = id || ''; holder.replaceChildren();
       holder.setAttribute('role', 'group'); holder.setAttribute('aria-label', 'Playback mode');
@@ -34,10 +36,10 @@
         const link = document.createElement('a'); link.className = 'lc-mode-button'; link.textContent = 'Watch'; link.href = url.href; holder.appendChild(link);
         if (valid) { const listen = document.createElement('a'); listen.className = 'lc-mode-button'; listen.textContent = 'Listen'; url.searchParams.set('mode', 'audio'); listen.href = url.href; holder.appendChild(listen); }
         holder.setAttribute('aria-label', 'Open teaching');
-      } else if (valid) {
-        add(holder, 'Watch', 'video'); add(holder, 'Listen', 'audio');
+      } else if (valid || watchOnly) {
+        add(holder, 'Watch', 'video'); if (valid) add(holder, 'Listen', 'audio');
       }
-      holder.hidden = holder === home ? !/^[\w-]{11}$/.test(id || '') : !valid;
+      holder.hidden = holder === home ? !/^[\w-]{11}$/.test(id || '') : !(valid || watchOnly);
     }
     function viewportFor(holder) {
       if (holder === home) return hero.querySelector('.home-video-art');
@@ -52,7 +54,12 @@
         event.preventDefault(); event.stopPropagation();
         const holder = button.closest('.lc-video-actions'), id = holder?.dataset.videoId;
         const recording = available.get(id), viewport = holder && viewportFor(holder);
-        if (!recording || !viewport) return;
+        if (!viewport) return;
+        if (button.dataset.mediaMode === 'video' && !mounted.has(viewport)) {
+          const preview = viewport.querySelector('lite-youtube');
+          if (preview) { void preview.addIframe({ autoplay: true }).catch(() => feedback(holder, 'Tap Play on the video to begin.')); return; }
+        }
+        if (!recording) return;
         if (!globalThis.LightCityMedia) { feedback(holder, 'Playback controls are still loading. Please try again.'); return; }
         let controller = mounted.get(viewport);
         if (!controller) {
@@ -100,7 +107,6 @@
       if (grid) for (const card of grid.querySelectorAll('.video-box[data-video-id]')) {
         liveBadge(card.querySelector('.iframe-container'), card.dataset.videoId);
         let holder = card.querySelector('.lc-video-actions');
-        if (!holder && !available.has(card.dataset.videoId)) continue;
         if (!holder) { holder = document.createElement('div'); holder.className = 'lc-video-actions'; card.appendChild(holder); }
         actions(holder, card.dataset.videoId);
         // Video titles arrive asynchronously; keep the choices below the title.
@@ -123,7 +129,7 @@
       }
     }
 
-    function schedule() { if (!scheduled) { scheduled = true; queueMicrotask(() => { scheduled = false; render(); }); } }
+    function schedule() { if (!scheduled) { scheduled = true; const update = () => { scheduled = false; render(); }; if (globalThis.requestAnimationFrame) requestAnimationFrame(update); else queueMicrotask(update); } }
     if (grid) new MutationObserver(schedule).observe(grid, { childList: true, subtree: true });
     if (hero) new MutationObserver(schedule).observe(hero, { attributes: true, attributeFilter: ['data-video-id', 'hidden'] });
     async function refresh() {
@@ -135,25 +141,29 @@
       try {
         await globalThis.LightCityMembers?.ready;
         if (current !== version) return;
-        let receivedLive = false;
-        const [result, live] = await Promise.all([
-          globalThis.LightCityMembers.getAudio(),
-          globalThis.LightCityMembers.getLiveAudio?.().then(result => { receivedLive = true; return result; }).catch(error => ({ recordings: /permission-denied|unauthenticated|failed-precondition/.test(error?.code || '') ? [] : [...available.values()].filter(item => item.kind === 'live' && item.expiresAt > Date.now()) })) || Promise.resolve({ recordings: [] })
+        const merge = () => { available = new Map([...recordedAvailable, ...liveAvailable]); render(); };
+        const failed = error => {
+          if (current === version && /permission-denied|unauthenticated|failed-precondition|user-disabled|user-token-expired/.test(error?.code || '')) { ++version; reset(); }
+        };
+        // Each result updates controls immediately; a slow request cannot hold up the other.
+        await Promise.allSettled([
+          globalThis.LightCityMembers.getAudio().then(result => {
+            if (current !== version || !Array.isArray(result.recordings)) return;
+            recordedAvailable = new Map(result.recordings.filter(item => /^[\w-]{11}$/.test(item.videoId)).map(item => [item.videoId, item])); merge();
+          }).catch(failed),
+          (globalThis.LightCityMembers.getLiveAudio?.() || Promise.resolve({ recordings: [] })).then(result => {
+            if (current !== version || !Array.isArray(result.recordings)) return;
+            liveCheckedAt = Date.now();
+            liveAvailable = new Map(result.recordings.filter(item => item.kind === 'live' && /^[\w-]{11}$/.test(item.videoId) && /^session-\d{13}$/.test(item.session) && Number.isFinite(item.offsetSeconds)).map(item => [item.videoId, item])); merge();
+          }).catch(failed)
         ]);
-        if (current !== version) return;
-        if (!Array.isArray(result.recordings)) throw Error('Audio catalogue unavailable');
-        if (receivedLive) liveCheckedAt = Date.now();
-        available = new Map(result.recordings.filter(item => /^[\w-]{11}$/.test(item.videoId)).map(item => [item.videoId, item]));
-        for (const item of live.recordings || []) if (item.kind === 'live' && /^[\w-]{11}$/.test(item.videoId) && /^session-\d{13}$/.test(item.session) && Number.isFinite(item.offsetSeconds)) available.set(item.videoId, item);
-        render();
       } catch (error) {
-        if (current !== version) return;
-        if (/permission-denied|unauthenticated|failed-precondition|user-disabled|user-token-expired/.test(error?.code || '')) reset();
-        // A temporary catalogue/network failure must not tear down active media.
+        if (current === version && /permission-denied|unauthenticated|failed-precondition/.test(error?.code || '')) { ++version; reset(); }
       }
     }
     window.addEventListener('lightcity-members-changed', () => void refresh());
     window.addEventListener('pagehide', event => { if (event.persisted) return; for (const controller of mounted.values()) controller.dispose(); mounted.clear(); });
+    render();
     await refresh();
     const liveRefresh = setInterval(() => { if (document.visibilityState !== 'hidden') void refresh(); }, 45000);
     liveRefresh.unref?.();

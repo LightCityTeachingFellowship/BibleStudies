@@ -8,30 +8,25 @@
 <link type="text/css" href="../style/videos.css" rel="stylesheet">
 <!-- <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js"></script> -->
-<script src="https://kit.fontawesome.com/4c38acae5e.js" crossorigin="anonymous"></script>
+<script async src="https://kit.fontawesome.com/4c38acae5e.js" crossorigin="anonymous"></script>
 {% include browse-head.html %}
 </head>
 
 <body class="fonts app-home site-browse">
-    <div class="loader-bg">
-        <div class="loader"></div>
-    </div>
     {% include theme-toggle.html %}
     {% include homeHeader-section.html %}
     {% include site-search.html scope='Video' %}
 	{{ content }}
     {% include contact-section.html %}
-    <script type="text/javascript" src="../script/victorScripts/liteYtEmbed.js?v=inline-media-1" defer></script>
+    <script type="text/javascript" src="../script/victorScripts/liteYtEmbed.js?v=library-fast-1" defer></script>
     <!-- <script src="dist/bundle.js"></script> -->
     <!-- <script type="text/javascript" src="../script/victorScripts/getVideoIds.js" defer></script> -->
     <!-- <script type="text/javascript" src="../script/victorScripts/getVideoIdsJekyll.js" defer></script> -->
-    <script type="text/javascript" src="../script/victorScripts/lightANDdarkmode.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script type="text/javascript" src="../script/victorScripts/preloadVideos.js"></script>
-    <script type="text/javascript" src="../script/victorScripts/dropDownMenu.js"></script>
+    <script type="text/javascript" src="../script/victorScripts/lightANDdarkmode.js" defer></script>
+    <script type="text/javascript" src="../script/victorScripts/dropDownMenu.js" defer></script>
 
-    <script type="text/javascript" src="../script/victorScripts/recentposts.js"></script>
-    <script type="text/javascript" src="../script/victorScripts/videos.js" defer></script>
+    <script type="text/javascript" src="../script/victorScripts/recentposts.js" defer></script>
+    <script type="text/javascript" src="../script/victorScripts/videos.js?v=library-fast-1" defer></script>
 
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}"></script>
 </body>

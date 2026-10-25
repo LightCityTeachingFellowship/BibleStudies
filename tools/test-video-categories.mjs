@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 // Run the production category helpers and metadata handler without YouTube/network calls.
 const source = readFileSync('script/victorScripts/liteYtEmbed.js', 'utf8');
 const helpers = source.slice(source.indexOf('function getVideoCategory('), source.indexOf('// Select the container element'));
-const begin = source.indexOf('.then(data => {') + '.then(data => {'.length;
+const begin = source.indexOf('function applyVideoMetadata(data) {') + 'function applyVideoMetadata(data) {'.length;
 const last = 'syncVideoCategoryTab(videoBoxElement);';
 const metadata = source.slice(begin, source.indexOf(last, begin) + last.length);
 class Element {
@@ -28,7 +28,7 @@ class Element {
 const categories = ['Sunday', 'Meeting', 'Study', 'Program', 'Excerpts', 'Ceremonies'];
 const tabs = new Map(categories.map(name => [`${name}-Tab-content`, new Element()]));
 const context = vm.createContext({
-  videoCategories: categories,
+  videoCategories: categories, videoWeekday: new Intl.DateTimeFormat('en-US', { weekday: 'short' }),
   savedVideoCategories: {},
   document: { getElementById: id => tabs.get(id), createElement: tag => new Element(tag), createTextNode: text => Object.assign(new Element('text'), { textContent: text }) },
   stripHtmlTags: html => html,

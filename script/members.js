@@ -1,7 +1,7 @@
 // Member identity is separate from anonymous device identity used by web push.
 const settings = document.querySelector('script[data-lightcity-members]');
 const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
-let sdk, memberAuth, deviceAuth, functions, version = 0;
+let sdk, memberAuth, deviceAuth, functions, version = 0, mediaPrefetch = null;
 const page = document.getElementById('member-page');
 let busy = false, signup = false, notice = '';
 const field = id => document.getElementById(id);
@@ -86,7 +86,19 @@ async function bootstrap() {
     await Promise.all([memberAuth.authStateReady(), deviceAuth.authStateReady()]);
     await new Promise(resolve => {
       let initial = true;
-      auth.onAuthStateChanged(memberAuth, async () => { await checkAccess(); if (initial) { initial = false; resolve(); } });
+      auth.onAuthStateChanged(memberAuth, async () => {
+        const selector = '#videotab-container, #watch-player, .home-featured[data-video-id]';
+        const surface = document.querySelector(selector);
+        if (initial && surface?.matches?.(selector)) {
+          const user = memberAuth.currentUser, members = !!user && !user.isAnonymous;
+          mediaPrefetch = { uid: user?.uid || null, members };
+          for (const name of ['getChurchAudio', 'getChurchLiveAudio']) {
+            const pending = call(name, { includeMembers: members });
+            void pending.catch(() => {}); mediaPrefetch[name] = pending;
+          }
+        }
+        await checkAccess(); if (initial) { initial = false; resolve(); }
+      });
     });
     auth.onAuthStateChanged(deviceAuth, () => { void linkDevice().catch(() => {}); });
   } catch (error) { api.error = error; publish(null); renderPage(); }
@@ -95,11 +107,17 @@ api.ready = bootstrap();
 api.getAudio = async (videoId, diagnose = false) => {
   await api.ready;
   if (!memberAuth || !functions) throw Error('Member sign-in is unavailable. Please reload the page.');
+  if (videoId === undefined && mediaPrefetch?.uid === (memberAuth.currentUser?.uid || null) && mediaPrefetch.members === Array.isArray(api.library) && mediaPrefetch.getChurchAudio) {
+    const pending = mediaPrefetch.getChurchAudio; delete mediaPrefetch.getChurchAudio; return pending;
+  }
   return call('getChurchAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId, diagnose });
 };
 api.getLiveAudio = async videoId => {
   await api.ready;
   if (!memberAuth || !functions) throw Error('Live listening is unavailable.');
+  if (videoId === undefined && mediaPrefetch?.uid === (memberAuth.currentUser?.uid || null) && mediaPrefetch.members === Array.isArray(api.library) && mediaPrefetch.getChurchLiveAudio) {
+    const pending = mediaPrefetch.getChurchLiveAudio; delete mediaPrefetch.getChurchLiveAudio; return pending;
+  }
   return call('getChurchLiveAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId });
 };
 api.refresh = async ({ preserveOnTransient = false } = {}) => {

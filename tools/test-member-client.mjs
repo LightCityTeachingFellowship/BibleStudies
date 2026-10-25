@@ -55,7 +55,7 @@ function setup(enabled = true, configMode = 'ready', startup = {}) {
   const rootClasses = new Set(enabled ? ['lc-member-restoring'] : []);
   let domReady;
   const context = vm.createContext({
-    document: { readyState: startup.domLoading ? 'loading' : 'complete', addEventListener: (name, callback) => { if (name === 'DOMContentLoaded') domReady = callback; }, documentElement: { classList: { add: (...names) => names.forEach(name => rootClasses.add(name)), remove: (...names) => names.forEach(name => rootClasses.delete(name)) } }, getElementById: get, querySelector: () => ({ dataset: { enabled: String(enabled) } }) },
+    document: { readyState: startup.domLoading ? 'loading' : 'complete', addEventListener: (name, callback) => { if (name === 'DOMContentLoaded') domReady = callback; }, documentElement: { classList: { add: (...names) => names.forEach(name => rootClasses.add(name)), remove: (...names) => names.forEach(name => rootClasses.delete(name)) } }, getElementById: get, querySelector: selector => startup.media && selector.startsWith('#videotab-container') ? { matches: () => true } : ({ dataset: { enabled: String(enabled) } }) },
     window: { addEventListener: (name, callback) => { events.set(name, [...events.get(name) || [], callback]); }, dispatchEvent: event => { announcements.push(event); for (const callback of events.get(event.type) || []) callback(event); } },
     ...(configMode === 'ready' ? { LIGHTCITY_PUSH: { firebase: { apiKey: 'test-public-key', projectId: 'test-project' } } } : {}),
     mockLoadConfig: async () => {
@@ -171,3 +171,14 @@ app.state.libraryError = 'functions/permission-denied';
 app.events.get('pageshow')[0]({ persisted: true }); await app.api.ready;
 assert.equal(app.api.library, null, 'Revoked access still clears the member library');
 console.log('PASS: quiet membership revalidation preserves playback on network failure and clears revoked access.');
+
+app = setup(true, 'ready', { signedIn: true, approved: true, verified: true, hold: true, media: true });
+await settle();
+assert.ok(app.calls.some(call => call.name === 'getChurchAudio'), 'Recorded catalogue starts while library verification is pending');
+assert.ok(app.calls.some(call => call.name === 'getChurchLiveAudio'), 'Live catalogue starts while library verification is pending');
+app.state.waiting({ data: { videos: [{ id: 'abcdefghijk', title: 'Member teaching' }] } }); await app.api.ready;
+const catalogueCalls = () => app.calls.filter(call => ['getChurchAudio', 'getChurchLiveAudio'].includes(call.name)).length;
+const beforePrefetch = catalogueCalls();
+await app.api.getAudio(); await app.api.getLiveAudio();
+assert.equal(catalogueCalls(), beforePrefetch, 'The first catalogue reads reuse the prefetched requests');
+console.log('PASS: media catalogues prefetch alongside access verification and reuse results for the verified audience.');

@@ -8,7 +8,7 @@ class Element {
   get lastElementChild() { return this.children.at(-1); }
   append(child) { this.children.push(child); }
   replaceChildren() { this.children = []; }
-  querySelector(selector) { if (selector === '.iframe-container' || selector === '.home-video-art') return this.viewport || null; return this.children.find(child => child.className === selector.slice(1)) || null; }
+  querySelector(selector) { if (selector === 'lite-youtube') return this.preview || null; if (selector === '.iframe-container' || selector === '.home-video-art') return this.viewport || null; return this.children.find(child => child.className === selector.slice(1)) || null; }
   querySelectorAll() { return this.children.filter(child => child.dataset.mediaMode); }
   contains(child) { return child === this || this.children.some(node => node.contains(child)); }
   closest(selector) { if ((selector.startsWith('button') && this.dataset.mediaMode) || this.className === selector.slice(1)) return this; return this.parentNode?.closest(selector) || null; }
@@ -24,13 +24,13 @@ const card = id => Object.assign(new Element(), { className: 'video-box', datase
 const publicCard = card(publicId), memberCard = card(memberId), missingCard = card('aaaaaaaaaaa');
 const cards = [publicCard, memberCard, missingCard], grid = new Element(); grid.querySelectorAll = () => cards; cards.forEach(card => grid.appendChild(card));
 const home = new Element(), watch = new Element(), hero = card(publicId), events = new Map(), observers = [], pageHides = [];
-let mode = 'public', resolveLate, liveRows = [];
+let mode = 'public', resolveLate, liveRows = [], releaseReady;
 const mountedPlayers = [];
 const media = { mount: options => {
   const item = { videoId: options.videoId, liveSession: options.recording?.session, liveOffset: options.recording?.offsetSeconds, recording: options.recording, viewport: options.viewport, mode: 'video', switchTo: async mode => { item.mode = mode; options.onState(mode, ''); }, dispose: () => { item.disposed = true; } };
   mountedPlayers.push(item); return item;
 } };
-const api = { library: null, ready: Promise.resolve(), getAudio: async () => mode === 'hold' ? new Promise(resolve => { resolveLate = resolve; }) : { recordings: (mode === 'member' ? [publicId, memberId] : [publicId]).map(videoId => ({ videoId })) } };
+const api = { library: null, ready: new Promise(resolve => { releaseReady = resolve; }), getAudio: async () => mode === 'hold' ? new Promise(resolve => { resolveLate = resolve; }) : { recordings: (mode === 'member' ? [publicId, memberId] : [publicId]).map(videoId => ({ videoId })) } };
 api.getLiveAudio = async () => ({ recordings: liveRows });
 const source = readFileSync('script/audio-links.js', 'utf8');
 let domReady, earlyReads = 0;
@@ -44,11 +44,17 @@ vm.runInNewContext(source, {
   URL, URLSearchParams, Set, queueMicrotask, setInterval: () => ({ unref() {} }), clearInterval() {}, MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} }
 });
 const settle = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
-await settle();
+assert.equal(publicCard.children[0].children[0].textContent, 'Watch', 'Watch is rendered before member/audio requests finish');
+let directStarts = 0;
+publicCard.viewport.preview = { addIframe: async () => { directStarts++; } };
+grid.events.click({ target: publicCard.children[0].children[0], preventDefault() {}, stopPropagation() {} });
+assert.equal(directStarts, 1, 'Watch starts the iframe without waiting for the audio catalogue');
+assert.equal(mountedPlayers.length, 0);
+releaseReady(); await settle();
 assert.deepEqual(publicCard.children[0].children.map(item => item.textContent), ['Watch', 'Listen']);
 assert.equal(publicCard.children[0].children[1].dataset.mediaMode, 'audio');
 assert.equal(publicCard.children[0].children[1].type, 'button');
-assert.equal(memberCard.children.length, 0); assert.equal(missingCard.children.length, 0);
+assert.equal(memberCard.children[0].children.length, 1); assert.equal(missingCard.children[0].children[0].textContent, 'Watch');
 assert.equal(home.children[1].textContent, 'Listen'); assert.equal(watch.children[1].textContent, 'Listen');
 assert.equal(home.children[0].href, 'https://example.com/BibleStudies/Watch/?v=' + publicId);
 assert.equal(home.children[1].href, 'https://example.com/BibleStudies/Watch/?v=' + publicId + '&mode=audio');
@@ -77,12 +83,17 @@ mode = 'member'; api.library = [{ id: memberId }]; events.get('lightcity-members
 assert.equal(mountedPlayers[0].disposed, true);
 assert.equal(memberCard.children[0].hidden, false);
 mode = 'public'; api.library = null; events.get('lightcity-members-changed')();
-assert.equal(memberCard.children[0].hidden, true, 'Private links disappear immediately on sign-out');
+assert.equal(memberCard.children[0].children.length, 1, 'Private Listen disappears immediately on sign-out');
 await settle();
-mode = 'hold'; events.get('lightcity-members-changed')(); await settle();
+mode = 'hold'; liveRows = [{ kind: 'live', videoId: missingCard.dataset.videoId, title: 'Fast live metadata', session: 'session-1792874042803', offsetSeconds: 0, expiresAt: Date.now() + 3600000 }];
+events.get('lightcity-members-changed')(); await settle();
+assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden, false, 'LIVE appears while recorded audio metadata is still pending');
+assert.equal(missingCard.children[0].children[1].textContent, 'Listen');
+liveRows = [];
+
 mode = 'public'; events.get('lightcity-members-changed')(); await settle();
 resolveLate({ recordings: [{ videoId: memberId }] }); await settle();
-assert.equal(memberCard.children[0].hidden, true, 'A late member catalogue cannot restore private links');
+assert.equal(memberCard.children[0].children.length, 1, 'A late member catalogue cannot restore private Listen');
 const clone = card(publicId); cards.push(clone); observers[0](); await settle(); observers[0](); await settle();
 assert.equal(clone.children.length, 1); assert.equal(clone.children[0].children.length, 2);
 const title = new Element(); publicCard.appendChild(title); observers[0](); await settle();
@@ -103,7 +114,7 @@ assert.equal(liveController.recording.kind, 'live'); assert.equal(liveController
 liveRows = [{ ...liveRows[0], session: 'session-1792874042804' }]; events.get('lightcity-members-changed')(); await settle();
 assert.equal(liveController.disposed, true, 'a restarted session cannot retain the previous controller');
 liveRows = []; events.get('lightcity-members-changed')(); await settle();
-assert.equal(missingCard.children[0].hidden, true, 'ended/unregistered live sessions lose their choices');
+assert.equal(missingCard.children[0].children.length, 1, 'Ended broadcasts keep Watch without unavailable Listen');
 assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden, true, 'Ended broadcasts lose their LIVE badge');
 console.log('PASS: LIVE badges on library and homepage thumbnails, recorded exclusions, featured-video changes, and broadcast end cleanup.');
 

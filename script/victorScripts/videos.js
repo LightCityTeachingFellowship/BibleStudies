@@ -14,31 +14,6 @@ const allTabs = document.querySelectorAll(".videotab-content");
 
   allBtns.forEach((elem) => {
     const linkId = elem.id;
-    // Define a function to handle the setTimeout callback
-    function updateButton() {
-        // Find the corresponding tab for the button
-        const correspondingTab = tabsArrayAll.find((tab) => tab.id === linkId + "-content");
-        if (correspondingTab) {
-            // Count the children of the corresponding tab
-            const tabChildrenCount = correspondingTab.children.length;
-            if (tabChildrenCount === 0) {
-                // Hide the button if there are no children in the corresponding tab
-                // elem.style.display = 'none';
-            } else {
-                const tabChildrenCountElement = document.createElement('span');
-                tabChildrenCountElement.classList.add('video-count');
-                const countText = document.createTextNode(`(${tabChildrenCount})`);
-                tabChildrenCountElement.appendChild(countText);
-                const originalText = elem.innerText;
-                elem.innerHTML = '';
-                elem.appendChild(document.createTextNode(originalText));
-                // elem.appendChild(tabChildrenCountElement);
-            }
-        }
-    }
-    setTimeout(updateButton, 3655);
-
-
       elem.addEventListener('click', function() {
           allBtns.forEach((button) => {
               if (button.id === linkId) {

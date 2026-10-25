@@ -13,7 +13,7 @@ const controls = ['All-Tab', 'Sunday-Tab', 'All-Tab-content', 'Sunday-Tab-conten
 const context = vm.createContext({
   window: { dispatchEvent() {} }, Event: class {},
   LightCityMembers: memberState, publicVideoIds: ['abcdefghijk'], publicVideoCategories: { abcdefghijk: 'Program' },
-  videoIds: [], savedVideoCategories: {}, videoCategories: ['Sunday', 'Program'], renderedAudience: null,
+  videoIds: [], savedVideoCategories: {}, savedVideoTitles: {}, publicVideoTitles: { abcdefghijk: 'Public teaching' }, videoCategories: ['Sunday', 'Program'], renderedAudience: null,
   document: { getElementById: id => tabs.get(id), querySelectorAll: selector => controls.filter(control => selector === '.videos-header-btns' ? !control.id.endsWith('-content') : control.id.endsWith('-content')) }, createVideoCards: ids => calls.push([...ids])
 });
 vm.runInContext(videoSource.slice(start, stop), context);
