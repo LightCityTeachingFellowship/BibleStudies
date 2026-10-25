@@ -83,6 +83,12 @@ console.log('PASS: Watch/Listen buttons switch the matching viewport without nav
 liveRows = [{ kind: 'live', videoId: missingCard.dataset.videoId, title: 'Live teaching', session: 'session-1792874042803', offsetSeconds: 0, expiresAt: Date.now() + 3600000 }];
 events.get('lightcity-members-changed')(); await settle();
 assert.equal(missingCard.children[0].hidden, false, 'registered live broadcasts get same-page choices');
+assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden, false);
+assert.equal(publicCard.viewport.querySelector('.lc-live-badge'), null, 'Recorded videos have no LIVE badge');
+hero.dataset.videoId = missingCard.dataset.videoId; observers[1](); await settle();
+assert.equal(hero.viewport.querySelector('.lc-live-badge').hidden, false, 'The featured live video is badged');
+hero.dataset.videoId = publicId; observers[1](); await settle();
+assert.equal(hero.viewport.querySelector('.lc-live-badge').hidden, true, 'Changing the featured video clears its old badge');
 grid.events.click({ target: missingCard.children[0].children[1], preventDefault() {}, stopPropagation() {} }); await settle();
 const liveController = mountedPlayers.at(-1);
 assert.equal(liveController.recording.kind, 'live'); assert.equal(liveController.liveSession, liveRows[0].session);
@@ -90,6 +96,8 @@ liveRows = [{ ...liveRows[0], session: 'session-1792874042804' }]; events.get('l
 assert.equal(liveController.disposed, true, 'a restarted session cannot retain the previous controller');
 liveRows = []; events.get('lightcity-members-changed')(); await settle();
 assert.equal(missingCard.children[0].hidden, true, 'ended/unregistered live sessions lose their choices');
+assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden, true, 'Ended broadcasts lose their LIVE badge');
+console.log('PASS: LIVE badges on library and homepage thumbnails, recorded exclusions, featured-video changes, and broadcast end cleanup.');
 
 const playerSource = readFileSync('script/audio-pilot.js', 'utf8');
 async function playerFixture(selected, available) {

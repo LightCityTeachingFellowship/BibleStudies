@@ -113,3 +113,10 @@
 .video-box .lc-inline-audio audio {height:36px; min-height:36px; flex-shrink:0;}
 .video-box .lc-inline-audio select {height:22px; font-size:11px; padding:0 6px;}
 .lc-standalone-media {position:relative; aspect-ratio:16/9; min-height:220px; background:var(--black); border-radius:12px; overflow:hidden;}
+
+/* Live broadcast indicators on featured and library thumbnails. */
+.home-video-art,.video-box .iframe-container {position:relative;}
+.lc-live-badge {position:absolute; right:10px; bottom:10px; z-index:2; display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:5px; background:#e60032; color:#fff!important; font:600 14px/1.2 'Outfit','Segoe UI',sans-serif; letter-spacing:.2px; text-shadow:none; pointer-events:none; box-shadow:0 1px 4px #0003;}
+.lc-live-badge[hidden] {display:none!important;}
+/* Keep the homepage play icon clear of the bottom-right live label. */
+.home-video-art:has(> .lc-live-badge:not([hidden])) .home-play {right:50%; bottom:50%; transform:translate(50%,50%);}

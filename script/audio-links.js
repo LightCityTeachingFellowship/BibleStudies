@@ -6,7 +6,7 @@
     const watch = document.getElementById('watch-audio-choice');
     const home = document.getElementById('home-audio-choice');
     if (!grid && !hero && !watch) return;
-    let available = new Map(), version = 0, scheduled = false, audience = null;
+    let available = new Map(), version = 0, scheduled = false, audience = null, liveCheckedAt = 0;
     const mounted = new Map();
     let openAudio = new URLSearchParams(location.search).get('mode') === 'audio';
     function feedback(holder, message) {
@@ -16,7 +16,7 @@
     }
     function reset() {
       for (const controller of mounted.values()) controller.dispose(); mounted.clear();
-      available = new Map(); render();
+      available = new Map(); liveCheckedAt = 0; render();
     }
     function add(parent, text, mode) {
       const button = document.createElement('button'); button.type = 'button'; button.className = 'lc-mode-button'; button.textContent = text; button.dataset.mediaMode = mode; button.setAttribute('aria-pressed', String(mode === 'video')); parent.appendChild(button);
@@ -74,6 +74,18 @@
       });
     }
     delegate(grid); delegate(watch);
+    function liveBadge(viewport, id) {
+      if (!viewport) return;
+      const recording = available.get(id);
+      const live = recording?.kind === 'live' && recording.expiresAt > Date.now() && Date.now() - liveCheckedAt < 90000;
+      let badge = viewport.querySelector('.lc-live-badge');
+      if (!badge && live) {
+        badge = document.createElement('span'); badge.className = 'lc-live-badge';
+        badge.textContent = '\u25c9 LIVE'; badge.setAttribute('aria-label', 'Live now');
+        viewport.appendChild(badge);
+      }
+      if (badge) badge.hidden = !live;
+    }
     function render() {
       for (const [viewport, controller] of mounted) {
         const recording = available.get(controller.videoId);
@@ -82,6 +94,7 @@
         if (viewport.isConnected === false || !recording || changedLive || changedFeatured) { controller.dispose(); mounted.delete(viewport); }
       }
       if (grid) for (const card of grid.querySelectorAll('.video-box[data-video-id]')) {
+        liveBadge(card.querySelector('.iframe-container'), card.dataset.videoId);
         let holder = card.querySelector('.lc-video-actions');
         if (!holder && !available.has(card.dataset.videoId)) continue;
         if (!holder) { holder = document.createElement('div'); holder.className = 'lc-video-actions'; card.appendChild(holder); }
@@ -89,6 +102,7 @@
         // Video titles arrive asynchronously; keep the choices below the title.
         if (card.lastElementChild !== holder) card.appendChild(holder);
       }
+      if (hero) liveBadge(hero.querySelector('.home-video-art'), hero.hidden ? '' : hero.dataset.videoId);
       if (home && hero) actions(home, hero.hidden ? '' : hero.dataset.videoId);
       if (watch) {
         actions(watch, new URLSearchParams(location.search).get('v'));
@@ -110,12 +124,14 @@
       try {
         await globalThis.LightCityMembers?.ready;
         if (current !== version) return;
+        let receivedLive = false;
         const [result, live] = await Promise.all([
           globalThis.LightCityMembers.getAudio(),
-          globalThis.LightCityMembers.getLiveAudio?.().catch(error => ({ recordings: /permission-denied|unauthenticated|failed-precondition/.test(error?.code || '') ? [] : [...available.values()].filter(item => item.kind === 'live' && item.expiresAt > Date.now()) })) || Promise.resolve({ recordings: [] })
+          globalThis.LightCityMembers.getLiveAudio?.().then(result => { receivedLive = true; return result; }).catch(error => ({ recordings: /permission-denied|unauthenticated|failed-precondition/.test(error?.code || '') ? [] : [...available.values()].filter(item => item.kind === 'live' && item.expiresAt > Date.now()) })) || Promise.resolve({ recordings: [] })
         ]);
         if (current !== version) return;
         if (!Array.isArray(result.recordings)) throw Error('Audio catalogue unavailable');
+        if (receivedLive) liveCheckedAt = Date.now();
         available = new Map(result.recordings.filter(item => /^[\w-]{11}$/.test(item.videoId)).map(item => [item.videoId, item]));
         for (const item of live.recordings || []) if (item.kind === 'live' && /^[\w-]{11}$/.test(item.videoId) && /^session-\d{13}$/.test(item.session) && Number.isFinite(item.offsetSeconds)) available.set(item.videoId, item);
         render();
