@@ -44,7 +44,7 @@
     const publicVideoCategories = { ...savedVideoCategories };
     const savedVideoTitles = JSON.parse(document.getElementById('video-title-data')?.textContent || '{}');
     const publicVideoTitles = { ...savedVideoTitles };
-    const videoIdsString = ImportvideoIdsString.textContent;
+    const videoIdsString = ImportvideoIdsString?.textContent?.trim() || Object.keys(savedVideoCategories).join(' ');
     // Convert the string to an array of video IDs
     // const videoIds = videoIdsString.split(',').map(id => id.trim());
 

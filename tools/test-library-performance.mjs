@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const source = readFileSync('script/victorScripts/liteYtEmbed.js', 'utf8');
 class Node {
- constructor(tag = 'div') { this.tag = tag; this.children = []; this.attributes = {}; this.style = {}; this.events = []; this.textContent = ''; this.classList = { add() {}, contains: () => false }; }
+ constructor(tag = 'div') { this.tag = tag; this.children = []; this.attributes = {}; this.style = {}; this.events = []; this.textContent = ''; this.classList = { add() {}, contains: () => false, toggle() {}, remove() {} }; }
  setAttribute(name, value) { this.attributes[name] = String(value); }
  getAttribute(name) { return this.attributes[name] || null; }
  removeAttribute(name) { delete this.attributes[name]; }
@@ -41,3 +41,29 @@ for (const row of rows) {
 }
 assert.equal(applied, rows.length); assert.equal(queued, 0, 'Saved library titles do not request YouTube metadata'); assert.ok(observed >= rows.length);
 console.log(`PASS: 1,000 cards render in batches of 24, stale builds cancel, and all ${rows.length} cached titles render with zero YouTube title requests.`);
+
+// Execute the entire startup script, including its real DOM-input wiring.
+function bootLibrary(idsText) {
+ const timers = [], grid = new Node(), all = new Node(), tabs = new Node();
+ all.id = 'All-Tab-content'; all.className = 'videotab-content'; grid.appendChild(all); tabs.dataset = { publicOnly: 'true' };
+ const categories = ['All','Sunday','Meeting','Study','Program','Excerpts','Ceremonies'];
+ const buttons = categories.map(category => { const button = new Node('button'); button.setAttribute('videoCategory-btn', category); button.id = category + '-Tab'; return button; });
+ const metadata = new Node(); metadata.textContent = JSON.stringify({ abcdefghijk: 'Program', lmnopqrstuv: 'Sunday' });
+ const idBlock = idsText === null ? null : Object.assign(new Node(), { textContent: idsText });
+ const nodes = { videoIDS: idBlock, 'video-category-data': metadata, 'video-category-tabs': tabs, 'All-Tab-content': all, 'videotab-container': grid };
+ vm.runInNewContext(source, {
+  document: { getElementById: id => nodes[id] || grid.children.find(child => child.id === id) || null,
+   querySelectorAll: selector => selector.includes('videos-header-btns') ? buttons : selector === '.videotab-content' ? grid.children : [],
+   querySelector: () => null, createElement: tag => new Node(tag), createDocumentFragment: () => new Node('fragment') },
+  window: { addEventListener() {}, dispatchEvent() {} }, Event: class {}, HTMLElement: Node, customElements: { define() {} },
+  setTimeout: fn => timers.push(fn), console,
+ });
+ while (timers.length) timers.shift()();
+ return all.children.map(card => card.getAttribute('data-video-id'));
+}
+assert.deepEqual(bootLibrary('abcdefghijk'), ['abcdefghijk'], 'Explicit ID lists remain authoritative');
+assert.deepEqual(bootLibrary(null), ['abcdefghijk', 'lmnopqrstuv'], 'Missing ID block falls back to the page-scoped metadata without crashing');
+const template = readFileSync('_includes/videosTEMPLATE.html', 'utf8');
+assert.equal((template.match(/include videosALL\.html/g) || []).length, 1, 'Library layout supplies one ID block outside the replaceable grid');
+assert.ok(template.indexOf('include videosALL.html') < template.indexOf('{{ content }}'));
+console.log('PASS: complete library startup with normal IDs and missing-ID fallback, plus the real layout ID-source contract.');
