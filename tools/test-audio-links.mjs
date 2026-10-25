@@ -23,7 +23,7 @@ class Element {
 const card = id => Object.assign(new Element(), { className: 'video-box', dataset: { videoId: id }, viewport: new Element() });
 const publicCard = card(publicId), memberCard = card(memberId), missingCard = card('aaaaaaaaaaa');
 const cards = [publicCard, memberCard, missingCard], grid = new Element(); grid.querySelectorAll = () => cards; cards.forEach(card => grid.appendChild(card));
-const home = new Element(), watch = new Element(), hero = card(publicId), events = new Map(), observers = [];
+const home = new Element(), watch = new Element(), hero = card(publicId), events = new Map(), observers = [], pageHides = [];
 let mode = 'public', resolveLate, liveRows = [];
 const mountedPlayers = [];
 const media = { mount: options => {
@@ -39,7 +39,7 @@ assert.equal(earlyReads, 0, 'Interactive deferred scripts must wait for the medi
 domReady(); assert.ok(earlyReads > 0);
 vm.runInNewContext(source, {
   document: { readyState: 'complete', querySelector: selector => selector.startsWith('script') ? { dataset: { base: '/BibleStudies/' } } : hero, getElementById: id => ({ 'videotab-container': grid, 'home-audio-choice': home, 'watch-audio-choice': watch })[id], createElement: () => new Element() },
-  window: { addEventListener: (name, fn) => events.set(name, fn) }, LightCityMembers: api, LightCityMedia: media,
+  window: { addEventListener: (name, fn) => { if (name === 'pagehide') pageHides.push(fn); events.set(name, fn); } }, LightCityMembers: api, LightCityMedia: media,
   location: { href: 'https://example.com/BibleStudies/Watch/?v=' + publicId, search: '?v=' + publicId },
   URL, URLSearchParams, Set, queueMicrotask, setInterval: () => ({ unref() {} }), clearInterval() {}, MutationObserver: class { constructor(fn) { observers.push(fn); } observe() {} }
 });
@@ -65,6 +65,14 @@ assert.equal(mountedPlayers[0].mode, 'audio');
 assert.equal(publicCard.children[0].children[1].attributes['aria-pressed'], 'true');
 events.get('lightcity-members-changed')(); await settle();
 assert.equal(mountedPlayers[0].disposed, undefined, 'Repeated unchanged audience events must not interrupt playback');
+const oldGetAudio = api.getAudio;
+api.getAudio = async () => { throw Object.assign(Error('Temporary offline'), { code: 'functions/unavailable' }); };
+events.get('lightcity-members-changed')(); await settle();
+assert.equal(mountedPlayers[0].disposed, undefined, 'A temporary network failure must not stop audio');
+for (const handler of pageHides) handler({ persisted: true });
+assert.equal(mountedPlayers[0].disposed, undefined, 'A persisted page must retain its player');
+api.getAudio = oldGetAudio;
+
 mode = 'member'; api.library = [{ id: memberId }]; events.get('lightcity-members-changed')(); await settle();
 assert.equal(mountedPlayers[0].disposed, true);
 assert.equal(memberCard.children[0].hidden, false);

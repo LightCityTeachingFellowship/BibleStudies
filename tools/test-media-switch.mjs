@@ -12,7 +12,7 @@ class Node extends EventTarget {
 }
 class Audio extends Node {
   constructor() { super('audio'); this.currentTime = 0; this.duration = 3600; this.readyState = 0; this.playbackRate = 1; this.paused = true; this.error = null; }
-  set src(value) { this.attributes.src = value; this.readyState = 1; }
+  set src(value) { this.attributes.src = value; this.readyState = 1; this.error = null; }
   load() { if (!this.attributes.src) this.readyState = 0; }
   async play() { this.paused = false; this.dispatchEvent(new Event('play')); }
   pause() { this.paused = true; this.dispatchEvent(new Event('pause')); }
@@ -81,3 +81,14 @@ releaseLink({ videoId: '0xma1jqVwsg', url: 'https://' + 'a'.repeat(32) + '.r2.cl
 await pendingSwitch;
 assert.equal(pendingItem.audio.getAttribute('src'), null); assert.equal(pendingItem.audio.paused, true);
 console.log('PASS: disposing an inline member player while its access request is pending discards the late signed link.');
+
+globalThis.LightCityMembers.getAudio = async videoId => { requests++; return { videoId, url: 'https://' + 'a'.repeat(32) + '.r2.cloudflarestorage.com/lightcity-audio/audio/' + videoId + '.m4a', expiresAt: Date.now() + 3600000 }; };
+const reconnectViewport = new Node(); reconnectViewport.appendChild(new Node('iframe'));
+const reconnect = mount({ viewport: reconnectViewport, videoId: 'R42uVd9spDw', title: 'Reconnect fixture' });
+await reconnect.switchTo('audio'); reconnect.audio.currentTime = 222.25;
+const beforeReconnect = requests; reconnect.audio.error = { code: 2 }; reconnect.audio.paused = true;
+reconnect.audio.dispatchEvent(new Event('error'));
+await new Promise(resolve => setTimeout(resolve, 2200));
+assert.ok(requests > beforeReconnect); assert.equal(reconnect.audio.currentTime, 222.25); assert.ok(!reconnect.audio.paused);
+reconnect.dispose();
+console.log('PASS: interrupted recorded audio renews its link and resumes from the same position.');

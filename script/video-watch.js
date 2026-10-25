@@ -4,7 +4,12 @@
  const status=document.getElementById('watch-status');
  const container=document.getElementById('watch-player');
  const help=document.getElementById('watch-help');
- const startWithAudio=new URLSearchParams(location.search).get('mode')==='audio';
+ let restoringAudio=false;
+ try {
+  const saved=JSON.parse(sessionStorage.getItem('lc-listening-session'));
+  restoringAudio=saved?.videoId===videoId && saved.page===location.pathname+location.search && Date.now()-saved.savedAt>=0 && Date.now()-saved.savedAt<12*3600000;
+ } catch {}
+ const startWithAudio=restoringAudio || new URLSearchParams(location.search).get('mode')==='audio';
  if(!/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
   title.textContent='Video unavailable';
   status.textContent='This video link is incomplete or invalid. Choose a video from All videos.';

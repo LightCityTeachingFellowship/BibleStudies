@@ -29,7 +29,7 @@ class Audio extends Node {
   async play() { this.anchor = clock; this.paused = false; this.dispatchEvent(new Event('play')); }
   pause() { this.base = this.currentTime; this.paused = true; this.anchor = clock; this.dispatchEvent(new Event('pause')); }
 }
-const players = [], sources = [];
+const players = [], sources = [], hlsInstances = [];
 class Player {
   constructor(frame, { events }) { this.frame = frame; this.events = events; this.state = 1; this.base = 120.5; this.anchor = clock; this.rate = 1; this.muted = false; players.push(this); queueMicrotask(() => events.onReady({ target: this })); }
   getIframe() { return this.frame; }
@@ -48,15 +48,15 @@ class Player {
 }
 class Hls {
   static Events = { LEVEL_UPDATED: 'level', ERROR: 'error' }; static isSupported() { return true; }
-  constructor() { this.events = {}; }
+  constructor(config) { this.events = {}; this.config = config; hlsInstances.push(this); }
   on(event, callback) { this.events[event] = callback; }
   loadSource(url) { sources.push(url); }
   attachMedia(audio) { this.audio = audio; audio.src = 'blob:synthetic-live'; audio.currentTime = 900; this.events.level?.(null, { details: { fragments: [{ start: 0, cc: 0 }], edge: 10000 } }); }
   startLoad(time) { if (time !== undefined) this.audio.currentTime = time; }
   stopLoad() {} destroy() { this.destroyed = true; }
 }
-globalThis.window = { YT: { Player }, Hls };
-globalThis.document = { createElement: tag => tag === 'audio' ? new Audio() : new Node(tag) };
+globalThis.window = Object.assign(new EventTarget(), { YT: { Player }, Hls });
+globalThis.document = Object.assign(new EventTarget(), { visibilityState: 'visible', createElement: tag => tag === 'audio' ? new Audio() : new Node(tag) });
 globalThis.location = { origin: 'https://lightcityfellowship.com' };
 Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { mediaSession: { setActionHandler() {}, setPositionState() {} } } });
 globalThis.localStorage = { getItem() { return null; }, setItem() { throw Error('Live capability URLs must not be saved'); } };
@@ -85,7 +85,14 @@ try {
   assert.ok(messages.includes('Preparing playback…'));
   dateShift += 3600000; clock += 5000;
   await item.switchTo('audio'); assert.equal(requests, 2, 'expired links are reissued through the access gate');
-  assert.equal(sources.length, 2); assert.ok(!item.audio.paused);
+  assert.equal(sources.length, 1, 'access renewal does not reattach or reload the HLS source'); assert.ok(!item.audio.paused);
+  let refreshedUrl;
+  hlsInstances[0].config.xhrSetup({ open: (_method, url) => { refreshedUrl = url; } }, sources[0].replace('audio.m3u8', 'segment-000001.ts'));
+  assert.equal(new URL(refreshedUrl).searchParams.get('token').split('.')[0], String(Math.floor(Date.now() / 1000) + 3600));
+  const beforeReturn = item.audio.currentTime, beforeRequests = requests;
+  document.dispatchEvent(new Event('visibilitychange')); window.dispatchEvent(new Event('pageshow'));
+  assert.equal(item.audio.currentTime, beforeReturn); assert.equal(requests, beforeRequests);
+  assert.ok(!item.audio.paused, 'healthy audio is untouched when returning to the app');
   await item.switchTo('video'); denied = true; dateShift += 3600000;
   await item.switchTo('audio'); assert.equal(item.mode, 'video'); assert.equal(players[0].state, 1, 'denied renewal restores outgoing video');
   item.dispose(); assert.equal(item.audio.getAttribute('src'), null); assert.equal(viewport.querySelector('audio'), null); assert.equal(frame.hidden, false);
@@ -106,5 +113,15 @@ try {
   paused.item.audio.currentTime = 240;
   await paused.item.switchTo('video'); assert.equal(pausedPlayer.getCurrentTime(), 240); assert.equal(pausedPlayer.state, 2);
   paused.item.dispose();
+  const recovery = make(); await recovery.item.switchTo('audio');
+  const recoveryAt = recovery.item.audio.currentTime, beforeRecovery = requests;
+  recovery.item.audio.paused = true;
+  hlsInstances.at(-1).events[Hls.Events.ERROR](null, { fatal: true });
+  for (let i = 0; i < 100 && (requests === beforeRecovery || recovery.item.audio.paused); i++) await new Promise(resolve => nativeTimeout(resolve, 5));
+  assert.ok(requests > beforeRecovery, 'Fatal live errors automatically obtain fresh playback access');
+  assert.equal(recovery.item.mode, 'audio'); assert.ok(!recovery.item.audio.paused);
+  assert.ok(Math.abs(recovery.item.audio.currentTime - recoveryAt) < 2, 'Reconnect retains the content position');
+  recovery.item.dispose();
+
   console.log('PASS: production live mount, repeated progressing handoffs, direct Listen, paused switches, access-gated renewal, failure rollback, and disposal.');
 } finally { globalThis.setTimeout = nativeTimeout; Date.now = nativeDate; Object.defineProperty(performance, 'now', { configurable: true, value: nativeNow }); }

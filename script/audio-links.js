@@ -9,6 +9,7 @@
     let available = new Map(), version = 0, scheduled = false, audience = null, liveCheckedAt = 0;
     const mounted = new Map();
     let openAudio = new URLSearchParams(location.search).get('mode') === 'audio';
+    let resume = globalThis.LightCityMedia?.savedListening?.();
     function feedback(holder, message) {
       let node = holder.querySelector('.lc-mode-feedback');
       if (!node && message) { node = document.createElement('p'); node.className = 'lc-mode-feedback'; node.setAttribute('role', 'status'); holder.appendChild(node); }
@@ -65,9 +66,12 @@
           } });
           mounted.set(viewport, controller);
         }
+        const checkpoint = button.dataset.mediaMode === 'audio' && resume?.videoId === id ? resume : null;
+        resume = null;
         const startPlayback = button.dataset.startPlayback === 'true';
-        void controller.switchTo(button.dataset.mediaMode).then(async () => {
-          if (startPlayback && controller.mode === 'audio' && mounted.get(viewport) === controller) {
+        const switching = checkpoint && controller.restoreListening ? controller.restoreListening(checkpoint) : controller.switchTo(button.dataset.mediaMode);
+        void switching.then(async () => {
+          if (startPlayback && !checkpoint && controller.mode === 'audio' && mounted.get(viewport) === controller) {
             try { await controller.audio.play(); } catch { feedback(holder, 'Tap Play on the audio player to begin listening.'); }
           }
         }).catch(() => feedback(holder, 'Playback could not start. Please try again.'));
@@ -111,14 +115,21 @@
           watch.querySelectorAll('button[data-media-mode]').forEach(button => { if (button.dataset.mediaMode === 'audio') { button.dataset.startPlayback = 'true'; button.click(); delete button.dataset.startPlayback; } });
         }
       }
+      if (resume && available.has(resume.videoId)) {
+        let holder = watch && watch.dataset.videoId === resume.videoId ? watch : null;
+        if (!holder && grid) holder = [...grid.querySelectorAll('.video-box[data-video-id]')].find(card => card.dataset.videoId === resume.videoId)?.querySelector('.lc-video-actions');
+        const button = holder && [...holder.querySelectorAll('button[data-media-mode]')].find(button => button.dataset.mediaMode === 'audio');
+        if (button) { openAudio = false; button.click(); }
+      }
     }
+
     function schedule() { if (!scheduled) { scheduled = true; queueMicrotask(() => { scheduled = false; render(); }); } }
     if (grid) new MutationObserver(schedule).observe(grid, { childList: true, subtree: true });
     if (hero) new MutationObserver(schedule).observe(hero, { attributes: true, attributeFilter: ['data-video-id', 'hidden'] });
     async function refresh() {
       const current = ++version;
       const member = globalThis.LightCityMembers;
-      const nextAudience = member?.loading ? 'loading' : Array.isArray(member?.library) ? 'member:' + (member.user?.uid || '') + ':' + member.library.map(item => item.id).join(',') : 'public';
+      const nextAudience = member?.loading ? 'loading' : Array.isArray(member?.library) ? 'member:' + (member.user?.uid || '') : 'public';
       if (audience !== nextAudience || nextAudience === 'loading') reset();
       audience = nextAudience;
       try {
@@ -135,14 +146,18 @@
         available = new Map(result.recordings.filter(item => /^[\w-]{11}$/.test(item.videoId)).map(item => [item.videoId, item]));
         for (const item of live.recordings || []) if (item.kind === 'live' && /^[\w-]{11}$/.test(item.videoId) && /^session-\d{13}$/.test(item.session) && Number.isFinite(item.offsetSeconds)) available.set(item.videoId, item);
         render();
-      } catch { if (current === version) reset(); }
+      } catch (error) {
+        if (current !== version) return;
+        if (/permission-denied|unauthenticated|failed-precondition|user-disabled|user-token-expired/.test(error?.code || '')) reset();
+        // A temporary catalogue/network failure must not tear down active media.
+      }
     }
     window.addEventListener('lightcity-members-changed', () => void refresh());
-    window.addEventListener('pagehide', () => { for (const controller of mounted.values()) controller.dispose(); mounted.clear(); });
+    window.addEventListener('pagehide', event => { if (event.persisted) return; for (const controller of mounted.values()) controller.dispose(); mounted.clear(); });
     await refresh();
     const liveRefresh = setInterval(() => { if (document.visibilityState !== 'hidden') void refresh(); }, 45000);
     liveRefresh.unref?.();
-    window.addEventListener('pagehide', () => clearInterval(liveRefresh), { once: true });
+    window.addEventListener('pagehide', event => { if (!event.persisted) clearInterval(liveRefresh); });
   }
   // Deferred scripts can run at "interactive" before the mode module's imports finish.
   if (document.readyState !== 'complete') document.addEventListener('DOMContentLoaded', () => void start(), { once: true }); else void start();

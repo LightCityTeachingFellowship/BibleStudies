@@ -46,7 +46,7 @@ async function linkDevice() {
   if (!Array.isArray(api.library) || !deviceAuth.currentUser) return;
   await call('linkChurchDevice', { deviceToken: await deviceAuth.currentUser.getIdToken() });
 }
-async function checkAccess() {
+async function checkAccess({ preserveOnTransient = false } = {}) {
   const current = ++version;
   api.user = memberAuth.currentUser;
   api.error = null;
@@ -61,7 +61,7 @@ async function checkAccess() {
   } catch (error) {
     if (current !== version) return;
     api.error = error;
-    publish(null);
+    if (!(preserveOnTransient && Array.isArray(api.library) && /^(functions\/(unavailable|deadline-exceeded|internal|unknown)|auth\/network-request-failed)$/.test(error?.code || ''))) publish(null);
   }
   if (current === version) renderPage();
 }
@@ -102,20 +102,20 @@ api.getLiveAudio = async videoId => {
   if (!memberAuth || !functions) throw Error('Live listening is unavailable.');
   return call('getChurchLiveAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId });
 };
-api.refresh = async () => {
+api.refresh = async ({ preserveOnTransient = false } = {}) => {
   await api.ready;
   if (!memberAuth) throw Error('Member access is unavailable. Please try again shortly.');
   if (memberAuth.currentUser) { await sdk.auth.reload(memberAuth.currentUser); await memberAuth.currentUser.getIdToken(true); }
-  await checkAccess();
+  await checkAccess({ preserveOnTransient });
 };
 window.addEventListener('lightcity-push-ready', () => { void linkDevice().catch(() => {}); });
 window.addEventListener('pageshow', event => {
   if (event.persisted && api.enabled) {
-    ++version; api.loading = true; api.library = null;
-    document.documentElement?.classList.add('lc-member-restoring');
-    // refresh() captures the previous ready promise before we replace it.
-    api.ready = api.refresh().catch(error => { api.error = error; publish(null); });
-    window.dispatchEvent(new CustomEvent('lightcity-members-changed', { detail: { videos: null } }));
+    // Revalidate quietly: the existing player and verified audience stay mounted.
+    api.ready = api.refresh({ preserveOnTransient: true }).catch(error => {
+      api.error = error;
+      if (!/^(functions\/(unavailable|deadline-exceeded|internal|unknown)|auth\/network-request-failed)$/.test(error?.code || '')) publish(null);
+    });
   }
 });
 async function action(task) {

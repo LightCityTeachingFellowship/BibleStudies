@@ -25,7 +25,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
   const message = node('p', 'lc-inline-status'); message.setAttribute('role', 'status');
   panel.append(node('p', 'lc-inline-kind', '♫ LIVE AUDIO'), node('p', 'lc-inline-title', title), audio, message);
   panel.hidden = true; viewport.classList.add('lc-media-viewport'); viewport.appendChild(panel);
-  let disposed = false, requested = null, frame = null, player = null, createdFrame = false, hls = null, details = null, expiresAt = 0, blocked = false, audioFailure = null, renewalTimer = null, revision = 0;
+  let disposed = false, requested = null, frame = null, player = null, createdFrame = false, hls = null, details = null, expiresAt = 0, blocked = false, audioFailure = null, renewalTimer = null, revision = 0, playbackToken = null, recovering = false, wantsPlayback = false, retryTimer = null, retries = 0;
   const pending = new Set(), listeners = [];
   const waitUntil = (check, signal, timeout = 15000) => new Promise((resolve, reject) => {
     const started = performance.now(); let timer;
@@ -39,7 +39,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     };
     pending.add(cancel); signal?.addEventListener('abort', cancel, { once: true }); tick();
   });
-  const on = (target, event, handler) => { target.addEventListener(event, handler); listeners.push(() => target.removeEventListener(event, handler)); };
+  const on = (target, event, handler) => { if (!target.addEventListener) return; target.addEventListener(event, handler); listeners.push(() => target.removeEventListener(event, handler)); };
   const status = text => { const friendly = text.startsWith('Preparing ') ? 'Preparing playback…' : text.startsWith('Playing with provisional') || text.startsWith('Playing with the timing') ? 'Live audio and video may take a moment to align when switching.' : text; message.textContent = friendly; onState(core.mode, friendly); };
   const show = mode => {
     panel.hidden = mode !== 'audio'; viewport.classList.toggle('lc-audio-mode', mode === 'audio');
@@ -63,7 +63,40 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     if (disposed) { player.pauseVideo(); throw new DOMException('Cancelled', 'AbortError'); }
     return player;
   }
+  async function renewHlsAccess() {
+    const result = await globalThis.LightCityMembers.getLiveAudio(videoId);
+    if (disposed) return;
+    const url = new URL(checkedLiveLink(result, videoId, recording.session));
+    if (result.offsetSeconds !== recording.offsetSeconds) throw Error('Broadcast timing changed. Choose Listen again.');
+    playbackToken = url.searchParams.get('token'); expiresAt = result.expiresAt;
+    scheduleRenewal();
+  }
+  function scheduleRenewal() {
+    clearTimeout(renewalTimer);
+    renewalTimer = setTimeout(() => {
+      if (disposed) return;
+      if (hls) void renewHlsAccess().catch(() => { if (core.mode === 'audio') scheduleRecovery(); });
+      else { expiresAt = 0; if (core.mode === 'audio' && !requested) void item.switchTo('audio'); }
+    }, Math.max(30000, expiresAt - Date.now() - 120000));
+  }
+  function scheduleRecovery() {
+    if (disposed || retries >= 3 || retryTimer || core.mode !== 'audio' || !wantsPlayback) return;
+    retryTimer = setTimeout(() => { retryTimer = null; void recover(); }, Math.min(15000, 2000 * 2 ** retries));
+  }
+  async function recover() {
+    if (disposed || recovering || core.mode !== 'audio' || !wantsPlayback) return;
+    if (requested) { scheduleRecovery(); return; }
+    recovering = true; retries++;
+    try {
+      if (audioFailure || expiresAt <= Date.now() + 60000) {
+        await item.switchTo('audio');
+        if (!disposed && core.mode === 'audio' && !audioFailure) { await audio.play(); activate(item); }
+      } else { hls?.startLoad(audio.currentTime); if (audio.paused) await audio.play(); }
+    } catch { scheduleRecovery(); }
+    finally { recovering = false; }
+  }
   async function loadAudio(signal) {
+    if (hls && !audioFailure && audio.getAttribute('src') && expiresAt <= Date.now() + 60000) await renewHlsAccess();
     if (!audio.getAttribute('src') || audioFailure || expiresAt <= Date.now() + 60000) {
       const generation = ++revision;
       const result = await globalThis.LightCityMembers.getLiveAudio(videoId);
@@ -76,7 +109,13 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
       audio.removeAttribute('src'); audio.load();
       const transport = chooseTransport({ hlsSupported: Hls?.isSupported() === true, nativeSupport: !!audio.canPlayType('application/vnd.apple.mpegurl') });
       if (transport === 'hls') {
-        hls = new Hls({ enableWorker: true, maxBufferLength: 30, backBufferLength: 60, liveSyncDurationCount: 3, liveMaxLatencyDurationCount: Infinity, maxLiveSyncPlaybackRate: 1 });
+        playbackToken = new URL(url).searchParams.get('token');
+        hls = new Hls({ enableWorker: true, maxBufferLength: 120, backBufferLength: 60, liveSyncDurationCount: 3, liveMaxLatencyDurationCount: Infinity, maxLiveSyncPlaybackRate: 1, xhrSetup(xhr, requestUrl) {
+          const request = new URL(requestUrl);
+          if (request.origin === new URL(url).origin && request.pathname.startsWith('/live/' + recording.session + '/') && playbackToken) {
+            request.searchParams.set('token', playbackToken); xhr.open('GET', request.href, true);
+          }
+        } });
         let continuity;
         hls.on(Hls.Events.LEVEL_UPDATED, (_event, data) => {
           details = data.details;
@@ -84,18 +123,11 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
           if (continuity !== undefined && next !== undefined && next !== continuity) core.invalidate('The live stream restarted. Please choose Watch or Listen again.');
           continuity = next;
         });
-        hls.on(Hls.Events.ERROR, (_event, data) => { if (data.fatal) { audioFailure = 'Live audio could not load. Press Listen to retry.'; status(audioFailure); } });
+        hls.on(Hls.Events.ERROR, (_event, data) => { if (data.fatal) { audioFailure = 'Live audio could not load. Press Listen to retry.'; status(audioFailure); scheduleRecovery(); } });
         hls.loadSource(url); hls.attachMedia(audio);
       } else if (transport === 'native') { audio.src = url; audio.load(); }
       else throw Error('Live audio is not supported in this browser. Please use Watch.');
-      clearTimeout(renewalTimer);
-      const renew = () => {
-        expiresAt = 0;
-        if (disposed) return;
-        if (requested) { renewalTimer = setTimeout(renew, 10000); return; }
-        if (core.mode === 'audio') void item.switchTo('audio');
-      };
-      renewalTimer = setTimeout(renew, Math.max(30000, expiresAt - Date.now() - 120000));
+      scheduleRenewal();
     }
     await waitUntil(() => { if (audioFailure) throw Error(audioFailure); return audio.readyState >= 1 && availableAudioRanges(audio, details).length > 0; }, signal, 30000);
   }
@@ -109,7 +141,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     },
     dispose() {
       if (disposed) return;
-      disposed = true; revision++; core.dispose(); clearTimeout(renewalTimer); pending.forEach(cancel => cancel()); listeners.forEach(remove => remove());
+      disposed = true; revision++; core.dispose(); clearTimeout(renewalTimer); clearTimeout(retryTimer); pending.forEach(cancel => cancel()); listeners.forEach(remove => remove());
       hls?.destroy(); audio.removeAttribute('src'); audio.load(); panel.remove();
       surfaces.forEach(surface => { surface.hidden = false; }); viewport.classList.remove('lc-media-viewport', 'lc-audio-mode');
       if (frame) { releaseFrame(frame, createdFrame ? player : null); if (createdFrame) { player?.destroy(); frame.remove(); } else frame.hidden = false; }
@@ -118,6 +150,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
   };
   const core = createLiveSwitch({
     readVideo: async signal => {
+      if (item.resumeCheckpoint) return { time: item.resumeCheckpoint.seconds - recording.offsetSeconds, playing: false, rate: item.resumeCheckpoint.rate };
       const current = await video(false);
       if (!current || [-1, 5].includes(current.getPlayerState())) {
         await loadAudio(signal);
@@ -160,10 +193,18 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     }
   }, { session: recording.session, videoId });
   if (recording.offsetSeconds) core.setOffset(recording.offsetSeconds);
-  on(audio, 'play', () => { if (core.mode !== 'audio') audio.pause(); else { pauseOthers(audio); activate(item); } });
-  on(audio, 'pause', () => { if (navigator.mediaSession && core.mode === 'audio') navigator.mediaSession.playbackState = 'paused'; });
+  on(audio, 'play', () => { if (core.mode !== 'audio') audio.pause(); else { wantsPlayback = true; retries = 0; pauseOthers(audio); activate(item); } });
+  on(audio, 'pause', () => { if (!requested && !recovering && !audio.error && !audioFailure) wantsPlayback = false; if (navigator.mediaSession && core.mode === 'audio') navigator.mediaSession.playbackState = 'paused'; });
   on(audio, 'timeupdate', () => position(item));
-  on(audio, 'error', () => { if (!disposed && core.mode === 'audio') { audioFailure = 'Live audio could not load. Press Listen to retry.'; status(audioFailure); } });
+  on(audio, 'error', () => { if (!disposed && core.mode === 'audio') { audioFailure = 'Live audio could not load. Press Listen to retry.'; status(audioFailure); scheduleRecovery(); } });
+  on(audio, 'waiting', scheduleRecovery); on(audio, 'stalled', scheduleRecovery);
+  const returnToAudio = () => {
+    if (core.mode !== 'audio' || !wantsPlayback) return;
+    activate(item);
+    if (audioFailure || audio.readyState < 3 || expiresAt <= Date.now() + 60000) void recover();
+  };
+  on(window, 'online', returnToAudio); on(window, 'pageshow', returnToAudio);
+  on(document, 'visibilitychange', () => { if (document.visibilityState !== 'hidden') returnToAudio(); });
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
   return item;
 }

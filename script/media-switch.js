@@ -1,8 +1,10 @@
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js';
+import { mountLive } from './live-media.js?v=background-audio-1';
+import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
 
 const framePlayers = new WeakMap(), frameOwners = new WeakMap(), youtubePlayers = new Set(), controllers = new Set();
 let apiPromise, activeAudio;
+listeningLifecycle(controllers);
 const storageKey = id => 'lc-audio-progress:' + id;
 const element = (tag, className, text) => { const node = document.createElement(tag); if (className) node.className = className; if (text) node.textContent = text; return node; };
 function youtubeAPI() {
@@ -86,7 +88,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
       clearSession: owner => { if (activeAudio === owner) { activeAudio = null; if (navigator.mediaSession) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; } } },
       onDispose: owner => controllers.delete(owner)
     });
-    controllers.add(item); return item;
+    controllers.add(item); return keepListening(item, controllers);
   }
   const audio = existingAudio || element('audio');
   const panel = element('div', 'lc-inline-audio'); panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Audio player');
@@ -104,9 +106,9 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
     panel.appendChild(speed);
   }
   panel.hidden = !existingAudio; viewport.classList.add('lc-media-viewport'); viewport.appendChild(panel);
-  let player, frame, expiresAt = initialExpiry, disposed = false, lastSaved = 0, core, createdFrame = false;
+  let player, frame, expiresAt = initialExpiry, disposed = false, lastSaved = 0, core, createdFrame = false, changing = false, recovering = false, wantsPlayback = false, retryTimer = null, retries = 0;
   const listeners = [];
-  const on = (target, name, callback) => { target.addEventListener(name, callback); listeners.push(() => target.removeEventListener(name, callback)); };
+  const on = (target, name, callback) => { if (!target.addEventListener) return; target.addEventListener(name, callback); listeners.push(() => target.removeEventListener(name, callback)); };
   const clearSession = () => { if (activeAudio === item) { activeAudio = null; if (navigator.mediaSession) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; } } };
   async function video(create = false) {
     frame = viewport.querySelector('iframe');
@@ -129,12 +131,12 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   }
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(storageKey(videoId))) || {}; } catch {}
-  const item = { viewport, videoId, title, audio, get mode() { return core?.mode || (existingAudio ? 'audio' : 'video'); }, switchTo: mode => core.switchTo(mode), dispose: () => core.dispose() };
+  const item = { viewport, videoId, title, audio, get mode() { return core?.mode || (existingAudio ? 'audio' : 'video'); }, switchTo: async mode => { changing = true; try { await core.switchTo(mode); } finally { changing = false; } }, dispose: () => core.dispose() };
   core = createModeSwitch({
     initialMode: existingAudio ? 'audio' : 'video', initialPosition: existingAudio?.currentTime || saved.seconds || 0,
     getRate: () => audio.playbackRate || 1,
     readAudio: () => core.readPendingAudio() || ({ time: audio.currentTime, playing: !audio.paused && !audio.ended, rate: audio.playbackRate }),
-    readVideo: async () => { const current = await video(); return current ? { time: current.getCurrentTime(), playing: ![0, 2].includes(current.getPlayerState()), rate: current.getPlaybackRate() } : null; },
+    readVideo: async () => { if (item.resumeCheckpoint) return { time: item.resumeCheckpoint.seconds, playing: false, rate: item.resumeCheckpoint.rate }; const current = await video(); return current ? { time: current.getCurrentTime(), playing: ![0, 2].includes(current.getPlayerState()), rate: current.getPlaybackRate() } : null; },
     pauseAudio: () => { if (audio.readyState >= 1) remember(videoId, audio); audio.pause(); },
     pauseVideo: () => { try { player?.pauseVideo(); } catch {} },
     show: mode => {
@@ -160,7 +162,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
     playVideo: () => { pauseOthers(null, player); player.playVideo(); },
     onState: (mode, text) => { message.textContent = text || 'Continue listening with your screen locked.'; onState(mode, text); },
     dispose: () => {
-      disposed = true; listeners.forEach(remove => remove()); controllers.delete(item); clearSession();
+      disposed = true; clearTimeout(retryTimer); listeners.forEach(remove => remove()); controllers.delete(item); clearSession();
       if (frame) frameOwners.delete(frame);
       if (existingAudio && originalParent) originalParent.appendChild(audio);
       else { audio.removeAttribute('src'); audio.load(); }
@@ -173,18 +175,32 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   });
   on(audio, 'play', () => {
     if (item.mode !== 'audio') { audio.pause(); return; }
+    wantsPlayback = true; retries = 0;
     if (expiresAt && expiresAt <= Date.now()) { void item.switchTo('audio'); return; }
     pauseOthers(audio); session(item); message.textContent = 'Continue listening with your screen locked.';
     if (navigator.mediaSession) navigator.mediaSession.playbackState = 'playing';
   });
-  on(audio, 'pause', () => { if (audio.readyState >= 1) remember(videoId, audio); if (activeAudio === item && navigator.mediaSession) navigator.mediaSession.playbackState = 'paused'; });
+  on(audio, 'pause', () => { if (!changing && !recovering && !audio.error) wantsPlayback = false; if (audio.readyState >= 1) remember(videoId, audio); if (activeAudio === item && navigator.mediaSession) navigator.mediaSession.playbackState = 'paused'; });
   on(audio, 'timeupdate', () => { positionState(item); if (Date.now() - lastSaved > 5000) { lastSaved = Date.now(); remember(videoId, audio); } });
   on(audio, 'ratechange', () => positionState(item));
-  on(audio, 'error', () => { if (item.mode === 'audio' && audio.getAttribute('src')) message.textContent = 'Audio could not be loaded. Press Listen to retry.'; });
+  const recover = async () => {
+    if (disposed || changing || recovering || !wantsPlayback || item.mode !== 'audio' || retries >= 3) return;
+    if (!audio.error && audio.readyState >= 3) { session(item); return; }
+    recovering = true; retries++; expiresAt = 0;
+    try { await item.switchTo('audio'); if (!disposed && item.mode === 'audio' && !audio.error) await audio.play(); }
+    catch {} finally { recovering = false; }
+  };
+  on(audio, 'error', () => {
+    if (item.mode !== 'audio' || !audio.getAttribute('src')) return;
+    message.textContent = 'Audio connection interrupted. Reconnecting…';
+    if (!retryTimer && wantsPlayback && retries < 3) retryTimer = setTimeout(() => { retryTimer = null; void recover(); }, 2000);
+  });
+  on(window, 'online', () => void recover()); on(window, 'pageshow', () => void recover());
+  on(document, 'visibilitychange', () => { if (document.visibilityState !== 'hidden') void recover(); });
   if (speed) on(speed, 'change', () => { audio.playbackRate = Number(speed.value); remember(videoId, audio); });
   controllers.add(item);
   if (existingAudio) { surfaces.forEach(surface => { surface.hidden = true; }); viewport.classList.add('lc-audio-mode'); }
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
   return item;
 }
-globalThis.LightCityMedia = { mount, trackYouTube };
+globalThis.LightCityMedia = { mount, trackYouTube, savedListening };

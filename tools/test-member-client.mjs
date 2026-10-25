@@ -43,6 +43,7 @@ function setup(enabled = true, configMode = 'ready', startup = {}) {
         state.approved = true; return { data: { verificationRequired: true } };
       }
       if (name === 'getChurchLibrary') {
+        if (state.libraryError) throw Object.assign(Error('Lookup failed'), { code: state.libraryError });
         if (!state.approved) throw Object.assign(Error('No church access'), { code: 'functions/permission-denied' });
         if (!state.verified) throw Object.assign(Error('Verify your email'), { code: 'functions/failed-precondition' });
         if (state.hold) return new Promise(resolve => { state.waiting = resolve; });
@@ -153,11 +154,20 @@ console.log('PASS: slow restored member sessions stay masked until access and re
 app = setup(true, 'ready', { signedIn: true, approved: true, verified: true }); await app.api.ready;
 app.state.hold = true;
 app.events.get('pageshow')[0]({ persisted: true }); await settle();
-assert.equal(app.api.loading, true);
-assert.equal(app.api.library, null);
-assert.equal(app.rootClasses.has('lc-member-restoring'), true);
+assert.equal(app.api.loading, false);
+assert.equal(app.api.library.length, 1, 'Restored verified access stays mounted while revalidation runs');
+assert.equal(app.rootClasses.has('lc-member-restoring'), false);
 app.state.waiting({ data: { videos: [{ id: 'abcdefghijk', title: 'Revalidated member teaching' }] } });
 await app.api.ready;
 assert.equal(app.api.loading, false);
 assert.equal(app.rootClasses.has('lc-member-restoring'), false);
 console.log('PASS: back/forward cache restores recheck membership without showing the public library.');
+
+app = setup(true, 'ready', { signedIn: true, approved: true, verified: true }); await app.api.ready;
+app.state.libraryError = 'functions/unavailable';
+app.events.get('pageshow')[0]({ persisted: true }); await app.api.ready;
+assert.equal(app.api.library.length, 1, 'Transient return-to-app network errors retain verified access');
+app.state.libraryError = 'functions/permission-denied';
+app.events.get('pageshow')[0]({ persisted: true }); await app.api.ready;
+assert.equal(app.api.library, null, 'Revoked access still clears the member library');
+console.log('PASS: quiet membership revalidation preserves playback on network failure and clears revoked access.');
