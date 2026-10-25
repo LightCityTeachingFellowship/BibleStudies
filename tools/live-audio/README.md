@@ -1,5 +1,7 @@
 # Live audio: pilot and prepared site integration
 
+**Normal OBS workflow:** the [automatic companion](automatic/README.md) replaces the manual relay/publisher steps for everyday broadcasts. Its source and local checks are prepared; one-time key setup, OBS script installation, deployment updates, and a real normal-profile broadcast test are still required. The instructions below describe the earlier manual test tools.
+
 The same-page site integration, access gate, and broadcast publisher are now prepared. Follow [SITE-SETUP.md](SITE-SETUP.md) for deployment and per-broadcast registration. Source preparation does not mean the integration is deployed. The user considers live timing usable with occasional differences; repeated switching still requires real-device checks. The earlier prototype stages below remain useful for isolated testing.
 
 The recorded-video audio feature stays unchanged. The bulk export can be prepared in parallel. The local pilot produces seekable AAC HLS segments with clock timestamps from a local file or a loopback OBS test feed. Audible OBS ingestion, local captured playback, and local playback while streaming have now been confirmed by the user. The next [private phone-test gateway](cloud/README.md) is prepared separately and is not deployed automatically. The local pilot does not forward to YouTube or enable a Listen button for a live video.

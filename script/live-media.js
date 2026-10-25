@@ -14,7 +14,7 @@ function hlsAPI() {
 }
 export function checkedLiveLink(result, videoId, session, now = Date.now()) {
   const url = new URL(result?.url);
-  if (result.kind !== 'live' || result.videoId !== videoId || result.session !== session || !(result.expiresAt > now + 10000) || result.expiresAt > now + 3605000 || !Number.isFinite(result.offsetSeconds) || Math.abs(result.offsetSeconds) > 600 || url.protocol !== 'https:' || !/^[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev$/.test(url.hostname) || url.port || url.username || url.password || url.hash || url.pathname !== `/live/${session}/audio.m3u8` || !/^\d{10}\.[a-f0-9]{64}$/.test(url.searchParams.get('token') || '') || [...url.searchParams.keys()].some(key => key !== 'token')) throw Error('This live broadcast has changed. Refresh the page to continue.');
+  if (result.kind !== 'live' || result.videoId !== videoId || result.session !== session || !(result.expiresAt > now + 10000) || result.expiresAt > now + 3605000 || !Number.isFinite(result.offsetSeconds) || Math.abs(result.offsetSeconds) > 57600 || url.protocol !== 'https:' || !/^[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev$/.test(url.hostname) || url.port || url.username || url.password || url.hash || url.pathname !== `/live/${session}/audio.m3u8` || !/^\d{10}\.[a-f0-9]{64}$/.test(url.searchParams.get('token') || '') || [...url.searchParams.keys()].some(key => key !== 'token')) throw Error('This live broadcast has changed. Refresh the page to continue.');
   return url.href;
 }
 export function mountLive({ viewport, videoId, title, recording, onState, trackYouTube, ownFrame, releaseFrame, pauseOthers, activate, position, clearSession, onDispose }) {

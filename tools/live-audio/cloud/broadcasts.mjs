@@ -1,6 +1,6 @@
 import { validSession, sameSecret, parsePlaylist } from './auth.mjs';
 export function broadcast(value, now = Date.now()) {
-  if (!value || !/^[\w-]{11}$/.test(value.videoId || '') || !validSession(value.session) || typeof value.title !== 'string' || !value.title.trim() || value.title.length > 300 || !['public', 'members'].includes(value.visibility) || !Number.isFinite(value.offsetSeconds) || Math.abs(value.offsetSeconds) > 600 || typeof value.active !== 'boolean' || !Number.isSafeInteger(value.expiresAt) || value.expiresAt <= now || value.expiresAt > now + 16 * 3600000) throw Error('Invalid broadcast');
+  if (!value || !/^[\w-]{11}$/.test(value.videoId || '') || !validSession(value.session) || typeof value.title !== 'string' || !value.title.trim() || value.title.length > 300 || !['public', 'members'].includes(value.visibility) || !Number.isFinite(value.offsetSeconds) || Math.abs(value.offsetSeconds) > 57600 || typeof value.active !== 'boolean' || !Number.isSafeInteger(value.expiresAt) || value.expiresAt <= now || value.expiresAt > now + 16 * 3600000) throw Error('Invalid broadcast');
   return { videoId: value.videoId, session: value.session, title: value.title.trim(), visibility: value.visibility, offsetSeconds: value.offsetSeconds, active: value.active, expiresAt: value.expiresAt };
 }
 export async function broadcastRoute(request, env, now = Date.now()) {

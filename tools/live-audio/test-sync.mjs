@@ -25,7 +25,7 @@ function fixture() {
   state.audio.time = 205.5; await sync.switchTo('video'); assert.equal(state.video.time, 214.75); assert.ok(state.video.playing); assert.ok(!state.audio.playing);
   const report = sync.confirm(); assert.equal(report.videoId, identity.videoId); assert.equal(report.offsetSeconds, -9.25); assert.ok(sync.verified);
   sync.setOffset(3); assert.ok(!sync.verified); assert.throws(() => sync.confirm(), /Test Watch/);
-  assert.throws(() => sync.setOffset(601)); assert.throws(() => sync.setOffset(NaN));
+  assert.throws(() => sync.setOffset(57601)); assert.throws(() => sync.setOffset(NaN));
 }
 {
   const { state, sync } = fixture(); state.video.playing = false; await sync.switchTo('audio'); assert.equal(state.audio.time, 120.75); assert.ok(!state.audio.playing);

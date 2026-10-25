@@ -20,12 +20,15 @@ const entry = { videoId: publicId, session, title: 'Live teaching', visibility: 
 assert.equal((await send(origin + '/catalog')).status, 403); assert.equal(touches, 0);
 await assert.rejects(registerBroadcast({ origin, uploadKey: playback, entry, send }), /403/);
 await registerBroadcast({ origin, uploadKey: upload, entry, send });
-await registerBroadcast({ origin, uploadKey: upload, entry: { ...entry, videoId: privateId, visibility: 'members' }, send });
+await registerBroadcast({ origin, uploadKey: upload, entry: { ...entry, videoId: privateId, visibility: 'public' }, send });
 const live = createLiveAudio(() => ({ origin, secret: playback }), { send, cacheMs: 0 });
 class Failure extends Error { constructor(code, message) { super(message); this.code = code; } }
-let active = true, verified = true, disabled = false, checks = 0;
-const handlers = createMemberHandlers({ live, fail: Failure, secret: () => '', auth: { getUser: async () => { checks++; return { disabled, emailVerified: verified }; } }, db: { doc: () => ({ get: async () => ({ exists: true, data: () => ({ active }) }) }) } });
+let active = true, verified = true, disabled = false, checks = 0, libraryAvailable = true;
+const handlers = createMemberHandlers({ live, fail: Failure, secret: () => '', auth: { getUser: async () => { checks++; return { disabled, emailVerified: verified }; } }, db: { doc: path => ({ get: async () => ({ exists: path !== 'churchVideoLibrary/current' || libraryAvailable, data: () => path === 'churchVideoLibrary/current' ? { videos: [{ id: publicId, visibility: 'public' }, { id: privateId, visibility: 'members' }] } : { active } }) }) } });
 assert.deepEqual((await handlers.getChurchLiveAudio({ data: {} })).recordings.map(item => item.videoId), [publicId]); assert.equal(checks, 0);
+libraryAvailable = false; await assert.rejects(handlers.getChurchLiveAudio({ data: {} }), error => error.code === 'unavailable'); libraryAvailable = true;
+await registerBroadcast({ origin, uploadKey: upload, entry: { ...entry, videoId: 'unknown1234' }, send });
+assert.deepEqual((await handlers.getChurchLiveAudio({ data: {} })).recordings.map(item => item.videoId), [publicId]);
 const signed = await handlers.getChurchLiveAudio({ data: { videoId: publicId } });
 assert.equal(checkedLiveLink(signed, publicId, session), signed.url);
 let response = await send(signed.url, { headers: { Origin: 'https://lightcityfellowship.com' } });

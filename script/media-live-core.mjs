@@ -140,7 +140,7 @@ export function createLiveSwitch(adapter, identity) {
     get verified() { return verified; },
     switchTo,
     setOffset(value) {
-      if (!Number.isFinite(value) || Math.abs(value) > 600) throw Error('Timing adjustment must be within ten minutes.');
+      if (!Number.isFinite(value) || Math.abs(value) > 57600) throw Error('Timing adjustment exceeds the supported broadcast window.');
       if (disposed) return;
       ++revision; controller?.abort(); pending = null; adapter.pauseBoth();
       offset = value; verified = false; checkedDirections.clear();

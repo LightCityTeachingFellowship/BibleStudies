@@ -6,7 +6,7 @@ export function liveOrigin(value = defaultOrigin) {
   return url.origin;
 }
 export function validLive(value, now = Date.now()) {
-  return value && /^[\w-]{11}$/.test(value.videoId || '') && /^session-\d{13}$/.test(value.session || '') && typeof value.title === 'string' && value.title.length > 0 && value.title.length <= 300 && ['public', 'members'].includes(value.visibility) && value.active === true && Number.isFinite(value.offsetSeconds) && Math.abs(value.offsetSeconds) <= 600 && Number.isSafeInteger(value.expiresAt) && value.expiresAt > now && value.expiresAt <= now + 16 * 3600000;
+  return value && /^[\w-]{11}$/.test(value.videoId || '') && /^session-\d{13}$/.test(value.session || '') && typeof value.title === 'string' && value.title.length > 0 && value.title.length <= 300 && ['public', 'members'].includes(value.visibility) && value.active === true && Number.isFinite(value.offsetSeconds) && Math.abs(value.offsetSeconds) <= 57600 && Number.isSafeInteger(value.expiresAt) && value.expiresAt > now && value.expiresAt <= now + 16 * 3600000;
 }
 export function createLiveAudio(config, { send = fetch, now = Date.now, cacheMs = 10000 } = {}) {
   let cached = null, cacheUntil = 0, loading = null;

@@ -53,7 +53,18 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
       if (videoId !== undefined && (typeof videoId !== 'string' || !/^[\w-]{11}$/.test(videoId))) throw new fail('invalid-argument', 'Choose a live broadcast.');
       if (request.data?.includeMembers === true) await member(request);
       let catalog;
-      try { catalog = await live.catalog(); } catch { throw new fail('unavailable', 'Live listening is temporarily unavailable.'); }
+      try {
+        const [registered, library] = await Promise.all([live.catalog(), db.doc('churchVideoLibrary/current').get()]);
+        const declarations = library.exists ? library.data()?.videos : null;
+        if (!Array.isArray(declarations)) throw Error('Library unavailable');
+        const access = new Map();
+        for (const video of declarations) {
+          if (!/^[\w-]{11}$/.test(video.id || '')) continue;
+          const visibility = video.visibility === 'public' ? 'public' : 'members';
+          if (access.get(video.id) !== 'members') access.set(video.id, visibility);
+        }
+        catalog = registered.filter(item => access.has(item.videoId)).map(item => ({ ...item, visibility: access.get(item.videoId) }));
+      } catch { throw new fail('unavailable', 'Live listening is temporarily unavailable.'); }
       if (videoId === undefined) return { recordings: catalog.filter(item => item.visibility === 'public' || request.data?.includeMembers === true).map(({ videoId, title, session, offsetSeconds, expiresAt }) => ({ kind: 'live', videoId, title, session, offsetSeconds, expiresAt })) };
       const item = catalog.find(item => item.videoId === videoId);
       if (!item) throw new fail('not-found', 'This broadcast is not available for live listening.');
