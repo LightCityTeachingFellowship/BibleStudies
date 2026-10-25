@@ -33,3 +33,6 @@ tools/audio-pilot/runtime/
 # Bulk audio import sources, progress, and generated audio (local only)
 tools/audio-library/work/
 tools/live-audio/work/
+
+# Generated worker bundles from commands run inside the gateway folder
+tools/live-audio/cloud/tools/live-audio/work/

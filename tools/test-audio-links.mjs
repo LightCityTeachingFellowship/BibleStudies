@@ -50,6 +50,14 @@ assert.equal(publicCard.children[0].children[1].dataset.mediaMode, 'audio');
 assert.equal(publicCard.children[0].children[1].type, 'button');
 assert.equal(memberCard.children.length, 0); assert.equal(missingCard.children.length, 0);
 assert.equal(home.children[1].textContent, 'Listen'); assert.equal(watch.children[1].textContent, 'Listen');
+assert.equal(home.children[0].href, 'https://example.com/BibleStudies/Watch/?v=' + publicId);
+assert.equal(home.children[1].href, 'https://example.com/BibleStudies/Watch/?v=' + publicId + '&mode=audio');
+assert.equal(home.events.click, undefined, 'Homepage choices navigate without mounting an inline player');
+assert.equal(hero.events.click, undefined, 'The featured thumbnail retains normal Watch-page navigation');
+assert.equal(home.children[1].dataset.mediaMode, undefined, 'Home Listen is a link, not a local mode switch');
+assert.ok(!readFileSync('watch.html', 'utf8').includes('id="watch-youtube"'));
+assert.ok(!readFileSync('script/video-watch.js', 'utf8').includes('youtube.hidden'));
+
 let prevented = false;
 grid.events.click({ target: publicCard.children[0].children[1], preventDefault: () => { prevented = true; }, stopPropagation() {} }); await settle();
 assert.equal(prevented, true); assert.equal(mountedPlayers[0].viewport, publicCard.viewport);
