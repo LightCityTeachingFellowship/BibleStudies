@@ -3,7 +3,7 @@ globalThis.LIGHTCITY_PUSH = {
   enabled: true,
   firebase: {
     apiKey: 'AIzaSyBL9YGgNxz9oaAu2NTLk-mND4Zce3cZF8c',
-    authDomain: 'perceptive-zoo-424115-j6.firebaseapp.com',
+    authDomain: 'auth.lightcityfellowship.com',
     projectId: 'perceptive-zoo-424115-j6',
     storageBucket: 'perceptive-zoo-424115-j6.firebasestorage.app',
     messagingSenderId: '792419084813',
