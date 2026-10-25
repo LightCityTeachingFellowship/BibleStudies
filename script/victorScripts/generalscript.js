@@ -231,7 +231,7 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
   function videoItem(item) {
     const link = new URL(dialog.dataset.watch, location.href);
     link.searchParams.set('v', item.id);
-    return prepare({ title: item.title, url: link.href, kind: 'Video', text: '' });
+    return prepare({ title: item.title, url: link.href, kind: 'Video', videoId: item.id, text: '' });
   }
   function addText(parent, tag, text, className) {
     const node = document.createElement(tag);
@@ -270,10 +270,12 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
         const start = Math.max(0, index - 45);
         addText(link, 'span', (start ? '…' : '') + text.slice(start, start + 170) + (text.length > start + 170 ? '…' : ''), 'home-result-excerpt');
       }
+      if(item.videoId){li.dataset.videoId=item.videoId;li.className='lc-search-video-result';}
       li.appendChild(link);
       results.appendChild(li);
     }
     more.hidden = matches.length <= limit;
+    if(matches.some(({item})=>item.videoId)&&typeof Event!=='undefined')window.dispatchEvent?.(new Event('lightcity-search-results'));
   }
   async function json(url) {
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });

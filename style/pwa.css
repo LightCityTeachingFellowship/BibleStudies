@@ -87,7 +87,7 @@
 .lc-video-actions {display:flex; flex-wrap:wrap; gap:10px; padding:12px 0;}
 .video-box > .lc-video-actions {padding:12px;}
 .lc-video-actions[hidden] {display:none;}
-.lc-video-actions a,.lc-video-actions .lc-mode-button {display:inline-flex; align-items:center; justify-content:center; padding:10px 20px; border:1px solid transparent; border-radius:999px; font:500 16px/1.3 'Outfit','Segoe UI',sans-serif; color:var(--black); background:var(--vivid-orange); text-decoration:none; cursor:pointer;}
+.lc-video-actions a,.lc-video-actions .lc-mode-button {display:inline-flex; align-items:center; justify-content:center; padding:5px 15px; border:1px solid transparent; border-radius:999px; font:500 16px/1.3 'Outfit','Segoe UI',sans-serif; color:var(--black); background:var(--vivid-orange); text-decoration:none; cursor:pointer;}
 .lc-video-actions .lc-mode-button[aria-pressed="false"] {background:transparent; color:inherit; border-color:currentColor;}
 .lc-video-actions a:focus-visible,.lc-video-actions button:focus-visible {outline:2px solid currentColor; outline-offset:4px;}
 .lc-audio-library-link {margin:12px 0 24px;}
@@ -125,8 +125,8 @@
 /* Personal video library: compact controls, private saved/history lists. */
 .lc-personal-library-link {display:inline-block; font-size:15px!important; margin:8px 0 16px; text-decoration:underline;}
 .lc-personal-actions {display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:10px 0;}
-.lc-personal-actions button, .lc-personal-remove, .lc-personal-tools button {font:inherit; font-size:14px!important; padding:8px 14px; border:1px solid currentColor; border-radius:24px; background:transparent; color:inherit; cursor:pointer;}
-.lc-personal-actions button[aria-pressed="true"] {background:var(--vivid-orange,#ffbf00); color:#171717; border-color:transparent;}
+.lc-personal-remove, .lc-personal-tools button {font:inherit; font-size:14px!important; padding:8px 14px; border:1px solid currentColor; border-radius:24px; background:transparent; color:inherit; cursor:pointer;}
+
 .lc-personal-actions .lc-video-resume {font-size:13px!important; text-decoration:underline;}
 .lc-personal-header {display:flex; align-items:center; justify-content:space-between; gap:16px; padding-top:24px; padding-bottom:24px;}
 .lc-personal-main {max-width:1400px; margin:20px auto 80px;}
@@ -142,7 +142,19 @@
 .lc-personal-card h2 {font-size:20px!important; line-height:1.35!important; margin:12px 0!important;}
 .lc-personal-card p {font-size:13px!important; line-height:1.4!important; margin:8px 0!important;}
 .lc-personal-card .lc-mode-button {font-size:15px;}
-.lc-personal-actions button:focus-visible, .lc-personal-tabs button:focus-visible, .lc-personal-remove:focus-visible {outline:3px solid var(--vivid-orange,#ffbf00); outline-offset:3px;}
+.lc-save-video:focus-visible, .lc-personal-tabs button:focus-visible, .lc-personal-remove:focus-visible {outline:3px solid var(--vivid-orange,#ffbf00); outline-offset:3px;}
 .lc-personal-card progress {display:block; width:100%; height:5px; accent-color:var(--vivid-orange,#ffbf00);}
 .lc-personal-card time {display:block; font-size:12px; opacity:.75; margin:8px 0;}
 #load-more-videos {margin-top:24px;}
+
+.lc-video-title-row {display:flex;align-items:flex-start;gap:8px;margin-top:12px;}
+.lc-video-title-row > .video-title, .lc-video-title-row > .watch-title {flex:1;min-width:0;margin:0!important;padding:0!important;}
+.lc-save-video {display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;width:40px;height:40px;padding:8px!important;margin:0;border:0!important;border-radius:50%;background:transparent;color:inherit;cursor:pointer;}
+.lc-save-video svg {width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;pointer-events:none;}
+.lc-save-video[aria-pressed="true"] svg {fill:currentColor;}
+.lc-save-video:hover {background:rgba(128,128,128,.15);}
+.lc-save-video:disabled {opacity:.5;cursor:wait;}
+.lc-personal-actions[hidden] {display:none;}
+.app-home #home-search-results li.lc-search-video-result {display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:8px;border-top:1px solid var(--home-border);padding:16px 4px;}
+.app-home #home-search-results .lc-search-video-result > a {min-width:0;border:0;padding:0;}
+.lc-search-video-result > .lc-save-video {margin-top:18px;}

@@ -46,7 +46,8 @@ async function refresh() {
       personal.acceptSaved(watchId,point.saved,titleFor(watchId)); if(point.history)personal.acceptHistory(point.history);
       syncMessage='Saved videos and history sync with your account.';emit();return;
     }
-    for (const view of ['saved','history']) {
+    const searchOnly=!['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page'].some(id=>document.getElementById?.(id));
+    for (const view of searchOnly?['saved']:['saved','history']) {
       const rows = []; let cursor = null, pages = 0;
       do {
         const page = await globalThis.LightCityMembers.getVideoActivity({ view, accountUid:owner.slice(5), ...(cursor ? { cursor } : {}) });
@@ -97,18 +98,39 @@ function watchUrl(id,row,startOver=false) {
   return url.href;
 }
 export function timeLabel(seconds) { const s=Math.max(0,Math.floor(seconds || 0)); return s>=3600 ? `${Math.floor(s/3600)}:${String(Math.floor(s/60)%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}` : `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
-function decorate(holder,id,title) {
-  if(!visibleVideos().has(id))return;
-  let actions=holder.querySelector?.('.lc-personal-actions');
-  if(!actions) { actions=node('div','', 'lc-personal-actions'); holder.appendChild(actions); const button=node('button'); button.type='button'; button.className='lc-save-video'; actions.appendChild(button);
-    button.onclick=()=>{personal.save(id,titleFor(id,holder.getAttribute?.('video-title') || document.getElementById?.('watch-title')?.textContent || title),!personal.saved(id)); void flush();};
+function saveButton(holder,id,title) {
+  let button=holder._lcSaveButton || holder.querySelector?.('.lc-save-video');
+  if(!button) {
+    button=node('button','', 'lc-save-video');button.type='button';
+    button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg>';
   }
-  const button=actions.querySelector('button'), saved=personal.saved(id);
-  button.disabled = globalThis.LightCityMembers?.loading === true;
-  button.textContent=saved?'✓ Saved':'Save'; button.setAttribute('aria-pressed',String(saved)); button.setAttribute('aria-label',saved?'Remove from saved videos':'Save video for later');
-  let progress=actions.querySelector('.lc-video-resume'); const row=personal.history(id);
-  if(resumeSeconds(row)) { if(!progress){progress=node('a','', 'lc-video-resume');actions.appendChild(progress);} progress.href=watchUrl(id,row);progress.textContent='Continue from '+timeLabel(row.seconds); }
+  holder._lcSaveButton=button;
+  button.onclick=event=>{
+    event?.preventDefault();event?.stopPropagation();
+    personal.save(id,titleFor(id,holder.getAttribute?.('video-title') || title),!personal.saved(id));void flush();
+  };
+  const saved=personal.saved(id), label=saved?'Remove from saved videos':'Save video for later';
+  button.disabled=globalThis.LightCityMembers?.loading===true;
+  button.setAttribute('aria-pressed',String(saved));button.setAttribute('aria-label',label);button.title=label;
+  return button;
+}
+function decorate(holder,id,title,search=false) {
+  if(!visibleVideos().has(id))return;
+  const button=saveButton(holder,id,title);
+  if(search) {if(button.parentNode!==holder)holder.appendChild(button);return;}
+  const heading=holder.querySelector?.('.video-title') || (holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-title'):null);
+  if(heading) {
+    let line=heading.parentNode?.className==='lc-video-title-row'?heading.parentNode:holder.querySelector?.('.lc-video-title-row');
+    if(!line){line=node('div','', 'lc-video-title-row');heading.parentNode.insertBefore(line,heading);}
+    if(heading.parentNode!==line)line.insertBefore(heading,line.children[0] || null);
+    if(button.parentNode!==line)line.appendChild(button);
+  }
+  let actions=holder.querySelector?.('.lc-personal-actions');
+  if(!actions){actions=node('div','', 'lc-personal-actions');holder.appendChild(actions);}
+  let progress=actions.querySelector('.lc-video-resume');const row=personal.history(id);
+  if(resumeSeconds(row)){if(!progress){progress=node('a','', 'lc-video-resume');actions.appendChild(progress);}progress.href=watchUrl(id,row);progress.textContent='Continue from '+timeLabel(row.seconds);}
   else progress?.remove();
+  actions.hidden=!progress;
 }
 function renderPage(visible) {
   const list=document.getElementById?.('my-video-list'); if(!list)return;
@@ -120,7 +142,7 @@ function renderPage(visible) {
   list.replaceChildren();
   const rows=personal.rows(pageView).filter(r=>visible.has(r.videoId));
   document.getElementById('my-video-empty').hidden=rows.length>0;
-  document.getElementById('my-video-empty').textContent=pageView==='saved'?'No saved videos yet. Use Save on a video to keep it here.':'Your watched and listened-to videos will appear here.';
+  document.getElementById('my-video-empty').textContent=pageView==='saved'?'No saved videos yet. Use the bookmark beside a video title to keep it here.':'Your watched and listened-to videos will appear here.';
   for(const row of rows) {
     const card=node('article','', 'lc-personal-card'), link=node('a');link.href=watchUrl(row.videoId,personal.history(row.videoId));
     const image=node('img');image.src=`https://i.ytimg.com/vi/${row.videoId}/hqdefault.jpg`;image.alt='';image.loading='lazy';link.appendChild(image);
@@ -139,14 +161,18 @@ function render() {
   for(const card of document.querySelectorAll?.('.video-box[data-video-id]') || [])decorate(card,card.dataset.videoId,card.querySelector('lite-youtube')?.getAttribute('title'));
   const watch=document.getElementById?.('watch-personal-actions');const id=new URLSearchParams(location.search).get('v');
   if(watch&&id)decorate(watch,id,document.getElementById('watch-title')?.textContent);
+  for(const result of document.querySelectorAll?.('.lc-search-video-result[data-video-id]') || [])decorate(result,result.dataset.videoId,result.querySelector('strong')?.textContent,true);
   renderPage(visible);
 }
 function boot() {
-  if(!document.querySelector?.('script[data-lightcity-personal]') || !['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page'].some(id=>document.getElementById?.(id)))return;
+  const primary=['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page'].some(id=>document.getElementById?.(id));
+  if(!document.querySelector?.('script[data-lightcity-personal]') || (!primary&&!document.getElementById?.('home-search-results')))return;
+  let initialized=primary;
+  window.addEventListener('lightcity-search-results',()=>{if(!initialized){initialized=true;refreshPromise=refresh();personal.ready=refreshPromise;}schedule();});
   active=true;
   window.addEventListener('lightcity-video-activity',schedule);
-  window.addEventListener('lightcity-members-changed',()=>{refreshPromise=refresh();personal.ready=refreshPromise;});
-  window.addEventListener('online',()=>{refreshPromise=refresh();personal.ready=refreshPromise;});
+  window.addEventListener('lightcity-members-changed',()=>{if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}});
+  window.addEventListener('online',()=>{if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')void flush();});
   window.addEventListener('pagehide',()=>void flush());
   for(const button of document.querySelectorAll('[data-personal-tab]')){button.tabIndex=button.dataset.personalTab===pageView?0:-1;button.onclick=()=>{pageView=button.dataset.personalTab;for(const other of document.querySelectorAll('[data-personal-tab]')){other.setAttribute('aria-selected',String(other===button));other.tabIndex=other===button?0:-1;}render();};button.onkeydown=event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const tabs=[...document.querySelectorAll('[data-personal-tab]')],next=tabs[(tabs.indexOf(button)+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length];next.onclick();next.focus();};}
@@ -164,8 +190,8 @@ function boot() {
   };
   const clear=document.getElementById('clear-video-history');if(clear)clear.onclick=()=>{if(window.confirm('Clear your watch and listening history? Saved videos will be kept.')){personal.clearHistory();void flush();}};
   const grid=document.getElementById('videotab-container');
-  if(grid&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches?.('.video-box')||n.querySelector?.('.video-box')))))schedule();}).observe(grid,{childList:true,subtree:true});
-  refreshPromise=refresh();personal.ready=refreshPromise;render();
+  if(grid&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches?.('.video-box, .video-title')||n.querySelector?.('.video-box')))))schedule();}).observe(grid,{childList:true,subtree:true});
+  if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}render();
   const timer=setInterval(()=>void flush(),30000);timer.unref?.();
 }
 if(browser){globalThis.LightCityVideos=personal;if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();}

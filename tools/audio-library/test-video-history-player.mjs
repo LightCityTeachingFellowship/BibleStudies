@@ -1,7 +1,7 @@
 // Uses the existing controller fixtures, then exercises real persistence hooks against a real tracked player.
 import '../test-media-switch.mjs';
 import assert from 'node:assert/strict';
-import { personal } from '../../script/video-personal.js?v=saved-history-1';
+import { personal } from '../../script/video-personal.js?v=bookmark-title-1';
 const id='R42uVd9spDw';
 document.getElementById=name=>name==='lc-public-video-data'?{textContent:JSON.stringify({[id]:'Teaching'})}:null;
 const BasePlayer=window.YT.Player;

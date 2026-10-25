@@ -580,7 +580,7 @@ body.site-browse {font-family:'Outfit','Segoe UI',sans-serif!important; font-siz
 .site-browse #site-search-open:focus,.site-browse #home-search-dialog button:focus {background:var(--home-soft)!important; color:var(--home-ink); outline:2px solid var(--home-accent);}
 .site-browse #home-search-dialog [aria-pressed=true]:focus {background:var(--home-accent)!important; color:var(--black);}
 .site-browse .browse-search svg path {stroke:currentColor!important;}
-.site-browse .videos-header-btns {font:500 15px/1.4 'Outfit','Segoe UI',sans-serif; border:1px solid var(--home-border); border-radius:24px; background:var(--home-soft); color:var(--home-ink); padding:10px 16px!important;}
+.site-browse .videos-header-btns {font:500 15px/1.4 'Outfit','Segoe UI',sans-serif; border:1px solid var(--home-border); border-radius:24px; background:var(--home-soft); color:var(--home-ink); padding:5px 15px!important;}
 .site-browse .videos-header-btns.active {background:var(--home-accent)!important; color:var(--black)!important; border-color:var(--home-accent);}
 .site-browse .video-title {font-family:inherit!important; font-size:20px!important; line-height:1.35!important; text-transform:none!important;}
 .site-browse .video-box {overflow:hidden; padding:16px;}
