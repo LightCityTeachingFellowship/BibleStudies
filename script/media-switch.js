@@ -1,5 +1,6 @@
+import { personal } from './video-personal.js?v=saved-history-1';
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js?v=live-replay-1';
+import { mountLive } from './live-media.js?v=saved-history-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
 
 const framePlayers = new WeakMap(), frameOwners = new WeakMap(), youtubePlayers = new Set(), controllers = new Set();
@@ -34,13 +35,35 @@ export function trackYouTube(frame, { autoplay = false } = {}) {
     if (frame.isConnected === false) { reject(Error('Player removed')); return; }
     const timer = setTimeout(() => reject(Error('Video player unavailable')), 15000);
     new YT.Player(frame, { events: {
-      onReady: event => {
+      onReady: async event => {
         clearTimeout(timer); const player = event.target; youtubePlayers.add(player);
+        let id;
+        try { id = new URL(frame.src || frame.getAttribute?.('src'), location.href || location.origin).pathname.split('/').pop(); } catch {}
+        if (/^[\w-]{11}$/.test(id || '')) {
+          let explicit = false; try { explicit = new URL(frame.src || frame.getAttribute('src')).searchParams.has('start'); } catch {}
+          const held = !explicit && !frameOwners.has(frame) && player.getCurrentTime() < 2;
+          const wasPlaying = [1,3].includes(player.getPlayerState());
+          if (held) player.pauseVideo();
+          await Promise.race([personal.ready, new Promise(done=>{const t=setTimeout(done,1500);t.unref?.();})]);
+          const owner = personal.scope;
+          const save = () => { try { if (frameOwners.get(frame)?.mode === 'audio') return; if(player.getPlayerState()===1)frame.lcHistoryStarted=true;if(!frame.lcHistoryStarted)return; personal.record({ videoId:id, title:player.getVideoData?.()?.title || frame.title, seconds:player.getCurrentTime(), duration:player.getDuration(), rate:player.getPlaybackRate(), mode:'video', completed:player.getPlayerState()===0 },owner); } catch {} };
+          if (!explicit && !frameOwners.has(frame)) {
+            const row = await Promise.race([personal.forVideo(id), new Promise(done=>{ const t=setTimeout(done,1500); t.unref?.(); })]);
+            if (frame.isConnected !== false && personal.scope === owner && row && !row.completed && row.seconds > 5 && player.getCurrentTime() < 2) player.seekTo(row.seconds,true);
+          }
+          const visibility=()=>{if(document.visibilityState==='hidden')save();};
+          const releaseHistory=()=>{clearInterval(historyTimer);window.removeEventListener?.('pagehide',save);document.removeEventListener?.('visibilitychange',visibility);delete frame.lcSaveHistory;};
+          const historyTimer = setInterval(()=>{ try{if(frame.isConnected===false){releaseHistory();return;}if(player.getPlayerState()===1)save();}catch{releaseHistory();} },5000); historyTimer.unref?.();
+          frame.lcSaveHistory = save;
+          if (held && (wasPlaying || autoplay) && frameOwners.get(frame)?.mode !== 'audio' && frame.isConnected !== false) player.playVideo();
+          window.addEventListener?.('pagehide',save); document.addEventListener?.('visibilitychange',visibility);
+        }
         resolve(player);
         if (frameOwners.get(frame)?.mode === 'audio') player.pauseVideo();
         else if (autoplay && ![0, 2].includes(player.getPlayerState())) player.playVideo();
       },
       onStateChange: event => {
+        if ([0,1,2].includes(event.data)) { frame.lcSaveHistory?.(); if(event.data!==1)void personal.flush(); }
         if (event.data !== 1) return;
         if (frameOwners.get(frame)?.mode === 'audio') { event.target.pauseVideo(); return; }
         pauseOthers(null, event.target);
@@ -64,6 +87,7 @@ function waitForMetadata(audio, signal) {
   });
 }
 function remember(id, audio) {
+  if (globalThis.LightCityVideos) return;
   try { localStorage.setItem(storageKey(id), JSON.stringify({ seconds: audio.currentTime, rate: audio.playbackRate })); } catch {}
 }
 function session(item) {
@@ -88,7 +112,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
       clearSession: owner => { if (activeAudio === owner) { activeAudio = null; if (navigator.mediaSession) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; } } },
       onDispose: owner => controllers.delete(owner)
     });
-    controllers.add(item); return keepListening(item, controllers);
+    controllers.add(item); personal.attachAudio(item); return keepListening(item, controllers);
   }
   const audio = existingAudio || element('audio');
   const panel = element('div', 'lc-inline-audio'); panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Audio player');
@@ -130,13 +154,19 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
     return player;
   }
   let saved = {};
-  try { saved = JSON.parse(localStorage.getItem(storageKey(videoId))) || {}; } catch {}
+  try { saved = personal.history(videoId) || (!globalThis.LightCityVideos ? JSON.parse(localStorage.getItem(storageKey(videoId))) : {}) || {}; } catch {}
   const item = { viewport, videoId, title, audio, get mode() { return core?.mode || (existingAudio ? 'audio' : 'video'); }, switchTo: async mode => { changing = true; try { await core.switchTo(mode); } finally { changing = false; } }, dispose: () => core.dispose() };
   core = createModeSwitch({
     initialMode: existingAudio ? 'audio' : 'video', initialPosition: existingAudio?.currentTime || saved.seconds || 0,
     getRate: () => audio.playbackRate || 1,
     readAudio: () => core.readPendingAudio() || ({ time: audio.currentTime, playing: !audio.paused && !audio.ended, rate: audio.playbackRate }),
-    readVideo: async () => { if (item.resumeCheckpoint) return { time: item.resumeCheckpoint.seconds, playing: false, rate: item.resumeCheckpoint.rate }; const current = await video(); return current ? { time: current.getCurrentTime(), playing: ![0, 2].includes(current.getPlayerState()), rate: current.getPlaybackRate() } : null; },
+    readVideo: async () => { if (item.resumeCheckpoint) return { time: item.resumeCheckpoint.seconds, playing: false, rate: item.resumeCheckpoint.rate }; const current = await video();
+      if (!current || [-1,5].includes(current.getPlayerState())) {
+        const row = await personal.forVideo(videoId); let time = personal.resume(videoId);
+        try { const query = new URLSearchParams(location.search); if(query.get('v')===videoId && query.has('t')) { const n=Number(query.get('t')); if(Number.isFinite(n)&&n>=0&&n<=172800)time=n; } } catch {}
+        if(time || row?.completed) return { time, playing:true, rate:row?.rate || 1 };
+      }
+      return current ? { time: current.getCurrentTime(), playing: ![0,2].includes(current.getPlayerState()), rate:current.getPlaybackRate() } : null; },
     pauseAudio: () => { if (audio.readyState >= 1) remember(videoId, audio); audio.pause(); },
     pauseVideo: () => { try { player?.pauseVideo(); } catch {} },
     show: mode => {
@@ -201,6 +231,10 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   controllers.add(item);
   if (existingAudio) { surfaces.forEach(surface => { surface.hidden = true; }); viewport.classList.add('lc-audio-mode'); }
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}
-  return item;
+  personal.attachAudio(item);
+  return keepListening(item,controllers);
 }
 globalThis.LightCityMedia = { mount, trackYouTube, savedListening };
+
+window.dispatchEvent?.(new Event('lightcity-media-ready'));
+for (const frame of document.querySelectorAll?.('#videotab-container iframe, #watch-player iframe') || []) void trackYouTube(frame).catch(() => {});

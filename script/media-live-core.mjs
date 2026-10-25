@@ -13,6 +13,11 @@ function intervals(ranges) {
 export function availableAudioRanges(media, details = null) {
   if (media.readyState < 1) return [];
   const seekable = intervals(media.seekable);
+  // Completed HLS history remains fetchable even when the browser initially exposes only buffered fragments.
+  if (details?.live === false) {
+    const first = details.fragments?.[0]?.start, last = details.edge;
+    if (Number.isFinite(first) && Number.isFinite(last) && first >= 0 && last > first) return [[first, last]];
+  }
   if (seekable.length) return seekable;
   // A retained hls.js EVENT playlist describes fetchable history before the
   // media element exposes seekable. Never infer an infinite available range.
@@ -25,6 +30,15 @@ export function audioTimeFor(videoTime, offset) {
   return videoTime + offset;
 }
 export function videoTimeFor(audioTime, offset) { return audioTimeFor(audioTime, -offset); }
+export function replayBoundaryTarget(time, ranges) {
+  if (!Number.isFinite(time)) return time;
+  // Only absorb sub-second capture/container rounding at the ends. Never jump across a real missing section.
+  const first = ranges[0]?.[0], last = ranges.at(-1)?.[1];
+  if (Number.isFinite(first) && time < first && first - time <= 0.75) return first;
+  if (Number.isFinite(last) && time > last && time - last <= 0.75) return last;
+  return time;
+}
+
 export function settledPosition(read, target, { tolerance = 0.75, holdMs = 700, now = () => performance.now() } = {}) {
   let since = null;
   return () => {
@@ -110,8 +124,9 @@ export function createLiveSwitch(adapter, identity) {
       adapter.status('Preparing ' + (next === 'audio' ? 'audio' : 'video') + ' at the same point…');
       await adapter.ready(next, signal);
       if (stale()) return;
-      const target = next === 'audio' ? audioTimeFor(canonical, offset) : canonical;
       const targetRanges = adapter.ranges(next);
+      const rawTarget = next === 'audio' ? audioTimeFor(canonical, offset) : canonical;
+      const target = next === 'audio' && adapter.audioTarget ? adapter.audioTarget(rawTarget, targetRanges) : rawTarget;
       // YouTube does not publish exact DVR ranges through the iframe API.
       // An unknown video range requires adapter.seek to verify the actual result.
       if (!(next === 'video' && targetRanges === null) && !inRanges(target, targetRanges)) throw Error(next === 'audio' ? 'That moment is not available in the audio stream yet. Try Listen again shortly.' : 'That moment is outside the available YouTube DVR range.');

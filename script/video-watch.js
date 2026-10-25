@@ -21,9 +21,13 @@
  player.allowFullscreen=true;
  player.referrerPolicy='strict-origin-when-cross-origin';
  const params=new URLSearchParams({autoplay:startWithAudio?'0':'1',playsinline:'1',controls:'1',rel:'0',enablejsapi:'1',origin:location.origin});
+ const query=new URLSearchParams(location.search);
+ if(query.has('t')) { const seconds=Number(query.get('t')); if(Number.isFinite(seconds)&&seconds>=0&&seconds<=172800)params.set('start',String(Math.floor(seconds))); }
+ player.dataset.videoId=videoId;
  player.src=`https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
  container.appendChild(player);
- globalThis.LightCityMedia?.trackYouTube(player, { autoplay: !startWithAudio }).catch(() => {});
+ function connectPlayer() { if(globalThis.LightCityMedia)void globalThis.LightCityMedia.trackYouTube(player,{autoplay:!startWithAudio}).catch(()=>{});else window.addEventListener('lightcity-media-ready',connectPlayer,{once:true}); }
+ connectPlayer();
  // Fullscreen and screen orientation are separate browser capabilities.
  // A cross-origin player exposes its iframe as the fullscreen element here.
  const orientation=globalThis.screen?.orientation;

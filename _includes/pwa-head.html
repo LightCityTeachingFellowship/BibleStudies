@@ -22,9 +22,13 @@ setTimeout(() => {
 <meta name="theme-color" content="#322348">
 <link rel="manifest" href="{{ '/manifest.webmanifest' | relative_url }}">
 <link rel="apple-touch-icon" href="{{ '/images/pwa-192.png' | relative_url }}">
-<link rel="stylesheet" href="{{ '/style/pwa.css' | relative_url }}?v=live-badge-1">
+<link rel="stylesheet" href="{{ '/style/pwa.css' | relative_url }}?v=saved-history-1">
 <script defer src="{{ '/pwa-config.js' | relative_url }}"></script>
 <script defer src="{{ '/script/pwa.js' | relative_url }}?v=members-6" data-base="{{ '/' | relative_url }}"></script>
-<script type="module" src="{{ '/script/members.js' | relative_url }}?v=library-fast-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
-<script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=live-replay-1"></script>
+<script type="module" src="{{ '/script/members.js' | relative_url }}?v=saved-history-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
+<script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=saved-history-1"></script>
 <script defer src="{{ '/script/audio-links.js' | relative_url }}?v=live-replay-1" data-lightcity-audio-links data-base="{{ '/' | relative_url }}"></script>
+
+{% include video-list.html %}
+<script type="application/json" id="lc-public-video-data">{ {% assign personal_public_count = 0 %}{% for personal_id in public_video_ids %}{% unless member_video_ids contains personal_id %}{% if personal_id.size == 11 %}{% if personal_public_count > 0 %},{% endif %}{% assign personal_video = site.data.videos | where: 'id', personal_id | first %}{{ personal_id | jsonify }}:{{ personal_video.title | jsonify | replace: '<', '\u003c' }}{% assign personal_public_count = personal_public_count | plus: 1 %}{% endif %}{% endunless %}{% endfor %} }</script>
+<script type="module" src="{{ '/script/video-personal.js' | relative_url }}?v=saved-history-1" data-lightcity-personal data-base="{{ '/' | relative_url }}"></script>

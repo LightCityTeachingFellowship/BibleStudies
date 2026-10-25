@@ -244,3 +244,20 @@ If diagnostics show the Access Key ID matches the active token but its Secret Ac
 ```
 
 This mode asks for Account ID, Access Key ID, and Token value (not the mismatched secret). It derives the R2 secret locally using Cloudflare's SHA-256 token convention, verifies the token's active identity through Cloudflare, then verifies actual bucket access before saving the derived pair encrypted for this Windows account. The Token value is used transiently and is not saved. Firebase playback secrets are not modified. Do not use the older audio-pilot repair script for this upload-only setup, because that script updates Firebase playback credentials.
+
+## One-time catch-up of recent prayer recordings
+
+The prepared Day 1–28 catch-up batch requests only missing recordings in that series (Day 28 and Days 1–21 initially). It skips existing pilot audio and completed automatic uploads. Separate non-series teachings and the rest of the Takeout backlog are excluded. Requests are saved in ignored `work/automatic-recorded/requests/`, separately from the live queue, so preparing a batch cannot overwrite an active worker's progress.
+
+Load the prepared batch into the existing Windows helper with:
+
+```powershell
+& .\tools\audio-library\start-catchup.ps1
+```
+
+This verifies the scheduled task belongs to this repository's runner, stops/restarts only that task so it loads the updated code, and uses the already saved encrypted credentials. It does not restart OBS or change live replay. Once restarted, the worker consumes pending requests, rechecks current website IDs, and processes one recording at a time. Successfully applied requests retain a small `.applied` receipt. Interrupted application can safely repeat without replacing completed jobs. Processing state remains in the normal queue; Listen appears gradually as each upload and registration succeeds. Keep the computer on, signed in, and connected.
+
+```powershell
+node tools/audio-library/automatic.mjs status
+node tools/audio-library/test-catchup.mjs
+```

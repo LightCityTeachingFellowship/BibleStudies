@@ -4,3 +4,6 @@ match /churchMembers/{document} { allow read, write: if false; }
 match /churchDevices/{document} { allow read, write: if false; }
 match /churchRateLimits/{document} { allow read, write: if false; }
 match /churchVideoLibrary/{document} { allow read, write: if false; }
+
+// Saved videos and history are private; only the authenticated callable backend accesses them.
+match /churchVideoActivity/{uid}/{document=**} { allow read, write: if false; }

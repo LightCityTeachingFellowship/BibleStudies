@@ -1,4 +1,4 @@
-import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition } from './media-live-core.mjs';
+import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition, replayBoundaryTarget } from './media-live-core.mjs?v=replay-feedback-1';
 const node = (tag, className, text) => { const value = document.createElement(tag); if (className) value.className = className; if (text) value.textContent = text; return value; };
 let hlsReady;
 function hlsAPI() {
@@ -44,7 +44,14 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     pending.add(cancel); signal?.addEventListener('abort', cancel, { once: true }); tick();
   });
   const on = (target, event, handler) => { if (!target.addEventListener) return; target.addEventListener(event, handler); listeners.push(() => target.removeEventListener(event, handler)); };
-  const status = text => { const friendly = text.startsWith('Preparing ') ? 'Preparing playback…' : text.startsWith('Playing with provisional') || text.startsWith('Playing with the timing') ? 'Live audio and video may take a moment to align when switching.' : text; message.textContent = friendly; onState(core.mode, friendly); };
+  const status = text => {
+    const playing = text.startsWith('Playing with provisional') || text.startsWith('Playing with the timing');
+    const friendly = text.startsWith('Paused at the corresponding point.') ? ''
+      : text.startsWith('Preparing ') ? 'Preparing playback…'
+      : playing ? (replay ? '' : 'Live audio and video may take a moment to align when switching.')
+      : replay && text.startsWith('That moment is not available') ? 'The replay does not include that position. Try a nearby point.' : text;
+    message.textContent = friendly; message.hidden = !friendly; onState(core.mode, friendly);
+  };
   const show = mode => {
     panel.hidden = mode !== 'audio'; viewport.classList.toggle('lc-audio-mode', mode === 'audio');
     surfaces.forEach(surface => { surface.hidden = mode === 'audio'; });
@@ -138,7 +145,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     }
     await waitUntil(() => { if (audioFailure) throw Error(audioFailure); return audio.readyState >= 1 && availableAudioRanges(audio, details).length > 0; }, signal, 30000);
   }
-  const item = { viewport, videoId, title, audio, liveSession: recording.session, liveOffset: recording.offsetSeconds,
+  const item = { viewport, videoId, title, audio, liveSession: recording.session, liveOffset: recording.offsetSeconds, get liveReplay() { return replay; },
     updateRecording(value) { if (value?.session === recording.session && value.offsetSeconds === recording.offsetSeconds) markReplay(value.replay); },
     onAutoplayBlocked() { blocked = true; },
     get mode() { return requested === 'video' ? 'video' : core.mode; },
@@ -162,6 +169,12 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
       const current = await video(false);
       if (!current || [-1, 5].includes(current.getPlayerState())) {
         await loadAudio(signal);
+        if (replay) {
+          const history = await globalThis.LightCityVideos?.forVideo(videoId);
+          let savedTime = history && !history.completed && history.seconds > 5 ? history.seconds : null;
+          try { const query = new URLSearchParams(location.search); if(query.get('v')===videoId && query.has('t')) { const n=Number(query.get('t')); if(Number.isFinite(n)&&n>=0&&n<=172800)savedTime=n; } } catch {}
+          if (savedTime !== null) return { time:savedTime, playing:true, rate:history?.rate || 1 };
+        }
         const latest = availableAudioRanges(audio, details).at(-1);
         const liveAt = replay ? availableAudioRanges(audio, details)[0][0] : Number.isFinite(hls?.liveSyncPosition) ? hls.liveSyncPosition : Math.max(latest[0], latest[1] - 12);
         return { time: Math.max(0, liveAt - recording.offsetSeconds), playing: true, rate: 1 };
@@ -170,6 +183,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     },
     readAudio: () => ({ time: audio.currentTime, playing: !audio.paused && !audio.ended, rate: audio.playbackRate }),
     pauseBoth: () => { audio.pause(); player?.pauseVideo(); }, show, status,
+    audioTarget: (time, ranges) => replay ? replayBoundaryTarget(time, ranges) : time,
     ranges: mode => mode === 'video' ? null : availableAudioRanges(audio, details).map(([start, end]) => [start, Math.max(start, end - 0.1)]),
     ready: async (mode, signal) => { if (mode === 'audio') await loadAudio(signal); else await video(true); },
     seek: async (mode, time, rate, signal) => {

@@ -4,6 +4,7 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
 import { createMemberHandlers } from './core.mjs';
+import { createVideoActivity } from './video-activity.mjs';
 import { createAudioSigner, createAudioCredentialCheck, checkAudioLink } from './audio.mjs';
 import { createLiveAudio } from './live-audio.mjs';
 import { createRecordedCatalog } from './recorded-catalog.mjs';
@@ -39,3 +40,7 @@ export const registerGoogleChurchMember = onCall({ ...options, secrets: [registr
 
 export const getChurchAudio = onCall({ ...options, secrets: [r2Access, r2Secret, livePlaybackKey] }, handlers.getChurchAudio);
 export const getChurchLiveAudio = onCall({ ...options, secrets: [livePlaybackKey] }, handlers.getChurchLiveAudio);
+
+const activity = createVideoActivity({ auth: getAuth(), db: getFirestore(), fail: HttpsError });
+export const getMyVideoActivity = onCall(options, activity.getMyVideoActivity);
+export const updateMyVideoActivity = onCall(options, activity.updateMyVideoActivity);

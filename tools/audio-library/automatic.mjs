@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ROOT, json, save, digest, client, ensureRemote } from './import.mjs';
 import { trial } from './youtube-trial.mjs';
+import { applyRequests } from './catchup.mjs';
 import { loadVideoLibrary } from '../video-library.mjs';
 import { workerOrigin, validSecret } from '../live-audio/cloud/auth.mjs';
 export const WORK = join(ROOT, 'tools/audio-library/work/automatic-recorded');
@@ -128,7 +129,9 @@ async function main() {
     let stopped = false; process.once('SIGTERM', () => { stopped = true; }); process.once('SIGINT', () => { stopped = true; });
     do {
       const state = await json(join(WORK, 'queue.json'));
-      const result = await tick({ state, library: () => loadVideoLibrary(ROOT), catalog: await json(join(ROOT, 'tools/members/functions/audio-catalog.json')),
+      const staticCatalog = await json(join(ROOT, 'tools/members/functions/audio-catalog.json'));
+      await applyRequests(WORK, state, await loadVideoLibrary(ROOT), staticCatalog);
+      const result = await tick({ state, library: () => loadVideoLibrary(ROOT), catalog: staticCatalog,
         download: async videoId => {
           const space = await statfs(WORK); if (Number(space.bavail) * Number(space.bsize) < 2 * 1024 ** 3) throw Error('Less than 2 GB free; audio download paused.');
           return trial({ id: videoId, limit: 1, download: true, embedded: true });

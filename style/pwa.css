@@ -94,7 +94,8 @@
 .app-home .home-featured-group {grid-area:video; min-width:0;}
 .app-home .home-video-link {display:block; width:100%; height:100%;}
 .app-home .home-featured-copy {display:block; color:inherit; text-decoration:none;}
-.lc-mode-feedback {flex-basis:100%; margin:0; font-size:14px; line-height:1.4;}
+.lc-video-actions .lc-mode-feedback, .video-box .lc-mode-feedback {flex-basis:100%; margin:4px 0 0!important; font-size:12px!important; line-height:1.4!important;}
+.lc-mode-feedback[hidden], .lc-inline-status[hidden] {display:none!important;}
 .lc-media-viewport {position:relative;}
 .lc-media-viewport > [hidden] {display:none!important;}
 .lc-media-viewport > iframe {position:absolute; inset:0; width:100%; height:100%; border:0;}
@@ -103,7 +104,7 @@
 .lc-inline-audio p {flex-shrink:0; line-height:1.3!important; margin:0!important;}
 .lc-inline-audio .lc-inline-kind {color:var(--vivid-orange); font-size:12px!important; letter-spacing:2px;}
 .lc-inline-audio .lc-inline-title {font-size:clamp(16px,2vw,26px)!important; font-weight:600;}
-.lc-inline-audio .lc-inline-status {font-size:13px!important;}
+.lc-inline-audio .lc-inline-status {font-size:12px!important;}
 .lc-inline-audio audio {display:block; width:100%; margin:0; height:40px; min-height:40px;}
 .lc-inline-audio select {align-self:center; flex-shrink:0; font:inherit; font-size:13px; color:var(--black); background:var(--white); border-radius:8px; padding:3px 8px;}
 .video-box .lc-inline-audio {padding:8px; gap:4px;}
@@ -120,3 +121,28 @@
 .lc-live-badge[hidden] {display:none!important;}
 /* Keep the homepage play icon clear of the bottom-right live label. */
 .home-video-art:has(> .lc-live-badge:not([hidden])) .home-play {right:50%; bottom:50%; transform:translate(50%,50%);}
+
+/* Personal video library: compact controls, private saved/history lists. */
+.lc-personal-library-link {display:inline-block; font-size:15px!important; margin:8px 0 16px; text-decoration:underline;}
+.lc-personal-actions {display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:10px 0;}
+.lc-personal-actions button, .lc-personal-remove, .lc-personal-tools button {font:inherit; font-size:14px!important; padding:8px 14px; border:1px solid currentColor; border-radius:24px; background:transparent; color:inherit; cursor:pointer;}
+.lc-personal-actions button[aria-pressed="true"] {background:var(--vivid-orange,#ffbf00); color:#171717; border-color:transparent;}
+.lc-personal-actions .lc-video-resume {font-size:13px!important; text-decoration:underline;}
+.lc-personal-header {display:flex; align-items:center; justify-content:space-between; gap:16px; padding-top:24px; padding-bottom:24px;}
+.lc-personal-main {max-width:1400px; margin:20px auto 80px;}
+.lc-personal-main #my-video-status {font-size:14px!important; line-height:1.5!important;}
+.lc-personal-tabs {display:flex; gap:12px; margin:20px 0;}
+.lc-personal-tabs button {font:inherit; font-size:18px; border:1px solid #cbd2da; border-radius:30px; padding:10px 24px; background:transparent; color:inherit; cursor:pointer;}
+.lc-personal-tabs button[aria-selected="true"] {background:var(--vivid-orange,#ffbf00); color:#171717; border-color:transparent;}
+.lc-personal-tools, .lc-personal-row {display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin:16px 0;}
+.lc-personal-grid {display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr)); gap:20px;}
+.lc-personal-card {padding:12px; border:1px solid #cbd2da; border-radius:18px; overflow:hidden;}
+.lc-personal-card > a {color:inherit; text-decoration:none;}
+.lc-personal-card img {width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:12px;}
+.lc-personal-card h2 {font-size:20px!important; line-height:1.35!important; margin:12px 0!important;}
+.lc-personal-card p {font-size:13px!important; line-height:1.4!important; margin:8px 0!important;}
+.lc-personal-card .lc-mode-button {font-size:15px;}
+.lc-personal-actions button:focus-visible, .lc-personal-tabs button:focus-visible, .lc-personal-remove:focus-visible {outline:3px solid var(--vivid-orange,#ffbf00); outline-offset:3px;}
+.lc-personal-card progress {display:block; width:100%; height:5px; accent-color:var(--vivid-orange,#ffbf00);}
+.lc-personal-card time {display:block; font-size:12px; opacity:.75; margin:8px 0;}
+#load-more-videos {margin-top:24px;}

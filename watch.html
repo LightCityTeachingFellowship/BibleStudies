@@ -19,7 +19,7 @@ title: Watch a video
   <link id="theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}">
   <script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script>
-  <script defer src="{{ '/script/video-watch.js' | relative_url }}?v=background-audio-1"></script>
+  <script defer src="{{ '/script/video-watch.js' | relative_url }}?v=saved-history-1"></script>
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}"></script>
 </head>
@@ -35,6 +35,7 @@ title: Watch a video
               </a>
             </div>
             <div class="headerUL">
+              <a class="lc-personal-library-link" href="{{ '/MyVideos/' | relative_url }}">Saved &amp; history</a>
               <a class="moreButton transition" href="{{ '/Videos/' | relative_url }}">All videos <span aria-hidden="true">→</span></a>
             </div>
           </nav>
@@ -48,6 +49,7 @@ title: Watch a video
     <p id="watch-status" role="status">Loading your video…</p>
     <div id="watch-player" class="watch-player" hidden></div>
     <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
+    <div id="watch-personal-actions"></div>
     <div id="watch-audio-choice" class="lc-video-actions" aria-label="Listen to this teaching" hidden></div>
     <noscript>Enable JavaScript to play this video, or browse <a href="{{ '/Videos/' | relative_url }}">all videos</a>.</noscript>
   </main>

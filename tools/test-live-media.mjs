@@ -129,10 +129,23 @@ try {
   recovery.item.dispose();
 
   const replayViewport = new Node();
-  const replayItem = mount({ viewport: replayViewport, videoId, title: 'Completed service', recording: { kind: 'live', session, offsetSeconds: 0, replay: true } });
+  const replayItem = mount({ viewport: replayViewport, videoId, title: 'Completed service', onState: (_mode, text) => messages.push(text), recording: { kind: 'live', session, offsetSeconds: 0, replay: true } });
   await replayItem.switchTo('audio');
   assert.equal(replayItem.mode, 'audio'); assert.ok(replayItem.audio.currentTime < 2, 'a new replay listener starts at the beginning, not the old live edge');
+  assert.ok(!messages.at(-1), 'successful replay playback clears obsolete warnings and live alignment advice');
   replayItem.dispose();
+  const boundary = make(); const boundaryPlayer = await globalThis.LightCityMedia.trackYouTube(boundary.frame);
+  boundaryPlayer.pauseVideo(); boundaryPlayer.seekTo(0);
+  // This is the measured Day 29 capture offset; the omitted fraction of a second is normal startup rounding.
+  const savedLiveApi = globalThis.LightCityMembers.getLiveAudio;
+  globalThis.LightCityMembers.getLiveAudio = async id => ({ ...await savedLiveApi(id), offsetSeconds: -0.468, replay: true });
+  boundary.item.dispose();
+  const boundaryReplay = mount({ viewport: boundary.viewport, videoId, title: 'Replay start', recording: { kind: 'live', session, offsetSeconds: -0.468, replay: true }, onState: (_mode, text) => messages.push(text) });
+  await boundaryReplay.switchTo('audio');
+  assert.equal(boundaryReplay.mode, 'audio', 'replay start with sub-second capture offset must work on the first switch');
+  assert.equal(boundaryReplay.audio.currentTime, 0);
+  assert.ok(!messages.at(-1)?.includes('not available'));
+  boundaryReplay.dispose(); globalThis.LightCityMembers.getLiveAudio = savedLiveApi;
 
   console.log('PASS: production live mount, repeated progressing handoffs, direct Listen, paused switches, access-gated renewal, failure rollback, and disposal.');
 } finally { globalThis.setTimeout = nativeTimeout; Date.now = nativeDate; Object.defineProperty(performance, 'now', { configurable: true, value: nativeNow }); }

@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+const req=createRequire(import.meta.url), { Liquid }=req('../visibility-qa/node_modules/liquidjs');
+const engine=new Liquid({root:'_includes',dynamicPartials:false});
+engine.registerFilter('jsonify',v=>JSON.stringify(v??null));engine.registerFilter('relative_url',v=>'/BibleStudies'+v);engine.registerFilter('normalize_whitespace',v=>String(v).replace(/\s+/g,' ').trim());
+const videos=JSON.parse(await readFile('_data/videos.json','utf8'));
+const source=(await readFile('MyVideos.html','utf8')).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/,'');
+const output=await engine.parseAndRender(source,{site:{data:{videos},pages:[],posts:[],members_enabled:true,video_visibility_enabled:true}});
+assert.ok(output.includes('id="my-video-list"'));assert.ok(output.includes('id="load-more-videos"'));
+const publicData=JSON.parse(output.match(/id="lc-public-video-data">([\s\S]*?)<\/script>/)[1]);
+const members=new Set((await readFile('_includes/video-ids-members.txt','utf8')).trim().split(/\s+/));
+assert.ok(Object.keys(publicData).length>0);assert.ok(Object.keys(publicData).every(id=>!members.has(id)));
+assert.ok(output.includes('/BibleStudies/script/video-personal.js?v=saved-history-1'));assert.ok(output.includes('/BibleStudies/members/'));
+const original=await readFile('tools/audio-library/work/privacy-current.rules','utf8');const patched=await readFile('tools/members/firestore-personal.rules','utf8');
+assert.equal(patched.replace(/'churchVideoLibrary',\r?\n\s*'churchVideoActivity'/,"'churchVideoLibrary'").replace(/\r\n/g,'\n'),original.replace(/\r\n/g,'\n'),'privacy rules change only excludes the new collection from the broad grant');
+console.log('PASS: full Saved & History page renders, base paths work, only public metadata is embedded, and privacy rules preserve all existing app rules.');

@@ -1,0 +1,171 @@
+import { createVideoStore, resumeSeconds } from './video-personal-store.mjs';
+const browser = typeof window !== 'undefined' && typeof document !== 'undefined';
+const emit = () => { if (browser) window.dispatchEvent?.(new Event('lightcity-video-activity')); };
+let storage; try { storage = globalThis.localStorage; } catch {}
+export const personal = createVideoStore({ storage, changed: emit });
+let revision = 0, syncing = false, refreshPromise = Promise.resolve(), syncMessage = '', active = false;
+let cursors = {saved:null,history:null};
+function publicData() { try { return JSON.parse(document.getElementById?.('lc-public-video-data')?.textContent || '{}'); } catch { return {}; } }
+export function visibleVideos() {
+  const result = new Map(Object.entries(browser ? publicData() : {}).map(([id,title]) => [id, title || id]));
+  for (const v of globalThis.LightCityMembers?.library || []) result.set(v.id, v.title || v.id);
+  return result;
+}
+const titleFor = (id, fallback) => { const value = visibleVideos().get(id); return value && value !== id ? value : fallback || id; };
+async function flush() {
+  if (syncing || !personal.signedIn || !personal.pending().length) return;
+  const api = globalThis.LightCityMembers, owner = personal.scope;
+  if (!api?.updateVideoActivity) return;
+  syncing = true; let completed=false;
+  try {
+    for (const [key, op] of personal.pending()) {
+      if (personal.scope !== owner) break;
+      let result; do { result = await api.updateVideoActivity({...op,accountUid:owner.slice(5)}); } while (op.action === 'clearHistory' && result.more && personal.scope === owner);
+      if (personal.scope === owner) personal.acknowledge(key,op);
+    }
+    if (personal.scope === owner) {syncMessage = 'Saved to your account.';completed=true;}
+  } catch { if (personal.scope === owner) syncMessage = 'Saved on this device. Account sync will retry when available.'; }
+  finally { syncing = false; emit(); if(completed&&personal.scope===owner&&personal.pending().length)queueMicrotask(()=>void flush()); }
+}
+async function refresh() {
+  const ticket = ++revision;
+  const initial = globalThis.LightCityMembers;
+  if (!initial?.loading) personal.setIdentity(initial?.user && !initial.user.isAnonymous ? initial.user.uid : null);
+  await globalThis.LightCityMembers?.ready;
+  if (ticket !== revision) return;
+  const user = globalThis.LightCityMembers?.user;
+  personal.setIdentity(user && !user.isAnonymous ? user.uid : null);
+  const owner = personal.scope;
+  if (!personal.signedIn || !globalThis.LightCityMembers?.getVideoActivity) { syncMessage = 'Saved on this device. Sign in to sync across devices.'; emit(); return; }
+  await flush();
+  try {
+    const watchId = document.getElementById?.('watch-personal-actions') && new URLSearchParams(location.search).get('v');
+    if (watchId && visibleVideos().has(watchId)) {
+      const point = await globalThis.LightCityMembers.getVideoActivity({videoId:watchId,accountUid:owner.slice(5)});
+      if(owner!==personal.scope||ticket!==revision)return;
+      personal.acceptSaved(watchId,point.saved,titleFor(watchId)); if(point.history)personal.acceptHistory(point.history);
+      syncMessage='Saved videos and history sync with your account.';emit();return;
+    }
+    for (const view of ['saved','history']) {
+      const rows = []; let cursor = null, pages = 0;
+      do {
+        const page = await globalThis.LightCityMembers.getVideoActivity({ view, accountUid:owner.slice(5), ...(cursor ? { cursor } : {}) });
+        if (owner !== personal.scope || ticket !== revision) return;
+        if (!Array.isArray(page.rows)) throw Error('Invalid activity response');
+        rows.push(...page.rows); cursor = page.cursor;
+      } while (cursor && view==='saved' && !document.getElementById?.('my-video-list') && ++pages < 30);
+      cursors[view]=cursor;personal.hydrate(view,rows);
+    }
+    syncMessage = 'Saved videos and history sync with your account.';
+  } catch { syncMessage = 'Saved on this device. Account sync will retry when available.'; }
+  emit();
+}
+personal.ready = Promise.resolve();
+personal.forVideo = async id => {
+  await Promise.race([personal.ready, new Promise(done => { const timer = setTimeout(done,1500); timer.unref?.(); })]);
+  if (!visibleVideos().has(id)) return null;
+  if (personal.history(id) || !personal.signedIn) return personal.history(id);
+  const owner = personal.scope;
+  try { const result = await globalThis.LightCityMembers.getVideoActivity({ videoId:id, accountUid:owner.slice(5) }); if (personal.scope === owner && result.history) personal.acceptHistory(result.history); } catch {}
+  return owner === personal.scope ? personal.history(id) : null;
+};
+personal.resume = id => resumeSeconds(personal.history(id));
+personal.record = (row, owner = personal.scope) => { if (owner === personal.scope && visibleVideos().has(row.videoId)) personal.progress({ ...row, title: titleFor(row.videoId,row.title) }); };
+personal.flush = flush;
+personal.attachAudio = item => {
+  const owner = personal.scope; let played = false, last = 0, disposed = false;
+  const listeners=[];
+  const on=(event,fn)=>{item.audio.addEventListener(event,fn);listeners.push(()=>item.audio.removeEventListener(event,fn));};
+  const save = () => {
+    if (!played || disposed || item.mode !== 'audio') return;
+    const offset = item.liveOffset || 0;
+    personal.record({ videoId:item.videoId, title:item.title, seconds:Math.max(0,item.audio.currentTime-offset), duration:item.liveSession&&!item.liveReplay?0:Number.isFinite(item.audio.duration)?Math.max(0,item.audio.duration-offset):0, rate:item.audio.playbackRate, mode:'audio', completed:item.audio.ended },owner);
+  };
+  on('play', () => { played = true; save(); });
+  on('timeupdate', () => { if (Date.now()-last > 5000) { last=Date.now(); save(); } });
+  for (const event of ['pause','ended','seeked']) on(event,()=>{save();if(event!=='seeked')void flush();});
+  const dispose = item.dispose; item.dispose = () => { if(disposed)return;save();disposed=true;listeners.forEach(remove=>remove());dispose.call(item); };
+};
+function node(tag, text, className) { const n=document.createElement(tag); if(text)n.textContent=text; if(className)n.className=className; return n; }
+let pageView='saved', renderScheduled=false;
+function schedule() { if(renderScheduled)return; renderScheduled=true; queueMicrotask(()=>{renderScheduled=false; render();}); }
+function watchUrl(id,row,startOver=false) {
+  const base=document.querySelector('script[data-lightcity-personal]')?.dataset.base || '/';
+  const url=new URL(base+'Watch/',location.href); url.searchParams.set('v',id);
+  if(row?.mode==='audio')url.searchParams.set('mode','audio');
+  if(startOver)url.searchParams.set('t','0'); else if(resumeSeconds(row))url.searchParams.set('t',String(Math.floor(row.seconds)));
+  return url.href;
+}
+export function timeLabel(seconds) { const s=Math.max(0,Math.floor(seconds || 0)); return s>=3600 ? `${Math.floor(s/3600)}:${String(Math.floor(s/60)%60).padStart(2,'0')}:${String(s%60).padStart(2,'0')}` : `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+function decorate(holder,id,title) {
+  if(!visibleVideos().has(id))return;
+  let actions=holder.querySelector?.('.lc-personal-actions');
+  if(!actions) { actions=node('div','', 'lc-personal-actions'); holder.appendChild(actions); const button=node('button'); button.type='button'; button.className='lc-save-video'; actions.appendChild(button);
+    button.onclick=()=>{personal.save(id,titleFor(id,holder.getAttribute?.('video-title') || document.getElementById?.('watch-title')?.textContent || title),!personal.saved(id)); void flush();};
+  }
+  const button=actions.querySelector('button'), saved=personal.saved(id);
+  button.disabled = globalThis.LightCityMembers?.loading === true;
+  button.textContent=saved?'✓ Saved':'Save'; button.setAttribute('aria-pressed',String(saved)); button.setAttribute('aria-label',saved?'Remove from saved videos':'Save video for later');
+  let progress=actions.querySelector('.lc-video-resume'); const row=personal.history(id);
+  if(resumeSeconds(row)) { if(!progress){progress=node('a','', 'lc-video-resume');actions.appendChild(progress);} progress.href=watchUrl(id,row);progress.textContent='Continue from '+timeLabel(row.seconds); }
+  else progress?.remove();
+}
+function renderPage(visible) {
+  const list=document.getElementById?.('my-video-list'); if(!list)return;
+  document.getElementById('load-more-videos').hidden=!personal.signedIn||!cursors[pageView];
+  document.getElementById('my-video-status').textContent=syncMessage;
+  const signIn=document.getElementById('personal-video-signin');if(signIn)signIn.hidden=personal.signedIn;
+  const copy=document.getElementById('import-device-videos');if(copy)copy.hidden=!personal.signedIn||!['saved','history'].some(view=>createVideoStore({storage}).rows(view).some(r=>visible.has(r.videoId))); 
+  document.getElementById('clear-video-history').hidden=pageView!=='history';
+  list.replaceChildren();
+  const rows=personal.rows(pageView).filter(r=>visible.has(r.videoId));
+  document.getElementById('my-video-empty').hidden=rows.length>0;
+  document.getElementById('my-video-empty').textContent=pageView==='saved'?'No saved videos yet. Use Save on a video to keep it here.':'Your watched and listened-to videos will appear here.';
+  for(const row of rows) {
+    const card=node('article','', 'lc-personal-card'), link=node('a');link.href=watchUrl(row.videoId,personal.history(row.videoId));
+    const image=node('img');image.src=`https://i.ytimg.com/vi/${row.videoId}/hqdefault.jpg`;image.alt='';image.loading='lazy';link.appendChild(image);
+    const title=node('h2',titleFor(row.videoId,row.title));link.appendChild(title);card.appendChild(link);
+    const history=personal.history(row.videoId);
+    if(history?.duration>0){const bar=node('progress');bar.max=history.duration;bar.value=Math.min(history.seconds,history.duration);bar.setAttribute('aria-label','Playback progress');card.appendChild(bar);}
+    if(history){card.appendChild(node('p',history.completed?'Finished':`Stopped at ${timeLabel(history.seconds)}${history.duration?' of '+timeLabel(history.duration):''}`));}
+    if(row.updatedAt){const date=node('time',new Date(row.updatedAt).toLocaleDateString());date.dateTime=new Date(row.updatedAt).toISOString();card.appendChild(date);}
+    const buttons=node('div','', 'lc-personal-row');const play=node('a',resumeSeconds(history)?'Continue':'Watch','lc-mode-button');play.href=watchUrl(row.videoId,history);buttons.appendChild(play);if(resumeSeconds(history)){const restart=node('a','Start over','lc-personal-remove');restart.href=watchUrl(row.videoId,history,true);buttons.appendChild(restart);}
+    const remove=node('button',pageView==='saved'?'Remove saved':'Remove from history','lc-personal-remove');remove.type='button';remove.onclick=()=>{if(pageView==='saved')personal.save(row.videoId,row.title,false);else personal.removeHistory(row.videoId);void flush();};buttons.appendChild(remove);card.appendChild(buttons);list.appendChild(card);
+  }
+}
+function render() {
+  if(!active)return;
+  const visible=visibleVideos();
+  for(const card of document.querySelectorAll?.('.video-box[data-video-id]') || [])decorate(card,card.dataset.videoId,card.querySelector('lite-youtube')?.getAttribute('title'));
+  const watch=document.getElementById?.('watch-personal-actions');const id=new URLSearchParams(location.search).get('v');
+  if(watch&&id)decorate(watch,id,document.getElementById('watch-title')?.textContent);
+  renderPage(visible);
+}
+function boot() {
+  if(!document.querySelector?.('script[data-lightcity-personal]') || !['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page'].some(id=>document.getElementById?.(id)))return;
+  active=true;
+  window.addEventListener('lightcity-video-activity',schedule);
+  window.addEventListener('lightcity-members-changed',()=>{refreshPromise=refresh();personal.ready=refreshPromise;});
+  window.addEventListener('online',()=>{refreshPromise=refresh();personal.ready=refreshPromise;});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')void flush();});
+  window.addEventListener('pagehide',()=>void flush());
+  for(const button of document.querySelectorAll('[data-personal-tab]')){button.tabIndex=button.dataset.personalTab===pageView?0:-1;button.onclick=()=>{pageView=button.dataset.personalTab;for(const other of document.querySelectorAll('[data-personal-tab]')){other.setAttribute('aria-selected',String(other===button));other.tabIndex=other===button?0:-1;}render();};button.onkeydown=event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const tabs=[...document.querySelectorAll('[data-personal-tab]')],next=tabs[(tabs.indexOf(button)+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length];next.onclick();next.focus();};}
+  const signIn=document.getElementById('personal-video-signin');if(signIn)signIn.onclick=async()=>{signIn.disabled=true;try{await globalThis.LightCityMembers.signInForVideos();}catch{syncMessage='Sign-in could not finish. Please try again.';emit();}finally{signIn.disabled=false;}};
+  const copy=document.getElementById('import-device-videos');if(copy)copy.onclick=()=>{
+    const device=createVideoStore({storage}), visible=visibleVideos();
+    for(const row of device.rows('saved'))if(visible.has(row.videoId)&&!personal.saved(row.videoId))personal.save(row.videoId,row.title,true);
+    for(const row of device.rows('history'))if(visible.has(row.videoId)&&(!personal.history(row.videoId)||personal.history(row.videoId).updatedAt<row.updatedAt))personal.progress(row);
+    syncMessage='Device videos copied to this account. Syncing…';emit();void flush();
+  };
+  const more=document.getElementById('load-more-videos');if(more)more.onclick=async()=>{
+    const view=pageView, owner=personal.scope, cursor=cursors[view];if(!cursor)return;more.disabled=true;
+    try{const page=await globalThis.LightCityMembers.getVideoActivity({view,cursor,accountUid:owner.slice(5)});if(owner!==personal.scope)return;cursors[view]=page.cursor;personal.mergeRows(view,page.rows);}
+    catch{syncMessage='Could not load more videos. Please try again.';emit();}finally{more.disabled=false;}
+  };
+  const clear=document.getElementById('clear-video-history');if(clear)clear.onclick=()=>{if(window.confirm('Clear your watch and listening history? Saved videos will be kept.')){personal.clearHistory();void flush();}};
+  const grid=document.getElementById('videotab-container');
+  if(grid&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches?.('.video-box')||n.querySelector?.('.video-box')))))schedule();}).observe(grid,{childList:true,subtree:true});
+  refreshPromise=refresh();personal.ready=refreshPromise;render();
+  const timer=setInterval(()=>void flush(),30000);timer.unref?.();
+}
+if(browser){globalThis.LightCityVideos=personal;if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();}

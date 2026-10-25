@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function nonAnonymousUser() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function ownsSubscription(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Existing publicly readable content.
+    match /{collection}/{document} {
+      allow read: if collection in [
+        'video_metadata',
+        'video_ids',
+        'failed_video_ids',
+        'articles',
+        'summaries'
+      ];
+    }
+
+    // Each visitor manages only their own notification subscription.
+    match /webPushSubscribers/{uid} {
+      allow get, delete: if ownsSubscription(uid);
+
+      allow create, update: if ownsSubscription(uid)
+        && request.resource.data.keys().hasOnly(['token', 'updatedAt'])
+        && request.resource.data.token is string
+        && request.resource.data.token.size() > 0
+        && request.resource.data.token.size() < 4096
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    // Preserve other existing app access.
+    // Content uploads and member records are managed by the server.
+    match /{collection}/{document=**} {
+      allow read, write: if nonAnonymousUser()
+        && !(collection in [
+          'video_metadata',
+          'video_ids',
+          'failed_video_ids',
+          'articles',
+          'summaries',
+          'webPushSubscribers',
+          'webPushSent',
+          'webPushState',
+          'churchMembers',
+          'churchDevices',
+          'churchRateLimits',
+          'churchVideoLibrary',
+          'churchVideoActivity'
+        ]);
+    }
+  }
+}

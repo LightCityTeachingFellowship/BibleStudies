@@ -120,6 +120,14 @@ api.getLiveAudio = async videoId => {
   }
   return call('getChurchLiveAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId });
 };
+api.signInForVideos = async () => {
+  await api.ready;
+  if (!memberAuth || !sdk) throw Error('Sign-in is unavailable.');
+  const provider = new sdk.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
+  await sdk.auth.signInWithPopup(memberAuth, provider); await checkAccess();
+};
+api.getVideoActivity = async data => { await api.ready; return call('getMyVideoActivity', data); };
+api.updateVideoActivity = async data => { await api.ready; return call('updateMyVideoActivity', data); };
 api.refresh = async ({ preserveOnTransient = false } = {}) => {
   await api.ready;
   if (!memberAuth) throw Error('Member access is unavailable. Please try again shortly.');
