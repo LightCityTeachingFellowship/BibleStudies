@@ -6,6 +6,7 @@ import { defineSecret, defineString } from 'firebase-functions/params';
 import { createMemberHandlers } from './core.mjs';
 import { createAudioSigner, createAudioCredentialCheck, checkAudioLink } from './audio.mjs';
 import { createLiveAudio } from './live-audio.mjs';
+import { createRecordedCatalog } from './recorded-catalog.mjs';
 import { readFileSync } from 'node:fs';
 initializeApp();
 const registrationCode = defineSecret('CHURCH_REGISTRATION_CODE');
@@ -20,7 +21,10 @@ const audioConfig = () => ({ accountId: r2Account.value(), bucket: r2Bucket.valu
 const audio = {
   credentials: createAudioCredentialCheck(audioConfig),
   check: checkAudioLink,
-  catalog: JSON.parse(readFileSync(new URL('./audio-catalog.json', import.meta.url), 'utf8')),
+  catalog: createRecordedCatalog(() => ({ origin: liveGateway.value(), secret: livePlaybackKey.value() }), {
+    staticCatalog: JSON.parse(readFileSync(new URL('./audio-catalog.json', import.meta.url), 'utf8')),
+    library: async () => { const snapshot = await getFirestore().doc('churchVideoLibrary/current').get(); return snapshot.exists ? snapshot.data()?.videos : null; }
+  }),
   sign: createAudioSigner(audioConfig)
 };
 const handlers = createMemberHandlers({ audio, live, auth: getAuth(), db: getFirestore(), secret: () => registrationCode.value(), fail: HttpsError, stamp: () => FieldValue.serverTimestamp() });
@@ -33,5 +37,5 @@ export const unlinkChurchDevice = onCall(options, handlers.unlinkChurchDevice);
 
 export const registerGoogleChurchMember = onCall({ ...options, secrets: [registrationCode] }, handlers.registerGoogleChurchMember);
 
-export const getChurchAudio = onCall({ ...options, secrets: [r2Access, r2Secret] }, handlers.getChurchAudio);
+export const getChurchAudio = onCall({ ...options, secrets: [r2Access, r2Secret, livePlaybackKey] }, handlers.getChurchAudio);
 export const getChurchLiveAudio = onCall({ ...options, secrets: [livePlaybackKey] }, handlers.getChurchLiveAudio);

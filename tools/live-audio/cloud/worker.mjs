@@ -1,6 +1,7 @@
 import { validSecret, validSession, sameSecret, sha256, verifyToken, parsePlaylist } from './auth.mjs';
 import phonePage from './phone-page.mjs';
 import { broadcastRoute } from './broadcasts.mjs';
+import { recordingsRoute } from './recordings.mjs';
 const prefix = (session, file) => `live-test/${session}/${file}`;
 function result(body, status = 200, headers = {}) {
   return new Response(body, { status, headers: { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', ...headers } });
@@ -12,7 +13,7 @@ const worker = {
     // Fail closed until both independent secrets and the private bucket are bound.
     if (!env.AUDIO || !validSecret(env.LIVE_UPLOAD_KEY) || !validSecret(env.LIVE_PLAYBACK_KEY) || env.LIVE_UPLOAD_KEY === env.LIVE_PLAYBACK_KEY) return result('Not configured', 503);
     try {
-      const registration = await broadcastRoute(request, env);
+      const registration = await recordingsRoute(request, env) || await broadcastRoute(request, env);
       if (registration) return result(registration.body, registration.status, { 'Content-Type': registration.headers.get('Content-Type') || 'text/plain' });
     } catch { return result('Live catalogue temporarily unavailable', 503); }
     const match = url.pathname.match(/^\/(upload|live)\/(session-\d{13})\/(audio\.m3u8|segment-\d{6,}\.ts)$/);

@@ -6,7 +6,11 @@ export class AutomaticPublisher {
     Object.assign(this, { context, origin, uploadKey, library, lookup, status, now, publish, register });
     this.entry = null; this.receipts = {}; this.nextScan = 0; this.nextProbe = 0; this.misses = 0; this.fingerprint = ''; this.retired = false;
   }
-  async close() {
+  async close({ keepReplay = false } = {}) {
+    if (this.entry && keepReplay) {
+      const snapshot = await this.publish({ folder: this.context.folder, origin: this.origin, uploadKey: this.uploadKey, receipts: this.receipts });
+      if (!snapshot.ended) throw Error('Waiting for the finalized audio playlist');
+    }
     if (this.entry) { await this.register({ origin: this.origin, uploadKey: this.uploadKey, entry: { ...this.entry, active: false, expiresAt: this.now() + 3600000 } }); this.entry = null; }
   }
   async tick(signal) {
@@ -40,11 +44,11 @@ export class AutomaticPublisher {
       await this.register({ origin: this.origin, uploadKey: this.uploadKey, entry }); this.entry = entry;
     }
     const snapshot = await this.publish({ folder: this.context.folder, origin: this.origin, uploadKey: this.uploadKey, receipts: this.receipts });
-    if (snapshot.ended || this.context.ended) { await this.close(); this.retired = true; this.status('idle', 'OBS stopped; live audio was finalized.'); return; }
+    if (snapshot.ended || this.context.ended) { await this.close({ keepReplay: true }); this.retired = true; this.status('idle', 'OBS stopped; live audio was finalized.'); return; }
     if (this.now() >= this.nextProbe) {
       this.nextProbe = this.now() + 30000;
       const current = await this.lookup([this.entry.videoId]);
-      if (!current.some(item => item.id === this.entry.videoId && item.live)) { await this.close(); this.retired = true; this.status('idle', 'The matched YouTube broadcast has ended.'); }
+      if (!current.some(item => item.id === this.entry.videoId && item.live)) { this.retired = true; this.status('finishing', 'The broadcast ended. Finishing replay audio.'); }
     }
   }
 }

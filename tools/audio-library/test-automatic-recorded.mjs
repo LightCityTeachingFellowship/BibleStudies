@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import { tick, updateQueue, registerRecording } from './automatic.mjs';
+const a = 'abcdefghijk', b = 'ABCDEFGHIJK', c = '12345678901';
+const state = { version: 1, seenIds: [a], jobs: {} };
+updateQueue(state, [{ id: a }, { id: b }], [], 1000);
+assert.equal(state.jobs[a], undefined, 'baseline library does not start a thousand downloads');
+assert.equal(state.jobs[b].phase, 'pending');
+let library = [{ id: b, visibility: 'members' }], downloads = 0, uploads = 0, registrations = 0, cleans = 0, saved = 0, time = 1000;
+const r = { videoId: b, title: 'Final upload', file: 'local-file', bytes: 10, sha256: 'a'.repeat(64), audioDurationSeconds: 42, status: 'local audio verified' };
+const options = { state, catalog: [], now: () => time, library: async () => library,
+  download: async id => { assert.equal(id, b); downloads++; return [r]; },
+  remote: async () => { uploads++; }, register: async () => { registrations++; }, cleanup: async () => { cleans++; }, persist: async () => { saved++; } };
+await tick(options);
+assert.equal(state.jobs[b].phase, 'published'); assert.equal(downloads, 1); assert.equal(uploads, 1); assert.equal(registrations, 1); assert.equal(cleans, 1);
+await tick(options); assert.equal(downloads, 1, 'published queue entry never downloads again');
+const pending = { version: 1, seenIds: [], jobs: {} };
+let fail = true;
+const interrupted = { ...options, state: pending, remote: async () => { if (fail) throw Error('storage offline'); } };
+await tick(interrupted); assert.equal(pending.jobs[b].phase, 'retry'); assert.equal(cleans, 1, 'failed upload cannot delete local audio');
+library.push({ id: c });
+await tick(interrupted); assert.equal(pending.jobs[c].phase, 'pending'); assert.equal(downloads, 2, 'one retained artifact blocks accumulating downloads');
+fail = false; time = pending.jobs[b].nextAttempt;
+await tick(interrupted); assert.equal(pending.jobs[b].phase, 'published'); assert.equal(downloads, 2, 'upload retry reuses downloaded audio');
+const waiting = { version: 1, seenIds: [], jobs: {} };
+library = [{ id: b }];
+await tick({ ...options, state: waiting, download: async () => [{ status: 'waiting for replay', reason: 'Processing' }] });
+assert.equal(waiting.jobs[b].phase, 'waiting'); assert.equal(waiting.jobs[b].attempts, 0);
+const removed = { version: 1, seenIds: [], jobs: {} };
+let calls = 0;
+await tick({ ...options, state: removed, library: async () => ++calls < 2 ? [{ id: b }] : [] });
+assert.equal(removed.jobs[b].phase, 'removed');
+assert.equal(cleans, 2, 'removed-before-upload does not clean/publish');
+const credential = 'b'.repeat(64);
+const registered = await registerRecording(r, { origin: 'https://audio.example.workers.dev', uploadKey: credential, send: async (url, init) => {
+  assert.ok(url.endsWith('/' + b + '.json')); assert.equal(init.headers.Authorization, 'Bearer ' + credential);
+  const body = JSON.parse(init.body); assert.equal(body.objectKey, `audio/${b}.m4a`); assert.equal(body.durationSeconds, 42); assert.ok(!('file' in body));
+  return Response.json({ registered: true, videoId: b, sha256: r.sha256 });
+} });
+assert.equal(registered.videoId, b);
+assert.ok(saved > 5);
+console.log('PASS: baseline excludes backlog, new IDs queue, automatic download/upload/register/cleanup, durable retry without duplicate download, processing waits, bounded retained files, and removal checks.');

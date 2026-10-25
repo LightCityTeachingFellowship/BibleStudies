@@ -65,7 +65,7 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
         }
         catalog = registered.filter(item => access.has(item.videoId)).map(item => ({ ...item, visibility: access.get(item.videoId) }));
       } catch { throw new fail('unavailable', 'Live listening is temporarily unavailable.'); }
-      if (videoId === undefined) return { recordings: catalog.filter(item => item.visibility === 'public' || request.data?.includeMembers === true).map(({ videoId, title, session, offsetSeconds, expiresAt }) => ({ kind: 'live', videoId, title, session, offsetSeconds, expiresAt })) };
+      if (videoId === undefined) return { recordings: catalog.filter(item => item.visibility === 'public' || request.data?.includeMembers === true).map(({ videoId, title, session, offsetSeconds, expiresAt, replay }) => ({ kind: 'live', replay: replay === true, videoId, title, session, offsetSeconds, expiresAt })) };
       const item = catalog.find(item => item.videoId === videoId);
       if (!item) throw new fail('not-found', 'This broadcast is not available for live listening.');
       if (item.visibility !== 'public') await member(request);
@@ -96,13 +96,17 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
     async getChurchAudio(request) {
       if (!audio) throw new fail('unavailable', 'Audio listening is being prepared. Please try again shortly.');
       const videoId = request.data?.videoId;
+      if (videoId !== undefined && (typeof videoId !== 'string' || !/^[\w-]{11}$/.test(videoId))) throw new fail('invalid-argument', 'Choose a recording.');
+      if (request.data?.includeMembers === true) await member(request);
+      let catalog;
+      try { catalog = typeof audio.catalog === 'function' ? await audio.catalog() : audio.catalog; }
+      catch { throw new fail('unavailable', 'Audio listening is temporarily unavailable.'); }
       if (videoId === undefined) {
         const includeMembers = request.data?.includeMembers === true;
-        if (includeMembers) await member(request);
-        return { recordings: audio.catalog.filter(item => item.visibility === 'public' || (includeMembers && item.visibility === 'members')).map(({ videoId, title, durationSeconds }) => ({ videoId, title, durationSeconds })) };
+        return { recordings: catalog.filter(item => item.visibility === 'public' || (includeMembers && item.visibility === 'members')).map(({ videoId, title, durationSeconds }) => ({ videoId, title, durationSeconds })) };
       }
       if (typeof videoId !== 'string' || !/^[\w-]{11}$/.test(videoId)) throw new fail('invalid-argument', 'Choose a recording from the pilot library.');
-      const recording = audio.catalog.find(item => item.videoId === videoId);
+      const recording = catalog.find(item => item.videoId === videoId);
       if (!recording) throw new fail('not-found', 'This recording is not available in the audio pilot.');
       if (recording.visibility !== 'public') await member(request);
       try {

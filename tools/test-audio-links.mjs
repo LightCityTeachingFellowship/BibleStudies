@@ -111,6 +111,16 @@ assert.equal(hero.viewport.querySelector('.lc-live-badge').hidden, true, 'Changi
 grid.events.click({ target: missingCard.children[0].children[1], preventDefault() {}, stopPropagation() {} }); await settle();
 const liveController = mountedPlayers.at(-1);
 assert.equal(liveController.recording.kind, 'live'); assert.equal(liveController.liveSession, liveRows[0].session);
+liveRows = [{ ...liveRows[0], replay: true }]; events.get('lightcity-members-changed')(); await settle();
+assert.equal(liveController.disposed, undefined, 'live-to-replay must retain the playing controller');
+assert.equal(missingCard.children[0].children[1].textContent, 'Listen', 'replay keeps Listen');
+assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden, true, 'replay loses LIVE badge');
+const savedRecordedApi = api.getAudio;
+api.getAudio = async () => ({ recordings: [{ videoId: publicId }, { videoId: missingCard.dataset.videoId, title: 'Permanent audio' }] });
+events.get('lightcity-members-changed')(); await settle();
+assert.equal(liveController.disposed, undefined, 'permanent audio arriving must not stop an existing replay listener');
+api.getAudio = savedRecordedApi;
+
 liveRows = [{ ...liveRows[0], session: 'session-1792874042804' }]; events.get('lightcity-members-changed')(); await settle();
 assert.equal(liveController.disposed, true, 'a restarted session cannot retain the previous controller');
 liveRows = []; events.get('lightcity-members-changed')(); await settle();

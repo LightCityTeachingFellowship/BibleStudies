@@ -1,5 +1,5 @@
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js?v=background-audio-1';
+import { mountLive } from './live-media.js?v=live-replay-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
 
 const framePlayers = new WeakMap(), frameOwners = new WeakMap(), youtubePlayers = new Set(), controllers = new Set();
@@ -192,7 +192,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   };
   on(audio, 'error', () => {
     if (item.mode !== 'audio' || !audio.getAttribute('src')) return;
-    message.textContent = 'Audio connection interrupted. Reconnecting…';
+    message.textContent = 'Audio connection interrupted. Reconnectingâ€¦';
     if (!retryTimer && wantsPlayback && retries < 3) retryTimer = setTimeout(() => { retryTimer = null; void recover(); }, 2000);
   });
   on(window, 'online', () => void recover()); on(window, 'pageshow', () => void recover());

@@ -6,7 +6,7 @@ export function liveOrigin(value = defaultOrigin) {
   return url.origin;
 }
 export function validLive(value, now = Date.now()) {
-  return value && /^[\w-]{11}$/.test(value.videoId || '') && /^session-\d{13}$/.test(value.session || '') && typeof value.title === 'string' && value.title.length > 0 && value.title.length <= 300 && ['public', 'members'].includes(value.visibility) && value.active === true && Number.isFinite(value.offsetSeconds) && Math.abs(value.offsetSeconds) <= 57600 && Number.isSafeInteger(value.expiresAt) && value.expiresAt > now && value.expiresAt <= now + 16 * 3600000;
+  return value && /^[\w-]{11}$/.test(value.videoId || '') && /^session-\d{13}$/.test(value.session || '') && typeof value.title === 'string' && value.title.length > 0 && value.title.length <= 300 && ['public', 'members'].includes(value.visibility) && ((value.active === true && value.replay !== true) || (value.active === false && value.replay === true)) && Number.isFinite(value.offsetSeconds) && Math.abs(value.offsetSeconds) <= 57600 && Number.isSafeInteger(value.expiresAt) && value.expiresAt > now && value.expiresAt <= now + (value.replay === true ? 7 * 86400000 : 16 * 3600000);
 }
 export function createLiveAudio(config, { send = fetch, now = Date.now, cacheMs = 10000 } = {}) {
   let cached = null, cacheUntil = 0, loading = null;
@@ -25,7 +25,7 @@ export function createLiveAudio(config, { send = fetch, now = Date.now, cacheMs 
         const response = await send(origin + '/catalog', { headers: { Authorization: 'Bearer ' + secret }, redirect: 'error', signal: AbortSignal.timeout(10000) });
         if (!response.ok) { await response.body?.cancel(); throw Error('Live catalogue unavailable'); }
         const data = await response.json();
-        if (!Array.isArray(data.recordings) || data.recordings.length > 20 || data.recordings.some(item => !validLive(item, now())) || new Set(data.recordings.map(item => item.videoId)).size !== data.recordings.length) throw Error('Invalid live catalogue');
+        if (!Array.isArray(data.recordings) || data.recordings.length > 220 || data.recordings.some(item => !validLive(item, now())) || new Set(data.recordings.map(item => item.videoId)).size !== data.recordings.length) throw Error('Invalid live catalogue');
         cached = data.recordings; cacheUntil = now() + cacheMs;
         return cached;
       })();
@@ -36,7 +36,7 @@ export function createLiveAudio(config, { send = fetch, now = Date.now, cacheMs 
       const { origin, secret } = settings();
       const expires = Math.floor(Math.min(now() + 3600000, item.expiresAt) / 1000);
       const signature = createHmac('sha256', secret).update(`lightcity-live-test:v1:${item.session}:${expires}`).digest('hex');
-      return { kind: 'live', videoId: item.videoId, title: item.title, session: item.session, offsetSeconds: item.offsetSeconds, url: `${origin}/live/${item.session}/audio.m3u8?token=${expires}.${signature}`, expiresAt: expires * 1000 };
+      return { kind: 'live', replay: item.replay === true, videoId: item.videoId, title: item.title, session: item.session, offsetSeconds: item.offsetSeconds, url: `${origin}/live/${item.session}/audio.m3u8?token=${expires}.${signature}`, expiresAt: expires * 1000 };
     }
   };
 }

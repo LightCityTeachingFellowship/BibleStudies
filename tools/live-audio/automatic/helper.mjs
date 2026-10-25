@@ -70,8 +70,13 @@ export async function main() {
         catch { status('waiting', 'Audio connection is being retried. Your YouTube stream continues normally.'); }
         if (job.context.ended || job.engine.retired) {
           job.capture?.stop();
-          try { await job.engine.close(); } catch {}
-          current = null;
+          try {
+            try { await job.capture?.completed; } catch { job.failed = true; }
+            job.context.ended = true;
+            await job.engine.close({ keepReplay: !job.failed });
+            status(job.failed ? 'warning' : 'idle', job.failed ? 'Capture did not finish cleanly. Your YouTube stream is unaffected.' : 'Live audio is finished; Listen remains available as a replay.');
+            current = null;
+          } catch { status('finishing', 'Finishing replay upload; the connection is being retried.'); }
         }
       } else if (job?.failed) current = null;
       await new Promise(done => setTimeout(done, 1500));
@@ -81,7 +86,7 @@ export async function main() {
     if (current) {
       current.abort.abort(); current.capture?.stop();
       try { await current.capture?.completed; } catch {}
-      try { await current.engine?.close(); } catch {}
+      try { await current.engine?.close({ keepReplay: !current.failed }); } catch {}
     }
     status('stopped', 'Automatic audio stopped.'); saveState(); await writes;
   }

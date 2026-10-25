@@ -23,7 +23,11 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
   panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Live audio player');
   audio.controls = true; audio.preload = 'metadata'; audio.crossOrigin = 'anonymous';
   const message = node('p', 'lc-inline-status'); message.setAttribute('role', 'status');
-  panel.append(node('p', 'lc-inline-kind', '♫ LIVE AUDIO'), node('p', 'lc-inline-title', title), audio, message);
+  let replay = recording.replay === true;
+  const kind = node('p', 'lc-inline-kind', replay ? '♫ AUDIO REPLAY' : '♫ LIVE AUDIO');
+  const markReplay = value => { if (value === true) replay = true; kind.textContent = replay ? '♫ AUDIO REPLAY' : '♫ LIVE AUDIO'; panel.setAttribute('aria-label', replay ? 'Audio replay player' : 'Live audio player'); };
+  markReplay(replay);
+  panel.append(kind, node('p', 'lc-inline-title', title), audio, message);
   panel.hidden = true; viewport.classList.add('lc-media-viewport'); viewport.appendChild(panel);
   let disposed = false, requested = null, frame = null, player = null, createdFrame = false, hls = null, details = null, expiresAt = 0, blocked = false, audioFailure = null, renewalTimer = null, revision = 0, playbackToken = null, recovering = false, wantsPlayback = false, retryTimer = null, retries = 0;
   const pending = new Set(), listeners = [];
@@ -68,6 +72,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     if (disposed) return;
     const url = new URL(checkedLiveLink(result, videoId, recording.session));
     if (result.offsetSeconds !== recording.offsetSeconds) throw Error('Broadcast timing changed. Choose Listen again.');
+    markReplay(result.replay);
     playbackToken = url.searchParams.get('token'); expiresAt = result.expiresAt;
     scheduleRenewal();
   }
@@ -102,6 +107,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
       const result = await globalThis.LightCityMembers.getLiveAudio(videoId);
       if (disposed || signal?.aborted || generation !== revision) throw new DOMException('Cancelled', 'AbortError');
       const url = checkedLiveLink(result, videoId, recording.session);
+      markReplay(result.replay);
       if (result.offsetSeconds !== recording.offsetSeconds) throw Error('Broadcast timing changed. Refresh the page to continue.');
       const Hls = await hlsAPI().catch(error => { if (audio.canPlayType('application/vnd.apple.mpegurl')) return null; throw error; });
       if (disposed || signal?.aborted || generation !== revision) throw new DOMException('Cancelled', 'AbortError');
@@ -119,6 +125,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
         let continuity;
         hls.on(Hls.Events.LEVEL_UPDATED, (_event, data) => {
           details = data.details;
+          if (details.live === false) markReplay(true);
           const next = data.details.fragments?.at(-1)?.cc;
           if (continuity !== undefined && next !== undefined && next !== continuity) core.invalidate('The live stream restarted. Please choose Watch or Listen again.');
           continuity = next;
@@ -132,6 +139,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     await waitUntil(() => { if (audioFailure) throw Error(audioFailure); return audio.readyState >= 1 && availableAudioRanges(audio, details).length > 0; }, signal, 30000);
   }
   const item = { viewport, videoId, title, audio, liveSession: recording.session, liveOffset: recording.offsetSeconds,
+    updateRecording(value) { if (value?.session === recording.session && value.offsetSeconds === recording.offsetSeconds) markReplay(value.replay); },
     onAutoplayBlocked() { blocked = true; },
     get mode() { return requested === 'video' ? 'video' : core.mode; },
     async switchTo(mode) {
@@ -155,7 +163,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
       if (!current || [-1, 5].includes(current.getPlayerState())) {
         await loadAudio(signal);
         const latest = availableAudioRanges(audio, details).at(-1);
-        const liveAt = Number.isFinite(hls?.liveSyncPosition) ? hls.liveSyncPosition : Math.max(latest[0], latest[1] - 12);
+        const liveAt = replay ? availableAudioRanges(audio, details)[0][0] : Number.isFinite(hls?.liveSyncPosition) ? hls.liveSyncPosition : Math.max(latest[0], latest[1] - 12);
         return { time: Math.max(0, liveAt - recording.offsetSeconds), playing: true, rate: 1 };
       }
       return { time: current.getCurrentTime(), playing: [1, 3].includes(current.getPlayerState()), rate: current.getPlaybackRate() };

@@ -121,7 +121,18 @@ try {
   assert.ok(requests > beforeRecovery, 'Fatal live errors automatically obtain fresh playback access');
   assert.equal(recovery.item.mode, 'audio'); assert.ok(!recovery.item.audio.paused);
   assert.ok(Math.abs(recovery.item.audio.currentTime - recoveryAt) < 2, 'Reconnect retains the content position');
+  const replayAt = recovery.item.audio.currentTime, sourceCount = sources.length;
+  recovery.item.updateRecording({ session, offsetSeconds: 0, replay: true });
+  assert.ok(!recovery.item.audio.paused, 'becoming a replay does not pause current listening');
+  assert.equal(recovery.item.audio.currentTime, replayAt); assert.equal(sources.length, sourceCount);
+  assert.equal(recovery.item.audio.parentNode.getAttribute('aria-label'), 'Audio replay player');
   recovery.item.dispose();
+
+  const replayViewport = new Node();
+  const replayItem = mount({ viewport: replayViewport, videoId, title: 'Completed service', recording: { kind: 'live', session, offsetSeconds: 0, replay: true } });
+  await replayItem.switchTo('audio');
+  assert.equal(replayItem.mode, 'audio'); assert.ok(replayItem.audio.currentTime < 2, 'a new replay listener starts at the beginning, not the old live edge');
+  replayItem.dispose();
 
   console.log('PASS: production live mount, repeated progressing handoffs, direct Listen, paused switches, access-gated renewal, failure rollback, and disposal.');
 } finally { globalThis.setTimeout = nativeTimeout; Date.now = nativeDate; Object.defineProperty(performance, 'now', { configurable: true, value: nativeNow }); }

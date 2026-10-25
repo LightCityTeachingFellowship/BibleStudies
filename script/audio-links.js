@@ -88,7 +88,7 @@
     function liveBadge(viewport, id) {
       if (!viewport) return;
       const recording = available.get(id);
-      const live = recording?.kind === 'live' && recording.expiresAt > Date.now() && Date.now() - liveCheckedAt < 90000;
+      const live = recording?.kind === 'live' && recording.replay !== true && recording.expiresAt > Date.now() && Date.now() - liveCheckedAt < 90000;
       let badge = viewport.querySelector('.lc-live-badge');
       if (!badge && live) {
         badge = document.createElement('span'); badge.className = 'lc-live-badge';
@@ -100,6 +100,7 @@
     function render() {
       for (const [viewport, controller] of mounted) {
         const recording = available.get(controller.videoId);
+        controller.updateRecording?.(recording);
         const changedLive = (recording?.kind === 'live' && !controller.liveSession) || (controller.liveSession && (controller.liveSession !== recording?.session || controller.liveOffset !== recording?.offsetSeconds));
         const changedFeatured = home && viewport === hero?.querySelector('.home-video-art') && controller.videoId !== hero.dataset.videoId;
         if (viewport.isConnected === false || !recording || changedLive || changedFeatured) { controller.dispose(); mounted.delete(viewport); }
@@ -141,7 +142,15 @@
       try {
         await globalThis.LightCityMembers?.ready;
         if (current !== version) return;
-        const merge = () => { available = new Map([...recordedAvailable, ...liveAvailable]); render(); };
+        const merge = () => {
+          available = new Map(recordedAvailable);
+          for (const [id, item] of liveAvailable) {
+            const listening = [...mounted.values()].some(controller => controller.videoId === id && controller.liveSession === item.session && controller.mode === 'audio');
+            // New listeners use permanent audio when ready; an existing replay listener keeps the source and position.
+            if (item.replay !== true || !available.has(id) || listening) available.set(id, item);
+          }
+          render();
+        };
         const failed = error => {
           if (current === version && /permission-denied|unauthenticated|failed-precondition|user-disabled|user-token-expired/.test(error?.code || '')) { ++version; reset(); }
         };

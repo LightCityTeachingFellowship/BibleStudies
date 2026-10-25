@@ -27,6 +27,18 @@ const engine = new AutomaticPublisher({ context, origin: 'unused', uploadKey: 'u
 await engine.tick(); assert.equal(registrations[0].visibility, 'members'); assert.equal(registrations[0].offsetSeconds, -10);
 declarations = [{ id, visibility: 'public' }]; await engine.tick(); assert.equal(registrations.at(-1).visibility, 'public');
 ended = true; await engine.tick(); assert.equal(registrations.at(-1).active, false); assert.equal(engine.retired, true);
+// When YouTube ends before OBS capture, retain the entry until the last audio is uploaded.
+let captureEnded = false, finalWrites = [], probes = 0;
+const finishingContext = { ...context, ended: false };
+const finishing = new AutomaticPublisher({ context: finishingContext, origin: 'unused', uploadKey: 'unused', now: () => now,
+ library: async () => [{ id, visibility: 'public' }], lookup: async () => [{ id, title: 'Live', live: ++probes === 1 }],
+ publish: async () => ({ ended: captureEnded }), register: async ({ entry }) => finalWrites.push(entry) });
+await finishing.tick(); now += 31000; await finishing.tick();
+assert.equal(finishing.retired, true); assert.ok(finishing.entry, 'do not discard entry before capture finalizes');
+await assert.rejects(finishing.close({ keepReplay: true }), /finalized/);
+assert.equal(finalWrites.length, 1, 'never close before final playlist upload succeeds');
+captureEnded = true; await finishing.close({ keepReplay: true });
+assert.equal(finalWrites.at(-1).active, false); assert.equal(finishing.entry, null);
 // A list edit during upload must be rechecked before any registration.
 let reads = 0, raced = [];
 const race = new AutomaticPublisher({ context: { ...context, ended: false }, origin: 'unused', uploadKey: 'unused',

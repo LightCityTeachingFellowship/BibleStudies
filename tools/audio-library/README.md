@@ -134,3 +134,113 @@ Cleanup checks:
 ```powershell
 node tools/audio-library/test-cleanup.mjs
 ```
+
+## YouTube-ID download trial
+
+This is a bounded proof of the proposed ID-only workflow for final uploaded videos. It does not yet enable automatic publishing, change OBS, replace live audio, edit the catalogue, or deploy anything. It reads the normal website ID lists, preserves member/public visibility, skips existing audio catalogue entries, and accepts only the two LightCity channels already used in the pilot. Live/upcoming/processing broadcasts are deferred; final separately uploaded videos use their own IDs.
+
+One-time local downloader setup (Python and Node 22+ are required):
+
+```powershell
+node tools/audio-library/setup-downloader.mjs
+```
+
+This downloads the official yt-dlp zip executable and verifies its published SHA-256. Everything stays under the already ignored `work/downloader` folder. It does not install global packages, read browser cookies, or sign into YouTube. Rerun the setup explicitly to update the downloader; each trial checks the installed file against the saved checksum. YouTube changes can still require maintenance.
+
+Check up to three currently unregistered website recordings, without downloading media:
+
+```powershell
+node tools/audio-library/youtube-trial.mjs --limit 3
+```
+
+Download and validate one selected recording:
+
+```powershell
+node tools/audio-library/youtube-trial.mjs --id VIDEO_ID --limit 1 --download
+```
+
+Or use `--limit 2 --download` to test the first two unregistered IDs in website order. This is not necessarily publication-date order; it follows the current site lists. The trial prefers the existing AAC audio-only stream, preserving it when available; other audio formats are converted to AAC at 128 kbps. It checks one audio stream, no video, channel/ID, and duration within one second of YouTube metadata. These checks do not prove word-for-word synchronization; listen and compare positions before relying on the workflow. Later YouTube-side trims need separate change detection.
+
+Completed files and small verification receipts are under `tools/audio-library/work/youtube-trial/VIDEO_ID/`. They can be opened locally. A repeat run reuses unchanged verified audio. The latest `report.json` contains only selected metadata and safe status messages; it never stores signed media URLs or browser credentials. Existing different output files are kept for review. Individual downloads are limited to 500 MB and 20 minutes in this trial. Failures are reported with a suggested retry time; no scheduler or automatic retry loop is installed yet.
+
+The trial intentionally does not register or delete files automatically. The next integration step is a durable queue plus upload/registration service, audience checks against the current published lists, retries, and cleanup after a verified remote copy. That integration must be tested before the routine can truly be just adding an ID; this trial alone does not provide that unattended workflow. Until then the existing manual importer and live audio continue working.
+
+```powershell
+node tools/audio-library/test-youtube-trial.mjs
+```
+
+## Automatic recorded audio after the successful trial
+
+The local automatic worker watches changes to the same public/member ID files you already edit. It runs independently of OBS. When a new ID appears, it downloads audio from that final YouTube upload, verifies it, uploads to private R2, registers the recording through the existing gateway, and removes only its generated local audio. The website discovers it through the existing audio refresh; there is no per-recording Firebase deployment. Live audio still uses the separate existing OBS helper.
+
+The first setup snapshots the current library so it does not unexpectedly download the thousand-video backlog. By default it seeds only `CwSrbPtbUOw`, the Day 27 audio already downloaded and checked. Existing recordings remain for Takeout. New IDs added after initialization are queued automatically. IDs removed during processing are not registered. If an ID occurs in both access lists, members wins.
+
+### One-time deployment
+
+Deploy the updated gateway from the repository root:
+
+```powershell
+& .\tools\live-audio\deploy-test.ps1
+```
+
+Then deploy the updated recorded-audio backend (the existing playback secret is additionally bound to this function):
+
+```powershell
+Set-Location tools/members
+$env:FUNCTIONS_DISCOVERY_TIMEOUT = "60"
+firebase deploy --only functions:lightcity-members:getChurchAudio --project perceptive-zoo-424115-j6
+Set-Location ../..
+```
+
+No website frontend change is required for this integration. Commit the source changes for version control. This deployment supports both existing bundled Takeout/pilot catalogue entries and newly registered recordings. The server always applies the current **published** video-list policy from Firestore before issuing playback links; the uploader cannot make a member recording public or enable an ID absent from the published library. The existing site publishing workflow must still sync those lists as it does for live audio.
+
+### One-time computer setup
+
+Use a separate **Object Read & Write** token scoped only to `lightcity-audio`. Existing playback credentials remain read-only and are not replaced. Keep the Access Key ID and matching Secret Access Key together. The setup prompts privately and saves the pair encrypted for this Windows account in ignored `work/automatic-recorded/config.private.json`.
+
+For a controlled first upload, without installing a startup task:
+
+```powershell
+& .\tools\audio-library\setup-automatic.ps1 -ManualStart
+& .\tools\audio-library\run-automatic.ps1 -Once
+```
+
+The first command verifies the updated gateway and existing bucket read access; write permission is exercised by the first actual upload. The second runs one queued job. Verify Day 27 Listen on the site with the appropriate account. Its source YouTube ID remains unchanged. Remote registration must succeed before the generated local audio is removed.
+
+After the first upload/playback succeeds, enable startup using the saved encrypted credentials to install and start the `LightCity Recorded Audio` Windows sign-in task:
+
+```powershell
+& .\tools\audio-library\setup-automatic.ps1 -EnableStartup
+```
+
+The task runs hidden under the current signed-in user, with no administrator privileges requested. It starts on Windows sign-in; closing OBS or the browser does not stop it. This computer must be on, signed in, and online. Sleep/offline time delays imports; queued jobs resume afterward. It does not run in the cloud. Existing queues and completed jobs are preserved when setup is rerun.
+
+Normal routine after setup: upload the finished edited video, add/replace its ID in the usual website file, then commit/sync as usual. The background helper handles recorded audio. Merely seeing an ID cannot prove that someone will never edit that same video inside YouTube later; later YouTube-side trims are not detected automatically yet and need an explicit replacement workflow. Edits made **before** uploading are included because the audio comes from the uploaded version.
+
+Status and maintenance:
+
+```powershell
+node tools/audio-library/automatic.mjs status
+node tools/audio-library/automatic.mjs retry --id VIDEO_ID
+```
+
+Status records and receipts remain small. Processing replays wait ten minutes between checks. Other failures retry with increasing delays, then pause for review after six attempts. A retained downloaded file blocks further new downloads until it is published or reviewed, preventing upload outages from accumulating large files. Downloads also pause below 2 GB free space. The helper does not access browser cookies or auto-update its downloader. If YouTube changes require an update, rerun `setup-downloader.mjs`; this does not change the encrypted upload credentials.
+
+To disable future automatic starts, disable `LightCity Recorded Audio` in Windows Task Scheduler. Its queue and files are retained. Never commit `work/`, encrypted credential files, media, or gateway secrets.
+
+Integration checks:
+
+```powershell
+node tools/audio-library/test-automatic-recorded.mjs
+node tools/audio-library/test-recorded-site.mjs
+```
+
+Tests simulate remote uploads/registration. The earlier download trial used a real uploaded YouTube recording; the first real R2 upload and new backend deployment still need the one-time setup above.
+
+If diagnostics show the Access Key ID matches the active token but its Secret Access Key does not, the upload-only setup can derive the matching secret from the Token value on that same creation page:
+
+```powershell
+& .\tools\audio-library\setup-automatic.ps1 -ManualStart -UseTokenValue
+```
+
+This mode asks for Account ID, Access Key ID, and Token value (not the mismatched secret). It derives the R2 secret locally using Cloudflare's SHA-256 token convention, verifies the token's active identity through Cloudflare, then verifies actual bucket access before saving the derived pair encrypted for this Windows account. The Token value is used transiently and is not saved. Firebase playback secrets are not modified. Do not use the older audio-pilot repair script for this upload-only setup, because that script updates Firebase playback credentials.
