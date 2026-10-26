@@ -280,3 +280,5 @@ Run `start-catchup.ps1` once after updating to reload the existing scheduled hel
 The computer must remain on, signed in and connected. After downtime it resumes
 without catching up missed downloads in a burst. No extra scheduled task is needed.
 Use `node tools/audio-library/automatic.mjs status` to see quota and queue totals.
+
+Reading continuation regression checks: `node tools/audio-library/test-study-ui.mjs` covers immediate scrolling, nested scroll capture, collapsed sections, saving on quick navigation, and title fallback from the authorized audio catalogue.
