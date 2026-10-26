@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFile} from 'node:fs/promises';
+import {createVideoStore} from '../script/video-personal-store.mjs';
+const a='abcdefghijk',b='ABCDEFGHIJK',privateId='12345678901';let calls=0;
+const nodes=new Map([['lc-public-video-data',{textContent:JSON.stringify({[b]:'Uploaded recording'})}],['lc-public-video-replacements',{textContent:'{}'}],...['watch-title','watch-status','watch-player','watch-help'].map(id=>[id,{textContent:'',hidden:false}])]);
+globalThis.document={getElementById:id=>nodes.get(id),createElement:()=>{throw Error('Old iframe must not open');}};
+globalThis.LightCityMembers={ready:Promise.resolve(),library:null,user:null,getVideoReplacements:async()=>{calls++;return {replacements:{[a]:b,PRIVATEOLD1:privateId}};}};
+const {resolveWatchReplacement,replacementMap,loadRemoteReplacements}=await import('../script/video-replacements.mjs?v=automatic-1');
+assert.equal(await resolveWatchReplacement(a),b,'a list-only replacement is discovered without a repository mapping');assert.equal(replacementMap().has('PRIVATEOLD1'),false,'remote entries cannot bypass the public video allowlist');await loadRemoteReplacements();assert.equal(calls,1,'nearby callers share the catalogue');
+const store=createVideoStore();store.save(a,'Livestream',true);store.replaceSaved(replacementMap(),()=> 'Upload');assert.equal(store.saved(b),true);assert.equal(store.saved(a),false);
+let destination;globalThis.location={href:'https://example.com/Watch/?v='+a+'&t=700',search:'?v='+a+'&t=700',pathname:'/Watch/',replace:url=>destination=url};globalThis.sessionStorage={getItem:()=>null};
+await vm.runInThisContext(await readFile('script/video-watch.js','utf8'),{filename:new URL('../script/video-watch.js',import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1'),importModuleDynamically:vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER});assert.equal(new URL(destination).searchParams.get('v'),b);assert.equal(new URL(destination).searchParams.has('t'),false);
+LightCityMembers.library=[{id:privateId,replaces:['PRIVATEOLD1']}];assert.equal(replacementMap().get('PRIVATEOLD1'),privateId);LightCityMembers.library=null;assert.equal(replacementMap().has('PRIVATEOLD1'),false);
+console.log('PASS: automatic remote redirect discovery, same-device bookmark migration, actual old notification/Watch startup, caching and member-access cleanup.');

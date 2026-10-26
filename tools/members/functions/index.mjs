@@ -43,6 +43,7 @@ export const getChurchAudio = onCall({ ...options, secrets: [r2Access, r2Secret,
 export const getChurchLiveAudio = onCall({ ...options, secrets: [livePlaybackKey] }, handlers.getChurchLiveAudio);
 
 const activity = createVideoActivity({ auth: getAuth(), db: getFirestore(), fail: HttpsError });
+export const getVideoReplacements = onCall(options, activity.getVideoReplacements);
 export const getMyVideoActivity = onCall(options, activity.getMyVideoActivity);
 export const updateMyVideoActivity = onCall(options, activity.updateMyVideoActivity);
 

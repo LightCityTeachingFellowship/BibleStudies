@@ -28,6 +28,14 @@ export function createVideoActivity({ auth, db, fail, now = Date.now }) {
       ...(value.seconds !== undefined ? { seconds: value.seconds, duration: value.duration, mode: value.mode, completed: value.completed === true, rate: value.rate || 1 } : {}) };
   };
   return {
+    // Public redirects contain no member source IDs or member destinations.
+    async getVideoReplacements() {
+      const snapshot=await db.doc('churchVideoLibrary/current').get(),videos=snapshot.exists?snapshot.data()?.videos:null;
+      if(!Array.isArray(videos))throw new fail('unavailable','Video replacements are being prepared.');
+      const active=new Set(videos.map(v=>v.id)),replacements={};
+      for(const video of videos)if(validId(video.id)&&video.visibility==='public')for(const from of Array.isArray(video.replaces)?video.replaces:[])if(validId(from)&&!active.has(from)&&video.replacementVisibility?.[from]==='public')replacements[from]=video.id;
+      return {replacements};
+    },
     async getMyVideoActivity(request) {
       const uid = await identity(request), data = request.data || {}, access = await allowed(uid);
       if (data.videoId !== undefined) {

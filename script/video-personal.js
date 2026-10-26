@@ -1,4 +1,4 @@
-import {replacementMap} from './video-replacements.mjs';
+import {replacementMap,loadRemoteReplacements} from './video-replacements.mjs?v=automatic-1';
 import {isLive,refreshLiveStatus} from './live-status.mjs';
 import { createVideoStore, resumeSeconds } from './video-personal-store.mjs?v=replacements-1';
 const browser = typeof window !== 'undefined' && typeof document !== 'undefined';
@@ -38,7 +38,7 @@ async function refresh() {
   const user = globalThis.LightCityMembers?.user;
   personal.setIdentity(user && !user.isAnonymous ? user.uid : null);
   const owner = personal.scope;
-  personal.replaceSaved(replacementMap(),id=>titleFor(id));
+  await loadRemoteReplacements();if(owner!==personal.scope||ticket!==revision)return;personal.replaceSaved(replacementMap(),id=>titleFor(id));
   if (!personal.signedIn || !globalThis.LightCityMembers?.getVideoActivity) { syncMessage = 'Saved on this device. Sign in to sync across devices.'; emit(); return; }
   await flush();
   try {
@@ -176,7 +176,7 @@ function boot() {
   window.addEventListener('lightcity-video-activity',schedule);window.addEventListener('lightcity-live-status',schedule);
   window.addEventListener('lightcity-members-changed',()=>{if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}});
   window.addEventListener('online',()=>{if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')void flush();else void refreshLiveStatus();});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')void flush();else {void refreshLiveStatus();const scope=personal.scope;void loadRemoteReplacements().then(()=>{if(scope===personal.scope)personal.replaceSaved(replacementMap(),id=>titleFor(id));});}});
   window.addEventListener('pagehide',()=>void flush());
   for(const button of document.querySelectorAll('[data-personal-tab]')){button.tabIndex=button.dataset.personalTab===pageView?0:-1;button.onclick=()=>{pageView=button.dataset.personalTab;for(const other of document.querySelectorAll('[data-personal-tab]')){other.setAttribute('aria-selected',String(other===button));other.tabIndex=other===button?0:-1;}render();};button.onkeydown=event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const tabs=[...document.querySelectorAll('[data-personal-tab]')],next=tabs[(tabs.indexOf(button)+(event.key==='ArrowRight'?1:tabs.length-1))%tabs.length];next.onclick();next.focus();};}
   const signIn=document.getElementById('personal-video-signin');if(signIn)signIn.onclick=async()=>{signIn.disabled=true;try{await globalThis.LightCityMembers.signInForVideos();}catch{syncMessage='Sign-in could not finish. Please try again.';emit();}finally{signIn.disabled=false;}};

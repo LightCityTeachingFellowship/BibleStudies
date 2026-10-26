@@ -54,3 +54,7 @@ await assert.rejects(api.updateMyVideoActivity(call('replacement-user',{action:'
 declarations=[{id:b,title:'Member upload',visibility:'members',replaces:[a]}];active=false;assert.equal((await api.getMyVideoActivity(call('replacement-user',{view:'saved'}))).rows.length,0);await assert.rejects(api.getMyVideoActivity(call('replacement-user',{videoId:a})),e=>e.code==='not-found');
 await api.updateMyVideoActivity(call('replacement-user',{action:'unsave',videoId:a}));active=true;assert.equal((await api.getMyVideoActivity(call('replacement-user',{videoId:b}))).saved,false,'users can clear their own replacement bookmark after access revocation');
 console.log('PASS: replacement bookmarks resolve across devices, deduplicate, unsave permanently, preserve member access and leave edited timelines independent.');
+
+declarations=[{id:b,title:'Public replacement',visibility:'public',replaces:[a,'PUBLICOLD01'],replacementVisibility:{[a]:'members',PUBLICOLD01:'public'}},{id:'MEMBERNEW01',title:'Private replacement',visibility:'members',replaces:['PRIVATEOLD1'],replacementVisibility:{PRIVATEOLD1:'public'}}];
+const publicAliases=await api.getVideoReplacements();assert.deepEqual(publicAliases.replacements,{PUBLICOLD01:b},'public redirect endpoint excludes member source IDs and member destinations');
+console.log('PASS: automatic public redirect discovery reveals only public-to-public replacements and requires no member sign-in.');

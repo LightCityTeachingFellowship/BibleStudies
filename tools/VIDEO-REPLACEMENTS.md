@@ -1,27 +1,36 @@
-# Replace a livestream with its uploaded recording
+# Automatic video replacements
 
-Use the helper **before** manually replacing/removing the original ID:
+Your normal workflow is now simply to edit the existing video ID lists and commit/sync:
+
+- Replace one ID with one new ID in the same public or members list: a silent replacement.
+- Add IDs without removing any: new videos, with normal notifications.
+- Remove IDs without adding any: removals.
+- Reorder IDs or move an existing ID between audiences: not a replacement.
+
+The existing publish workflow compares the successfully published library with the edited lists. It records replacement history in the protected library automatically; there is no replacement command or extra file to maintain for normal single-ID replacements. Old Watch/notification links and saved bookmarks follow the uploaded version after publishing finishes. Public redirect discovery excludes member source IDs and member destinations.
+
+Make one replacement per list at a time. A simultaneous unrelated deletion and addition in the same list will be treated as a replacement under this rule. Mixed batches containing several removals/additions are paused rather than guessed; split those edits or use the optional explicit helper below. Older publish jobs cannot overwrite newer replacement history.
+
+Edited uploads keep their own playback timeline and audio. Old live timestamps are not copied; the automatic audio helper processes the new ID normally.
+
+## One-time activation
+
+Commit and sync the implementation, then deploy these endpoints once before replacing an ID:
+
+```powershell
+Set-Location "C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub\tools\members"
+$env:FUNCTIONS_DISCOVERY_TIMEOUT = "60"
+firebase deploy --only "functions:lightcity-members:getVideoReplacements,functions:lightcity-members:getMyVideoActivity,functions:lightcity-members:updateMyVideoActivity" --project perceptive-zoo-424115-j6
+```
+
+The next successful publish initializes the protected snapshot. No Firestore rule changes or bulk user-account migration are needed. The existing GitHub publish workflow must be allowed to finish after each replacement.
+
+## Optional explicit fallback for mixed batches
+
+Before manually removing the original ID, run from the project root:
 
 ```powershell
 & .\tools\replace-video.ps1
 ```
 
-Paste the livestream's ID/link, then the uploaded recording's ID/link. It updates the website ID lists and `_data/video_replacements.json` together. Commit and sync all three changed files in one commit. No notification is sent for the replacement. Unrelated newly added videos still notify normally.
-
-Old LightCity Watch links, including links in already-delivered livestream notifications, open the uploaded recording. The old notification's displayed text is not rewritten. The replacement stays saved for users who saved the livestream, including device saves and account saves on other devices. Removing that save removes its old aliases too.
-
-Edited uploads start with their own playback history and audio. Livestream timestamps are not copied because edits can change the timeline. The automatic audio helper processes the new ID as usual.
-
-The same helper can replace the uploaded version again; every older link keeps pointing directly to the latest version. Do not remove historical replacement records while you still want old links and bookmarks to work. The helper keeps the original audience and refuses to merge IDs already listed for different audiences. Replacement metadata for member recordings is not embedded in public pages.
-
-## One-time activation
-
-Before registering the first replacement, deploy the updated saved-video endpoints:
-
-```powershell
-Set-Location "C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub\tools\members"
-$env:FUNCTIONS_DISCOVERY_TIMEOUT = "60"
-firebase deploy --only "functions:lightcity-members:getMyVideoActivity,functions:lightcity-members:updateMyVideoActivity" --project perceptive-zoo-424115-j6
-```
-
-Commit and sync the implementation first. The existing publish workflow syncs replacement metadata with the protected video library and suppresses replacement notifications automatically. No Firestore rules changes, bulk rewrite of user accounts, or notification resend are required. To return to the project root afterwards, run `Set-Location ../..`.
+Enter the old and uploaded video links. The helper changes the ID lists and `_data/video_replacements.json`; commit/sync those changes together. Use this only when a mixed batch would be ambiguous. Historical explicit records can stay in place; later automatic replacements preserve the latest destination.

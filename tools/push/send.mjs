@@ -1,4 +1,4 @@
-import {splitReplacementNotifications} from '../video-replacements.mjs';
+import {splitReplacementNotifications,publishedNotificationLibrary} from '../video-replacements.mjs';
 import {initializeApp,cert} from 'firebase-admin/app';
 import {getFirestore,FieldValue} from 'firebase-admin/firestore';
 import {getMessaging} from 'firebase-admin/messaging';
@@ -111,7 +111,10 @@ if(!response.ok) throw Error(`Feed returned ${response.status}`);
 const feed=await response.json();
 if(!Array.isArray(feed.posts)||!Array.isArray(feed.videos)) throw Error('Invalid publication feed');
 const visibilityEnabled=feed.videoVisibilityEnabled===true;
-const videoEntries=(await loadVideoLibrary(fileURLToPath(new URL('../..',import.meta.url)))).map(video=>({id:'video:'+video.id,title:video.title||'New LightCity video',url:new URL('Watch/?v='+video.id,origin).href,kind:'video',visibility:video.visibility==='public'?'public':'members',replaces:video.replaces||[]}));
+const localVideos=await loadVideoLibrary(fileURLToPath(new URL('../..',import.meta.url)));
+const publishedSnapshot=await db.doc('churchVideoLibrary/current').get();
+const notificationVideos=dryRun||baselineOnly?localVideos:publishedNotificationLibrary(localVideos,publishedSnapshot.exists?publishedSnapshot.data()?.videos:null);
+const videoEntries=notificationVideos.map(video=>({id:'video:'+video.id,title:video.title||'New LightCity video',url:new URL('Watch/?v='+video.id,origin).href,kind:'video',visibility:video.visibility==='public'?'public':'members',replaces:video.replaces||[]}));
 const entries=[...new Map([...feed.posts,...videoEntries].map(item=>[item.id,item])).values()].map(item=>{
  if(!item.id||!item.title||!item.url) throw Error('Invalid publication');
  const url=new URL(item.url,origin);

@@ -32,20 +32,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: master
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'master' }}
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm install --omit=dev
         working-directory: tools/push
-      - name: Update the protected member video library
-        if: ${{ vars.CHURCH_MEMBERS_ENABLED == 'true' && (github.event_name == 'workflow_run' || inputs.operation == 'sync-members') }}
+      - id: sync_library
+        name: Detect replacements and update the protected video library
+        if: ${{ (vars.CHURCH_MEMBERS_ENABLED == 'true' || vars.WEB_PUSH_ENABLED == 'true') && (github.event_name == 'workflow_run' || inputs.operation == 'sync-members') }}
         run: node sync-members.mjs
         working-directory: tools/push
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       - run: npm run send
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.operation != 'sync-members') || (github.event_name == 'workflow_run' && vars.WEB_PUSH_ENABLED == 'true') }}
+        if: ${{ steps.sync_library.outputs.skipped != 'true' && ((github.event_name == 'workflow_dispatch' && inputs.operation != 'sync-members') || (github.event_name == 'workflow_run' && vars.WEB_PUSH_ENABLED == 'true')) }}
         working-directory: tools/push
         env:
           SITE_URL: ${{ vars.SITE_URL }}
