@@ -1,5 +1,6 @@
+import {replacementMap} from './video-replacements.mjs';
 import {isLive,refreshLiveStatus} from './live-status.mjs';
-import { createVideoStore, resumeSeconds } from './video-personal-store.mjs';
+import { createVideoStore, resumeSeconds } from './video-personal-store.mjs?v=replacements-1';
 const browser = typeof window !== 'undefined' && typeof document !== 'undefined';
 const emit = () => { if (browser) window.dispatchEvent?.(new Event('lightcity-video-activity')); };
 let storage; try { storage = globalThis.localStorage; } catch {}
@@ -37,6 +38,7 @@ async function refresh() {
   const user = globalThis.LightCityMembers?.user;
   personal.setIdentity(user && !user.isAnonymous ? user.uid : null);
   const owner = personal.scope;
+  personal.replaceSaved(replacementMap(),id=>titleFor(id));
   if (!personal.signedIn || !globalThis.LightCityMembers?.getVideoActivity) { syncMessage = 'Saved on this device. Sign in to sync across devices.'; emit(); return; }
   await flush();
   try {

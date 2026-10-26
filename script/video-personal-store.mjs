@@ -39,6 +39,18 @@ export function createVideoStore({ storage, now = Date.now, changed = () => {} }
     },
     removeHistory(id) { delete state.history[id]; write('removeHistory', { videoId: id, updatedAt: now() }); },
     clearHistory() { state.history = {}; for (const k of Object.keys(state.outbox)) if (k.startsWith('history:')) delete state.outbox[k]; if (scope !== 'device') state.outbox['history:clear'] = { action: 'clearHistory', updatedAt: now(), sequence: ++sequence }; persist(); },
+    replaceSaved(replacements,titleFor=id=>id) {
+      let dirty=false;
+      for(const [from,to] of replacements){if(!validId(from)||!validId(to)||from===to)continue;
+        const old=state.saved[from],current=state.saved[to];
+        if(old){if(!current||old.updatedAt>current.updatedAt)state.saved[to]={...old,videoId:to,title:String(titleFor(to)||old.title||to).slice(0,300)};delete state.saved[from];dirty=true;}
+        const key='saved:'+from,op=state.outbox[key],next=state.outbox['saved:'+to];
+        if(op){if(!next||op.updatedAt>next.updatedAt||(op.updatedAt===next.updatedAt&&op.sequence>next.sequence))state.outbox['saved:'+to]={...op,videoId:to,title:String(titleFor(to)||op.title||to).slice(0,300),sequence:++sequence};delete state.outbox[key];const winner=state.outbox['saved:'+to];if(winner?.action==='unsave')delete state.saved[to];else if(winner?.action==='save'&&!state.saved[to])state.saved[to]={videoId:to,title:winner.title,updatedAt:winner.updatedAt};dirty=true;}
+        // Edited uploads have a different timeline. Never send old live progress into them.
+        if(state.outbox['history:'+from]?.action==='progress'){delete state.outbox['history:'+from];dirty=true;}
+      }
+      if(dirty)persist();return dirty;
+    },
     pending() { return Object.entries(state.outbox); },
     acknowledge(k, op) { if (state.outbox[k] === op) { delete state.outbox[k]; persist(); } },
     hydrate(view, rows) {

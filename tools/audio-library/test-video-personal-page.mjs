@@ -11,7 +11,7 @@ assert.ok(output.includes('id="my-video-list"'));assert.ok(output.includes('id="
 const publicData=JSON.parse(output.match(/id="lc-public-video-data">([\s\S]*?)<\/script>/)[1]);
 const members=new Set((await readFile('_includes/video-ids-members.txt','utf8')).trim().split(/\s+/));
 assert.ok(Object.keys(publicData).length>0);assert.ok(Object.keys(publicData).every(id=>!members.has(id)));
-assert.ok(output.includes('/BibleStudies/script/video-personal.js?v=live-navigation-1'));assert.ok(!output.includes('/BibleStudies/members/'),'public library has no members entrance');
+assert.ok(output.includes('/BibleStudies/script/video-personal.js?v=replacements-1'));assert.ok(!output.includes('/BibleStudies/members/'),'public library has no members entrance');
 const original=await readFile('tools/audio-library/work/privacy-current.rules','utf8');const patched=await readFile('tools/members/firestore-personal.rules','utf8');
 assert.equal(patched.replace(/'churchVideoLibrary',\r?\n\s*'churchVideoActivity'/,"'churchVideoLibrary'").replace(/\r\n/g,'\n'),original.replace(/\r\n/g,'\n'),'privacy rules change only excludes the new collection from the broad grant');
 console.log('PASS: full Saved & History page renders, base paths work, only public metadata is embedded, and privacy rules preserve all existing app rules.');

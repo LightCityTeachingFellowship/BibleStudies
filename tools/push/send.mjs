@@ -1,3 +1,4 @@
+import {splitReplacementNotifications} from '../video-replacements.mjs';
 import {initializeApp,cert} from 'firebase-admin/app';
 import {getFirestore,FieldValue} from 'firebase-admin/firestore';
 import {getMessaging} from 'firebase-admin/messaging';
@@ -110,7 +111,7 @@ if(!response.ok) throw Error(`Feed returned ${response.status}`);
 const feed=await response.json();
 if(!Array.isArray(feed.posts)||!Array.isArray(feed.videos)) throw Error('Invalid publication feed');
 const visibilityEnabled=feed.videoVisibilityEnabled===true;
-const videoEntries=visibilityEnabled ? (await loadVideoLibrary(fileURLToPath(new URL('../..',import.meta.url)))).map(video=>({id:'video:'+video.id,title:video.title||'New LightCity video',url:new URL('Watch/?v='+video.id,origin).href,kind:'video',visibility:video.visibility==='public'?'public':'members'})) : feed.videos;
+const videoEntries=(await loadVideoLibrary(fileURLToPath(new URL('../..',import.meta.url)))).map(video=>({id:'video:'+video.id,title:video.title||'New LightCity video',url:new URL('Watch/?v='+video.id,origin).href,kind:'video',visibility:video.visibility==='public'?'public':'members',replaces:video.replaces||[]}));
 const entries=[...new Map([...feed.posts,...videoEntries].map(item=>[item.id,item])).values()].map(item=>{
  if(!item.id||!item.title||!item.url) throw Error('Invalid publication');
  const url=new URL(item.url,origin);
@@ -129,8 +130,12 @@ if(initial){
  console.log('Baseline saved. No historical notifications sent.');process.exit(0);
 }
 if(baselineOnly){console.log('Baseline already exists. No notifications sent and no history changed.');process.exit(0);}
-const pending=[];
-for(const item of entries) if(!(await db.doc('webPushSent/'+item.key).get()).exists) pending.push(item);
+const candidates=[];
+for(const item of entries) if(!(await db.doc('webPushSent/'+item.key).get()).exists) candidates.push(item);
+const {silent,notify:pending}=splitReplacementNotifications(candidates);
+// A replacement updates the site and old links without sending any push message.
+for(let i=0;i<silent.length;i+=400){const batch=db.batch();for(const item of silent.slice(i,i+400))batch.set(db.doc('webPushSent/'+item.key),{silent:true,replacementOf:item.replaces,recordedAt:FieldValue.serverTimestamp()});await batch.commit();}
+if(silent.length)console.log(`Registered ${silent.length} silent video replacements. No replacement notifications sent.`);
 if(!pending.length){console.log('No new publications.');process.exit(0);}
 // Each video gets its own real title and thumbnail. Text resources retain a digest.
 // Resolve every video before sending, so a metadata failure cannot silently

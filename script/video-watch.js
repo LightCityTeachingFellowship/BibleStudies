@@ -1,4 +1,4 @@
-(() => {
+(async () => {
  const videoId=new URLSearchParams(location.search).get('v') || '';
  const title=document.getElementById('watch-title');
  const status=document.getElementById('watch-status');
@@ -15,6 +15,9 @@
   status.textContent='This video link is incomplete or invalid. Choose a video from All videos.';
   return;
  }
+ const {resolveWatchReplacement}=await import('./video-replacements.mjs');
+ const replacement=await resolveWatchReplacement(videoId);
+ if(replacement!==videoId){const url=new URL(location.href);url.searchParams.set('v',replacement);for(const key of ['t','start','live'])url.searchParams.delete(key);status.textContent='Opening the updated recording…';location.replace(url.href);return;}
  const player=document.createElement('iframe');
  player.title='LightCity video player';
  player.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';

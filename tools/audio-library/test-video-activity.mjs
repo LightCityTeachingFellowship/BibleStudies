@@ -41,3 +41,16 @@ verified=false;await assert.rejects(api.getMyVideoActivity(call('alice',{view:'s
 console.log('PASS: private per-user API, guest denial, current member access and revocation, input validation, fractional resume timestamps, clear-history isolation, removed IDs, and paginated results.');
 
 disabled=false;await assert.rejects(api.updateMyVideoActivity(call('bob',{action:'save',videoId:a,accountUid:'alice'})),e=>e.code==='permission-denied','an in-flight account switch must not write old-account activity under the new identity');
+
+active=true;disabled=false;verified=true;declarations=[{id:b,title:'Uploaded version',visibility:'public',replaces:[a]}];
+data.set('churchVideoActivity/replacement-user/saved/'+a,{title:'Original livestream',updatedAt:100});data.set('churchVideoActivity/replacement-user/history/'+a,{title:'Original livestream',seconds:800,duration:1000,mode:'audio',updatedAt:100});
+let point=await api.getMyVideoActivity(call('replacement-user',{videoId:b}));assert.equal(point.saved,true);assert.equal(point.history,null,'edited uploads never inherit old live timestamps');
+let savedPage=await api.getMyVideoActivity(call('replacement-user',{view:'saved'}));assert.deepEqual(savedPage.rows.map(r=>r.videoId),[b]);assert.equal(savedPage.rows[0].title,'Uploaded version');
+assert.equal((await api.getMyVideoActivity(call('replacement-user',{view:'history'}))).rows.length,0);
+await api.updateMyVideoActivity(call('replacement-user',{action:'save',videoId:b}));assert.equal((await api.getMyVideoActivity(call('replacement-user',{view:'saved'}))).rows.length,1,'old and new saves appear once');
+await api.updateMyVideoActivity(call('replacement-user',{action:'unsave',videoId:b}));assert.equal((await api.getMyVideoActivity(call('replacement-user',{videoId:b}))).saved,false,'unsaving clears old aliases too');
+await api.updateMyVideoActivity(call('replacement-user',{action:'save',videoId:a}));assert.ok(data.has('churchVideoActivity/replacement-user/saved/'+b),'a queued old save writes to the current version');
+await assert.rejects(api.updateMyVideoActivity(call('replacement-user',{action:'progress',videoId:a,seconds:1,duration:10,mode:'video',rate:1})),e=>e.code==='permission-denied','old-player progress cannot be written to the edited upload');
+declarations=[{id:b,title:'Member upload',visibility:'members',replaces:[a]}];active=false;assert.equal((await api.getMyVideoActivity(call('replacement-user',{view:'saved'}))).rows.length,0);await assert.rejects(api.getMyVideoActivity(call('replacement-user',{videoId:a})),e=>e.code==='not-found');
+await api.updateMyVideoActivity(call('replacement-user',{action:'unsave',videoId:a}));active=true;assert.equal((await api.getMyVideoActivity(call('replacement-user',{videoId:b}))).saved,false,'users can clear their own replacement bookmark after access revocation');
+console.log('PASS: replacement bookmarks resolve across devices, deduplicate, unsave permanently, preserve member access and leave edited timelines independent.');

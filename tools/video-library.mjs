@@ -1,3 +1,4 @@
+import {loadReplacements,attachReplacements} from './video-replacements.mjs';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 import { join } from 'node:path';
@@ -60,5 +61,5 @@ export async function loadVideoLibrary(root = '.') {
     readFile(join(root, '_includes/video-ids-public.txt'), 'utf8'),
     readFile(join(root, '_includes/video-ids-members.txt'), 'utf8')
   ]);
-  return libraryFromLists(cached, parseVideoIds(publicText), parseVideoIds(memberText));
+  return attachReplacements(libraryFromLists(cached, parseVideoIds(publicText), parseVideoIds(memberText)),await loadReplacements(root));
 }

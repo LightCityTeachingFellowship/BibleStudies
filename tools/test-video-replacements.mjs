@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {validateReplacements,attachReplacements,planReplacement,splitReplacementNotifications} from './video-replacements.mjs';
+import {createVideoStore} from '../script/video-personal-store.mjs';
+const a='abcdefghijk',b='ABCDEFGHIJK',c='12345678901',d='98765432109';
+const plan=planReplacement({publicIds:[a,c],memberIds:[d],from:a,to:b});assert.deepEqual(plan.publicIds,[b,c]);assert.deepEqual(plan.memberIds,[d]);assert.deepEqual(plan.replacements,[{from:a,to:b,visibility:'public'}]);
+const next=planReplacement({...plan,from:b,to:c});assert.equal(next.replacements.find(r=>r.from===a).to,c,'repeated replacements keep old links pointing directly to the newest version');assert.equal(next.replacements.find(r=>r.from===b).to,c);
+assert.throws(()=>validateReplacements([{from:a,to:b,visibility:'public'},{from:b,to:a,visibility:'public'}]));assert.throws(()=>planReplacement({publicIds:[a],memberIds:[b],from:a,to:b}));
+assert.equal(attachReplacements([{id:b,replaces:[a]}],[])[0].replaces,undefined,'cached metadata alone cannot silently suppress a notification');assert.throws(()=>attachReplacements([{id:a}],plan.replacements));assert.deepEqual(attachReplacements([{id:b,visibility:'public'}],plan.replacements)[0].replaces,[a]);
+const choices=splitReplacementNotifications([{kind:'video',id:b,replaces:[a]},{kind:'video',id:c},{kind:'Article',id:'reading'}]);assert.deepEqual(choices.silent.map(r=>r.id),[b]);assert.deepEqual(choices.notify.map(r=>r.id),[c,'reading']);
+const memory=new Map(),store=createVideoStore({storage:{getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v)},now:(()=>{let n=100;return ()=>++n;})()});
+store.save(a,'Livestream',true);store.progress({videoId:a,seconds:120,duration:500,mode:'audio',rate:1});store.replaceSaved(new Map([[a,b]]),()=> 'Uploaded recording');assert.equal(store.saved(a),false);assert.equal(store.saved(b),true);assert.equal(store.history(b),null);assert.equal(store.history(a).seconds,120);assert.equal(store.rows('saved').length,1);store.replaceSaved(new Map([[a,b]]));assert.equal(store.rows('saved').length,1);
+store.setIdentity('alice');store.save(a,'Old',false);store.save(b,'New',true);store.replaceSaved(new Map([[a,b]]));assert.equal(store.saved(b),true,'a newer explicit save wins');store.save(a,'Old',false);store.progress({videoId:a,seconds:300,duration:500,mode:'video',rate:1});store.replaceSaved(new Map([[a,b]]));assert.equal(store.saved(b),false,'a newer offline unsave wins');assert.ok(!store.pending().some(([,op])=>op.videoId===a));store.hydrate('saved',[{videoId:b,title:'Server',updatedAt:1}]);assert.equal(store.saved(b),false);store.setIdentity('bob');assert.equal(store.saved(b),false);store.setIdentity(null);assert.equal(store.saved(b),true,'device bookmarks stay independent');
+// Public HTML includes only public-to-public aliases; member IDs remain protected.
+const require=createRequire(import.meta.url),{Liquid}=require('./visibility-qa/node_modules/liquidjs');const engine=new Liquid({root:'_includes',dynamicPartials:false});engine.registerFilter('jsonify',v=>JSON.stringify(v??null));engine.registerFilter('relative_url',v=>v);engine.registerFilter('normalize_whitespace',v=>String(v).replace(/\s+/g,' ').trim());
+const source=await readFile('_includes/pwa-head.html','utf8'),fragment=source.slice(source.indexOf('<script type="application/json" id="lc-public-video-replacements"'));
+const html=await engine.parseAndRender(fragment,{public_video_ids:[b],member_video_ids:[c],site:{data:{video_replacements:[{from:a,to:b,visibility:'public'},{from:d,to:b,visibility:'members'},{from:'PUBLICOLD01',to:c,visibility:'public'}]}}});const links=JSON.parse(html.match(/>([\s\S]*?)<\/script>/)[1]);assert.deepEqual(links,{[a]:b});
+const nodes=new Map([['lc-public-video-data',{textContent:JSON.stringify({[b]:'Upload'})}],['lc-public-video-replacements',{textContent:JSON.stringify(links)}]]);globalThis.document={getElementById:id=>nodes.get(id)};globalThis.LightCityMembers={library:null,ready:Promise.resolve()};const {replacementMap,resolveWatchReplacement}=await import('../script/video-replacements.mjs');assert.equal(await resolveWatchReplacement(a),b);assert.equal(await resolveWatchReplacement(d),d,'public clients cannot resolve private aliases');LightCityMembers.library=[{id:c,replaces:[d]}];assert.equal(await resolveWatchReplacement(d),c);LightCityMembers.library=null;assert.equal(replacementMap().has(d),false,'private aliases disappear on sign-out');
+console.log('PASS: explicit silent replacement planning, repeated versions, normal notifications retained, device/offline bookmarks, independent timelines, and public/member link privacy.');
+
+// Exercise the actual sender's pending-publication block with local stubs only.
+const vm=await import('node:vm'),sender=await readFile('tools/push/send.mjs','utf8');const block=sender.slice(sender.indexOf('const candidates=[];'),sender.indexOf('// Each video gets its own real title'));
+const writes=[],entries=[{id:'video:'+b,key:'replacement',kind:'video',replaces:[a]},{id:'video:'+c,key:'normal',kind:'video'}];
+const pending=await vm.runInNewContext('(async()=>{'+block+';return pending;})()',{entries,splitReplacementNotifications,db:{doc:path=>({path,get:async()=>({exists:false})}),batch:()=>({set:(ref,value)=>writes.push({ref,value}),commit:async()=>{}})},FieldValue:{serverTimestamp:()=>1},console:{log(){}},process:{exit(){throw Error('Unexpected exit');}}});
+assert.deepEqual(Array.from(pending,r=>r.id),['video:'+c]);assert.equal(writes.length,1);assert.equal(writes[0].value.silent,true);assert.equal(writes[0].ref.path,'webPushSent/replacement');
+console.log('PASS: the real notification sender records replacements silently and leaves ordinary new videos queued for notification.');
+
+// Run Watch's actual startup: an old notification URL must redirect before an iframe is created.
+let redirected,iframes=0;for(const id of ['watch-title','watch-status','watch-player','watch-help'])nodes.set(id,{textContent:'',hidden:false});
+document.createElement=()=>{iframes++;throw Error('Old video iframe must not be created');};
+globalThis.location={href:'https://example.com/Watch/?v='+a+'&t=123&live=1&mode=audio',search:'?v='+a+'&t=123&live=1&mode=audio',pathname:'/Watch/',replace:url=>redirected=url};globalThis.sessionStorage={getItem:()=>null};
+await vm.runInThisContext(await readFile('script/video-watch.js','utf8'),{filename:new URL('../script/video-watch.js',import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1'),importModuleDynamically:vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER});
+const destination=new URL(redirected);assert.equal(destination.searchParams.get('v'),b);assert.equal(destination.searchParams.has('t'),false);assert.equal(destination.searchParams.has('live'),false);assert.equal(destination.searchParams.get('mode'),'audio');assert.equal(iframes,0);
+console.log('PASS: old notification/Watch URLs redirect before playback, preserve audio mode and discard incompatible old timestamps.');
