@@ -223,3 +223,7 @@ body.app-home .home-bottom-nav {grid-template-columns:repeat(5,minmax(0,1fr));}
 .site-footer #Contact-section .footer-disclosure:not([open]) > .footer-disclosure-content {display:none;}
 .site-footer #Contact-section .footer-disclosure > summary:focus-visible {outline:2px solid var(--vivid-orange,#ffbf00);outline-offset:4px;}
 @media(min-width:721px){.site-footer #Contact-section .footer-disclosure > summary::after{display:none;}}
+
+.lc-live-label {color:inherit!important;font-size:13px!important;font-weight:700;letter-spacing:.06em;}
+.lc-live-label::before {content:"";display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:#e60032;vertical-align:middle;}
+.video-box .iframe-container.lc-audio-mode > .lc-live-badge,.video-box .iframe-container:has(iframe) > .lc-live-badge {display:none!important;}

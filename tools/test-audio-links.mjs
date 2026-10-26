@@ -27,7 +27,7 @@ const home = new Element(), watch = new Element(), hero = card(publicId), events
 let mode = 'public', resolveLate, liveRows = [], releaseReady;
 const mountedPlayers = [];
 const media = { mount: options => {
-  const item = { videoId: options.videoId, liveSession: options.recording?.session, liveOffset: options.recording?.offsetSeconds, recording: options.recording, viewport: options.viewport, mode: 'video', switchTo: async mode => { item.mode = mode; options.onState(mode, ''); }, dispose: () => { item.disposed = true; } };
+  const item = { videoId: options.videoId, liveSession: options.recording?.session, liveOffset: options.recording?.offsetSeconds, recording: options.recording, viewport: options.viewport, mode: 'video', switchTo: async mode => { item.mode = mode;options.viewport.classList={contains:name=>mode==='audio'&&name==='lc-audio-mode'}; options.onState(mode, ''); }, dispose: () => { item.disposed = true; } };
   mountedPlayers.push(item); return item;
 } };
 const api = { library: null, ready: new Promise(resolve => { releaseReady = resolve; }), getAudio: async () => mode === 'hold' ? new Promise(resolve => { resolveLate = resolve; }) : { recordings: (mode === 'member' ? [publicId, memberId] : [publicId]).map(videoId => ({ videoId })) } };
@@ -108,9 +108,10 @@ hero.dataset.videoId = missingCard.dataset.videoId; observers[1](); await settle
 assert.equal(hero.viewport.querySelector('.lc-live-badge').hidden, false, 'The featured live video is badged');
 hero.dataset.videoId = publicId; observers[1](); await settle();
 assert.equal(hero.viewport.querySelector('.lc-live-badge').hidden, true, 'Changing the featured video clears its old badge');
+missingCard.viewport.querySelector = function(selector){if(selector==='iframe')return this.testFrame||null;return this.children.find(child=>child.className===selector.slice(1))||null;};missingCard.viewport.testFrame={};observers[0]();await settle();assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden,true,'LIVE thumbnail badge is hidden once the video iframe is open');delete missingCard.viewport.testFrame;observers[0]();await settle();assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden,false,'returning to an unplayed live thumbnail restores its badge');
 grid.events.click({ target: missingCard.children[0].children[1], preventDefault() {}, stopPropagation() {} }); await settle();
 const liveController = mountedPlayers.at(-1);
-assert.equal(liveController.recording.kind, 'live'); assert.equal(liveController.liveSession, liveRows[0].session);
+assert.equal(missingCard.viewport.querySelector('.lc-live-badge').hidden,true,'LIVE thumbnail badge is hidden during audio playback');assert.equal(liveController.recording.kind, 'live'); assert.equal(liveController.liveSession, liveRows[0].session);
 liveRows = [{ ...liveRows[0], replay: true }]; events.get('lightcity-members-changed')(); await settle();
 assert.equal(liveController.disposed, undefined, 'live-to-replay must retain the playing controller');
 assert.equal(missingCard.children[0].children[1].textContent, 'Listen', 'replay keeps Listen');

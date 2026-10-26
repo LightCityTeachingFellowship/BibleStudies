@@ -66,7 +66,7 @@
         if (!controller) {
           controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: recording.title || 'LightCity recording', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
-            feedback(holder, message);
+            feedback(holder, message);liveBadge(viewport,id);
             if (holder === watch) {
               const help = document.getElementById('watch-help');
               if (help) help.textContent = mode === 'audio' ? 'Audio mode. You can switch apps or lock your screen while listening.' : 'If playback doesn’t start automatically, tap Play on the video.';
@@ -96,7 +96,8 @@
         badge.textContent = '\u25c9 LIVE'; badge.setAttribute('aria-label', 'Live now');
         viewport.appendChild(badge);
       }
-      if (badge) badge.hidden = !live;
+      const playing=viewport.classList?.contains('lc-audio-mode')||!!viewport.querySelector('iframe')||viewport.querySelector('lite-youtube')?.classList?.contains('lyt-activated');
+      if (badge) badge.hidden = !live || !!playing;
     }
     function render() {
       for (const [viewport, controller] of mounted) {
@@ -161,7 +162,7 @@
             if (current !== version || !Array.isArray(result.recordings)) return;
             recordedAvailable = new Map(result.recordings.filter(item => /^[\w-]{11}$/.test(item.videoId)).map(item => [item.videoId, item])); merge();
           }).catch(failed),
-          (globalThis.LightCityMembers.getLiveAudio?.() || Promise.resolve({ recordings: [] })).then(result => {
+          ((globalThis.LightCityLiveStatus?.getRecordings?.() || globalThis.LightCityMembers.getLiveAudio?.()) || Promise.resolve({ recordings: [] })).then(result => {
             if (current !== version || !Array.isArray(result.recordings)) return;
             liveCheckedAt = Date.now();
             liveAvailable = new Map(result.recordings.filter(item => item.kind === 'live' && /^[\w-]{11}$/.test(item.videoId) && /^session-\d{13}$/.test(item.session) && Number.isFinite(item.offsetSeconds)).map(item => [item.videoId, item])); merge();

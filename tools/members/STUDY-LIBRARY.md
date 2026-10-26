@@ -57,4 +57,4 @@ node tools/audio-library/test-video-personal-page.mjs
 node tools/test-home-search.mjs
 ```
 
-After deployment, test on two devices with the same Google account: save one article and summary, read partway down, use Continue studying, mark one read, and confirm the save/progress syncs. Also test sign-out and switching accounts, clear history, a reading-only guest import, and related resources for public/member viewers. Reading remains available while account sync retries.
+After deployment, test on two devices with the same Google account: save one article and summary, read partway down, use Continue..., mark one read, and confirm the save/progress syncs. Also test sign-out and switching accounts, clear history, a reading-only guest import, and related resources for public/member viewers. Reading remains available while account sync retries.

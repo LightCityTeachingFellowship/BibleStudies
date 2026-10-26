@@ -34,7 +34,7 @@ if(page){
  async function refresh(){const ticket=++generation;const api=globalThis.LightCityMembers;const next=api?.loading?'loading':Array.isArray(api?.library)?'member:'+(api.user?.uid||''):'public';
   if(audience!==next){stopAll();audience=next;}if(api?.loading){status.textContent='Loading your audio library…';await api.ready;if(ticket!==generation)return;return refresh();}
   errors=[];render();status.textContent=rows.length?status.textContent:'Loading your audio library…';
-  const sources=[()=>api.getAudio(),()=>api.getLiveAudio?.()||Promise.resolve({recordings:[]})];
+  const sources=[()=>api.getAudio(),()=>(globalThis.LightCityLiveStatus?.getRecordings?.() || api.getLiveAudio?.())||Promise.resolve({recordings:[]})];
   await Promise.allSettled(sources.map(async (load,i)=>{try{const result=await load();if(ticket!==generation)return;if(!Array.isArray(result.recordings))throw Error('Invalid audio catalogue');if(i===0)recordings=result.recordings;else live=result.recordings;render();}catch(error){if(ticket!==generation)return;const code=String(error?.code||'');if(/permission-denied|unauthenticated|user-disabled|user-token-expired/.test(code)){++generation;stopAll();status.textContent='Your access changed. Sign in again to reload the audio library.';retry.hidden=false;return;}errors.push(i===0?'Recorded audio could not refresh.':'Live audio could not refresh.');render();}}));
   if(ticket!==generation)return;
   render();

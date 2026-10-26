@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+globalThis.window=new EventTarget();
+let calls=0,rows=[],release;const makeApi=(uid,load)=>({user:{uid},library:[],ready:Promise.resolve(),getLiveAudio:load});
+globalThis.LightCityMembers=makeApi('alice',async()=>{calls++;return {recordings:rows};});
+const {getLiveRecordings,isLive}=await import('../../script/live-status.mjs');
+const id='abcdefghijk';rows=[{videoId:id,kind:'live',session:'session-1792873903632',expiresAt:Date.now()+3600000}];
+await Promise.all([getLiveRecordings(),getLiveRecordings()]);assert.equal(calls,1,'simultaneous library/history requests share the live lookup');assert.equal(isLive(id),true);await getLiveRecordings();assert.equal(calls,1,'nearby requests reuse the current snapshot');
+rows=[{...rows[0],replay:true}];await getLiveRecordings({force:true});assert.equal(isLive(id),false,'ended replays are not live');
+rows=[{...rows[0],replay:false,expiresAt:Date.now()-1}];await getLiveRecordings({force:true});assert.equal(isLive(id),false,'expired entries are not live');
+rows=[{...rows[0],expiresAt:Date.now()+3600000}];await getLiveRecordings({force:true});assert.equal(isLive(id),true);
+LightCityMembers=makeApi('bob',()=>new Promise(resolve=>release=resolve));window.dispatchEvent(new Event('lightcity-members-changed'));assert.equal(isLive(id),false,'another account cannot inherit a live snapshot');const old=getLiveRecordings({force:true});await new Promise(resolve=>setTimeout(resolve,0));
+LightCityMembers=makeApi('charlie',async()=>({recordings:[]}));window.dispatchEvent(new Event('lightcity-members-changed'));await getLiveRecordings({force:true});release({recordings:rows});await old;assert.equal(isLive(id),false,'late responses from a previous account are discarded');
+console.log('PASS: shared live lookup, cache reuse, replay/expiry handling, account changes and rejection of stale account responses.');
