@@ -49,10 +49,12 @@ async function showLightCityNotification(payload) {
  const image = data.image || notification.image;
  try {
   await self.registration.showNotification(data.title || notification.title || 'LightCity', {
-   body: data.body || notification.body || 'New teaching available',
+   body: data.body || notification.body || 'A new resource is available',
    icon: new URL('images/pwa-192.png', BASE).href,
    badge: new URL('images/notification-badge.png', BASE).href,
-   ...(image ? { image } : {}), tag: data.id || key,
+   ...(image ? { image } : {}), tag: data.id || key || 'lightcity-update',
+   // Alert again when a publication replaces its existing notification.
+   silent: false, renotify: true,
    data: { url: data.url || payload?.fcmOptions?.link, lightcity: true }
   });
  } catch (error) { if (key) displayedMessages.delete(key); throw error; }

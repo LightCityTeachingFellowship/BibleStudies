@@ -19,7 +19,7 @@ function notificationMessage(data) {
   data,
   webpush:{
    headers:{TTL:'86400',Urgency:'high'},
-   notification:{icon:new URL('images/pwa-192.png',origin).href,badge:new URL('images/notification-badge.png',origin).href,tag:data.id,...(data.image ? {image:data.image} : {})},
+   notification:{icon:new URL('images/pwa-192.png',origin).href,badge:new URL('images/notification-badge.png',origin).href,tag:data.id,silent:false,renotify:true,...(data.image ? {image:data.image} : {})},
    fcmOptions:{link:data.url}
   }
  };

@@ -23,7 +23,7 @@ async function foreground(payload, url = 'https://example.com/BibleStudies/Video
 const payload = { messageId: 'one', notification: { title: 'Video', body: 'Video title' }, data: { id: 'video:abcdefghijk', image: 'https://i.ytimg.com/vi/abcdefghijk/maxresdefault.jpg', url: 'https://example.com/BibleStudies/Watch/?v=abcdefghijk' } };
 await Promise.all([foreground(payload), foreground(payload)]);
 assert.equal(shown.length, 1, 'Multiple tabs must display one notification per message');
-assert.equal(shown[0].title, 'Video');
+assert.equal(shown[0].title, 'Video');assert.equal(shown[0].options.silent,false);assert.equal(shown[0].options.renotify,true);assert.ok(shown[0].options.tag,'re-alerting always has a notification tag');
 assert.equal(shown[0].options.body, 'Video title');
 assert.equal(shown[0].options.image, payload.data.image);
 assert.ok(shown[0].options.badge.endsWith('/images/notification-badge.png'));
@@ -45,3 +45,13 @@ assert.equal(shown.length, 3, 'Failed display can be retried');
 await foreground({ ...payload, messageId: 'new-test' });
 assert.equal(shown.length, 4, 'A new send for the same publication must still display');
 console.log('PASS: foreground display, cross-tab deduplication, title/image/icon/badge, direct click destination, background delivery, source validation and retry.');
+
+await background({data:{title:'Recording'}});
+assert.equal(shown.at(-1).options.tag,'lightcity-update','untagged background alerts get a valid fallback tag');
+assert.equal(shown.at(-1).options.silent,false);
+assert.equal(shown.at(-1).options.renotify,true);
+const sender=readFileSync('tools/push/send.mjs','utf8');
+const builder=sender.slice(sender.indexOf('function notificationMessage'),sender.indexOf('// YouTube hqdefault'));
+const message=vm.runInNewContext(builder+';notificationMessage({id:"resource-1",title:"Update",body:"New recording",url:"https://example.com/Watch/"})',{URL,origin:new URL('https://example.com/')});
+assert.equal(message.webpush.headers.Urgency,'high');assert.equal(message.webpush.notification.silent,false);assert.equal(message.webpush.notification.renotify,true);assert.ok(message.notification,'automatic background display remains enabled');
+console.log('PASS: alert/re-alert options match foreground, data-only background and automatic Firebase background paths; high-urgency delivery retained. No notifications were sent.');
