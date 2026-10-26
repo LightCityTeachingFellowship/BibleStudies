@@ -22,27 +22,10 @@ title: Watch a video
   <script defer src="{{ '/script/video-watch.js' | relative_url }}?v=saved-history-1"></script>
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=study-1"></script>
+<script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
 </head>
 <body class="fonts app-home site-browse">
-  <div class="header-container">
-    <header>
-      <div id="homeHeader" class="bg-color bg-image">
-        <div class="leftRight-space-16">
-          <nav class="homeHeaderNav" aria-label="Video navigation">
-            <div class="churchLOGO">
-              <a class="iconLink transition" title="LightCity home" href="{{ '/Home/' | relative_url }}">
-                <img class="churchLOGO-img" src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" height="40" alt="LightCity Teaching Fellowship">
-              </a>
-            </div>
-            <div class="headerUL"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a>
-              <a class="lc-personal-library-link" href="{{ '/MyVideos/' | relative_url }}">Saved &amp; history</a>
-              <a class="moreButton transition" href="{{ '/Videos/' | relative_url }}">All videos <span aria-hidden="true">→</span></a>
-            </div>
-          </nav>
-        </div>
-      </div>
-    </header>
-  </div>
+  {% include homeHeader-section.html %}
   {% include site-search.html scope='Video' %}
   <main class="watch-main leftRight-space-16">
     <h3 id="watch-title" class="watch-title">LightCity video</h3>

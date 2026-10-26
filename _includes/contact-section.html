@@ -4,12 +4,7 @@
             <div class="Contact-section-inner leftRight-space-16">
                 <div class="footer-nav-wrapper">
                     <div class="footerLinks-wrapper">
-                        <div class="footerLinks-header">
-                            <div class="visible-titles2 collapsible">
-                                <h3>Latest Posts</h3>
-                                <i class="caret2 fas fa-solid fa-caret-right"></i>
-                            </div>
-                            <div class="min-height content">
+                        <details class="footerLinks-header footer-disclosure" open><summary><h3>Latest Posts</h3></summary><div class="footer-disclosure-content">
                                 <ul class="footerLinks-lists active-link">
                                     {% assign sorted-pages = site.pages | sort: 'date' | reverse %}
                                     {% assign my_array = "" | split: ',' %}
@@ -24,15 +19,9 @@
                                     </li>
                                     {% endfor %}
                                 </ul>
-                            </div>
-                        </div>
+                            </div></details>
 
-                        <div class="footerLinks-header space">
-                            <div class="visible-titles2 collapsible">
-                                <h3>Categories</h3>
-                                <i class="caret2 fas fa-solid fa-caret-right"></i>
-                            </div>
-                            <div class="min-height content">
+                        <details class="footerLinks-header footer-disclosure space" open><summary><h3>Categories</h3></summary><div class="footer-disclosure-content">
                                 <ul class="footerLinks-lists active-link" style="margin-bottom: 10px!important;">
                                     {% assign counter = '0' %}
                                     {% for page in site.pages %}
@@ -52,14 +41,8 @@
                                         <span>More categories</span>
                                     </a>{% endif %}{% endfor %}
                                 </small>
-                            </div>
-                        </div>
-                        <div class="footerLinks-header">
-                            <div class="visible-titles2 collapsible">
-                                <h3>Useful links</h3>
-                                <i class="caret2 fas fa-solid fa-caret-right"></i>
-                            </div>
-                            <div class="min-height content">
+                            </div></details>
+                        <details class="footerLinks-header footer-disclosure" open><summary><h3>Useful links</h3></summary><div class="footer-disclosure-content">
                                 <ul class="footerLinks-lists active-link">
 <li><a href="{{ '/Home/' | relative_url }}">Home</a></li><li><a href="{{ '/Listen/' | relative_url }}">Audio</a></li>
                                     <li>
@@ -104,8 +87,7 @@
                                         </a>{% endif %}{% endfor %}
                                     </li>
                                 </ul>
-                            </div>
-                        </div>
+                            </div></details>
                     </div>
                 </div>
 
@@ -125,3 +107,5 @@
         </div>
     </section>
 </footer>
+
+<script defer src="{{ '/script/footer-disclosures.js' | relative_url }}?v=footer-2"></script>

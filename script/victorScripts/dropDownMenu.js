@@ -11,7 +11,7 @@ function myFunction() {
   }
 }
 
-document.querySelector('.mobileButton').classList.add('Button');
+document.querySelector('.mobileButton')?.classList.add('Button');
 const createButton = document.createElement('button')
 createButton.classList.add('moreButton', 'Button');
 createButton.type = 'Button';
@@ -44,8 +44,8 @@ const elementsArray = [...myDropdowns];
     element.classList.add("slideOut");
   });
 // Close the dropdown menu if the user clicks outside of it
-window.onclick = function (event) {
-  if (!event.target.matches('.Button')) {
+window.addEventListener('click', function (event) {
+  if (!event.target.closest('.Button, .myDropdown, .myDropdownDesk')) {
     elementsArray.forEach(element => {
       if (element.classList.contains('slideInFromLeft')) {
         element.classList.remove('slideInFromLeft');
@@ -53,7 +53,7 @@ window.onclick = function (event) {
       }
     });
   }
-}
+});
 const headerUL = document.querySelector('.headerUL');
 const headerLink1 = document.querySelectorAll('.header-links-li');
 const elementArray = [...headerLink1];

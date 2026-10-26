@@ -124,7 +124,7 @@
     async function refresh() {
       const access = ++generation;
       const approved = Array.isArray(window.LightCityMembers?.library);
-      clear(); el('audio-signin').hidden = approved;
+      clear();
       status.textContent = 'Loading your audio library…';
       try {
         const result = await window.LightCityMembers.getAudio();
@@ -137,11 +137,11 @@
           button.addEventListener('click', () => void choose(recording)); list.append(button);
         }
         panel.hidden = result.recordings.length === 0;
-        status.textContent = result.recordings.length ? 'Choose a recording to start listening.' : approved ? 'No audio recordings are available yet.' : 'Public audio recordings are being prepared. Members can sign in for additional recordings.';
+        status.textContent = result.recordings.length ? 'Choose a recording to start listening.' : approved ? 'No audio recordings are available yet.' : 'Public audio recordings are being prepared.';
         if (requestedId && !requestedApplied) {
           const requested = result.recordings.find(item => item.videoId === requestedId);
           if (requested) { requestedApplied = true; void choose(requested); }
-          else status.textContent = approved ? 'Audio is not available for that recording. Choose another recording below.' : 'That recording is not available in the public audio library. Sign in for member recordings, or choose a public recording below.';
+          else status.textContent = approved ? 'Audio is not available for that recording. Choose another recording below.' : 'That recording is not available in the public audio library. Choose a public recording below.';
         }
       } catch { if (access === generation) status.textContent = 'The audio library could not be loaded. Please check your connection and reload the page.'; }
     }

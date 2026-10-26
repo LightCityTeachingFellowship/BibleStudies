@@ -24,23 +24,24 @@ if(page){
  function render(){rows=audioLibrary({publicVideos,memberVideos:globalThis.LightCityMembers?.library,recordings,live});const allowed=new Set(rows.map(r=>r.videoId));
   for(const [id,item]of cards)if(!allowed.has(id)){controllers.get(id)?.dispose();controllers.delete(id);item.card.remove();cards.delete(id);}
   const filtered=filterAudio(rows,search.value,category),visible=filtered.slice(0,limit);const shown=new Set(visible.map(r=>r.videoId));for(const [id,item]of cards)item.card.hidden=!shown.has(id);
-  visible.forEach((r,i)=>{const item=card(r);item.card.hidden=false;item.badge.textContent=r.kind==='live'?(r.replay?'Audio replay':'LIVE'):'Audio';item.badge.className='lc-audio-badge'+(r.kind==='live'&&!r.replay?' lc-audio-live':'');if(grid.children[i]!==item.card)grid.insertBefore(item.card,grid.children[i]||null);});
+  visible.forEach((r,i)=>{const item=card(r);item.card.hidden=false;item.badge.hidden=r.kind!=='live';item.badge.textContent=r.kind==='live'?(r.replay?'Audio replay':'LIVE'):'';item.badge.className='lc-audio-badge'+(r.kind==='live'&&!r.replay?' lc-audio-live':'');if(grid.children[i]!==item.card)grid.insertBefore(item.card,grid.children[i]||null);});
   more.hidden=filtered.length<=limit;retry.hidden=!errors.length;
   status.textContent=rows.length?`${filtered.length} matching recordings · Showing ${visible.length} of ${filtered.length}.`:'No audio is available for this selection yet.';
   if(!search.value&&category==='all')status.textContent=`${rows.length} audio recordings available · Showing ${visible.length}. Other videos will appear as their audio becomes available.`;
-  if(errors.length)status.textContent+=' '+errors.join(' ');
+  if(errors.length)status.textContent=(rows.length?'Your available recordings are shown. ':'')+errors.join(' ');status.hidden=rows.length>0&&!search.value&&category==='all'&&!errors.length;
   if(requested&&!requestedApplied&&allowed.has(requested)){requestedApplied=true;const found=filtered.findIndex(r=>r.videoId===requested);if(found>=limit){limit=Math.ceil((found+1)/24)*24;render();return;}void choose(requested,'audio');}
  }
  async function refresh(){const ticket=++generation;const api=globalThis.LightCityMembers;const next=api?.loading?'loading':Array.isArray(api?.library)?'member:'+(api.user?.uid||''):'public';
   if(audience!==next){stopAll();audience=next;}if(api?.loading){status.textContent='Loading your audio library…';await api.ready;if(ticket!==generation)return;return refresh();}
-  byId('audio-library-signin').hidden=Array.isArray(api?.library);render();errors=[];status.textContent=rows.length?status.textContent:'Loading your audio library…';
+  errors=[];render();status.textContent=rows.length?status.textContent:'Loading your audio library…';
   const sources=[()=>api.getAudio(),()=>api.getLiveAudio?.()||Promise.resolve({recordings:[]})];
   await Promise.allSettled(sources.map(async (load,i)=>{try{const result=await load();if(ticket!==generation)return;if(!Array.isArray(result.recordings))throw Error('Invalid audio catalogue');if(i===0)recordings=result.recordings;else live=result.recordings;render();}catch(error){if(ticket!==generation)return;const code=String(error?.code||'');if(/permission-denied|unauthenticated|user-disabled|user-token-expired/.test(code)){++generation;stopAll();status.textContent='Your access changed. Sign in again to reload the audio library.';retry.hidden=false;return;}errors.push(i===0?'Recorded audio could not refresh.':'Live audio could not refresh.');render();}}));
   if(ticket!==generation)return;
   render();
   const checkpoint=globalThis.LightCityMedia?.savedListening?.();if(checkpoint&&!requestedApplied&&rows.some(r=>r.videoId===checkpoint.videoId)){requestedApplied=true;const index=rows.findIndex(r=>r.videoId===checkpoint.videoId);limit=Math.max(limit,Math.ceil((index+1)/24)*24);render();void choose(checkpoint.videoId,'audio',checkpoint);}
  }
- for(const [value,label]of [['all','All'],...Object.entries(audioCategories)]){const button=node('button',label);button.type='button';button.dataset.audioCategory=value;button.setAttribute('aria-pressed',String(value==='all'));button.onclick=()=>{category=value;limit=24;for(const other of byId('audio-library-categories').children)other.setAttribute('aria-pressed',String(other===button));render();};byId('audio-library-categories').appendChild(button);}
+ for(const [value,label]of [['all','All'],...Object.entries(audioCategories)]){const button=node('button',label,'videos-header-btns'+(value==='all'?' active':''));button.type='button';button.dataset.audioCategory=value;button.setAttribute('aria-pressed',String(value==='all'));button.onclick=()=>{category=value;limit=24;for(const other of byId('audio-library-categories').children){other.setAttribute('aria-pressed',String(other===button));other.className='videos-header-btns'+(other===button?' active':'');}render();};byId('audio-library-categories').appendChild(button);}
+ search.form?.addEventListener('submit',event=>event.preventDefault());
  search.addEventListener('input',()=>{limit=24;render();});more.onclick=()=>{limit+=24;render();};retry.onclick=()=>void refresh();
  window.addEventListener('lightcity-members-changed',()=>void refresh());window.addEventListener('online',()=>void refresh());window.addEventListener('pagehide',e=>{if(!e.persisted)stopAll();});
  const timer=setInterval(()=>{if(document.visibilityState!=='hidden')void refresh();},45000);timer.unref?.();void refresh();

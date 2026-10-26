@@ -39,7 +39,7 @@ function renderPage() {
   page.querySelectorAll('.lc-member-card button,.lc-member-card input').forEach(node => { node.disabled = busy || !api.enabled; });
   // Account tabs are safe to preview even before the backend is activated.
   field('member-tab-signin').disabled = field('member-tab-signup').disabled = busy;
-  field('member-status').textContent = !api.enabled ? 'Member access is being prepared. Please check back soon.' : notice || api.error?.message || (verifiedAccess ? 'You have access to the full video library.' : 'Sign in, or create an account using the code shared with the church.');
+  field('member-status').textContent = !api.enabled ? 'Member access is being prepared. Please check back soon.' : notice || api.error?.message || (verifiedAccess ? 'You have access to the full LightCity library.' : 'Sign in, or create an account using the code shared with the church.');
 }
 async function call(name, data = {}) { return (await sdk.functions.httpsCallable(functions, name)(data)).data; }
 async function linkDevice() {
