@@ -15,6 +15,7 @@
                             </button>
                             <div id="myDropdown" class="myDropdown transition">
                                 <div class="mobile-homeHeaderNav active-link">
+<div class="mobile-headerLinks transition"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a></div><div class="mobile-headerLinks transition"><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a></div>
                                     <div class="mobile-headerLinks transition">
                                         {% for page in site.pages %}{% if page.title contains "Teaching-Articles" %}
                                         <a class="linkTitle transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
@@ -92,6 +93,7 @@
                     </div>
                     <div class="headerUL">
                         <div class="header-links active-link">
+<div class="header-links-li transition"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a></div><div class="header-links-li transition"><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a></div>
                             <div class="header-links-li transition">
                                 {% for page in site.pages %}{% if page.title contains "Teaching-Articles" %}
                                 <a class="iconLink transition"

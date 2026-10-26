@@ -66,7 +66,7 @@
       inlinePlayer?.dispose(); inlinePlayer = null;
       player.pause(); player.removeAttribute('src'); player.load();
       list.replaceChildren(); panel.hidden = true; retry.hidden = true;
-      el('audio-now-playing').textContent = 'Choose a teaching below';
+      el('audio-now-playing').textContent = 'Choose a recording below';
       const watchLink = el('audio-watch');
       if (watchLink) { watchLink.hidden = true; watchLink.removeAttribute('href'); watchLink.onclick = null; }
       if (navigator.mediaSession) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; }
@@ -88,7 +88,7 @@
         if (watchLink?.dataset.watchBase) {
           const watchUrl = new URL(watchLink.dataset.watchBase, location.href);
           watchUrl.searchParams.set('v', recording.videoId); watchLink.href = watchUrl.href; watchLink.hidden = false;
-          watchLink.textContent = 'Watch this teaching instead →';
+          watchLink.textContent = 'Watch this recording instead →';
         }
         for (const button of list.children) button.setAttribute('aria-pressed', String(button.dataset.videoId === recording.videoId));
         player.onloadedmetadata = () => {
@@ -103,7 +103,7 @@
         const inlineViewport = el('audio-mode-viewport');
         if (inlineViewport && globalThis.LightCityMedia) {
           inlinePlayer = globalThis.LightCityMedia.mount({ viewport: inlineViewport, videoId: recording.videoId, title: recording.title, audio: player, expiresAt, onState: (mode, text) => {
-            if (watchLink) watchLink.textContent = mode === 'video' ? 'Listen to this teaching instead →' : 'Watch this teaching instead →';
+            if (watchLink) watchLink.textContent = mode === 'video' ? 'Listen to this recording instead →' : 'Watch this recording instead →';
             status.textContent = text || (mode === 'video' ? 'Video mode. Switch back to Listen at any time.' : 'Audio mode. You can switch apps or lock your screen.');
           } });
           if (watchLink) watchLink.onclick = event => { event.preventDefault(); void inlinePlayer.switchTo(inlinePlayer.mode === 'audio' ? 'video' : 'audio'); };
@@ -137,11 +137,11 @@
           button.addEventListener('click', () => void choose(recording)); list.append(button);
         }
         panel.hidden = result.recordings.length === 0;
-        status.textContent = result.recordings.length ? 'Choose a teaching to start listening.' : approved ? 'No audio recordings are available yet.' : 'Public audio recordings are being prepared. Members can sign in for additional recordings.';
+        status.textContent = result.recordings.length ? 'Choose a recording to start listening.' : approved ? 'No audio recordings are available yet.' : 'Public audio recordings are being prepared. Members can sign in for additional recordings.';
         if (requestedId && !requestedApplied) {
           const requested = result.recordings.find(item => item.videoId === requestedId);
           if (requested) { requestedApplied = true; void choose(requested); }
-          else status.textContent = approved ? 'Audio is not available for that teaching. Choose another recording below.' : 'That recording is not available in the public audio library. Sign in for member recordings, or choose a public teaching below.';
+          else status.textContent = approved ? 'Audio is not available for that recording. Choose another recording below.' : 'That recording is not available in the public audio library. Sign in for member recordings, or choose a public recording below.';
         }
       } catch { if (access === generation) status.textContent = 'The audio library could not be loaded. Please check your connection and reload the page.'; }
     }

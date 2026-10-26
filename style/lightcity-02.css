@@ -324,7 +324,7 @@ p,li{
     /* font-family:"Marvel", sans-serif!important; */
     /* line-height:20px; */
     letter-spacing:1px;}
-:is(h1,h2,h3,h4,h5,h6):not(#home-welcome-title,#home-explore-title,#home-fresh-title,.video-title){ 
+:is(h1,h2,h3,h4,h5,h6):not(#home-welcome-title,#home-explore-title,#home-fresh-title,.video-title,#study-continue-title,.lc-personal-card h2){
     /* font-family:'Open Sans Condensed', sans-serif; */
     text-transform:uppercase;}
 @media only screen and (min-width:960px){ 

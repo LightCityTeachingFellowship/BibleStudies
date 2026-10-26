@@ -1,5 +1,6 @@
 (() => {
   async function start() {
+    if(document.getElementById('audio-library-page'))return;
     const settings = document.querySelector('script[data-lightcity-audio-links]');
     const grid = document.getElementById('videotab-container');
     const hero = document.querySelector('.home-featured[data-video-id]');
@@ -35,7 +36,7 @@
         url.searchParams.set('v', id); url.searchParams.delete('mode');
         const link = document.createElement('a'); link.className = 'lc-mode-button'; link.textContent = 'Watch'; link.href = url.href; holder.appendChild(link);
         if (valid) { const listen = document.createElement('a'); listen.className = 'lc-mode-button'; listen.textContent = 'Listen'; url.searchParams.set('mode', 'audio'); listen.href = url.href; holder.appendChild(listen); }
-        holder.setAttribute('aria-label', 'Open teaching');
+        holder.setAttribute('aria-label', 'Open recording');
       } else if (valid || watchOnly) {
         add(holder, 'Watch', 'video'); if (valid) add(holder, 'Listen', 'audio');
       }
@@ -63,7 +64,7 @@
         if (!globalThis.LightCityMedia) { feedback(holder, 'Playback controls are still loading. Please try again.'); return; }
         let controller = mounted.get(viewport);
         if (!controller) {
-          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: recording.title || 'LightCity teaching', onState: (mode, message) => {
+          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: recording.title || 'LightCity recording', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
             feedback(holder, message);
             if (holder === watch) {

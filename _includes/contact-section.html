@@ -61,6 +61,7 @@
                             </div>
                             <div class="min-height content">
                                 <ul class="footerLinks-lists active-link">
+<li><a href="{{ '/Home/' | relative_url }}">Home</a></li><li><a href="{{ '/Listen/' | relative_url }}">Audio</a></li>
                                     <li>
                                         {% for page in site.pages %}{% if page.title contains "Teaching-Articles" %}
                                         <a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">

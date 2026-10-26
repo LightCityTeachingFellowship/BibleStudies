@@ -188,3 +188,32 @@
 .app-home #home-search-results .lc-search-reading-result > a {min-width:0;border:0;padding:0;}
 .lc-search-reading-result > .lc-save-video {margin-top:18px;}
 .lc-study-toolbar :focus-visible,.lc-study-filters :focus-visible {outline:3px solid var(--vivid-orange,#ffbf00);outline-offset:3px;}
+
+/* Audio collection: familiar media cards, independent title search and stable playback. */
+.lc-audio-library {max-width:1400px;width:calc(100% - 32px);margin:24px auto 60px;}
+.lc-audio-search {display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:12px 16px;border:1px solid #cbd2da;border-radius:12px;}
+.lc-audio-search label {font-size:14px;white-space:nowrap;}
+.lc-audio-search input {flex:1;min-width:0;font:inherit;border:0;background:transparent;color:inherit;padding:8px;}
+.lc-audio-library-heading {padding:24px;border:1px solid #cbd2da;border-radius:18px;}
+.lc-audio-library-heading h1 {font-size:clamp(28px,5vw,44px)!important;margin:0 0 12px!important;}
+.lc-audio-library-heading p,#audio-library-status {font-size:15px!important;line-height:1.6!important;}
+.lc-audio-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:20px;align-items:stretch;}
+.lc-audio-card {min-width:0;padding:12px!important;border:1px solid #cbd2da;border-radius:18px;overflow:hidden;}
+.lc-audio-card[hidden] {display:none!important;}
+.lc-audio-art {aspect-ratio:16/9;position:relative;overflow:hidden;border-radius:12px;background:#242424;}
+.lc-audio-preview {display:block;position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:transparent;cursor:pointer;}
+.lc-audio-preview img {width:100%;height:100%;object-fit:cover;}
+.lc-audio-play {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#ffbf00;color:#171717;border-radius:50%;width:48px;height:48px;display:grid;place-items:center;font-size:26px;}
+.lc-audio-card .video-title {font-size:20px!important;line-height:1.35!important;}
+.lc-audio-badge {display:inline-block;font-size:11px;margin-top:8px;}
+.lc-audio-live {color:#d40028;font-weight:700;}
+#audio-library-more {margin-top:24px;}
+.lc-page-footer {padding:24px 16px;border-top:1px solid #cbd2da;}
+.lc-page-footer nav {display:flex;justify-content:center;flex-wrap:wrap;gap:20px;}
+.lc-page-footer a,.lc-section-link {color:inherit;text-decoration:none;font:inherit;}
+.lc-section-link {white-space:nowrap;}
+.app-home #app-home-main .home-shortcuts {grid-template-columns:repeat(4,minmax(0,1fr));}
+body.app-home .home-bottom-nav {grid-template-columns:repeat(5,minmax(0,1fr));}
+@media(max-width:699px){.app-home #app-home-main .home-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr));}.lc-audio-library-heading{padding:18px;}.lc-audio-search label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}}
+
+.site-browse .lc-audio-grid .lc-audio-card {margin:0;}

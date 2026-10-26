@@ -34,7 +34,7 @@ title: Watch a video
                 <img class="churchLOGO-img" src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" height="40" alt="LightCity Teaching Fellowship">
               </a>
             </div>
-            <div class="headerUL">
+            <div class="headerUL"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a>
               <a class="lc-personal-library-link" href="{{ '/MyVideos/' | relative_url }}">Saved &amp; history</a>
               <a class="moreButton transition" href="{{ '/Videos/' | relative_url }}">All videos <span aria-hidden="true">→</span></a>
             </div>
@@ -50,10 +50,11 @@ title: Watch a video
     <div id="watch-player" class="watch-player" hidden></div>
     <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
     <div id="watch-personal-actions"></div>
-    <div id="watch-audio-choice" class="lc-video-actions" aria-label="Listen to this teaching" hidden></div>
+    <div id="watch-audio-choice" class="lc-video-actions" aria-label="Listen to this recording" hidden></div>
     <section class="lc-study-related" data-study-related hidden><h2>Related study resources</h2><div data-study-related-list></div></section>
     <noscript>Enable JavaScript to play this video, or browse <a href="{{ '/Videos/' | relative_url }}">all videos</a>.</noscript>
   </main>
       {% include theme-toggle.html %}
+{% include site-short-footer.html %}
 </body>
 </html>

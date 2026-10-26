@@ -184,7 +184,7 @@ function pumpVideoMetadata() {
 }
 function queueVideoMetadata(player) {
     const card = player.closest('#All-Tab-content .video-box');
-    const heading = document.createElement('h3'); heading.className = 'video-title'; heading.textContent = 'LightCity teaching'; card.appendChild(heading);
+    const heading = document.createElement('h3'); heading.className = 'video-title'; heading.textContent = 'LightCity recording'; card.appendChild(heading);
     let pending = metadataRequests.get(player.videoId);
     if (!pending) {
         pending = new Promise((resolve, reject) => metadataJobs.push({ id: player.videoId, resolve, reject }));

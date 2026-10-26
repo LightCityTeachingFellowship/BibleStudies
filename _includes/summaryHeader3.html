@@ -22,6 +22,7 @@
                         <button onclick="myFunction()" class="mobileButton" type="button"></button>
                         <div id="myDropdown" class="myDropdown transition">
                             <div class="mobile-homeHeaderNav bg-image dropdown_menu-6">
+<div class="mobile-headerLinks transition"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a></div><div class="mobile-headerLinks transition"><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a></div>
                                 <div class="mobile-headerLinks transition">
                                     {% for page in site.pages %} {% if page.title contains "Teaching Summary" %}
                                     <a class="linkTitle transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
@@ -75,6 +76,7 @@
             </div>
             <div class="headerUL desktopView">
                 <ul class="header-links">
+<li class="header-links-li transition"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a></li><li class="header-links-li transition"><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a></li>
                     <li class="header-links-li transition">
                         {% for page in site.pages %} {% if page.title contains "Teaching Summary" %}
                         <a class="iconLink transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">Home

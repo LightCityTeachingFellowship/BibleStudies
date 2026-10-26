@@ -32,7 +32,7 @@ title: My study library
                 <img class="churchLOGO-img" src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" height="40" alt="LightCity Teaching Fellowship">
               </a>
             </div>
-            <div class="headerUL">
+            <div class="headerUL"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a>
               <a class="lc-personal-library-link" href="{{ '/MyVideos/' | relative_url }}">Saved &amp; history</a>
               <a class="moreButton transition" href="{{ '/Videos/' | relative_url }}">All videos <span aria-hidden="true">→</span></a>
             </div>
@@ -43,7 +43,7 @@ title: My study library
   </div>
   {% include site-search.html %}
   <main class="leftRight-space-16 lc-personal-main">
-    <h1>My study library</h1><p>Saved teachings and your reading, watching and listening history.</p><div class="lc-study-filters" role="group" aria-label="Content type"><button type="button" data-study-filter="all" aria-pressed="true">All</button><button type="button" data-study-filter="video" aria-pressed="false">Videos &amp; audio</button><button type="button" data-study-filter="Article" aria-pressed="false">Articles</button><button type="button" data-study-filter="Summary" aria-pressed="false">Summaries</button></div>
+    <h1>My study library</h1><p>Saved resources and your reading, watching and listening history.</p><div class="lc-study-filters" role="group" aria-label="Content type"><button type="button" data-study-filter="all" aria-pressed="true">All</button><button type="button" data-study-filter="video" aria-pressed="false">Videos &amp; audio</button><button type="button" data-study-filter="Article" aria-pressed="false">Articles</button><button type="button" data-study-filter="Summary" aria-pressed="false">Summaries</button></div>
     <p id="my-video-status" role="status">Loading your study library…</p>
     <div class="lc-personal-tabs" role="tablist" aria-label="Saved and history">
       <button type="button" role="tab" data-personal-tab="saved" aria-selected="true" aria-controls="my-video-list">Saved</button>
@@ -57,5 +57,6 @@ title: My study library
     <noscript>Enable JavaScript to use saved videos and history.</noscript>
   </main>
       {% include theme-toggle.html %}
+{% include site-short-footer.html %}
 </body>
 </html>

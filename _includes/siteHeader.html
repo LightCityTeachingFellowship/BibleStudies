@@ -20,6 +20,7 @@
                     </div>
                     <div class="headerUL">
                         <ul class="header-links">
+<li class="header-links-li transition"><a class="iconLink transition lc-section-link" href="{{ '/Home/' | relative_url }}">Home</a></li><li class="header-links-li transition"><a class="iconLink transition lc-section-link" href="{{ '/Listen/' | relative_url }}">Audio</a></li>
                         <li class="header-links-li transition">
                             {% for page in site.pages %}{% if page.title contains "LightCity Teaching Fellowship" %}
                             <a class="iconLink transition" href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">Home

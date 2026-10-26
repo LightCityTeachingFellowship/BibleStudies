@@ -188,7 +188,7 @@ function boot() {
     try{const page=await globalThis.LightCityMembers.getVideoActivity({view,cursor,accountUid:owner.slice(5)});if(owner!==personal.scope)return;cursors[view]=page.cursor;personal.mergeRows(view,page.rows);}
     catch{syncMessage='Could not load more videos. Please try again.';emit();}finally{more.disabled=false;}
   };
-  const clear=document.getElementById('clear-video-history');if(clear)clear.onclick=()=>{if(window.confirm('Clear your reading, watch and listening history? Saved teachings will be kept.')){personal.clearHistory();window.dispatchEvent(new Event('lc-clear-reading-history'));void flush();}};
+  const clear=document.getElementById('clear-video-history');if(clear)clear.onclick=()=>{if(window.confirm('Clear your reading, watch and listening history? Saved resources will be kept.')){personal.clearHistory();window.dispatchEvent(new Event('lc-clear-reading-history'));void flush();}};
   const grid=document.getElementById('videotab-container');
   if(grid&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches?.('.video-box, .video-title')||n.querySelector?.('.video-box')))))schedule();}).observe(grid,{childList:true,subtree:true});
   if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}render();
