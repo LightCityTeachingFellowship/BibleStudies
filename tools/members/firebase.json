@@ -1,3 +1,11 @@
 {
-  "functions": [{ "source": "functions", "codebase": "lightcity-members" }]
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "lightcity-members",
+      "predeploy": [
+        "node \"$PROJECT_DIR/prepare-reading-catalog.mjs\""
+      ]
+    }
+  ]
 }

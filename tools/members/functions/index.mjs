@@ -1,3 +1,4 @@
+import { createReadingActivity } from './reading-activity.mjs';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -44,3 +45,7 @@ export const getChurchLiveAudio = onCall({ ...options, secrets: [livePlaybackKey
 const activity = createVideoActivity({ auth: getAuth(), db: getFirestore(), fail: HttpsError });
 export const getMyVideoActivity = onCall(options, activity.getMyVideoActivity);
 export const updateMyVideoActivity = onCall(options, activity.updateMyVideoActivity);
+
+const readingActivity = createReadingActivity({auth:getAuth(),db:getFirestore(),fail:HttpsError,privateCatalog:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications});
+export const getMyReadingActivity = onCall(options, readingActivity.getMyReadingActivity);
+export const updateMyReadingActivity = onCall(options, readingActivity.updateMyReadingActivity);

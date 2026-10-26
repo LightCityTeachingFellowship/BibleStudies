@@ -261,3 +261,22 @@ This verifies the scheduled task belongs to this repository's runner, stops/rest
 node tools/audio-library/automatic.mjs status
 node tools/audio-library/test-catchup.mjs
 ```
+
+
+## Gradual full-library processing
+
+The existing Windows helper can process the remaining website library when the ignored
+`work/automatic-recorded/schedule-policy.json` contains `{"includeBacklog":true}`.
+It retains completed jobs and discovers missing website IDs on each queue check.
+
+The helper permits at most 35 new YouTube download attempts in a rolling 24-hour
+window, with at least 40 minutes between starts. Failed, processing and interrupted
+attempts count toward the limit. Attempt timestamps are saved before contacting
+YouTube and survive restarts. A bot check pauses new downloads for six hours;
+this can extend repeatedly and is not a guarantee of 35 completed recordings daily.
+Already-downloaded audio can still finish uploading during the pause or daily limit.
+
+Run `start-catchup.ps1` once after updating to reload the existing scheduled helper.
+The computer must remain on, signed in and connected. After downtime it resumes
+without catching up missed downloads in a burst. No extra scheduled task is needed.
+Use `node tools/audio-library/automatic.mjs status` to see quota and queue totals.

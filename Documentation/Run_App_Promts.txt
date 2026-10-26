@@ -12,4 +12,4 @@ cd C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub
 bundle exec jekyll serve --config _config.yml,_config.local.yml
 
 Deploy to firestore:
-C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub\tools\members
+cd C:\Users\samvi\OneDrive\Desktop\LightCityApp_Project\LightCity-Website-GitHub\tools\members

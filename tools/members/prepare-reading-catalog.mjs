@@ -1,0 +1,10 @@
+import {readdir,readFile,writeFile} from 'node:fs/promises';
+import {dirname,join,resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+const here=dirname(fileURLToPath(import.meta.url)),root=resolve(here,'../..');
+function scalar(text){text=text.trim();if(text.startsWith('"'))return JSON.parse(text);if(text.startsWith("'")){if(!text.endsWith("'"))throw Error('Unclosed front matter string');return text.slice(1,-1).replace(/''/g,"'");}if(/[\[\]{}]|\s+#/.test(text))throw Error('Unsupported private reading metadata; use a quoted scalar.');return text;}
+async function* walk(folder){for(const entry of await readdir(folder,{withFileTypes:true})){if(entry.name.startsWith('.')||entry.name==='node_modules')continue;const path=join(folder,entry.name);if(entry.isDirectory())yield*walk(path);else if(/\.(html|md)$/.test(entry.name))yield path;}}
+const entries=[];
+for(const folder of ['Posts-Articles','Posts-Summaries'])for await(const path of walk(join(root,folder))){const source=await readFile(path,'utf8'),front=source.match(/^---\r?\n([\s\S]*?)\r?\n---/);if(!front)continue;const get=k=>front[1].match(new RegExp('^'+k+':\\s*(.+)$','m'))?.[1];if(get('visibility')?.trim()!=='members')continue;const layout=get('layout')?.trim();if(!['articleTEMPLATE','summaryTEMPLATE','summaryTEMPLATE2','summaryTEMPLATE3'].includes(layout))continue;const title=scalar(get('title')||''),url=scalar(get('permalink')||'');if(!title||!url.startsWith('/')||url.startsWith('//')||/:[a-z]+/.test(url))throw Error('Private readings need explicit title and permalink: '+path);entries.push({title,url,kind:layout==='articleTEMPLATE'?'Article':'Summary',visibility:'members',studyId:get('study_id')?scalar(get('study_id')):'',videoIds:[]});}
+await writeFile(join(here,'functions/reading-private-catalog.json'),JSON.stringify({publications:entries},null,2)+'\n');
+console.log('Prepared private reading metadata for '+entries.length+' member publications; no private metadata is published to the website catalogue.');

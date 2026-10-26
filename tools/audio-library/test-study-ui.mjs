@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+class Element extends EventTarget{
+ constructor(tag='div'){super();this.tagName=tag.toUpperCase();this.children=[];this.dataset={};this.attrs={};this.hidden=false;this.textContent='';this.nodeType=1;}
+ appendChild(n){n.remove?.();this.children.push(n);n.parentNode=this;n.parentElement=this;return n;}append(...nodes){nodes.forEach(n=>this.appendChild(n));}
+ insertBefore(n,b){n.remove?.();let i=this.children.indexOf(b);if(i<0)i=this.children.length;this.children.splice(i,0,n);n.parentNode=this;n.parentElement=this;}
+ remove(){if(this.parentNode)this.parentNode.children=this.parentNode.children.filter(n=>n!==this);this.parentNode=null;this.parentElement=null;}
+ replaceChildren(...nodes){for(const n of this.children){n.parentNode=null;n.parentElement=null;}this.children=[];this.append(...nodes);}
+ setAttribute(k,v){this.attrs[k]=String(v);}getAttribute(k){return this.attrs[k]??null;}
+ matches(selector){return selector.split(',').some(s=>{s=s.trim();if(s.startsWith('#'))return this.id===s.slice(1);if(s.startsWith('.'))return this.className?.split(' ').includes(s.slice(1));if(s.startsWith('[data-'))return Object.hasOwn(this.dataset,s.slice(6,-1).replace(/-([a-z])/g,(_,c)=>c.toUpperCase()));return this.tagName.toLowerCase()===s;});}
+ querySelectorAll(s){return this.children.flatMap(n=>[...(n.matches(s)?[n]:[]),...n.querySelectorAll(s)]);}querySelector(s){return this.querySelectorAll(s)[0]||null;}
+ getClientRects(){return[{}];}getBoundingClientRect(){return{top:0,bottom:3000};}scrollIntoView(){this.scrolled=true;}focus(){this.focused=true;}
+}
+const root=new Element(),settings=new Element('script');settings.dataset={base:'/',catalog:'/study-catalog.json'};
+const add=(parent,key,tag='div')=>{const e=new Element(tag);e.dataset[key]='';parent.appendChild(e);return e;};
+const toolbar=add(root,'studyCurrent');toolbar.dataset.studyUrl='/Article/';const save=add(toolbar,'studySave','button');const resume=add(toolbar,'studyResume','button');const finish=add(toolbar,'studyFinish','button');add(toolbar,'studyStatus');
+const body=add(root,'studyBody','article');for(let i=0;i<10;i++){const p=new Element('p');p.textContent='Paragraph '+i;body.appendChild(p);}
+const lib=add(root,'studyLibrary');add(lib,'studyLibraryStatus');const list=add(lib,'studyLibraryList');
+const cont=add(root,'studyContinue');const continueList=add(cont,'studyContinueList');const related=add(root,'studyRelated');const relatedList=add(related,'studyRelatedList');
+const search=new Element('li');search.className='lc-search-reading-result';search.dataset.studyUrl='/Article/';root.appendChild(search);const anchor=new Element('a');anchor.href='/Article/';search.appendChild(anchor);
+const filters=['all','video','Article','Summary'].map(v=>{const n=add(root,'studyFilter','button');n.dataset.studyFilter=v;return n;});
+const tabs=['saved','history'].map(v=>{const n=add(root,'personalTab','button');n.dataset.personalTab=v;return n;});
+const publicData=new Element('script');publicData.textContent=JSON.stringify({abcdefghijk:'Holy Spirit and the Father'});
+const videoList=new Element();videoList.id='my-video-list';root.appendChild(videoList);const copy=new Element('button');copy.hidden=true;
+const document=Object.assign(new EventTarget(),{readyState:'complete',visibilityState:'visible',createElement:t=>new Element(t),getElementById:id=>id==='lc-public-video-data'?publicData:id==='my-video-list'?videoList:id==='import-device-videos'?copy:null,querySelector:s=>s==='script[data-lightcity-study]'?settings:s.startsWith('script[')?null:root.querySelector(s),querySelectorAll:s=>root.querySelectorAll(s)});
+Object.assign(globalThis,{document,window:new EventTarget(),location:{origin:'https://example.com',href:'https://example.com/Article/',search:''},innerHeight:800,requestAnimationFrame:fn=>fn()});
+const memory=new Map();globalThis.localStorage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v)};
+globalThis.LightCityMembers={ready:Promise.resolve(),user:null,loading:false,library:null,getReadingActivity:async()=>({rows:[],cursor:null}),updateReadingActivity:async()=>({ok:true})};
+globalThis.fetch=async()=>Response.json({publications:[{title:'Holy Spirit and the Father',kind:'Article',url:'/Article/',videoIds:['abcdefghijk']},{title:'Holy Spirit and the Father summary',kind:'Summary',url:'/Summary/',videoIds:['abcdefghijk']}]});
+const {study}=await import('../../script/study.js');const {resourceId}=await import('../../script/study-core.mjs');const {personal}=await import('../../script/video-personal.js?v=study-1');
+const settle=async()=>{for(let i=0;i<8;i++)await new Promise(r=>setTimeout(r,5));};await settle();
+const id=await resourceId('/Article/');assert.equal(save.disabled,false);assert.equal(save.getAttribute('aria-pressed'),'false');save.onclick({preventDefault(){},stopPropagation(){}});await settle();assert.equal(save.getAttribute('aria-pressed'),'true');assert.equal(list.children.length,1);assert.ok(search.querySelector('.lc-save-video'));
+study.progress({resourceId:id,fraction:.4,section:4});await settle();assert.equal(resume.hidden,false);resume.onclick();assert.ok(body.children[4].scrolled);assert.ok(body.children[4].focused);assert.equal(continueList.children.length,1);assert.ok(continueList.querySelector('a').href.includes('continue=reading'));
+personal.record({videoId:'abcdefghijk',seconds:75,duration:1000,mode:'audio'});await settle();assert.equal(continueList.children.length,2,'home merges reading and media progress');
+finish.onclick();await settle();assert.equal(study.history(id).completed,true);assert.equal(resume.hidden,true);assert.equal(continueList.children.length,1,'completed readings disappear from continuation');
+filters[1].onclick();await settle();assert.equal(lib.hidden,true);filters[2].onclick();await settle();assert.equal(lib.hidden,false);assert.equal(videoList.hidden,true);assert.equal(list.children.length,1);
+assert.ok(relatedList.children.some(n=>n.href==='/Summary/'));assert.ok(relatedList.children.some(n=>n.href?.includes('Watch/')));
+window.dispatchEvent(new Event('lc-clear-reading-history'));await settle();assert.equal(study.history(id),null);assert.equal(study.saved(id),true);
+LightCityMembers.user={uid:'alice',isAnonymous:false};window.dispatchEvent(new Event('lightcity-members-changed'));await settle();assert.equal(study.scope,'user:alice');assert.equal(study.saved(id),false);assert.equal(copy.hidden,false,'reading-only device saves can be imported');
+window.dispatchEvent(new Event('lc-copy-device-reading'));await settle();assert.equal(study.saved(id),true);
+LightCityMembers.user={uid:'bob',isAnonymous:false};window.dispatchEvent(new Event('lightcity-members-changed'));await settle();assert.equal(study.scope,'user:bob');assert.equal(study.saved(id),false,'account changes cannot display previous account reading saves');
+console.log('PASS: reading bookmark and search icon, shared library filters, focusable section restoration, combined homepage media/reading continuation, completion, related links, clear-history isolation, explicit device import and account switching.');

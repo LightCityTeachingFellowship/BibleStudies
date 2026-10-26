@@ -271,11 +271,12 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
         addText(link, 'span', (start ? '…' : '') + text.slice(start, start + 170) + (text.length > start + 170 ? '…' : ''), 'home-result-excerpt');
       }
       if(item.videoId){li.dataset.videoId=item.videoId;li.className='lc-search-video-result';}
+      else if(['Article','Summary'].includes(item.kind)){li.dataset.studyUrl=item.url;li.className='lc-search-reading-result';}
       li.appendChild(link);
       results.appendChild(li);
     }
     more.hidden = matches.length <= limit;
-    if(matches.some(({item})=>item.videoId)&&typeof Event!=='undefined')window.dispatchEvent?.(new Event('lightcity-search-results'));
+    if(matches.length&&typeof Event!=='undefined')window.dispatchEvent?.(new Event('lightcity-search-results'));
   }
   async function json(url) {
     const response = await fetch(url, { signal: AbortSignal.timeout(15000) });

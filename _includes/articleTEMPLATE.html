@@ -12,7 +12,8 @@
 	</div>
 </div>
 {% include theme-toggle.html %}
-<article class="reading-column homeResources-grid-containter bg-color leftRight-space-16 bottomBorderRadius-0">
+{% include study-controls.html %}
+<article data-study-body class="reading-column homeResources-grid-containter bg-color leftRight-space-16 bottomBorderRadius-0">
 	<small id="archive-date" class="archive-date">{{ page.date | date: "%a, %b %d, %y." }}</small>
 	<main>
 		{{content}}
@@ -64,7 +65,7 @@
 		<div class="all-links prev-link">
 			<a href="{% if site.baseurl == "" %}{{previous_page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{previous_page.url}}{% endif %}">
 				<span>&laquo; Previous article</span>
-				{{ previous_page.title }}		
+				{{ previous_page.title }}
 			</a>
 		</div>
 		{% endif %}
@@ -72,19 +73,20 @@
 		<div class="all-links next-link">
 			<a href="{% if site.baseurl == "" %}{{next_page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{next_page.url}}{% endif %}">
 				<span>Next article &raquo;</span>
-				{{ next_page.title }}			
+				{{ next_page.title }}
 			</a>
 		</div>
 		{% endif %}
 	</div>
 </div>
+<section class="reading-column lc-study-related" data-study-related hidden><h2>Related study resources</h2><div data-study-related-list></div></section>
 {% include contact-section.html %}
 <script type="text/javascript" src="../script/victorScripts/lightANDdarkmode.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript" src="../script/victorScripts/preload.js"></script>
 <script type="text/javascript" src="../script/victorScripts/dropDownMenu.js"></script>
 <script type="text/javascript" src="../script/victorScripts/slideInscript.js"></script>
-<script type="text/javascript" src="../script/victorScripts/generalscript.js?v=bookmark-title-1"></script>
+<script type="text/javascript" src="../script/victorScripts/generalscript.js?v=study-1"></script>
 <script type="text/javascript" src="../script/H1-H6.Accordion-D.js"></script>
 <script type="text/javascript" src="../script/victorScripts/responsiveTable.js"></script>
 <script type="text/javascript" src="../script/scroll2head.js"></script>

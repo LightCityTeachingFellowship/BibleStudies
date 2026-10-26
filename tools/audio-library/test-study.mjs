@@ -1,0 +1,66 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {resourcePath,resourceId,relatedResources} from '../../script/study-core.mjs';
+import {createStudyStore} from '../../script/study-store.mjs';
+import {createReadingActivity,publishedReadingCatalog} from '../members/functions/reading-activity.mjs';
+const path='/Teachings/Caf%C3%A9/',id=await resourceId(resourcePath(path));
+assert.equal(id,createHash('sha256').update('/Teachings/Café/').digest('hex'));
+assert.equal(resourcePath('https://evil.example/Article/'),null);assert.equal(resourcePath('/%2f%2fevil.example'),null);
+const memory=new Map(),storage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v)};
+let time=1000;const store=createStudyStore({storage,now:()=>++time});store.save(id,true);store.progress({resourceId:id,section:4,fraction:.4});
+assert.ok(store.saved(id));assert.equal(store.history(id).section,4);assert.equal(store.pending().length,0);
+store.setIdentity('alice');assert.equal(store.saved(id),false);store.save(id,true);const old=store.pending()[0];store.save(id,false);store.acknowledge(...old);assert.equal(store.pending().length,1,'stale acknowledgement cannot drop newer edits');
+store.hydrate('saved',[{resourceId:id,updatedAt:900}]);assert.equal(store.saved(id),false,'offline unsave wins during hydration');
+store.progress({resourceId:id,section:8,fraction:.8});store.hydrate('history',[]);assert.equal(store.history(id).section,8);
+store.clearHistory();store.hydrate('history',[{resourceId:id,section:9,fraction:.9}]);assert.equal(store.history(id),null);
+store.setIdentity('bob');assert.equal(store.history(id),null);store.setIdentity(null);assert.equal(store.history(id).section,4);
+const relations=relatedResources({id:'a',title:'The Holy Spirit and the Father',videoIds:['abcdefghijk']},[{id:'b',title:'The Holy Spirit and the Father',videoIds:[]},{id:'c',title:'Unrelated topic',videoIds:['abcdefghijk']}],new Map([['abcdefghijk','Teaching'],['ABCDEFGHIJK','Entirely unrelated']]));
+assert.equal(relations.reading[0].entry.id,'c');assert.equal(relations.media.length,1);
+let fetches=0;const cat=publishedReadingCatalog({send:async()=>{fetches++;return Response.json({publications:[{url:path,title:'Published teaching',kind:'Article'},{url:'https://evil.example/',title:'Bad',kind:'Article'}]});},now:()=>1000});
+assert.equal((await cat()).size,1);await cat();assert.equal(fetches,1);
+const data=new Map(),snapshot=(p,v)=>({id:p.split('/').pop(),ref:{path:p},exists:v!==undefined,data:()=>v});
+function doc(p){return{get:async()=>snapshot(p,data.get(p)),set:async v=>data.set(p,v),delete:async()=>data.delete(p)};}
+function collection(p){let limit=100,after;const q={doc:i=>doc(p+'/'+i),orderBy(){return q;},startAfter(t,i){after={t,i};return q;},limit(n){limit=n;return q;},async get(){let rows=[...data].filter(([k])=>k.startsWith(p+'/')).map(([k,v])=>snapshot(k,v)).sort((a,b)=>b.data().updatedAt-a.data().updatedAt||b.id.localeCompare(a.id));if(after)rows=rows.filter(d=>d.data().updatedAt<after.t||d.data().updatedAt===after.t&&d.id<after.i);rows=rows.slice(0,limit);return{docs:rows,size:rows.length};}};return q;}
+class Failure extends Error{constructor(code,message){super(message);this.code=code;}}
+let verified=true,disabled=false;
+const backend=createReadingActivity({auth:{getUser:async()=>({emailVerified:verified,disabled,providerData:[{providerId:'google.com'}]})},db:{collection,batch:()=>{const paths=[];return{delete:r=>paths.push(r.path),commit:async()=>paths.forEach(p=>data.delete(p))};}},fail:Failure,catalog:cat,now:()=>++time});
+const request=(uid,body)=>({auth:uid?{uid}:undefined,data:{accountUid:uid,...body}});
+await assert.rejects(backend.getMyReadingActivity(request(null,{view:'saved'})),e=>e.code==='unauthenticated');
+await backend.updateMyReadingActivity(request('alice',{action:'save',resourceId:id}));
+await backend.updateMyReadingActivity(request('alice',{action:'progress',resourceId:id,section:5,fraction:.5}));
+assert.equal((await backend.getMyReadingActivity(request('alice',{view:'saved'}))).rows.length,1);
+assert.equal((await backend.getMyReadingActivity(request('bob',{view:'saved',uid:'alice'}))).rows.length,0);
+await assert.rejects(backend.updateMyReadingActivity(request('bob',{accountUid:'alice',action:'save',resourceId:id})),e=>e.code==='permission-denied');
+await assert.rejects(backend.updateMyReadingActivity(request('alice',{action:'save',resourceId:'0'.repeat(64)})),e=>e.code==='not-found');
+await assert.rejects(backend.updateMyReadingActivity(request('alice',{action:'progress',resourceId:id,section:-1,fraction:4})),e=>e.code==='invalid-argument');
+await backend.updateMyReadingActivity(request('alice',{action:'clearHistory'}));assert.equal((await backend.getMyReadingActivity(request('alice',{view:'saved'}))).rows.length,1);assert.equal((await backend.getMyReadingActivity(request('alice',{view:'history'}))).rows.length,0);
+verified=false;await assert.rejects(backend.getMyReadingActivity(request('alice',{view:'saved'})),e=>e.code==='permission-denied');verified=true;disabled=true;await assert.rejects(backend.getMyReadingActivity(request('alice',{view:'saved'})),e=>e.code==='permission-denied');
+console.log('PASS: canonical reading IDs, private scoped persistence, offline edits and clear-history ordering, related-resource filtering, trusted published catalogue, account isolation and input validation.');
+const require=createRequire(import.meta.url),{Liquid}=require('../visibility-qa/node_modules/liquidjs');
+const engine=new Liquid({root:'_includes',dynamicPartials:false});engine.registerFilter('jsonify',v=>JSON.stringify(v??null));engine.registerFilter('relative_url',v=>'/BibleStudies'+v);engine.registerFilter('normalize_whitespace',v=>String(v).replace(/\s+/g,' ').trim());
+const videos=JSON.parse(await readFile('_data/videos.json','utf8'));const publics=(await readFile('_includes/video-ids-public.txt','utf8')).trim().split(/\s+/);const members=(await readFile('_includes/video-ids-members.txt','utf8')).trim().split(/\s+/);const publicId=publics.find(id=>!members.includes(id)),privateId=members[0];
+const source=(await readFile('study-catalog.json','utf8')).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/,'');
+const rendered=JSON.parse(await engine.parseAndRender(source,{site:{video_visibility_enabled:true,data:{videos},pages:[{layout:'articleTEMPLATE',title:'A "quoted" article',url:'/Article/',video_id:publicId,video_ids:[privateId],content:`<iframe src="https://www.youtube-nocookie.com/embed/${publicId}"></iframe><a href="https://youtu.be/${privateId}">private</a>`}],posts:[{layout:'summaryTEMPLATE',title:'Summary',url:'/Summary/'},{layout:'summaryTEMPLATE2',title:'Other summary',url:'/Summary2/'}]}}));
+assert.equal(rendered.publications.length,3);assert.ok(rendered.publications[0].videoIds.includes(publicId));assert.ok(!rendered.publications[0].videoIds.includes(privateId));assert.equal(rendered.publications[0].url,'/BibleStudies/Article/');
+const toolbar=await engine.parseAndRender(await readFile('_includes/study-controls.html','utf8'),{page:{url:'/Article/'}});assert.ok(toolbar.includes('data-study-save'));assert.ok(toolbar.includes('/BibleStudies/MyVideos/'));
+console.log('PASS: catalogue Liquid renders valid JSON, all summary layouts are included, subdirectory links work, and member video IDs stay out of public connection metadata.');
+
+disabled=false;const many=new Map(Array.from({length:105},(_,i)=>[createHash('sha256').update('reading-'+i).digest('hex'),{title:'Reading '+i}]));
+const paging=createReadingActivity({auth:{getUser:async()=>({emailVerified:true,disabled:false,providerData:[{}]})},db:{collection},fail:Failure,catalog:async()=>many,now:()=>5000});
+for(const rid of many.keys())await paging.updateMyReadingActivity(request('pager',{action:'save',resourceId:rid}));
+const page1=await paging.getMyReadingActivity(request('pager',{view:'saved'}));assert.equal(page1.rows.length,100);assert.ok(page1.cursor);
+const page2=await paging.getMyReadingActivity(request('pager',{view:'saved',cursor:page1.cursor}));assert.equal(page2.rows.length,5);assert.equal(new Set([...page1.rows,...page2.rows].map(r=>r.resourceId)).size,105);
+many.clear();assert.equal((await paging.getMyReadingActivity(request('pager',{view:'saved'}))).rows.length,0,'unpublished readings are filtered from account history');
+console.log('PASS: reading pagination has no duplicates with equal timestamps and removed publications are hidden.');
+
+let approved=true;const privateEntry={title:'Private reading',url:'/Private/',kind:'Article',visibility:'members'},privateKey=await resourceId('/Private/');
+const privateApi=createReadingActivity({auth:{getUser:async()=>({emailVerified:true,disabled:false,providerData:[{}]})},db:{collection,doc:()=>({get:async()=>({exists:true,data:()=>({active:approved})})})},fail:Failure,catalog:cat,privateCatalog:[privateEntry],now:()=>++time});
+assert.equal((await privateApi.getMyReadingActivity(request('member',{view:'catalog'}))).publications.length,1);
+await privateApi.updateMyReadingActivity(request('member',{action:'save',resourceId:privateKey}));assert.equal((await privateApi.getMyReadingActivity(request('member',{view:'saved'}))).rows.length,1);
+approved=false;assert.equal((await privateApi.getMyReadingActivity(request('member',{view:'saved'}))).rows.length,0);
+await assert.rejects(privateApi.getMyReadingActivity(request('member',{view:'catalog'})),e=>e.code==='permission-denied');
+await assert.rejects(privateApi.updateMyReadingActivity(request('member',{action:'save',resourceId:privateKey})),e=>e.code==='not-found');
+const hiddenRendered=JSON.parse(await engine.parseAndRender(source,{site:{data:{videos},pages:[{layout:'articleTEMPLATE',visibility:'members',title:'Secret title',url:'/Private/'},{layout:'articleTEMPLATE',visibility:'public',title:'Public title',url:'/Public/'}],posts:[]}}));assert.deepEqual(hiddenRendered.publications.map(p=>p.title),['Public title']);
+console.log('PASS: private reading metadata is excluded from public output, requires approved membership, and disappears after access revocation.');

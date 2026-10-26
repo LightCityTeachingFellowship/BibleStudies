@@ -46,7 +46,7 @@ async function refresh() {
       personal.acceptSaved(watchId,point.saved,titleFor(watchId)); if(point.history)personal.acceptHistory(point.history);
       syncMessage='Saved videos and history sync with your account.';emit();return;
     }
-    const searchOnly=!['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page'].some(id=>document.getElementById?.(id));
+    const searchOnly=!['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page','study-continue-title'].some(id=>document.getElementById?.(id));
     for (const view of searchOnly?['saved']:['saved','history']) {
       const rows = []; let cursor = null, pages = 0;
       do {
@@ -165,7 +165,7 @@ function render() {
   renderPage(visible);
 }
 function boot() {
-  const primary=['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page'].some(id=>document.getElementById?.(id));
+  const primary=['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page','study-continue-title'].some(id=>document.getElementById?.(id));
   if(!document.querySelector?.('script[data-lightcity-personal]') || (!primary&&!document.getElementById?.('home-search-results')))return;
   let initialized=primary;
   window.addEventListener('lightcity-search-results',()=>{if(!initialized){initialized=true;refreshPromise=refresh();personal.ready=refreshPromise;}schedule();});
@@ -181,14 +181,14 @@ function boot() {
     const device=createVideoStore({storage}), visible=visibleVideos();
     for(const row of device.rows('saved'))if(visible.has(row.videoId)&&!personal.saved(row.videoId))personal.save(row.videoId,row.title,true);
     for(const row of device.rows('history'))if(visible.has(row.videoId)&&(!personal.history(row.videoId)||personal.history(row.videoId).updatedAt<row.updatedAt))personal.progress(row);
-    syncMessage='Device videos copied to this account. Syncing…';emit();void flush();
+    window.dispatchEvent(new Event('lc-copy-device-reading'));syncMessage='Device videos copied to this account. Syncing…';emit();void flush();
   };
   const more=document.getElementById('load-more-videos');if(more)more.onclick=async()=>{
     const view=pageView, owner=personal.scope, cursor=cursors[view];if(!cursor)return;more.disabled=true;
     try{const page=await globalThis.LightCityMembers.getVideoActivity({view,cursor,accountUid:owner.slice(5)});if(owner!==personal.scope)return;cursors[view]=page.cursor;personal.mergeRows(view,page.rows);}
     catch{syncMessage='Could not load more videos. Please try again.';emit();}finally{more.disabled=false;}
   };
-  const clear=document.getElementById('clear-video-history');if(clear)clear.onclick=()=>{if(window.confirm('Clear your watch and listening history? Saved videos will be kept.')){personal.clearHistory();void flush();}};
+  const clear=document.getElementById('clear-video-history');if(clear)clear.onclick=()=>{if(window.confirm('Clear your reading, watch and listening history? Saved teachings will be kept.')){personal.clearHistory();window.dispatchEvent(new Event('lc-clear-reading-history'));void flush();}};
   const grid=document.getElementById('videotab-container');
   if(grid&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches?.('.video-box, .video-title')||n.querySelector?.('.video-box')))))schedule();}).observe(grid,{childList:true,subtree:true});
   if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}render();

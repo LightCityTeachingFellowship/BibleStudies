@@ -1,0 +1,13 @@
+---
+layout: null
+---
+{% assign study_articles = site.pages | where: 'layout', 'articleTEMPLATE' %}
+{% include video-list.html %}
+{% assign study_summaries = site.posts | where: 'layout', 'summaryTEMPLATE' %}
+{% assign study_summaries2 = site.posts | where: 'layout', 'summaryTEMPLATE2' %}
+{% assign study_summaries3 = site.posts | where: 'layout', 'summaryTEMPLATE3' %}
+{% assign study_summaries = study_summaries | concat: study_summaries2 | concat: study_summaries3 %}
+{% assign study_items = study_articles | concat: study_summaries %}
+{% assign public_study_items = '' | split: ',' %}
+{% for item in study_items %}{% unless item.visibility == 'members' %}{% assign public_study_items = public_study_items | push: item %}{% endunless %}{% endfor %}
+{"publications":[{% for item in public_study_items %}{% include study-catalog-entry.html %}{% unless forloop.last %},{% endunless %}{% endfor %}]}

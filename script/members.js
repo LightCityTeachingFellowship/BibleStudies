@@ -211,3 +211,6 @@ if (page) {
   });
   renderPage();
 }
+
+api.getReadingActivity = async data => { await api.ready; return call('getMyReadingActivity', data); };
+api.updateReadingActivity = async data => { await api.ready; return call('updateMyReadingActivity', data); };
