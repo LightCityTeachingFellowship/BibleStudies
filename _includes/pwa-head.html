@@ -33,4 +33,4 @@ setTimeout(() => {
 <script type="application/json" id="lc-public-video-data">{ {% assign personal_public_count = 0 %}{% for personal_id in public_video_ids %}{% unless member_video_ids contains personal_id %}{% if personal_id.size == 11 %}{% if personal_public_count > 0 %},{% endif %}{% assign personal_video = site.data.videos | where: 'id', personal_id | first %}{{ personal_id | jsonify }}:{{ personal_video.title | jsonify | replace: '<', '\u003c' }}{% assign personal_public_count = personal_public_count | plus: 1 %}{% endif %}{% endunless %}{% endfor %} }</script>
 <script type="module" src="{{ '/script/video-personal.js' | relative_url }}?v=media-library-1" data-lightcity-personal data-base="{{ '/' | relative_url }}"></script>
 
-<script type="module" src="{{ '/script/study.js' | relative_url }}?v=media-library-1" data-lightcity-study data-base="{{ '/' | relative_url }}" data-catalog="{{ '/study-catalog.json' | relative_url }}"></script>
+<script type="module" src="{{ '/script/study.js' | relative_url }}?v=related-date-1" data-lightcity-study data-base="{{ '/' | relative_url }}" data-catalog="{{ '/study-catalog.json' | relative_url }}"></script>

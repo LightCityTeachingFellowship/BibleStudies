@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {contentDates,relatedResources} from '../../script/study-core.mjs';
+const iso='2026-10-21';
+for(const title of ['Wed, Oct 21, 2026.','21 October 2026','October 21st, 2026','21st Oct. 2026','2026-10-21T23:30:00-07:00'])assert.deepEqual([...contentDates(title)],[iso],title);
+assert.deepEqual([...contentDates('Sept. 4, 2026')],['2026-09-04']);
+assert.equal(contentDates('Feb 29, 2025','2026-02-30','2026-13-21','John 1-4','Day 21','Oct 21').size,0,'invalid and partial dates never match');
+assert.deepEqual([...contentDates('29 February 2024')],['2024-02-29']);
+const id='abcdefghijk',other='ABCDEFGHIJK',videos=new Map([[id,'Day 24 - Prayer Meeting || Wed, Oct 21, 2026.'],[other,'Different event || Oct 21, 2025']]);
+const readings=[{id:'article',title:'God is faithful',date:iso,kind:'Article'},{id:'summary',title:'The hope of glory',date:iso,kind:'Summary'},{id:'wrong-year',title:'Another reading',date:'2025-10-21'},{id:'explicit',title:'Directly connected reading',videoIds:[id]}];
+let related=relatedResources({id,title:videos.get(id),videoIds:[id]},readings,videos);
+assert.equal(related.reading[0].entry.id,'explicit','direct connections rank before same-day suggestions');
+assert.deepEqual(related.reading.filter(r=>r.reason==='date').map(r=>r.entry.id),['article','summary']);assert.ok(!related.reading.some(r=>r.entry.id==='wrong-year'));
+related=relatedResources(readings[0],readings,videos);assert.equal(related.media[0].id,id);assert.equal(related.media[0].reason,'date');assert.ok(!related.media.some(r=>r.id===other));assert.ok(related.reading.some(r=>r.entry.id==='summary'&&r.reason==='date'),'readings on the same day connect too');assert.ok(!related.reading.some(r=>r.entry.id==='article'));
+related=relatedResources({id:'a',title:'Different topic',videoIds:[id]},readings,videos);assert.ok(related.reading.some(r=>r.entry.id==='summary'&&r.reason==='date'),'explicit recording titles can supply the date');
+related=relatedResources({id:'a',title:'Holy Spirit and the Father'},[{id:'b',title:'Holy Spirit and the Father'}],new Map());assert.equal(related.reading[0].reason,'title','existing title matching remains');
+assert.equal(relatedResources({id:'a',title:'Sunday October'},[{id:'b',title:'Sunday October'}],new Map()).reading.length,0,'calendar words alone are not a topic match');
+console.log('PASS: recording-title date parsing, publication dates, both matching directions, explicit-link priority, original title matches, leap days, invalid/ambiguous dates and timezone-safe comparisons.');
