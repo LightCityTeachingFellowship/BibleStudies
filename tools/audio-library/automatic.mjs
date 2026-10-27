@@ -10,6 +10,7 @@ export const WORK = join(ROOT, 'tools/audio-library/work/automatic-recorded');
 const MEDIA = join(ROOT, 'tools/audio-library/work/youtube-trial');
 export const YOUTUBE_COOLDOWN = 6 * 60 * 60000;
 export const YOUTUBE_SPACING = 40 * 60000;
+export const BACKLOG_BATCH_SIZE = 3;
 export const DAILY_DOWNLOAD_LIMIT = 35;
 export const DOWNLOAD_WINDOW = 24 * 60 * 60000;
 export const URGENT_RESERVED_ATTEMPTS = 5;
@@ -18,7 +19,7 @@ export function downloadBudget(state, time = Date.now(), lane = 'backlog') {
   // On upgrade, conservatively count recent completed jobs so a restart cannot add a fresh daily allowance.
   const previous = state.youtubeDownloadStarts || Object.values(state.jobs || {}).filter(j=>j.completedAt).map(j=>Date.parse(j.completedAt));
   const starts = previous.filter(t => Number.isSafeInteger(t) && t > time - DOWNLOAD_WINDOW).sort((a,b)=>a-b);
-  const spacing = lane === 'urgent' ? 0 : Math.max(starts.length ? starts.at(-1) + YOUTUBE_SPACING : 0, Number(state.youtubeBacklogNotBefore || 0));
+  const spacing = lane === 'urgent' ? 0 : Math.max(state.backlogBatchCount == null && starts.length ? starts.at(-1) + YOUTUBE_SPACING : 0, Number(state.youtubeBacklogNotBefore || 0));
   const limit = lane === 'urgent' ? DAILY_DOWNLOAD_LIMIT : DAILY_DOWNLOAD_LIMIT - URGENT_RESERVED_ATTEMPTS;
   const quota = starts.length >= limit ? starts[starts.length - limit] + DOWNLOAD_WINDOW : 0;
   return { starts, remaining:Math.max(0, limit-starts.length), nextAllowed:Math.max(spacing,quota,Number(state.youtubeNotBefore || 0),Number(state.youtubeExternalPauseUntil || 0)) };
@@ -95,6 +96,10 @@ export async function tick({ state, library, catalog, download, remote, register
     }
     state.urgentLaneInitialized = true;
   }
+  state.backlogBatchCount ??= 0;
+  if (state.backlogBatchCount >= BACKLOG_BATCH_SIZE && Number(state.youtubeBacklogNotBefore || 0) <= now()) {
+    state.backlogBatchCount = 0; state.youtubeBacklogNotBefore = 0;
+  }
   updateQueue(state, current, catalog, now()); await persist(state);
   // Keep at most one unpublished downloaded recording: network failures cannot fill the disk.
   if (Object.values(state.jobs).some(j => j.record && j.phase === 'attention')) return null;
@@ -106,18 +111,23 @@ export async function tick({ state, library, catalog, download, remote, register
   const job = retained || jobs.find(j => j.nextAttempt <= now() && downloadBudget(state, now(), j.lane).nextAllowed <= now());
   if (!job || job.nextAttempt > now()) return null;
   const budget = downloadBudget(state, now(), job.lane);
+  let closesBatch = false;
   try {
     if (!job.record) {
       // Persist the attempt before contacting YouTube, including failed or interrupted attempts.
       state.youtubeDownloadStarts = [...budget.starts, now()];
-      state.youtubeBacklogNotBefore = Math.max(Number(state.youtubeBacklogNotBefore || 0), now() + YOUTUBE_SPACING);
+      if (job.lane !== 'urgent') {
+        // Persist slots before requests: crashes and failed attempts cannot reset a batch.
+        state.backlogBatchCount++;
+        closesBatch = state.backlogBatchCount >= BACKLOG_BATCH_SIZE;
+        state.youtubeBacklogNotBefore = closesBatch ? now() + YOUTUBE_SPACING : 0;
+      }
       await persist(state);
       const [r] = await download(job.videoId);
       if (!r || !['local audio verified', 'existing local trial audio verified'].includes(r.status)) {
         if (r?.status === 'waiting for replay') { job.phase = 'waiting'; job.message = r.reason; job.nextAttempt = now() + 10 * 60000; await persist(state); return job; }
         throw Error(r?.reason || 'Download did not complete.');
       }
-      state.youtubeBacklogNotBefore = now() + YOUTUBE_SPACING;
       job.record = r; job.phase = 'downloaded'; await persist(state);
     }
     if (!(await library()).some(v => v.id === job.videoId)) { job.phase = 'removed'; await persist(state); return job; }
@@ -142,13 +152,18 @@ export async function tick({ state, library, catalog, download, remote, register
     job.nextAttempt = now() + [60000, 300000, 900000, 3600000, 10800000][Math.min(job.attempts - 1, 4)];
     job.message = error.$metadata ? `Storage request failed (HTTP ${error.$metadata.httpStatusCode || 0}).` : String(error.message).replace(/https?:\/\/\S+/g, '[address omitted]').slice(0, 250);
     await persist(state);
+  } finally {
+    if (closesBatch) {
+      state.youtubeBacklogNotBefore = now() + YOUTUBE_SPACING;
+      await persist(state);
+    }
   }
   return job;
 }
 async function main() {
   const [action, ...args] = process.argv.slice(2), i = args.indexOf('--id'), id = i < 0 ? undefined : args[i + 1];
   if (action === 'init') { await initialize({ seedId: id }); return; }
-  if (action === 'status') { const state = await json(join(WORK, 'queue.json')); const pause = await json(join(WORK, 'youtube-pause.json'), {}); const budget = downloadBudget(state); console.log('YouTube attempts: '+budget.starts.length+'/35 per rolling 24 hours. Backlog uses up to 30, spaced 40 minutes apart; new additions/replacements use an urgent lane with 5 attempts reserved.'); console.log('Urgent lane next allowed: '+new Date(downloadBudget(state, Date.now(), 'urgent').nextAllowed || Date.now()).toLocaleString()); const counts={};for(const j of Object.values(state.jobs))counts[j.phase]=(counts[j.phase]||0)+1;console.log('Queue totals: '+JSON.stringify(counts));const until = Math.max(budget.nextAllowed, Number(pause.until || 0)); if(until>Date.now())console.log('Backlog downloads next allowed after '+new Date(until).toLocaleString()+'. Completed audio and queued jobs are preserved.'); for (const j of Object.values(state.jobs)) console.log(`${j.videoId}: ${j.phase}${j.message ? ' — ' + j.message : ''}`); return; }
+  if (action === 'status') { const state = await json(join(WORK, 'queue.json')); const pause = await json(join(WORK, 'youtube-pause.json'), {}); const budget = downloadBudget(state); console.log('YouTube attempts: '+budget.starts.length+'/35 per rolling 24 hours. Backlog uses up to 30, in sequential batches of 3 followed by a 40-minute break; new additions/replacements use an urgent lane with 5 attempts reserved.'); console.log('Urgent lane next allowed: '+new Date(downloadBudget(state, Date.now(), 'urgent').nextAllowed || Date.now()).toLocaleString()); const counts={};for(const j of Object.values(state.jobs))counts[j.phase]=(counts[j.phase]||0)+1;console.log('Queue totals: '+JSON.stringify(counts));const until = Math.max(budget.nextAllowed, Number(pause.until || 0)); if(until>Date.now())console.log('Backlog downloads next allowed after '+new Date(until).toLocaleString()+'. Completed audio and queued jobs are preserved.'); for (const j of Object.values(state.jobs)) console.log(`${j.videoId}: ${j.phase}${j.message ? ' — ' + j.message : ''}`); return; }
   if (action === 'retry') {
     const state = await json(join(WORK, 'queue.json')), job = state.jobs[id];
     if (!job || !/^[\w-]{11}$/.test(id) || job.phase === 'published') throw Error('Select an unfinished queued ID.');

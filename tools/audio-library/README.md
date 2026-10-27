@@ -271,10 +271,11 @@ It retains completed jobs and discovers missing website IDs on each queue check.
 
 The helper checks ID lists every five seconds while idle. New additions and
 replacements enter an urgent lane, ahead of backlog jobs and without its routine
-40-minute interval. An in-flight download or retained upload finishes first.
+40-minute break between batches. An in-flight download or retained upload finishes first.
 The backlog can consume up to 30 attempts per rolling 24 hours, reserving five
-of the shared 35 attempts for urgent recordings. The backlog keeps at least
-40 minutes between starts. Failed, processing and interrupted
+of the shared 35 attempts for urgent recordings. The backlog processes three sequential download attempts, then takes a 40-minute
+break after the third finishes. Failed or still-processing attempts count toward
+the batch to avoid repeated request bursts. Batch progress survives restarts. Failed, processing and interrupted
 attempts count toward the limit. Attempt timestamps are saved before contacting
 YouTube and survive restarts. A bot check pauses new downloads for six hours;
 this can extend repeatedly and is not a guarantee of 35 completed recordings daily.

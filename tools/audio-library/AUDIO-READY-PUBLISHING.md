@@ -53,7 +53,8 @@ No Firebase function or Cloudflare Worker deployment is needed for this change.
 ## Timing and recovery
 
 The worker checks local IDs every five seconds while idle. New IDs use the urgent
-lane. Once uploaded and registered, the publishing workflow checks every five
+lane. Backlog attempts run in sequential batches of three, followed by a
+40-minute break; urgent recordings do not consume those three slots. Once uploaded and registered, the publishing workflow checks every five
 minutes; GitHub scheduling can be delayed, and building/deploying adds time. Audio
 is already available when the recorded video is released; publication itself is not
 instant. The computer must be on and online for audio preparation. Real YouTube

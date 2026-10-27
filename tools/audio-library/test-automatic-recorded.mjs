@@ -63,12 +63,12 @@ const spaced={version:1,seenIds:[a,b],jobs:{[a]:{videoId:a,phase:'pending',attem
 let starts=0;clock=1000;
 const paceOptions={...restricted,state:spaced,download:async()=>{starts++;throw Error('request timed out');}};
 await tick(paceOptions);assert.equal(starts,1);assert.equal(spaced.youtubeDownloadStarts.length,1,'failed attempts count too');
-clock+=60000;await tick(paceOptions);assert.equal(starts,1,'failed downloads cannot bypass spacing by trying the next video');
+clock+=60000;await tick(paceOptions);assert.equal(starts,2,'second sequential attempt can start within the batch');
 const exhausted={...spaced,youtubeDownloadStarts:policyState.youtubeDownloadStarts};clock=end+YOUTUBE_SPACING;
-await tick({...paceOptions,state:exhausted});assert.equal(starts,1,'full rolling quota prevents all fresh YouTube attempts');
+await tick({...paceOptions,state:exhausted});assert.equal(starts,2,'full rolling quota prevents all fresh YouTube attempts');
 exhausted.jobs[b].record=r;exhausted.jobs[b].phase='downloaded';exhausted.jobs[b].nextAttempt=0;
 await tick({...paceOptions,state:exhausted,remote:async()=>{},register:async()=>{},cleanup:async()=>{}});assert.equal(exhausted.jobs[b].phase,'published','quota must not block an already downloaded file');
-console.log('PASS: full backlog discovery, completed exclusions, 35-attempt rolling daily cap, 40-minute spacing, restart durability, failures counted and retained uploads allowed.');
+console.log('PASS: full backlog discovery, completed exclusions, 35-attempt rolling daily cap, sequential batching, restart durability, failures counted and retained uploads allowed.');
 
 assert.equal(downloadBudget({jobs:{[a]:{completedAt:new Date(1000).toISOString()}}},2000).starts.length,1,'upgrade counts earlier completed jobs in the daily budget');
 
@@ -111,3 +111,26 @@ const restrictedUpgrade={...upgrade,urgentLaneInitialized:false,youtubeBacklogNo
 const beforeStarts=urgentStarts.length;await tick({...laneOptions,state:restrictedUpgrade});
 assert.equal(urgentStarts.length,beforeStarts,'migration preserves a genuine existing restriction');
 console.log('PASS: urgent additions bypass backlog pacing, reserve daily capacity, migrate queued replacements, and honor processing waits, bot cooldowns, external pauses and total daily quota.');
+
+// Three sequential backlog attempts, then forty minutes from the third completion.
+const d='ZYXWVUTSRQP', fresh='freshvideo1';
+let batchState={version:1,urgentLaneInitialized:true,youtubeBacklogNotBefore:0,backlogBatchCount:0,seenIds:[a,b,c,d],jobs:Object.fromEntries([a,b,c,d].map(videoId=>[videoId,{videoId,phase:'pending',attempts:0,nextAttempt:0,lane:'backlog'}]))};
+let batchClock=10000, batchStarts=[], batchLibrary=[a,b,c,d].map(id=>({id}));
+const batchTick=()=>tick({state:batchState,catalog:[],now:()=>batchClock,library:async()=>batchLibrary,persist:async()=>{},
+ download:async id=>{batchStarts.push(id);batchClock+=1000;return [{...r,videoId:id}];},
+ remote:async()=>{batchClock+=2000;},register:async()=>{},cleanup:async()=>{}});
+await batchTick();assert.equal(batchState.backlogBatchCount,1);
+batchState=JSON.parse(JSON.stringify(batchState));
+await batchTick();assert.equal(batchState.backlogBatchCount,2,'restart preserves partial batch');
+await batchTick();assert.deepEqual(batchStarts,[a,b,c]);
+const breakUntil=batchClock+YOUTUBE_SPACING;
+assert.equal(batchState.youtubeBacklogNotBefore,breakUntil,'break starts after the third upload finishes');
+batchState=JSON.parse(JSON.stringify(batchState));
+await batchTick();assert.equal(batchStarts.length,3,'restart cannot reset the break');
+batchLibrary=[{id:fresh},...batchLibrary];await batchTick();
+assert.equal(batchStarts.at(-1),fresh,'urgent addition runs during backlog break');
+assert.equal(batchState.backlogBatchCount,3,'urgent attempt does not consume batch slots');
+assert.equal(batchState.youtubeBacklogNotBefore,breakUntil,'urgent attempt does not extend backlog break');
+batchClock=breakUntil-1;await batchTick();assert.equal(batchStarts.length,4);
+batchClock=breakUntil;await batchTick();assert.equal(batchStarts.at(-1),d);assert.equal(batchState.backlogBatchCount,1);
+console.log('PASS: three sequential backlog attempts, break measured after completion, partial-batch/break durability, urgent processing during break and automatic next-batch reset.');
