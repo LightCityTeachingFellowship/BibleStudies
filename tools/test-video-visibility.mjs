@@ -73,3 +73,15 @@ assert.deepEqual(parseVideoIds('abcdefghijk\r\n abcdefghijk\n lmnopqrstuv'), ['a
 assert.throws(() => parseVideoIds('not-an-id'));
 assert.deepEqual(libraryFromLists([knownMember, knownPublic], ['abcdefghijk', knownMember.id], ['lmnopqrstuv']).map(video => [video.id, video.visibility]), [['abcdefghijk', 'public'], ['lmnopqrstuv', 'members'], [knownMember.id, 'public']]);
 console.log('PASS: paste-only additions reach listings, search, homepage and feed without cached metadata; blank lines, duplicates, invalid IDs, removals, overlap and visibility moves handled.');
+
+// Uncached items inserted in the middle must not jump ahead of newer recordings.
+const ids = ['newday29000', 'cached28000', 'cached27000', 'uncache2600', 'cached25000'];
+const cacheFixture = [ids[4], ids[1], ids[2]].map(id => ({id, title:id}));
+publicText = 'publicnew00 publicold00'; memberText = ids.join(' ');
+fixtureSite.data.videos = [...cacheFixture, {id:'publicold00',title:'Public'}];
+const ordered = libraryFromLists(fixtureSite.data.videos, publicText.split(' '), ids);
+assert.deepEqual(ordered.filter(v=>v.visibility==='members').map(v=>v.id), ids);
+assert.deepEqual(ordered.filter(v=>v.visibility==='public').map(v=>v.id), publicText.split(' '));
+fixtureSite.video_visibility_enabled = false;
+assert.deepEqual(JSON.parse(await renderFixture('search-video-catalog.json')).map(v=>v.id), ordered.map(v=>v.id));
+console.log('PASS: source order overrides cached order and preserves uncached middle entries; Liquid and worker ordering agree.');

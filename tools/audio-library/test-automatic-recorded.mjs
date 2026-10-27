@@ -73,3 +73,16 @@ console.log('PASS: full backlog discovery, completed exclusions, 35-attempt roll
 assert.equal(downloadBudget({jobs:{[a]:{completedAt:new Date(1000).toISOString()}}},2000).starts.length,1,'upgrade counts earlier completed jobs in the daily budget');
 
 const oldBlock={version:1,seenIds:[a],youtubeNotBefore:9999,jobs:{[a]:{videoId:a,phase:'attention',attempts:6,message:'YouTube requested a sign-in/bot check.'}}};updateQueue(oldBlock,[{id:a}],[],1000);assert.equal(oldBlock.jobs[a].phase,'retry');assert.equal(oldBlock.jobs[a].nextAttempt,9999);
+
+// A newly queued replacement goes ahead of older backlog insertion order.
+const priority={version:1,seenIds:[a,b],jobs:{[a]:{videoId:a,phase:'pending',attempts:0,nextAttempt:0},[b]:{videoId:b,phase:'pending',attempts:0,nextAttempt:0}}};
+let selected;
+await tick({...options,state:priority,library:async()=>[{id:b},{id:a}],now:()=>1000,
+ download:async id=>{selected=id;return [{status:'waiting for replay',reason:'Processing'}];}});
+assert.equal(selected,b,'newest library item is attempted before old backlog');
+priority.jobs[a].record={...r,videoId:a};priority.jobs[a].phase='downloaded';priority.jobs[a].nextAttempt=0;
+let retainedId;
+await tick({...options,state:priority,library:async()=>[{id:b},{id:a}],now:()=>1000,
+ remote:async record=>{retainedId=record.videoId;},download:async()=>{throw Error('retained upload must take priority');}});
+assert.equal(retainedId,a,'retained audio still uploads first during download spacing');
+console.log('PASS: recent replacement priority preserves retained-upload priority and download pacing.');

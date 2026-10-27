@@ -79,7 +79,10 @@ export async function tick({ state, library, catalog, download, remote, register
   updateQueue(state, current, catalog, now()); await persist(state);
   // Keep at most one unpublished downloaded recording: network failures cannot fill the disk.
   if (Object.values(state.jobs).some(j => j.record && j.phase === 'attention')) return null;
-  const jobs = Object.values(state.jobs).filter(j => !['published', 'removed', 'attention'].includes(j.phase));
+  // Prioritize recent additions/replacements without bypassing pacing or retained uploads.
+  const rank = new Map(current.map((video, index) => [video.id, index]));
+  const jobs = Object.values(state.jobs).filter(j => !['published', 'removed', 'attention'].includes(j.phase))
+    .sort((a, b) => (rank.get(a.videoId) ?? Infinity) - (rank.get(b.videoId) ?? Infinity));
   const retained = jobs.find(j => j.record);
   const budget = downloadBudget(state, now());
   if (!retained && budget.nextAllowed > now()) return null;

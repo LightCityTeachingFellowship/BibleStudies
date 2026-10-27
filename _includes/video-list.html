@@ -5,12 +5,37 @@
 {%- assign member_video_ids = member_id_text | normalize_whitespace | split: ' ' | uniq -%}
 {%- assign pasted_video_ids = public_video_ids | concat: member_video_ids | uniq -%}
 {%- assign cached_video_ids = site.data.videos | map: 'id' -%}
-{%- comment -%}Uncached additions come first; existing videos keep their original mixed order.{%- endcomment -%}
-{%- capture ordered_id_csv -%}
-{%- for id in pasted_video_ids -%}{%- unless cached_video_ids contains id -%}{{ id }},{%- endunless -%}{%- endfor -%}
-{%- for id in cached_video_ids -%}{%- if pasted_video_ids contains id -%}{{ id }},{%- endif -%}{%- endfor -%}
-{%- endcapture -%}
-{%- assign ordered_video_ids = ordered_id_csv | split: ',' | uniq -%}
+{%- comment -%}Keep each source list's exact order. Cached order only interleaves audiences.{%- endcomment -%}
+{%- assign effective_public_ids = '' | split: ',' -%}
+{%- for id in public_video_ids -%}{%- unless member_video_ids contains id -%}{%- assign effective_public_ids = effective_public_ids | push: id -%}{%- endunless -%}{%- endfor -%}
+{%- assign ordered_video_ids = '' | split: ',' -%}
+{%- assign public_cursor = 0 -%}
+{%- assign member_cursor = 0 -%}
+{%- for id in effective_public_ids -%}
+  {%- if cached_video_ids contains id -%}{%- break -%}{%- endif -%}
+  {%- assign ordered_video_ids = ordered_video_ids | push: id -%}
+  {%- assign public_cursor = public_cursor | plus: 1 -%}
+{%- endfor -%}
+{%- for id in member_video_ids -%}
+  {%- if cached_video_ids contains id -%}{%- break -%}{%- endif -%}
+  {%- assign ordered_video_ids = ordered_video_ids | push: id -%}
+  {%- assign member_cursor = member_cursor | plus: 1 -%}
+{%- endfor -%}
+{%- for cached_id in cached_video_ids -%}
+  {%- assign source_ids = '' | split: ',' -%}
+  {%- assign source_cursor = public_cursor -%}
+  {%- if member_video_ids contains cached_id -%}{%- assign source_ids = member_video_ids -%}{%- assign source_cursor = member_cursor -%}
+  {%- elsif effective_public_ids contains cached_id -%}{%- assign source_ids = effective_public_ids -%}{%- endif -%}
+  {%- unless ordered_video_ids contains cached_id -%}
+    {%- for id in source_ids offset: source_cursor -%}
+      {%- assign ordered_video_ids = ordered_video_ids | push: id -%}
+      {%- if member_video_ids contains cached_id -%}{%- assign member_cursor = source_cursor | plus: forloop.index -%}
+      {%- else -%}{%- assign public_cursor = source_cursor | plus: forloop.index -%}{%- endif -%}
+      {%- if id == cached_id -%}{%- break -%}{%- endif -%}
+    {%- endfor -%}
+  {%- endunless -%}
+{%- endfor -%}
+{%- assign ordered_video_ids = ordered_video_ids | concat: pasted_video_ids | uniq -%}
 {%- assign allowed_id_characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-' -%}
 {%- capture visible_id_csv -%}
 {%- for id in ordered_video_ids -%}

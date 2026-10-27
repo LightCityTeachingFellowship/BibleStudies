@@ -49,9 +49,20 @@ export function parseVideoIds(text) {
 }
 
 export function libraryFromLists(cached, publicIds, memberIds) {
-  const members = new Set(memberIds), pasted = [...new Set([...publicIds, ...memberIds])];
+  const members = new Set(memberIds);
   const cache = new Map(cached.map(video => [video.id, video]));
-  const order = [...pasted.filter(id => !cache.has(id)), ...cached.filter(video => pasted.includes(video.id)).map(video => video.id)];
+  // Each ID file controls its own order; cached order only interleaves the audiences.
+  const queues = [publicIds.filter(id => !members.has(id)), memberIds];
+  const cursors = [0, 0], order = [];
+  const positions = queues.map(queue => new Map(queue.map((id, index) => [id, index])));
+  for (let q = 0; q < queues.length; q++) {
+    while (cursors[q] < queues[q].length && !cache.has(queues[q][cursors[q]])) order.push(queues[q][cursors[q]++]);
+  }
+  for (const video of cached) for (let q = 0; q < queues.length; q++) {
+    const end = positions[q].get(video.id);
+    if (end != null) while (cursors[q] <= end) order.push(queues[q][cursors[q]++]);
+  }
+  for (let q = 0; q < queues.length; q++) order.push(...queues[q].slice(cursors[q]));
   return order.map(id => ({ ...(cache.get(id) || { id, title: null, category: null }), visibility: publicIds.includes(id) && !members.has(id) ? 'public' : 'members' }));
 }
 
