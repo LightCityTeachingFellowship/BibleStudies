@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { declaredLibrary, youtubeVideos } from './discovery.mjs';
+import { declaredLibrary, youtubeVideos, activeChannelLink } from './discovery.mjs';
 import { AutomaticPublisher } from './engine.mjs';
 import { startCapture } from './capture.mjs';
 import { validSecret, workerOrigin } from '../cloud/auth.mjs';
@@ -42,6 +42,12 @@ export async function main() {
       const context = { session, folder: resolve(HERE, '../work', session), streamSession: control.streamSession, streamStartedAt: control.streamStartedAt, captureStartedAt, ended: false };
       const job = { context, socket, capture: null, engine: null, settling: false, failed: false, abort: new AbortController() };
       current = job;
+      // Copy only a single verified broadcast, once per OBS session. Unlisted or
+      // ambiguous broadcasts remain a manual paste; never guess another video.
+      void activeChannelLink({apiKey:key,channelId:config.channelId,startedAt:context.streamStartedAt}).then(url=>{
+        if(!url||current!==job||context.ended)return;
+        execFile('powershell.exe',['-NoLogo','-NoProfile','-NonInteractive','-Command','Set-Clipboard -Value '+url],{windowsHide:true,timeout:10000},()=>{});
+      }).catch(()=>{});
       status('capturing', 'OBS started. Matching the live video against your ID files.');
       try {
         job.capture = await startCapture({ socket, folder: context.folder, ffmpeg: join(ROOT, 'tools/audio-pilot/runtime/ffmpeg.exe'), streamStartedAt: context.streamStartedAt, captureStartedAt });

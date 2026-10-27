@@ -224,3 +224,5 @@ api.signOut=async()=>{
  try{if(deviceAuth.currentUser)await call('unlinkChurchDevice',{deviceToken:await deviceAuth.currentUser.getIdToken()});}catch{}
  await sdk.auth.signOut(memberAuth);
 };
+api.publishStudioVideo=async data=>{await api.ready;return call('publishChurchStudioVideo',{...data,accountUid:api.user?.uid});};
+api.getStudioPublication=async data=>{await api.ready;return call('getChurchStudioPublication',{...data,accountUid:api.user?.uid});};

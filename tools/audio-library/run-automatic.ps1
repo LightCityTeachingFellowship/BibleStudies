@@ -1,6 +1,11 @@
 param([switch]$Once)
 $ErrorActionPreference = 'Stop'
 $work = Join-Path $PSScriptRoot 'work/automatic-recorded'
+$pauseFile = Join-Path $work 'downloads-paused.json'
+if ((Test-Path -LiteralPath $pauseFile) -and (Get-Content -LiteralPath $pauseFile -Raw | ConvertFrom-Json).paused) {
+    Write-Host 'Recorded YouTube downloads are paused. Existing audio, queued progress, and live streaming are preserved.'
+    return
+}
 $config = Get-Content -LiteralPath (Join-Path $work 'config.private.json') -Raw | ConvertFrom-Json
 function Unprotect-Value([string]$Value) {
     $secure = ConvertTo-SecureString $Value

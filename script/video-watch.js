@@ -18,6 +18,13 @@
  const {resolveWatchReplacement}=await import('./video-replacements.mjs?v=automatic-1');
  const replacement=await resolveWatchReplacement(videoId);
  if(replacement!==videoId){const url=new URL(location.href);url.searchParams.set('v',replacement);for(const key of ['t','start','live'])url.searchParams.delete(key);status.textContent='Opening the updated recording…';location.replace(url.href);return;}
+ // Share links must respect the selected site audience before mounting YouTube.
+ await import('./members.js?v=studio-publish-1');
+ const {watchAccess}=await import('./watch-access.mjs');
+ let publicIds=[];try{publicIds=Object.keys(JSON.parse(document.getElementById('lc-public-video-data')?.textContent||'{}'));}catch{}
+ if(!await watchAccess(videoId,{publicIds,api:globalThis.LightCityMembers})){
+  title.textContent='Video unavailable';status.textContent='This video is not available to this account. Church members should sign in with their registered account, then reopen this link.';return;
+ }
  const player=document.createElement('iframe');
  player.title='LightCity video player';
  player.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';

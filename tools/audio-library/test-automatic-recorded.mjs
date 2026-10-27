@@ -134,3 +134,19 @@ assert.equal(batchState.youtubeBacklogNotBefore,breakUntil,'urgent attempt does 
 batchClock=breakUntil-1;await batchTick();assert.equal(batchStarts.length,4);
 batchClock=breakUntil;await batchTick();assert.equal(batchStarts.at(-1),d);assert.equal(batchState.backlogBatchCount,1);
 console.log('PASS: three sequential backlog attempts, break measured after completion, partial-batch/break durability, urgent processing during break and automatic next-batch reset.');
+
+const trialState={version:1,seenIds:[a,b,c],urgentLaneInitialized:true,newUploadsOnly:true,dailyDownloadLimit:2,youtubeDownloadStarts:[],jobs:{
+ [a]:{videoId:a,phase:'pending',attempts:0,nextAttempt:0,lane:'backlog'},
+ [b]:{videoId:b,phase:'pending',attempts:0,nextAttempt:0,lane:'urgent'},
+ [c]:{videoId:c,phase:'pending',attempts:0,nextAttempt:0,lane:'urgent'}
+}};
+let trialClock=50000;const trialDownloads=[];
+const trialTick=()=>tick({state:trialState,catalog:[],library:async()=>[a,b,c].map(id=>({id})),now:()=>trialClock,
+ download:async id=>{trialDownloads.push(id);throw Error('temporary connection failure');},remote:async()=>{},register:async()=>{},persist:async()=>{}});
+await trialTick();await trialTick();
+assert.deepEqual(trialDownloads,[b,c],'old backlog remains untouched even when jobs are already queued');
+trialClock+=3600000;await trialTick();assert.equal(trialDownloads.length,2,'failed attempts and retries consume the two-attempt daily cap');
+assert.equal(downloadBudget(JSON.parse(JSON.stringify(trialState)),trialClock,'urgent').remaining,0,'daily limit survives restart');
+trialClock+=DOWNLOAD_WINDOW;await trialTick();assert.equal(trialDownloads.length,3,'new upload retries can resume after the rolling window');
+assert.equal(trialState.jobs[a].attempts,0,'backlog never resumed');
+console.log('PASS: new uploads only, existing backlog excluded, two-attempt rolling cap includes failures and persists across restarts.');

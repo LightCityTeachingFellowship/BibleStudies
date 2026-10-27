@@ -1,9 +1,11 @@
+import {githubPublisher,createStudioPublishing} from './studio-publishing.mjs';
+import {timingSafeEqual} from 'node:crypto';
 import { createAdminDashboard } from './admin.mjs';
 import { createReadingActivity } from './reading-activity.mjs';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
 import { createMemberHandlers } from './core.mjs';
 import { createVideoActivity } from './video-activity.mjs';
@@ -56,3 +58,19 @@ const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcitytea
 const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live,
  privateReadings:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications });
 export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey] }, adminDashboard);
+const studioGitHubToken=defineSecret('STUDIO_GITHUB_TOKEN');
+const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
+const studioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});
+export const publishChurchStudioVideo=onCall({...options,secrets:[studioGitHubToken],timeoutSeconds:180},studioPublishing.publish);
+export const getChurchStudioPublication=onCall(options,studioPublishing.status);
+// Only the trusted local upload helper can read the desired source lists.
+let studioSourceCache=null;
+export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubToken,livePlaybackKey]},async(req,res)=>{
+ const provided=Buffer.from(String(req.get('authorization')||'').replace(/^Bearer /,'')),expected=Buffer.from(livePlaybackKey.value());
+ res.set('Cache-Control','no-store');
+ if(req.method!=='POST'||provided.length!==expected.length||!expected.length||!timingSafeEqual(provided,expected)){res.status(403).json({error:'Access denied'});return;}
+ try{
+  if(!studioSourceCache||Date.now()-studioSourceCache.at>10000){const source=await studioGitHub.snapshot();studioSourceCache={at:Date.now(),videos:[...source.lists.public.map(id=>({id,visibility:'public'})),...source.lists.members.map(id=>({id,visibility:'members'}))]};}
+  res.json({videos:studioSourceCache.videos});
+ }catch{res.status(503).json({error:'Source library unavailable'});}
+});
