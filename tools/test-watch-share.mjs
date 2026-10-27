@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { watchShare, setupWatchShare } from '../script/watch-share.mjs';
+const id='abcdefghijk';
+assert.deepEqual(watchShare({base:'https://lightcityfellowship.com/Watch/?t=10&mode=audio#old',videoId:id,title:'Live service'}),{title:'Live service',text:'Watch on LightCity',url:'https://lightcityfellowship.com/Watch/?v='+id});
+assert.equal(watchShare({base:'https://lightcityfellowship.com/Watch/',videoId:'invalid'}),null);
+assert.equal(watchShare({base:'http://example.com/Watch/',videoId:id}),null);
+const nodes=Object.fromEntries(['watch-share','watch-share-native','watch-copy-link','watch-share-status','watch-share-link','watch-title'].map(id=>[id,{hidden:true,dataset:{},textContent:'Live service',addEventListener(event,fn){this[event]=fn;},focus(){this.focused=true;},select(){this.selected=true;}}]));
+nodes['watch-share'].dataset.watchUrl='https://lightcityfellowship.com/Watch/';
+const document={getElementById:id=>nodes[id]};let shared,copied;
+const navigator={share:async item=>{shared=item;},clipboard:{writeText:async url=>{copied=url;}}};
+setupWatchShare({document,navigator,location:{href:'http://localhost:4000/Watch/?v='+id+'&t=25'}});
+assert.equal(nodes['watch-share'].hidden,false);assert.equal(nodes['watch-share-native'].hidden,false);
+await nodes['watch-share-native'].click();assert.equal(shared.url,'https://lightcityfellowship.com/Watch/?v='+id);
+await nodes['watch-copy-link'].click();assert.equal(copied,shared.url);assert.equal(nodes['watch-share-status'].textContent,'LightCity link copied.');
+navigator.clipboard=null;await nodes['watch-copy-link'].click();assert.equal(nodes['watch-share-link'].value,shared.url);assert.equal(nodes['watch-share-link'].selected,true);
+navigator.share=async()=>{throw Object.assign(Error('cancelled'),{name:'AbortError'});};await nodes['watch-share-native'].click();assert.equal(nodes['watch-share-status'].textContent,'');
+console.log('PASS: canonical LightCity links, native sharing, copy, manual copy fallback, invalid IDs, local preview and cancelled sharing.');
