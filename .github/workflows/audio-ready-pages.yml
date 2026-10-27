@@ -1,0 +1,85 @@
+name: Publish audio-ready website
+on:
+  push:
+    branches: [master]
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Validate setup without publishing, or publish ready content'
+        type: choice
+        options: [validate, publish]
+        default: validate
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: lightcity-web-push
+  cancel-in-progress: false
+jobs:
+  publish:
+    # Enable only after Pages source has been switched to GitHub Actions.
+    if: ${{ vars.AUDIO_READY_PUBLISHING == 'true' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'validate') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: master
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --omit=dev
+        working-directory: tools/push
+      - name: Hold recordings until their matching audio is ready
+        id: readiness
+        run: node tools/push/prepare-audio-publication.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          LIVE_AUDIO_PLAYBACK_KEY: ${{ secrets.LIVE_AUDIO_PLAYBACK_KEY }}
+          LIVE_AUDIO_GATEWAY: ${{ vars.LIVE_AUDIO_GATEWAY }}
+          FORCE_PUBLICATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'publish' }}
+          PUBLICATION_VALIDATE_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'validate' }}
+      - uses: actions/configure-pages@v5
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+      - uses: ruby/setup-ruby@v1
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+      - name: Install the website build dependencies
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        run: |
+          bundle lock --add-platform x86_64-linux
+          bundle install
+      - name: Build the approved website
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        with:
+          path: _site
+      - name: Deploy the approved website
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Publish protected library and replacement links
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        run: node tools/push/sync-members.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          AUDIO_READY_LIBRARY: tools/audio-library/work/publication.json
+      - name: Notify after publishing; replacements remain silent
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate' && vars.WEB_PUSH_ENABLED == 'true'
+        run: node tools/push/send.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          SITE_URL: ${{ vars.SITE_URL }}

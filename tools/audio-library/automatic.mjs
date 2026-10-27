@@ -12,21 +12,24 @@ export const YOUTUBE_COOLDOWN = 6 * 60 * 60000;
 export const YOUTUBE_SPACING = 40 * 60000;
 export const DAILY_DOWNLOAD_LIMIT = 35;
 export const DOWNLOAD_WINDOW = 24 * 60 * 60000;
-export function downloadBudget(state, time = Date.now()) {
+export const URGENT_RESERVED_ATTEMPTS = 5;
+export const QUEUE_CHECK_MS = 5000;
+export function downloadBudget(state, time = Date.now(), lane = 'backlog') {
   // On upgrade, conservatively count recent completed jobs so a restart cannot add a fresh daily allowance.
   const previous = state.youtubeDownloadStarts || Object.values(state.jobs || {}).filter(j=>j.completedAt).map(j=>Date.parse(j.completedAt));
   const starts = previous.filter(t => Number.isSafeInteger(t) && t > time - DOWNLOAD_WINDOW).sort((a,b)=>a-b);
-  const spacing = starts.length ? starts.at(-1) + YOUTUBE_SPACING : 0;
-  const quota = starts.length >= DAILY_DOWNLOAD_LIMIT ? starts[starts.length - DAILY_DOWNLOAD_LIMIT] + DOWNLOAD_WINDOW : 0;
-  return { starts, remaining:Math.max(0, DAILY_DOWNLOAD_LIMIT-starts.length), nextAllowed:Math.max(spacing,quota,Number(state.youtubeNotBefore || 0)) };
+  const spacing = lane === 'urgent' ? 0 : Math.max(starts.length ? starts.at(-1) + YOUTUBE_SPACING : 0, Number(state.youtubeBacklogNotBefore || 0));
+  const limit = lane === 'urgent' ? DAILY_DOWNLOAD_LIMIT : DAILY_DOWNLOAD_LIMIT - URGENT_RESERVED_ATTEMPTS;
+  const quota = starts.length >= limit ? starts[starts.length - limit] + DOWNLOAD_WINDOW : 0;
+  return { starts, remaining:Math.max(0, limit-starts.length), nextAllowed:Math.max(spacing,quota,Number(state.youtubeNotBefore || 0),Number(state.youtubeExternalPauseUntil || 0)) };
 }
-const youtubeRestricted = message => /sign-in\/bot check|not a bot|too many requests|YouTube limited requests|HTTP 429/i.test(message || '');
+const youtubeRestricted = message => /bot check|not a bot|too many requests|YouTube limited requests|HTTP 429/i.test(message || '');
 export function updateQueue(state, library, catalog, now = Date.now()) {
   const known = new Set(state.seenIds), registered = new Set(catalog.map(r => r.videoId));
   const ids = new Set(library.map(r => r.id));
   for (const entry of library) {
-    if ((!known.has(entry.id) || state.backlogEnabled === true) && !registered.has(entry.id)) state.jobs[entry.id] ||= { videoId: entry.id, phase: 'pending', attempts: 0, nextAttempt: now };
-    if (state.jobs[entry.id]?.phase === 'removed') { state.jobs[entry.id].phase = 'pending'; state.jobs[entry.id].nextAttempt = now; }
+    if ((!known.has(entry.id) || state.backlogEnabled === true) && !registered.has(entry.id)) state.jobs[entry.id] ||= { videoId: entry.id, phase: 'pending', attempts: 0, nextAttempt: now, lane: known.has(entry.id) ? 'backlog' : 'urgent' };
+    if (state.jobs[entry.id]?.phase === 'removed') { state.jobs[entry.id].phase = 'pending'; state.jobs[entry.id].nextAttempt = now; state.jobs[entry.id].lane = 'urgent'; }
     const job = state.jobs[entry.id];
     if (job?.phase === 'attention' && !job.record && youtubeRestricted(job.message)) { job.phase = 'retry'; job.attempts = 0; job.nextAttempt = Math.max(now, Number(state.youtubeNotBefore || 0)); }
     known.add(entry.id);
@@ -76,30 +79,45 @@ export async function cleanDownloaded(record, media = MEDIA) {
 }
 export async function tick({ state, library, catalog, download, remote, register, cleanup = cleanDownloaded, persist = async () => {}, progress = () => {}, now = Date.now }) {
   const current = await library();
+  // Older versions used one timestamp for both routine spacing and real restrictions.
+  // Preserve genuine bot-check cooldowns; move ordinary pacing into the backlog lane.
+  if (state.youtubeBacklogNotBefore == null) {
+    state.youtubeBacklogNotBefore = Number(state.youtubeNotBefore || 0);
+    if (!Object.values(state.jobs).some(j => youtubeRestricted(j.message))) state.youtubeNotBefore = 0;
+  }
+  if (!state.urgentLaneInitialized) {
+    // Upgrade already-queued latest entries without treating the old library as new.
+    const audiences = new Set();
+    for (const entry of current) if (!audiences.has(entry.visibility || 'members')) {
+      audiences.add(entry.visibility || 'members');
+      const job = state.jobs[entry.id];
+      if (state.initializedAt && job?.phase === 'pending' && !job.attempts && !job.requestedBy && !job.lane) job.lane = 'urgent';
+    }
+    state.urgentLaneInitialized = true;
+  }
   updateQueue(state, current, catalog, now()); await persist(state);
   // Keep at most one unpublished downloaded recording: network failures cannot fill the disk.
   if (Object.values(state.jobs).some(j => j.record && j.phase === 'attention')) return null;
   // Prioritize recent additions/replacements without bypassing pacing or retained uploads.
   const rank = new Map(current.map((video, index) => [video.id, index]));
   const jobs = Object.values(state.jobs).filter(j => !['published', 'removed', 'attention'].includes(j.phase))
-    .sort((a, b) => (rank.get(a.videoId) ?? Infinity) - (rank.get(b.videoId) ?? Infinity));
+    .sort((a, b) => Number(b.lane === 'urgent') - Number(a.lane === 'urgent') || (rank.get(a.videoId) ?? Infinity) - (rank.get(b.videoId) ?? Infinity));
   const retained = jobs.find(j => j.record);
-  const budget = downloadBudget(state, now());
-  if (!retained && budget.nextAllowed > now()) return null;
-  const job = retained || jobs.find(j => j.nextAttempt <= now());
+  const job = retained || jobs.find(j => j.nextAttempt <= now() && downloadBudget(state, now(), j.lane).nextAllowed <= now());
   if (!job || job.nextAttempt > now()) return null;
+  const budget = downloadBudget(state, now(), job.lane);
   try {
     if (!job.record) {
       // Persist the attempt before contacting YouTube, including failed or interrupted attempts.
       state.youtubeDownloadStarts = [...budget.starts, now()];
-      state.youtubeNotBefore = Math.max(Number(state.youtubeNotBefore || 0), now() + YOUTUBE_SPACING);
+      state.youtubeBacklogNotBefore = Math.max(Number(state.youtubeBacklogNotBefore || 0), now() + YOUTUBE_SPACING);
       await persist(state);
       const [r] = await download(job.videoId);
       if (!r || !['local audio verified', 'existing local trial audio verified'].includes(r.status)) {
         if (r?.status === 'waiting for replay') { job.phase = 'waiting'; job.message = r.reason; job.nextAttempt = now() + 10 * 60000; await persist(state); return job; }
         throw Error(r?.reason || 'Download did not complete.');
       }
-      state.youtubeNotBefore = now() + YOUTUBE_SPACING;
+      state.youtubeBacklogNotBefore = now() + YOUTUBE_SPACING;
       job.record = r; job.phase = 'downloaded'; await persist(state);
     }
     if (!(await library()).some(v => v.id === job.videoId)) { job.phase = 'removed'; await persist(state); return job; }
@@ -130,7 +148,7 @@ export async function tick({ state, library, catalog, download, remote, register
 async function main() {
   const [action, ...args] = process.argv.slice(2), i = args.indexOf('--id'), id = i < 0 ? undefined : args[i + 1];
   if (action === 'init') { await initialize({ seedId: id }); return; }
-  if (action === 'status') { const state = await json(join(WORK, 'queue.json')); const pause = await json(join(WORK, 'youtube-pause.json'), {}); const budget = downloadBudget(state); console.log('Download limit: 35 attempts per rolling 24 hours; '+budget.starts.length+' used. Starts spaced at least 40 minutes apart.'); const counts={};for(const j of Object.values(state.jobs))counts[j.phase]=(counts[j.phase]||0)+1;console.log('Queue totals: '+JSON.stringify(counts));const until = Math.max(budget.nextAllowed, Number(pause.until || 0)); if(until>Date.now())console.log('New YouTube downloads paused until '+new Date(until).toLocaleString()+'. Completed audio and queued jobs are preserved.'); for (const j of Object.values(state.jobs)) console.log(`${j.videoId}: ${j.phase}${j.message ? ' — ' + j.message : ''}`); return; }
+  if (action === 'status') { const state = await json(join(WORK, 'queue.json')); const pause = await json(join(WORK, 'youtube-pause.json'), {}); const budget = downloadBudget(state); console.log('YouTube attempts: '+budget.starts.length+'/35 per rolling 24 hours. Backlog uses up to 30, spaced 40 minutes apart; new additions/replacements use an urgent lane with 5 attempts reserved.'); console.log('Urgent lane next allowed: '+new Date(downloadBudget(state, Date.now(), 'urgent').nextAllowed || Date.now()).toLocaleString()); const counts={};for(const j of Object.values(state.jobs))counts[j.phase]=(counts[j.phase]||0)+1;console.log('Queue totals: '+JSON.stringify(counts));const until = Math.max(budget.nextAllowed, Number(pause.until || 0)); if(until>Date.now())console.log('Backlog downloads next allowed after '+new Date(until).toLocaleString()+'. Completed audio and queued jobs are preserved.'); for (const j of Object.values(state.jobs)) console.log(`${j.videoId}: ${j.phase}${j.message ? ' — ' + j.message : ''}`); return; }
   if (action === 'retry') {
     const state = await json(join(WORK, 'queue.json')), job = state.jobs[id];
     if (!job || !/^[\w-]{11}$/.test(id) || job.phase === 'published') throw Error('Select an unfinished queued ID.');
@@ -164,7 +182,7 @@ async function main() {
       const policy = await json(join(WORK, 'schedule-policy.json'), {});
       state.backlogEnabled = policy.includeBacklog === true;
       const pause = await json(join(WORK, 'youtube-pause.json'), {});
-      state.youtubeNotBefore = Math.max(Number(state.youtubeNotBefore || 0), Number(pause.until || 0));
+      state.youtubeExternalPauseUntil = Number(pause.until || 0);
       const staticCatalog = await json(join(ROOT, 'tools/members/functions/audio-catalog.json'));
       await applyRequests(WORK, state, await loadVideoLibrary(ROOT), staticCatalog);
       const result = await tick({ state, library: () => loadVideoLibrary(ROOT), catalog: staticCatalog,
@@ -178,7 +196,7 @@ async function main() {
       });
       if (result) console.log(`${result.videoId}: ${result.phase}`);
       if (args.includes('--once') || stopped) break;
-      await new Promise(ok => { const wake = () => { clearTimeout(timer); process.removeListener('SIGTERM', wake); process.removeListener('SIGINT', wake); ok(); }; const timer = setTimeout(wake, 60000); process.once('SIGTERM', wake); process.once('SIGINT', wake); });
+      await new Promise(ok => { const wake = () => { clearTimeout(timer); process.removeListener('SIGTERM', wake); process.removeListener('SIGINT', wake); ok(); }; const timer = setTimeout(wake, QUEUE_CHECK_MS); process.once('SIGTERM', wake); process.once('SIGINT', wake); });
     } while (!stopped);
   } finally { connection?.s3.destroy(); await unlink(lockPath).catch(() => {}); }
 }

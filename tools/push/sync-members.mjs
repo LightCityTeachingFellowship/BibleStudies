@@ -2,10 +2,13 @@ import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { fileURLToPath } from 'node:url';
 import { loadVideoLibrary } from '../video-library.mjs';
-import {appendFile} from 'node:fs/promises';
+import {appendFile,readFile} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {loadReplacements,reconcileReplacements,publicationRevisionDecision} from '../video-replacements.mjs';
-const root=fileURLToPath(new URL('../..',import.meta.url)),current=await loadVideoLibrary(root),declared=await loadReplacements(root);
+const root=fileURLToPath(new URL('../..',import.meta.url));
+const prepared=process.env.AUDIO_READY_LIBRARY?JSON.parse(await readFile(process.env.AUDIO_READY_LIBRARY,'utf8')):null;
+const current=prepared?prepared.videos:await loadVideoLibrary(root);
+const declared=prepared?current.flatMap(v=>(v.replaces||[]).map(from=>({from,to:v.id,visibility:v.replacementVisibility?.[from]==='public'?'public':'members'}))):await loadReplacements(root);
 const revision=process.env.GITHUB_ACTIONS==='true'?execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim():null;
 const isAncestor=(a,b)=>{try{execFileSync('git',['merge-base','--is-ancestor',a,b],{cwd:root,stdio:'ignore'});return true;}catch(error){if(error.status===1)return false;throw Error('Cannot verify the publication revision. Fetch complete Git history before syncing.');}};
 if (process.env.DRY_RUN === 'true') { console.log(`Validated ${current.length} library records. No remote changes.`); }

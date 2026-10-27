@@ -269,12 +269,20 @@ The existing Windows helper can process the remaining website library when the i
 `work/automatic-recorded/schedule-policy.json` contains `{"includeBacklog":true}`.
 It retains completed jobs and discovers missing website IDs on each queue check.
 
-The helper permits at most 35 new YouTube download attempts in a rolling 24-hour
-window, with at least 40 minutes between starts. Failed, processing and interrupted
+The helper checks ID lists every five seconds while idle. New additions and
+replacements enter an urgent lane, ahead of backlog jobs and without its routine
+40-minute interval. An in-flight download or retained upload finishes first.
+The backlog can consume up to 30 attempts per rolling 24 hours, reserving five
+of the shared 35 attempts for urgent recordings. The backlog keeps at least
+40 minutes between starts. Failed, processing and interrupted
 attempts count toward the limit. Attempt timestamps are saved before contacting
 YouTube and survive restarts. A bot check pauses new downloads for six hours;
 this can extend repeatedly and is not a guarantee of 35 completed recordings daily.
+Real YouTube restrictions and the shared daily cap apply to both lanes.
 Already-downloaded audio can still finish uploading during the pause or daily limit.
+Immediate processing is not immediate availability: YouTube processing, download
+and upload time, connectivity and cooldowns can delay Listen. For guaranteed audio
+at publication, audio must be prepared before the ID is published.
 
 Run `start-catchup.ps1` once after updating to reload the existing scheduled helper.
 The computer must remain on, signed in and connected. After downtime it resumes
@@ -282,3 +290,8 @@ without catching up missed downloads in a burst. No extra scheduled task is need
 Use `node tools/audio-library/automatic.mjs status` to see quota and queue totals.
 
 Reading continuation regression checks: `node tools/audio-library/test-study-ui.mjs` covers immediate scrolling, nested scroll capture, collapsed sections, saving on quick navigation, and title fallback from the authorized audio catalogue.
+
+
+## Publish with audio ready
+
+See [AUDIO-READY-PUBLISHING.md](AUDIO-READY-PUBLISHING.md) for the optional publishing gate, one-time GitHub setup, and behavior for pending recordings and replacements.

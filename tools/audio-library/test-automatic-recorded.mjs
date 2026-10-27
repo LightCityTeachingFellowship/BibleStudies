@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { tick, updateQueue, registerRecording, downloadBudget, YOUTUBE_SPACING, DOWNLOAD_WINDOW, DAILY_DOWNLOAD_LIMIT } from './automatic.mjs';
+import { tick, updateQueue, registerRecording, downloadBudget, YOUTUBE_SPACING, DOWNLOAD_WINDOW, DAILY_DOWNLOAD_LIMIT, URGENT_RESERVED_ATTEMPTS } from './automatic.mjs';
 const a = 'abcdefghijk', b = 'ABCDEFGHIJK', c = '12345678901';
 const state = { version: 1, seenIds: [a], jobs: {} };
 updateQueue(state, [{ id: a }, { id: b }], [], 1000);
@@ -56,8 +56,8 @@ assert.equal(backlog.jobs[a].phase,'published');assert.equal(backlog.jobs[b].pha
 const policyState={youtubeDownloadStarts:Array.from({length:DAILY_DOWNLOAD_LIMIT},(_,i)=>1000+i*YOUTUBE_SPACING),youtubeNotBefore:0};
 const end=policyState.youtubeDownloadStarts.at(-1);
 let policy=downloadBudget(policyState,end+YOUTUBE_SPACING);
-assert.equal(policy.remaining,0);assert.equal(policy.nextAllowed,1000+DOWNLOAD_WINDOW);
-assert.equal(downloadBudget(policyState,1000+DOWNLOAD_WINDOW).remaining,1,'rolling quota releases only the expired attempt');
+assert.equal(policy.remaining,0);assert.equal(policy.nextAllowed,1000+URGENT_RESERVED_ATTEMPTS*YOUTUBE_SPACING+DOWNLOAD_WINDOW);
+assert.equal(downloadBudget(policyState,1000+DOWNLOAD_WINDOW,'urgent').remaining,1,'rolling quota releases only the expired attempt');
 assert.equal(downloadBudget(JSON.parse(JSON.stringify(policyState)),end+YOUTUBE_SPACING).remaining,0,'restart preserves the quota');
 const spaced={version:1,seenIds:[a,b],jobs:{[a]:{videoId:a,phase:'pending',attempts:0,nextAttempt:0},[b]:{videoId:b,phase:'pending',attempts:0,nextAttempt:0}}};
 let starts=0;clock=1000;
@@ -86,3 +86,28 @@ await tick({...options,state:priority,library:async()=>[{id:b},{id:a}],now:()=>1
  remote:async record=>{retainedId=record.videoId;},download:async()=>{throw Error('retained upload must take priority');}});
 assert.equal(retainedId,a,'retained audio still uploads first during download spacing');
 console.log('PASS: recent replacement priority preserves retained-upload priority and download pacing.');
+
+// New IDs get their own lane even while routine backlog spacing is active.
+const laneTime=100000;
+const lanes={version:1,seenIds:[a],urgentLaneInitialized:true,youtubeBacklogNotBefore:laneTime+YOUTUBE_SPACING,youtubeDownloadStarts:[laneTime-1000],jobs:{[a]:{videoId:a,phase:'pending',attempts:0,nextAttempt:0,lane:'backlog'}}};
+let urgentStarts=[];
+const laneOptions={...options,state:lanes,now:()=>laneTime,library:async()=>[{id:a},{id:b}],download:async id=>{urgentStarts.push(id);return [{status:'waiting for replay',reason:'Processing'}];}};
+await tick(laneOptions);
+assert.equal(lanes.jobs[b].lane,'urgent');assert.deepEqual(urgentStarts,[b],'new ID bypasses backlog spacing and library rank');
+await tick(laneOptions);assert.equal(urgentStarts.length,1,'waiting urgent job does not spin on every poll');
+const reserved={youtubeDownloadStarts:Array.from({length:30},(_,i)=>laneTime-1000-i),youtubeBacklogNotBefore:0};
+assert.equal(downloadBudget(reserved,laneTime).remaining,0);
+assert.equal(downloadBudget(reserved,laneTime,'urgent').remaining,5,'backlog cannot consume reserved urgent capacity');
+assert.equal(downloadBudget({...reserved,youtubeNotBefore:laneTime+999},laneTime,'urgent').nextAllowed,laneTime+999,'urgent lane honors bot cooldown');
+assert.equal(downloadBudget({...reserved,youtubeExternalPauseUntil:laneTime+999},laneTime,'urgent').nextAllowed,laneTime+999,'urgent lane honors saved external pause');
+const full={...reserved,youtubeDownloadStarts:Array.from({length:35},(_,i)=>laneTime-1000-i)};
+assert.equal(downloadBudget(full,laneTime,'urgent').remaining,0,'urgent lane honors total daily cap');
+const upgrade={version:1,initializedAt:new Date(1).toISOString(),seenIds:[a,b],youtubeDownloadStarts:[laneTime-1000],youtubeNotBefore:laneTime+YOUTUBE_SPACING,jobs:{[b]:{videoId:b,phase:'pending',attempts:0,nextAttempt:0}}};
+await tick({...laneOptions,state:upgrade,library:async()=>[{id:b,visibility:'members'},{id:a,visibility:'members'}]});
+assert.equal(upgrade.jobs[b].lane,'urgent','already queued latest replacement migrates on upgrade');
+assert.equal(upgrade.jobs[b].phase,'waiting','old routine spacing does not delay latest replacement');
+assert.equal(upgrade.youtubeNotBefore,0);
+const restrictedUpgrade={...upgrade,urgentLaneInitialized:false,youtubeBacklogNotBefore:undefined,youtubeNotBefore:laneTime+999,jobs:{[b]:{videoId:b,phase:'retry',attempts:0,nextAttempt:0,lane:'urgent',message:'YouTube requested a bot check. All new downloads are cooling down for six hours; completed audio is preserved.'}}};
+const beforeStarts=urgentStarts.length;await tick({...laneOptions,state:restrictedUpgrade});
+assert.equal(urgentStarts.length,beforeStarts,'migration preserves a genuine existing restriction');
+console.log('PASS: urgent additions bypass backlog pacing, reserve daily capacity, migrate queued replacements, and honor processing waits, bot cooldowns, external pauses and total daily quota.');
