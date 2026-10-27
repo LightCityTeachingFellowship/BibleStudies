@@ -3,13 +3,14 @@ layout: null
 permalink: /Admin/
 title: LightCity Studio
 sitemap: false
+studio_app: true
 ---
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>LightCity Studio</title>{% include pwa-head.html %}{% include browse-head.html %}
 <link rel="stylesheet" href="{{ '/style/admin.css' | relative_url }}?v=1">
 <script type="module" src="{{ '/script/admin.mjs' | relative_url }}?v=1"></script></head>
-<body><header class="studio-top"><a href="{{ '/Home/' | relative_url }}"><img src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" alt="LightCity home"></a><span>STUDIO</span><div id="admin-account"></div><button id="admin-signout" hidden>Sign out</button></header>
+<body><header class="studio-top"><a href="{{ '/Home/' | relative_url }}"><img src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" alt="LightCity home"></a><span>STUDIO</span><button id="admin-install" type="button" hidden>Install Studio</button><div id="admin-account"></div><button id="admin-signout" hidden>Sign out</button></header>
 <main class="studio-main"><div class="studio-heading"><div><p class="eyebrow">YOUR CONTENT, IN ONE PLACE</p><h1>LightCity Studio</h1><p>Find a recording or publication. Share its LightCity link.</p></div><button id="admin-refresh" hidden>Refresh</button></div>
 <section id="admin-gate" class="studio-panel"><h2>Admin sign-in</h2><p>Use the Google account assigned to manage LightCity.</p><button id="admin-signin" class="primary" disabled>Sign in with Google</button></section>
 <p id="admin-status" role="status" aria-live="polite">Checking access…</p>

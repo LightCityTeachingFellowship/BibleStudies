@@ -1,0 +1,4 @@
+---
+layout: null
+---
+{"id":{{ '/Admin/' | relative_url | jsonify }},"name":"LightCity Studio","short_name":"Studio","description":"Private LightCity content and sharing dashboard","start_url":{{ '/Admin/' | relative_url | jsonify }},"scope":{{ '/Admin/' | relative_url | jsonify }},"display":"standalone","background_color":"#f5f6f8","theme_color":"#252525","icons":[{"src":{{ '/images/pwa-192.png' | relative_url | jsonify }},"sizes":"192x192","type":"image/png"},{"src":{{ '/images/pwa-512.png' | relative_url | jsonify }},"sizes":"512x512","type":"image/png"}]}

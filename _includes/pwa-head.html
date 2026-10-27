@@ -20,11 +20,20 @@ setTimeout(() => {
 .lc-member-restore-slow .lc-member-load-slow {display:inline;}
 </style>
 <meta name="theme-color" content="#322348">
+{% if page.studio_app == true %}
+<link rel="manifest" href="{{ '/studio.webmanifest' | relative_url }}">
+<meta name="apple-mobile-web-app-title" content="LightCity Studio">
+{% else %}
 <link rel="manifest" href="{{ '/manifest.webmanifest' | relative_url }}">
+{% endif %}
 <link rel="apple-touch-icon" href="{{ '/images/pwa-192.png' | relative_url }}">
 <link rel="stylesheet" href="{{ '/style/pwa.css' | relative_url }}?v=live-navigation-1">
 <script defer src="{{ '/pwa-config.js' | relative_url }}?v=branded-auth-1"></script>
+{% if page.studio_app == true %}
+<script defer src="{{ '/script/studio-install.js' | relative_url }}?v=1" data-base="{{ '/' | relative_url }}"></script>
+{% else %}
 <script defer src="{{ '/script/pwa.js' | relative_url }}?v=members-6" data-base="{{ '/' | relative_url }}"></script>
+{% endif %}
 <script type="module" src="{{ '/script/members.js' | relative_url }}?v=admin-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
 <script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=automatic-replacements-1"></script>
 <script defer src="{{ '/script/audio-links.js' | relative_url }}?v=daily-titles-1" data-lightcity-audio-links data-base="{{ '/' | relative_url }}"></script>

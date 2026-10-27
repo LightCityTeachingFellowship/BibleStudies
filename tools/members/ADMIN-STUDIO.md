@@ -47,3 +47,14 @@ node tools/test-admin-ui.mjs
 Checks cover authorization before private reads, blocked/unverified accounts,
 private/public metadata, URL validation, search, native sharing, copy links,
 sign-out cleanup and late responses after account changes.
+
+## Install Studio separately
+
+The Admin page uses studio.webmanifest with its own /Admin/ identity, start URL
+and scope. The main LightCity app continues to use its existing manifest. Studio
+shares the existing root service worker but does not show the main application's
+notification/install invitations. Installation never grants admin access.
+
+After committing/syncing these changes, open /Admin/ in Chrome or Edge, refresh,
+then use Install Studio when offered (or the browser's address-bar install icon).
+The installed app is named LightCity Studio and launches the dashboard directly.
