@@ -14,7 +14,7 @@ export function audioReadyPublication(previous, desired, { recordings = [], live
   const videos = [], pending = [], held = new Set();
   for (const video of candidates) {
     if (before.has(video.id) || ready.has(video.id) || liveIds.has(video.id)) {
-      const record = ready.get(video.id);
+      const record = ready.get(video.id) || live.find(r => r.videoId === video.id && r.active === true && r.expiresAt > now);
       videos.push({ ...video, ...(record && !video.title ? { title: record.title || null } : {}) });
       continue;
     }

@@ -15,11 +15,11 @@ let copied,shared;const navigator={clipboard:{writeText:async url=>{copied=url;}
 const client={enabled:true,user:{uid:'owner',email:data.account},ready:Promise.resolve(),getAdminDashboard:async()=>data,signOut:async()=>{client.user=null;}};
 const ui=setupAdmin({document,window,navigator,api:()=>client});const settle=async()=>{for(let i=0;i<20;i++)await Promise.resolve();};await settle();
 assert.equal(nodes['admin-content'].hidden,false);assert.equal(nodes['admin-gate'].hidden,true);assert.equal(nodes['admin-totals'].children.length,4);
-let row=nodes['admin-list'].children[0];await row.querySelectorAll('button')[0].handlers.click();await settle();assert.equal(copied,'https://lightcityfellowship.com/Watch/?v='+videoId);
-await row.querySelectorAll('button').find(b=>b.textContent==='Copy audio link').handlers.click();await settle();assert.equal(copied,'https://lightcityfellowship.com/Listen/?v='+videoId);
-await row.querySelectorAll('button').find(b=>b.textContent==='Share').handlers.click();assert.equal(shared.url,'https://lightcityfellowship.com/Watch/?v='+videoId);
+let row=nodes['admin-list'].children[0];await row.querySelectorAll('button')[0].handlers.click();await settle();assert.equal(copied,'https://lightcityfellowship.com/Share/Video/'+videoId+'/');
+await row.querySelectorAll('button').find(b=>b.textContent==='Copy audio link').handlers.click();await settle();assert.equal(copied,'https://lightcityfellowship.com/Share/Audio/'+videoId+'/');
+await row.querySelectorAll('button').find(b=>b.textContent==='Share').handlers.click();assert.equal(shared.url,'https://lightcityfellowship.com/Share/Video/'+videoId+'/');
 nodes['admin-search'].value='article';nodes['admin-search'].handlers.input();assert.ok(nodes['admin-list'].children.some(row=>row.querySelector('h3').textContent==='Public article'));
-nodes['admin-quick'].value='https://youtube.com/live/'+videoId;nodes['admin-quick-form'].handlers.submit({preventDefault(){}});assert.equal(nodes['admin-quick-link'].value,'https://lightcityfellowship.com/Watch/?v='+videoId);
+nodes['admin-quick'].value='https://youtube.com/live/'+videoId;nodes['admin-quick-form'].handlers.submit({preventDefault(){}});assert.equal(nodes['admin-quick-link'].value,'https://lightcityfellowship.com/Share/Video/'+videoId+'/');
 nodes['admin-search'].value='';
 data.videos=Array.from({length:70},(_,i)=>({id:String(i).padStart(11,'0'),title:'Recording '+i,published:true,visibility:'public'}));await ui.load();assert.equal(nodes['admin-list'].children.length,36);nodes['admin-more'].handlers.click();assert.equal(nodes['admin-list'].children.length,72,'large catalogues paginate without opening content pages');
 await nodes['admin-signout'].handlers.click();assert.equal(nodes['admin-content'].hidden,true);assert.equal(nodes['admin-list'].children.length,0);assert.equal(nodes['admin-quick-link'].value,'');

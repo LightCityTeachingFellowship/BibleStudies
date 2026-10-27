@@ -23,7 +23,7 @@ title: Watch a video
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=study-1"></script>
 <script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
-<script type="module" src="{{ '/script/watch-share.mjs' | relative_url }}?v=1"></script>
+<script type="module" src="{{ '/script/watch-share.mjs' | relative_url }}?v=previews-1"></script>
 </head>
 <body class="fonts app-home site-browse">
   {% include homeHeader-pages.html %}
@@ -34,13 +34,13 @@ title: Watch a video
     <div id="watch-player" class="watch-player" hidden></div>
     <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
     <div id="watch-personal-actions"></div>
+    <div id="watch-audio-choice" class="lc-video-actions" aria-label="Listen to this recording" hidden></div>
     <div id="watch-share" class="watch-share" data-watch-url="{{ site.url }}{{ '/Watch/' | relative_url }}" hidden>
       <button id="watch-share-native" type="button" hidden>Share</button>
       <button id="watch-copy-link" type="button">Copy link</button>
       <span id="watch-share-status" role="status" aria-live="polite"></span>
       <input id="watch-share-link" type="text" readonly aria-label="Link to watch on LightCity" hidden>
     </div>
-    <div id="watch-audio-choice" class="lc-video-actions" aria-label="Listen to this recording" hidden></div>
     <section class="lc-study-related" data-study-related hidden><h2>Related study resources</h2><div data-study-related-list></div></section>
     <noscript>Enable JavaScript to play this video, or browse <a href="{{ '/Videos/' | relative_url }}">all videos</a>.</noscript>
   </main>

@@ -1,3 +1,4 @@
+import { writeVideoSharePages } from '../share-previews.mjs';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { writeFile, appendFile, mkdir } from 'node:fs/promises';
@@ -15,6 +16,7 @@ export async function preparePublication({ root, previous, desired, recordings, 
   const changed = JSON.stringify(plan.videos) !== JSON.stringify(previous.videos);
   const publish = force || changed || previous.revision !== revision;
   if (publish) {
+    await writeVideoSharePages(root,plan.videos);
     await mkdir(join(root, 'tools/audio-library/work'), { recursive: true });
     await writeFile(join(root, 'tools/audio-library/work/publication.json'), JSON.stringify({ videos: plan.videos }));
     // These are build-only copies. The checkout is disposable; the user's source

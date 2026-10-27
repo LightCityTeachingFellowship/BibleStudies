@@ -1,4 +1,4 @@
-import {streamId,watchLink,dashboardRows,filterRows} from './admin-core.mjs?v=1';
+import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=previews-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -22,11 +22,11 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    const label=!item.published?(item.replacement?'Replacement pending':'Waiting for publication'):item.live?'LIVE':item.replay?'Audio replay':item.audio?'Audio ready':item.kind==='Video'?(checks.audio===false?'Audio status unavailable':'Published'):item.kind;
    info.appendChild(node('span',label,'studio-badge'+(item.live?' live':!item.published?' pending':'')));info.appendChild(node('h3',item.title));
    if(item.id||item.date)info.appendChild(node('small',item.id||item.date));row.appendChild(info);
-   const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?watchLink(item.id,true):item.url;
+   const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
    actions.appendChild(action('Copy link',()=>void copy(url,row)));
-   if(item.audio&&item.published&&tab!=='Audio')actions.appendChild(action('Copy audio link',()=>void copy(watchLink(item.id,true),row)));
-   if(typeof navigator.share==='function')actions.appendChild(action('Share',()=>{void navigator.share({title:item.title,text:'On LightCity',url}).catch(error=>{if(error.name!=='AbortError')status('Use Copy link to share this item.');});}));
-   if(item.published){const open=node('a','Open');open.href=url;open.target='_blank';open.rel='noopener';actions.appendChild(open);}row.appendChild(actions);list.appendChild(row);
+   if(item.audio&&item.published&&tab!=='Audio')actions.appendChild(action('Copy audio link',()=>void copy(previewLink(item.id,true),row)));
+   if(typeof navigator.share==='function')actions.appendChild(action('Share',()=>{void navigator.share({title:item.title,text:item.title,url}).catch(error=>{if(error.name!=='AbortError')status('Use Copy link to share this item.');});}));
+   if(item.published){const open=node('a','Open');open.href=tab==='Audio'&&item.id?watchLink(item.id,true):item.url;open.target='_blank';open.rel='noopener';actions.appendChild(open);}row.appendChild(actions);list.appendChild(row);
   }
  }
  async function load(){
@@ -47,7 +47,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
  byId('admin-search').addEventListener('input',()=>{limit=36;render();});byId('admin-more').addEventListener('click',()=>{limit+=36;render();});byId('admin-refresh').addEventListener('click',()=>void load());
  byId('admin-signin').addEventListener('click',async()=>{byId('admin-signin').disabled=true;try{await api().signInForVideos();await load();}catch{status('Sign-in did not finish. Please try again.');}finally{byId('admin-signin').disabled=false;}});
  byId('admin-signout').addEventListener('click',async()=>{++generation;clear();status('Signing out…');try{await api().signOut();await load();}catch{status('Sign-out could not finish. Please retry.');}});
- byId('admin-quick-form').addEventListener('submit',event=>{event.preventDefault();const id=streamId(byId('admin-quick').value);byId('admin-quick-result').hidden=!id;if(!id){status('Enter a valid YouTube link or 11-character video ID.');return;}byId('admin-quick-link').value=watchLink(id);status('LightCity Watch link prepared.');});
+ byId('admin-quick-form').addEventListener('submit',event=>{event.preventDefault();const id=streamId(byId('admin-quick').value);byId('admin-quick-result').hidden=!id;if(!id){status('Enter a valid YouTube link or 11-character video ID.');return;}byId('admin-quick-link').value=previewLink(id);status('LightCity Watch link prepared.');});
  byId('admin-quick-copy').addEventListener('click',()=>{const url=byId('admin-quick-link').value;if(url)void copy(url,byId('admin-quick-result'));});
  window.addEventListener('lightcity-members-changed',()=>void load());void load();
  return {load};

@@ -1,0 +1,15 @@
+{% assign preview_kind = '' %}
+{% if page.layout == 'articleTEMPLATE' %}{% assign preview_kind = 'Article' %}{% assign preview_image = '/images/share/article.png' %}
+{% elsif page.layout contains 'summaryTEMPLATE' %}{% assign preview_kind = 'Summary' %}{% assign preview_image = '/images/share/summary.png' %}{% endif %}
+{% if preview_kind != '' %}
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="LightCity Teaching Fellowship">
+<meta property="og:title" content="{{ page.title | escape }}">
+<meta property="og:description" content="Read this {{ preview_kind | downcase }} on LightCity Teaching Fellowship.">
+<meta property="og:url" content="{{ site.url }}{{ page.url | relative_url }}">
+<meta property="og:image" content="{{ site.url }}{{ preview_image | relative_url }}">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LightCity {{ preview_kind }}">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{{ page.title | escape }}">
+<meta name="twitter:image" content="{{ site.url }}{{ preview_image | relative_url }}">
+{% endif %}

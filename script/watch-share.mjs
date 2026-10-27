@@ -1,9 +1,10 @@
+import {videoShareLink} from './share-links.mjs?v=1';
 export function watchShare({ base, videoId, title }) {
   if (!/^[\w-]{11}$/.test(videoId || '')) return null;
   const url = new URL(base);
   if (url.protocol !== 'https:') return null;
-  url.search = ''; url.hash = ''; url.searchParams.set('v', videoId);
-  return { title: String(title || 'Watch on LightCity').trim(), text: 'Watch on LightCity', url: url.href };
+  const preview=videoShareLink(videoId,{base:url.href});
+  return { title: String(title || 'Watch on LightCity').trim(), text: String(title || 'Watch on LightCity').trim(), url: preview };
 }
 export function setupWatchShare({ document, navigator, location }) {
   const panel = document.getElementById('watch-share');

@@ -36,3 +36,6 @@ tools/live-audio/work/
 
 # Generated worker bundles from commands run inside the gateway folder
 tools/live-audio/cloud/tools/live-audio/work/
+
+# Sharing preview source pages are generated in the publishing checkout.
+/share-previews/

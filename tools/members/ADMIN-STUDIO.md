@@ -58,3 +58,27 @@ notification/install invitations. Installation never grants admin access.
 After committing/syncing these changes, open /Admin/ in Chrome or Edge, refresh,
 then use Install Studio when offered (or the browser's address-bar install icon).
 The installed app is named LightCity Studio and launches the dashboard directly.
+
+## Shared link previews
+
+Studio and Watch sharing now copy /Share/Video/VIDEO_ID/ links. Audio sharing uses
+/Share/Audio/VIDEO_ID/. Publishing generates small static HTML preview pages for
+published recordings and their replacement aliases. WhatsApp reads the title and
+YouTube thumbnail from the HTML; opening the link redirects to the normal Watch
+or Listen page. Pending recordings are not given generated preview pages until
+published. Sharing a newly prepared stream ID therefore needs its usual ID-list
+publication and active stream first.
+
+Article/summary links keep their existing addresses and include Open Graph tags
+with the actual publication title and distinct 1200x630 LightCity cards. These
+cards can be regenerated with tools/create-share-cards.ps1. The generated video
+preview source directory is ignored by Git and is created only in the publishing
+checkout, using the approved snapshot and refreshed titles. Do not commit that
+source directory. Preview pages are marked noindex and are not put in search
+catalogues. Shared previews intentionally expose only the recording title and
+thumbnail to anyone receiving that link; they do not contain member content,
+credentials, signed audio URLs or access grants.
+
+Commit/sync these changes; no Firebase or Cloudflare deployment is needed. Copy a
+new link from Studio or Watch after publishing to test the new preview addresses.
+Checks: node tools/test-share-previews.mjs and node tools/test-watch-share.mjs.
