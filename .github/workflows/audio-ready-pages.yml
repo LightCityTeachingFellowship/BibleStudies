@@ -24,6 +24,8 @@ jobs:
     if: ${{ vars.AUDIO_READY_PUBLISHING == 'true' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'validate') }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/tools/pages/Gemfile
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -43,6 +45,7 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           LIVE_AUDIO_PLAYBACK_KEY: ${{ secrets.LIVE_AUDIO_PLAYBACK_KEY }}
+          YOUTUBE_DATA_API_KEY: ${{ secrets.YOUTUBE_DATA_API_KEY }}
           LIVE_AUDIO_GATEWAY: ${{ vars.LIVE_AUDIO_GATEWAY }}
           FORCE_PUBLICATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'publish' }}
           PUBLICATION_VALIDATE_ONLY: ${{ github.event_name == 'workflow_dispatch' && inputs.operation == 'validate' }}

@@ -1,4 +1,4 @@
-import {audioLibrary,filterAudio,audioCategories} from './audio-library-core.mjs';
+import {audioLibrary,filterAudio,audioCategories} from './audio-library-core.mjs?v=daily-titles-1';
 const page=document.getElementById('audio-library-page');
 if(page){
  const byId=id=>document.getElementById(id),grid=byId('videotab-container'),status=byId('audio-library-status'),search=byId('audio-library-search'),more=byId('audio-library-more'),retry=byId('audio-library-retry');

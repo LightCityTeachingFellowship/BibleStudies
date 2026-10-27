@@ -64,7 +64,7 @@
         if (!globalThis.LightCityMedia) { feedback(holder, 'Playback controls are still loading. Please try again.'); return; }
         let controller = mounted.get(viewport);
         if (!controller) {
-          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: recording.title || 'LightCity recording', onState: (mode, message) => {
+          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: document.getElementById('watch-title')?.textContent || holder.closest('.video-box')?.getAttribute('video-title') || recording.title || 'LightCity recording', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
             feedback(holder, message);liveBadge(viewport,id);
             if (holder === watch) {

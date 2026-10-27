@@ -75,3 +75,24 @@ branch configuration; pending raw IDs will then become publishable again.
 
 Verification: `node tools/audio-library/test-publication-gate.mjs` and
 `node tools/test-automatic-replacements.mjs`.
+
+
+## Daily title refresh
+
+The active publishing workflow checks the private title cache every time it runs.
+After 24 hours it refreshes YouTube titles and rebuilds only if the published
+metadata changed. Video/audio libraries and search share the refreshed titles.
+Audio files are not downloaded again, IDs and order stay unchanged, and title
+edits do not send another notification. Pages already open show the new metadata
+when reopened/refreshed; active listening is not interrupted by forced reloads.
+
+No additional key is required: the fallback checks YouTube oEmbed with four
+concurrent requests and a four-minute time budget, retaining the last good title
+on failure. Optionally add GitHub secret YOUTUBE_DATA_API_KEY for the official
+YouTube Data API, which retrieves up to 50 titles per request. Use a key that
+allows server requests, rather than a website-referrer-only key.
+
+GitHub builds use the tracked tools/pages/Gemfile through BUNDLE_GEMFILE. The root
+Gemfile and lockfile are ignored local-preview files and are not required in CI.
+The obsolete placeholder Fetch YouTube Video IDs workflow has been removed; the
+actual public/member ID files remain manually controlled.

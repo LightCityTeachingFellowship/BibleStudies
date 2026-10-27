@@ -4,7 +4,8 @@ import { writeFile, appendFile, mkdir } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
-import { loadVideoLibrary } from '../video-library.mjs';
+import { refreshVideoTitles } from '../video-title-refresh.mjs';
+import { loadVideoLibrary, categoryMatcher } from '../video-library.mjs';
 import { loadReplacements, reconcileReplacements } from '../video-replacements.mjs';
 import { audioReadyPublication } from '../audio-library/publication-gate.mjs';
 
@@ -32,7 +33,8 @@ export async function preparePublication({ root, previous, desired, recordings, 
 async function main() {
   if (process.env.GITHUB_ACTIONS !== 'true') throw Error('This prepares a disposable GitHub Actions checkout only.');
   const root = fileURLToPath(new URL('../..', import.meta.url));
-  const desired = await loadVideoLibrary(root), declared = await loadReplacements(root);
+  let desired = await loadVideoLibrary(root);
+  const declared = await loadReplacements(root);
   const credential = cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT));
   initializeApp({ credential });
   const db = getFirestore();
@@ -60,6 +62,14 @@ async function main() {
     return body.recordings;
   };
   const [recordings, live] = await Promise.all([catalogue('/recordings/catalog'), catalogue('/catalog')]);
+  const titleRef = db.doc('churchVideoLibrary/titleMetadata');
+  const savedTitles = await titleRef.get();
+  const refreshed = await refreshVideoTitles(desired, savedTitles.exists ? savedTitles.data() : {}, { apiKey: process.env.YOUTUBE_DATA_API_KEY || '', classify: await categoryMatcher() });
+  desired = refreshed.videos;
+  if (process.env.PUBLICATION_VALIDATE_ONLY !== 'true' && refreshed.refreshed) {
+    await titleRef.set(refreshed.cache);
+    console.log(`Daily titles checked: ${refreshed.successes} refreshed; ${refreshed.failures} unavailable titles kept their previous values.`);
+  }
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
   const plan = await preparePublication({ root, previous: snapshot.data(), desired, recordings, live, declared, revision, intent: intent.exists ? intent.data() : null, force: process.env.FORCE_PUBLICATION === 'true',
     output: text => process.env.GITHUB_OUTPUT ? appendFile(process.env.GITHUB_OUTPUT, text) : Promise.resolve() });
