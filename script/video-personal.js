@@ -115,6 +115,7 @@ function saveButton(holder,id,title) {
   const saved=personal.saved(id), label=saved?'Remove from saved videos':'Save video for later';
   button.disabled=globalThis.LightCityMembers?.loading===true;
   button.setAttribute('aria-pressed',String(saved));button.setAttribute('aria-label',label);button.title=label;
+  const menuLabel=button.querySelector?.('.lc-save-label');if(menuLabel)menuLabel.textContent=label;
   return button;
 }
 function decorate(holder,id,title,search=false) {
@@ -122,7 +123,13 @@ function decorate(holder,id,title,search=false) {
   const button=saveButton(holder,id,title);
   if(search) {if(button.parentNode!==holder)holder.appendChild(button);return;}
   const heading=holder.querySelector?.('.video-title') || (holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-title'):null);
-  if(heading) {
+  const saveSlot=holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-save-slot'):null;
+  if(saveSlot) {
+    let label=button.querySelector('.lc-save-label');
+    if(!label){label=node('span','', 'lc-save-label');button.appendChild(label);}
+    label.textContent=button.getAttribute('aria-label');
+    if(button.parentNode!==saveSlot)saveSlot.appendChild(button);
+  } else if(heading) {
     let line=heading.parentNode?.className==='lc-video-title-row'?heading.parentNode:holder.querySelector?.('.lc-video-title-row');
     if(!line){line=node('div','', 'lc-video-title-row');heading.parentNode.insertBefore(line,heading);}
     if(heading.parentNode!==line)line.insertBefore(heading,line.children[0] || null);

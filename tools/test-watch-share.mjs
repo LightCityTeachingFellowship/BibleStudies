@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { watchShare, setupWatchShare } from '../script/watch-share.mjs';
+import { watchShare, setupWatchShare, setupWatchMenu } from '../script/watch-share.mjs';
 const id='abcdefghijk';
 assert.deepEqual(watchShare({base:'https://lightcityfellowship.com/Watch/?t=10&mode=audio#old',videoId:id,title:'Live service'}),{title:'Live service',text:'Live service',url:'https://lightcityfellowship.com/Share/Video/'+id+'/'});
 assert.equal(watchShare({base:'https://lightcityfellowship.com/Watch/',videoId:'invalid'}),null);
@@ -15,3 +15,26 @@ await nodes['watch-copy-link'].click();assert.equal(copied,shared.url);assert.eq
 navigator.clipboard=null;await nodes['watch-copy-link'].click();assert.equal(nodes['watch-share-link'].value,shared.url);assert.equal(nodes['watch-share-link'].selected,true);
 navigator.share=async()=>{throw Object.assign(Error('cancelled'),{name:'AbortError'});};await nodes['watch-share-native'].click();assert.equal(nodes['watch-share-status'].textContent,'');
 console.log('PASS: canonical LightCity links, native sharing, copy, manual copy fallback, invalid IDs, local preview and cancelled sharing.');
+
+// Native details supplies Enter/Space and Tab; dismissal must not affect playback.
+const handlers={}, menuHandlers={}, toggle={focus(){this.focused=true;}};
+const menu={open:true,contains:node=>node===toggle,addEventListener:(name,fn)=>menuHandlers[name]=fn};
+const menuDocument={getElementById:id=>id==='watch-menu'?menu:toggle,addEventListener:(name,fn)=>handlers[name]=fn};
+const close=setupWatchMenu(menuDocument);
+handlers.click({target:toggle});assert.equal(menu.open,true);
+handlers.click({target:{}});assert.equal(menu.open,false);
+menu.open=true;let prevented=false;handlers.keydown({key:'Escape',preventDefault(){prevented=true;}});
+assert.equal(menu.open,false);assert.equal(toggle.focused,true);assert.equal(prevented,true);
+menu.open=true;menuHandlers.focusout({relatedTarget:{}});assert.equal(menu.open,false);
+menu.open=true;close();assert.equal(menu.open,false);
+// Share falls back to copying on browsers without native sharing.
+navigator.share=undefined;navigator.clipboard={writeText:async url=>copied=url};
+let fallback=false;nodes['watch-copy-link'].click=()=>{fallback=true;};
+await nodes['watch-share-native'].click();assert.equal(fallback,true);
+const {readFileSync}=await import('node:fs');
+const html=readFileSync(new URL('../watch.html',import.meta.url),'utf8');
+assert.match(html,/<details id="watch-menu"/);
+assert.ok(html.indexOf('id="watch-save-slot"')<html.indexOf('</details>'));
+assert.ok(html.indexOf('id="watch-copy-link"')<html.indexOf('</details>'));
+assert.ok(html.indexOf('id="watch-personal-actions"')>html.indexOf('id="watch-player"'));
+console.log('PASS: Watch menu placement, outside click, Escape focus, Tab dismissal, sharing fallback and playback controls preserved.');

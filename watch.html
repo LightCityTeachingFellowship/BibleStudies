@@ -17,30 +17,46 @@ title: Watch a video
   <link rel="stylesheet" href="{{ '/style/lightcity-02.css' | relative_url }}?v=browse-2">
   <link rel="stylesheet" href="{{ '/style/darkMODE.css' | relative_url }}">
   <link id="theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}">
-  <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}">
+  <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}?v=watch-menu-1">
   <script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script>
   <script defer src="{{ '/script/video-watch.js' | relative_url }}?v=automatic-replacements-1"></script>
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=study-1"></script>
 <script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
-<script type="module" src="{{ '/script/watch-share.mjs' | relative_url }}?v=previews-1"></script>
+<script type="module" src="{{ '/script/watch-share.mjs' | relative_url }}?v=watch-menu-1"></script>
 </head>
 <body class="fonts app-home site-browse">
   {% include homeHeader-pages.html %}
   {% include site-search.html scope='Video' %}
   <main class="watch-main leftRight-space-16">
-    <h3 id="watch-title" class="watch-title">LightCity video</h3>
+    <div class="watch-title-row">
+      <h3 id="watch-title" class="watch-title">LightCity video</h3>
+      <details id="watch-menu" class="watch-menu">
+        <summary id="watch-menu-toggle" aria-label="More video actions" title="More video actions">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+        </summary>
+        <div class="watch-menu-panel bg-color">
+          <div id="watch-save-slot"></div>
+          <div id="watch-share" class="watch-share" data-watch-url="{{ site.url }}{{ '/Watch/' | relative_url }}" hidden>
+            <button id="watch-share-native" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 3 8 7-8 7v-5C7 12 4 15 2 20c0-9 4-13 12-13z"/></svg><span>Share</span>
+            </button>
+            <button id="watch-copy-link" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5V2h13v16h-3M3 6h13v16H3z"/></svg><span>Copy link</span>
+            </button>
+          </div>
+        </div>
+      </details>
+    </div>
+    <div class="watch-share-feedback">
+      <span id="watch-share-status" role="status" aria-live="polite"></span>
+      <input id="watch-share-link" type="text" readonly aria-label="Link to watch on LightCity" hidden>
+    </div>
     <p id="watch-status" role="status">Loading your video…</p>
     <div id="watch-player" class="watch-player" hidden></div>
     <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
     <div id="watch-personal-actions"></div>
     <div id="watch-audio-choice" class="lc-video-actions" aria-label="Listen to this recording" hidden></div>
-    <div id="watch-share" class="watch-share" data-watch-url="{{ site.url }}{{ '/Watch/' | relative_url }}" hidden>
-      <button id="watch-share-native" type="button" hidden>Share</button>
-      <button id="watch-copy-link" type="button">Copy link</button>
-      <span id="watch-share-status" role="status" aria-live="polite"></span>
-      <input id="watch-share-link" type="text" readonly aria-label="Link to watch on LightCity" hidden>
-    </div>
     <section class="lc-study-related" data-study-related hidden><h2>Related study resources</h2><div data-study-related-list></div></section>
     <noscript>Enable JavaScript to play this video, or browse <a href="{{ '/Videos/' | relative_url }}">all videos</a>.</noscript>
   </main>
