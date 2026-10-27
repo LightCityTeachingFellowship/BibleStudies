@@ -6,14 +6,14 @@ body{
     background-color:var(--DM-light-gray)!important;
     color:var(--DM-white);
 }
-.darkmode :is(h1,h2,h3,h4,h5,h6):not(header *,h3.video-title,.footerLinks-header h3,.Contact-section h3,.Contact-section h5) {
-    color: black!important;
+.darkmode :is(h1,h2,h3,h4,h5,h6):not(header *,h3.video-title,.footerLinks-header h3,.Contact-section h3,.Contact-section h5,.lc-personal-card *) {
+    color: var(--DM-white)!important;
 }
 .darkmode :is(.titles,h1.titles,h2.titles,h3.titles,h4.titles,h5.titles,h6.titles,.visible-titles h4):not(header *) {
     color: var(--DM-white)!important;
 }
 
-:is(h1,h2,h3,h4,h5,h6):not(.visible-titles h4,h5.all-links,.footerLinks-header h3,.Contact-section h3,.Contact-section h5,h3.video-title){
+:is(h1,h2,h3,h4,h5,h6):not(.visible-titles h4,h5.all-links,.footerLinks-header h3,.Contact-section h3,.Contact-section h5,h3.video-title,.lc-continue-study *){
     --shd4: rgba(0, 0, 0, 0.8);
     box-shadow: var(--shd4) 0px 12px 8px -11px, var(--shd4) 0px -10px 2px -10px, var(--shd4) 0px 13px 2px -11px!important;
 }
