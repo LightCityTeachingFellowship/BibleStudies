@@ -1,0 +1,20 @@
+---
+layout: null
+permalink: /Admin/
+title: LightCity Studio
+sitemap: false
+---
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>LightCity Studio</title>{% include pwa-head.html %}{% include browse-head.html %}
+<link rel="stylesheet" href="{{ '/style/admin.css' | relative_url }}?v=1">
+<script type="module" src="{{ '/script/admin.mjs' | relative_url }}?v=1"></script></head>
+<body><header class="studio-top"><a href="{{ '/Home/' | relative_url }}"><img src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" alt="LightCity home"></a><span>STUDIO</span><div id="admin-account"></div><button id="admin-signout" hidden>Sign out</button></header>
+<main class="studio-main"><div class="studio-heading"><div><p class="eyebrow">YOUR CONTENT, IN ONE PLACE</p><h1>LightCity Studio</h1><p>Find a recording or publication. Share its LightCity link.</p></div><button id="admin-refresh" hidden>Refresh</button></div>
+<section id="admin-gate" class="studio-panel"><h2>Admin sign-in</h2><p>Use the Google account assigned to manage LightCity.</p><button id="admin-signin" class="primary" disabled>Sign in with Google</button></section>
+<p id="admin-status" role="status" aria-live="polite">Checking access…</p>
+<div id="admin-content" hidden><div id="admin-totals" class="studio-totals"></div>
+<section class="studio-panel quick-link"><h2>Prepare a stream link</h2><p>Paste a YouTube link or video ID to get the LightCity Watch link.</p><form id="admin-quick-form"><label class="sr-only" for="admin-quick">YouTube link or video ID</label><input id="admin-quick" placeholder="YouTube link or video ID" required><button class="primary">Get link</button></form><div id="admin-quick-result" hidden><input id="admin-quick-link" readonly aria-label="LightCity Watch link"><button id="admin-quick-copy" type="button">Copy link</button><p>For a new stream, add the ID to your usual public or members list and start the stream before sharing.</p></div></section>
+<section class="studio-panel studio-library"><div class="studio-tools"><h2>Content library</h2><label class="sr-only" for="admin-search">Search content</label><input id="admin-search" type="search" placeholder="Search titles, dates or video IDs…"></div>
+<div id="admin-tabs" class="studio-tabs" role="group" aria-label="Content type"></div><p id="admin-results" class="muted"></p><div id="admin-list" class="studio-list"></div><button id="admin-more" hidden>Show more</button></section>
+</div><noscript>Enable JavaScript to sign in to LightCity Studio.</noscript></main></body></html>

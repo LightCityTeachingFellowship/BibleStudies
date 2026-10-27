@@ -1,3 +1,4 @@
+import { createAdminDashboard } from './admin.mjs';
 import { createReadingActivity } from './reading-activity.mjs';
 import { initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
@@ -50,3 +51,8 @@ export const updateMyVideoActivity = onCall(options, activity.updateMyVideoActiv
 const readingActivity = createReadingActivity({auth:getAuth(),db:getFirestore(),fail:HttpsError,privateCatalog:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications});
 export const getMyReadingActivity = onCall(options, readingActivity.getMyReadingActivity);
 export const updateMyReadingActivity = onCall(options, readingActivity.updateMyReadingActivity);
+
+const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcityteachingfellowship@gmail.com' });
+const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live,
+ privateReadings:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications });
+export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey] }, adminDashboard);

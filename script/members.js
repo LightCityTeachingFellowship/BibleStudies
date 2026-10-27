@@ -216,3 +216,11 @@ api.getReadingActivity = async data => { await api.ready; return call('getMyRead
 api.updateReadingActivity = async data => { await api.ready; return call('updateMyReadingActivity', data); };
 
 api.getVideoReplacements=async()=>{await api.ready;return call('getVideoReplacements',{});};
+
+api.getAdminDashboard=async()=>{await api.ready;return call('getChurchAdminDashboard',{accountUid:api.user?.uid});};
+api.signOut=async()=>{
+ await api.ready;if(!memberAuth||!sdk)return;
+ ++version;api.user=null;publish(null);
+ try{if(deviceAuth.currentUser)await call('unlinkChurchDevice',{deviceToken:await deviceAuth.currentUser.getIdToken()});}catch{}
+ await sdk.auth.signOut(memberAuth);
+};
