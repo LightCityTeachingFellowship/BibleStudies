@@ -1,7 +1,7 @@
 import {processingLibrary} from '../../studio-library.mjs';
 import { loadVideoLibrary } from '../../video-library.mjs';
 export async function declaredLibrary(root) {
-  return (await processingLibrary(root,()=>loadVideoLibrary(root))).map(({ id, title, visibility }) => ({ id, title, visibility: visibility === 'public' ? 'public' : 'members' }));
+  return (await processingLibrary(root,()=>loadVideoLibrary(root))).map(({ id, title, visibility, studioSelected }) => ({ id, title, studioSelected, visibility: visibility === 'public' ? 'public' : 'members' }));
 }
 export async function youtubeVideos(ids, { apiKey, channelId, send = fetch, signal }) {
   if (!/^UC[\w-]{22}$/.test(channelId || '') || typeof apiKey !== 'string' || apiKey.length < 20 || apiKey.length > 200 || ids.length > 50 || ids.some(id => !/^[\w-]{11}$/.test(id))) throw Error('YouTube lookup configuration is invalid');
@@ -17,7 +17,9 @@ export async function youtubeVideos(ids, { apiKey, channelId, send = fetch, sign
   return data.items.filter(item => item.snippet?.channelId === channelId).map(item => ({ id: item.id, title: typeof item.snippet.title === 'string' ? item.snippet.title.slice(0, 300) : '', live: item.snippet.liveBroadcastContent === 'live' && Number.isFinite(Date.parse(item.liveStreamingDetails?.actualStartTime)) && !item.liveStreamingDetails?.actualEndTime && ['public', 'unlisted'].includes(item.status?.privacyStatus), startedAt: Date.parse(item.liveStreamingDetails?.actualStartTime), ended: !!item.liveStreamingDetails?.actualEndTime }));
 }
 export async function discoverBroadcast(library, lookup, signal) {
-  const found = [], ids = [...new Set(library.map(item => item.id))];
+  const selected=library.filter(item=>item.studioSelected===true);
+  if(selected.length>1)return {video:null,reason:'More than one Studio selection was returned. Audio is waiting for a single selection.'};
+  const found = [], ids = [...new Set((selected.length?selected:library).map(item => item.id))];
   for (let i = 0; i < ids.length; i += 50) {
     if (signal?.aborted) throw new DOMException('Cancelled', 'AbortError');
     for (const video of await lookup(ids.slice(i, i + 50))) if (video.live && video.title) found.push(video);

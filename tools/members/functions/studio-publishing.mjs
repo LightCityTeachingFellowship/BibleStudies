@@ -1,3 +1,4 @@
+import {timingSafeEqual} from 'node:crypto';
 const valid=id=>/^[\w-]{11}$/.test(id||'');
 const paths={public:'_includes/video-ids-public.txt',members:'_includes/video-ids-members.txt'};
 export function parseIds(text){const ids=String(text).split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(ids.some(id=>!valid(id))||new Set(ids).size!==ids.length)throw Error('The video list needs review before publishing.');return ids;}
@@ -60,4 +61,16 @@ export function createStudioPublishing(deps){
   }catch{return {state:'publishing',message:'Checking the published share page…'};}
  }
  };
+}
+export function validHelperBearer(header,secret){
+ // Firebase CLI stdin secret setup can retain a trailing newline. Match the
+ // existing live-audio signer: normalize surrounding whitespace, not key bytes.
+ const provided=String(header||'').replace(/^Bearer\s+/i,'').trim();
+ const expected=String(secret||'').trim();
+ if(!/^[a-f0-9]{64}$/.test(provided)||!/^[a-f0-9]{64}$/.test(expected))return false;
+ return timingSafeEqual(Buffer.from(provided),Buffer.from(expected));
+}
+export function markStudioSelection(videos,request,now=Date.now()){
+ const selected=valid(request?.videoId)&&Number.isFinite(request.requestedAt)&&request.requestedAt<=now&&now-request.requestedAt<12*3600000?request.videoId:null;
+ return videos.map(v=>({...v,studioSelected:v.id===selected&&v.visibility===request?.visibility}));
 }

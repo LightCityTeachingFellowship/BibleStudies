@@ -1,5 +1,4 @@
-import {githubPublisher,createStudioPublishing} from './studio-publishing.mjs';
-import {timingSafeEqual} from 'node:crypto';
+import {githubPublisher,createStudioPublishing,validHelperBearer,markStudioSelection} from './studio-publishing.mjs';
 import { createAdminDashboard } from './admin.mjs';
 import { createReadingActivity } from './reading-activity.mjs';
 import { initializeApp } from 'firebase-admin/app';
@@ -68,9 +67,9 @@ let studioSourceCache=null;
 export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubToken,livePlaybackKey]},async(req,res)=>{
  const provided=Buffer.from(String(req.get('authorization')||'').replace(/^Bearer /,'')),expected=Buffer.from(livePlaybackKey.value());
  res.set('Cache-Control','no-store');
- if(req.method!=='POST'||provided.length!==expected.length||!expected.length||!timingSafeEqual(provided,expected)){res.status(403).json({error:'Access denied'});return;}
+ if(req.method!=='POST'||!validHelperBearer(req.get('authorization'),livePlaybackKey.value())){res.status(403).json({error:'Access denied'});return;}
  try{
-  if(!studioSourceCache||Date.now()-studioSourceCache.at>10000){const source=await studioGitHub.snapshot();studioSourceCache={at:Date.now(),videos:[...source.lists.public.map(id=>({id,visibility:'public'})),...source.lists.members.map(id=>({id,visibility:'members'}))]};}
+  if(!studioSourceCache||Date.now()-studioSourceCache.at>10000){const [source,requests]=await Promise.all([studioGitHub.snapshot(),getFirestore().collection('churchStudioPublications').orderBy('requestedAt','desc').limit(1).get()]);const videos=[...source.lists.public.map(id=>({id,visibility:'public'})),...source.lists.members.map(id=>({id,visibility:'members'}))];studioSourceCache={at:Date.now(),videos:markStudioSelection(videos,requests.docs[0]?.data())};}
   res.json({videos:studioSourceCache.videos});
  }catch{res.status(503).json({error:'Source library unavailable'});}
 });
