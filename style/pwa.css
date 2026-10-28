@@ -250,4 +250,7 @@ body.app-home .home-bottom-nav {grid-template-columns:repeat(5,minmax(0,1fr));}
 .app-home .lc-video-title-row>.home-video-title{flex:1;min-width:0;color:inherit;text-decoration:none}
 .app-home .home-featured .lc-video-title-row{margin-top:0}
 .app-home .home-featured .lc-library-menu-panel{color:var(--home-ink);background:var(--home-surface)}
-.app-home .home-featured:has(.lc-library-menu[open]){position:relative;z-index:30}
+.app-home .home-featured:has(.lc-library-menu[open]){position:relative;z-index:30}/* Completed recording durations come from the saved audio catalogue. */
+.lc-duration-badge{position:absolute;right:8px;bottom:8px;z-index:3;display:block;padding:3px 6px;border-radius:4px;background:rgba(0,0,0,.84)!important;color:#fff!important;font:600 12px/1.2 'Outfit','Segoe UI',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.15px;pointer-events:none;text-shadow:none;white-space:nowrap}
+.lc-duration-badge[hidden],.lc-audio-mode>.lc-duration-badge,.iframe-container:has(iframe)>.lc-duration-badge,.iframe-container:has(lite-youtube.lyt-activated)>.lc-duration-badge{display:none!important}
+.home-video-art>.lc-duration-badge{right:auto;left:10px;bottom:10px}

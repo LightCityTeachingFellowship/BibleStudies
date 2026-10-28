@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+const context={Event:class{}};vm.createContext(context);vm.runInContext(readFileSync('script/media-duration.js','utf8'),context);
+const {format,set}=context.LightCityDurations;
+for(const [seconds,label]of [[62,'1:02'],[3599.8,'59:59'],[3600,'1:00:00'],[6962,'1:56:02'],[19021.368889,'5:17:01'],[0,''],[-1,''],[NaN,''],[Infinity,''],[null,''],['128','']])assert.equal(format(seconds),label);
+let mutations=0,playing=false,audio=false,activated=false;
+const badge={hidden:false,className:'',set textContent(s){this.text=s;mutations++;},get textContent(){return this.text;},setAttribute(){}};
+const viewport={children:[],ownerDocument:{createElement:()=>badge},classList:{contains:()=>audio},appendChild(b){this.children.push(b);},querySelector(s){if(s==='.lc-duration-badge')return this.children[0];if(s==='iframe')return playing?{}:null;if(s==='lite-youtube')return {classList:{contains:()=>activated}};}};
+set(viewport,6962);assert.equal(badge.textContent,'1:56:02');assert.equal(badge.hidden,false);const count=mutations;set(viewport,6962);assert.equal(mutations,count,'stable rendering cannot retrigger the card child-list observer');assert.equal(viewport.children.length,1);
+set(viewport,6962,{live:true});assert.equal(badge.hidden,true);set(viewport,6962);assert.equal(badge.hidden,false);
+playing=true;set(viewport,6962);assert.equal(badge.hidden,true);playing=false;audio=true;set(viewport,6962);assert.equal(badge.hidden,true);audio=false;activated=true;set(viewport,6962);assert.equal(badge.hidden,true);activated=false;set(viewport,undefined);assert.equal(badge.hidden,true,'clear on catalogue/access reset');
+const headers=readFileSync('_includes/pwa-head.html','utf8');assert.ok(headers.indexOf('/script/media-duration.js')<headers.indexOf('/script/audio-links.js'));
+assert.ok(!/fetch\(|getToken|googleapis|\.load\(/.test(readFileSync('script/media-duration.js','utf8')));
+console.log('PASS: duration format, existing catalogue only, no network/media requests, live/playing suppression, catalogue reset, observer stability and shared script loading.');

@@ -98,6 +98,7 @@
       }
       const playing=viewport.classList?.contains('lc-audio-mode')||!!viewport.querySelector('iframe')||viewport.querySelector('lite-youtube')?.classList?.contains('lyt-activated');
       if (badge) badge.hidden = !live || !!playing;
+      globalThis.LightCityDurations?.set(viewport,recordedAvailable.get(id)?.durationSeconds,{live});
     }
     function render() {
       for (const [viewport, controller] of mounted) {
@@ -172,6 +173,7 @@
         if (current === version && /permission-denied|unauthenticated|failed-precondition/.test(error?.code || '')) { ++version; reset(); }
       }
     }
+    window.addEventListener('lightcity-durations-ready',schedule);
     window.addEventListener('lightcity-members-changed', () => void refresh());
     window.addEventListener('pagehide', event => { if (event.persisted) return; for (const controller of mounted.values()) controller.dispose(); mounted.clear(); });
     render();
