@@ -45,3 +45,6 @@ await f.service.submit({auth:{uid:'member'},data:{...request('message').data,sen
 const stored=[...f.rows.values()].find(v=>v.issue==='message');assert.equal(stored.sender.name,'Google Account Name');assert.equal(stored.sender.source,'account');assert.equal(stored.message,'<img onerror=alert(1)>\nA question','message is stored as plain text');
 f.auth.getUser=async()=>({disabled:true});await assert.rejects(f.service.submit({auth:{uid:'disabled'},data:{...request('message').data,message:'Question'}}),e=>e.code==='permission-denied');
 console.log('PASS: required sender names, message length, independent questions/answers, no YouTube gate, authoritative account names and disabled-account rejection.');
+assert.equal(sends[0].webpush.notification.requireInteraction,true,'admin feedback requests persistent automatic background display');
+assert.equal(sends[0].data.requireInteraction,'true','foreground delivery retains the persistence request');
+console.log('PASS: admin feedback requests persistent alerts in both delivery paths.');

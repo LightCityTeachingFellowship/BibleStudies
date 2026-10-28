@@ -55,6 +55,8 @@ async function showLightCityNotification(payload) {
    ...(image ? { image } : {}), tag: data.id || key || 'lightcity-update',
    // Alert again when a publication replaces its existing notification.
    silent: false, renotify: true,
+   // Admin stream feedback asks to remain visible until clicked or dismissed.
+   requireInteraction: data.requireInteraction === 'true',
    data: { url: data.url || payload?.fcmOptions?.link, lightcity: true }
   });
  } catch (error) { if (key) displayedMessages.delete(key); throw error; }

@@ -92,7 +92,7 @@ export async function notifyStreamReport({id,db,auth,messaging,emails,now=Date.n
  const body=row.issue==='message'?row.message.slice(0,240)+' · '+row.title:(senderLabel+': '+(row.issue==='ended'?'Stream ending confirmed. ':'Speaker volume is too low. ')+row.title);
  for(const [token,subscriber]of targets){
   const receipt=db.doc(reportsPath+'/'+id+'/delivery/'+hash(token));if((await receipt.get()).exists)continue;
-  const result=await messaging.sendEachForMulticast({tokens:[token],notification:{title,body},data:{id:'stream-issue-'+id,title,body,url},webpush:{headers:{TTL:'1800',Urgency:'high'},notification:{icon:'https://lightcityfellowship.com/images/pwa-192.png',badge:'https://lightcityfellowship.com/images/notification-badge.png',tag:'stream-issue-'+id,silent:false,renotify:true},fcmOptions:{link:url}}});
+  const result=await messaging.sendEachForMulticast({tokens:[token],notification:{title,body},data:{id:'stream-issue-'+id,title,body,url,requireInteraction:'true'},webpush:{headers:{TTL:'1800',Urgency:'high'},notification:{icon:'https://lightcityfellowship.com/images/pwa-192.png',badge:'https://lightcityfellowship.com/images/notification-badge.png',tag:'stream-issue-'+id,silent:false,renotify:true,requireInteraction:true},fcmOptions:{link:url}}});
   const error=result.responses[0]?.error;if(error){if(['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)){await subscriber.ref.delete();continue;}throw Error('Admin notification needs retry.');}
   await receipt.set({sentAt:now()});
  }

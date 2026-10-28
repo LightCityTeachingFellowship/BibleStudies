@@ -44,3 +44,8 @@ Redeploy using deploy-stream-reports.ps1, then commit/sync and refresh. The YouT
 ## Existing HTTP function name
 
 The Firestore notification handler is deployed as notifyChurchStreamIssueOnWrite. Some projects already have an HTTPS function called notifyChurchStreamIssue; Firebase cannot change that function's trigger type in place. The deployment helper uses the distinct background-handler name so no deletion or replacement of the existing HTTP function is required. Viewer and Studio callable names are unchanged. If deployment failed with the trigger-type error, rerun deploy-stream-reports.ps1 after updating these files. No secret setup needs repeating.
+## Persistent admin feedback alerts
+
+Feedback push messages request requireInteraction:true in both the automatic Firebase background notification and the service-worker foreground/data-only display paths. This asks supporting browsers to keep the popup visible until it is clicked or dismissed; browser and operating-system settings can override the request. This does not prevent dismissal or guarantee an always-visible desktop popup. Ordinary publication alerts are unaffected. Reports remain stored in the private Studio inbox and can be marked handled there.
+
+After updating, deploy-stream-reports.ps1 deploys the notification change. Commit/sync service-worker.js and refresh the installed app to load its new worker before testing the foreground path. PowerToys Always On Top can pin the Studio window over OBS (default shortcut Windows+Ctrl+T); a web page cannot itself force an operating-system window to stay on top.

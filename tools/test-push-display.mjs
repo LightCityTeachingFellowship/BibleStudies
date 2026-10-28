@@ -55,3 +55,10 @@ const builder=sender.slice(sender.indexOf('function notificationMessage'),sender
 const message=vm.runInNewContext(builder+';notificationMessage({id:"resource-1",title:"Update",body:"New recording",url:"https://example.com/Watch/"})',{URL,origin:new URL('https://example.com/')});
 assert.equal(message.webpush.headers.Urgency,'high');assert.equal(message.webpush.notification.silent,false);assert.equal(message.webpush.notification.renotify,true);assert.ok(message.notification,'automatic background display remains enabled');
 console.log('PASS: alert/re-alert options match foreground, data-only background and automatic Firebase background paths; high-urgency delivery retained. No notifications were sent.');
+
+assert.equal(shown[0].options.requireInteraction,false,'ordinary publication alerts are not made persistent');
+await foreground({messageId:'stream-feedback',data:{id:'stream-issue-report1',title:'Stream message',url:'/BibleStudies/Admin/?reports=1',requireInteraction:'true'}});
+assert.equal(shown.at(-1).options.requireInteraction,true,'foreground admin feedback stays open where supported');
+await background({messageId:'stream-feedback-background',data:{id:'stream-issue-report2',title:'Volume request',url:'/BibleStudies/Admin/?reports=1',requireInteraction:'true'}});
+assert.equal(shown.at(-1).options.requireInteraction,true,'data-only background preserves persistent feedback alerts');
+console.log('PASS: persistent feedback display in foreground/data-only paths, with ordinary alerts unchanged.');
