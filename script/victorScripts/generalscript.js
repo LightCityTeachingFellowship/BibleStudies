@@ -361,7 +361,23 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
   desktop.closest('form').addEventListener('submit', event => { event.preventDefault(); openSearch(desktop.value); });
   document.querySelector('.home-search-mobile').addEventListener('click', () => openSearch(desktop.value));
   dialog.querySelector('.home-search-close').addEventListener('click', () => dialog.close());
-  dialog.addEventListener('close', () => { desktop.value = query.value; });
+  // Native dialog backdrops target the dialog itself. Check its bounds so clicks
+  // on panel padding stay open, and drags beginning inside never dismiss it.
+  const outsideSearch = event => {
+    const bounds = dialog.getBoundingClientRect();
+    return event.clientX < bounds.left || event.clientX > bounds.right ||
+      event.clientY < bounds.top || event.clientY > bounds.bottom;
+  };
+  let searchBackdropPointer = false;
+  dialog.addEventListener('pointerdown', event => {
+    searchBackdropPointer = event.target === dialog && outsideSearch(event);
+  });
+  dialog.addEventListener('pointercancel', () => { searchBackdropPointer = false; });
+  dialog.addEventListener('click', event => {
+    if (searchBackdropPointer && event.target === dialog && outsideSearch(event)) dialog.close();
+    searchBackdropPointer = false;
+  });
+  dialog.addEventListener('close', () => { searchBackdropPointer = false; desktop.value = query.value; });
   let debounce;
   query.addEventListener('input', () => {
     desktop.value = query.value;

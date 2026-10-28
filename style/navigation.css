@@ -1,0 +1,37 @@
+/* LightCity navigation: the same links, with a quieter drawer and clear focus states. */
+.lc-nav-overlay,.lc-nav-desktop{--nav-surface:var(--bgColor-smoke-white,#f8f8f8);--nav-ink:var(--black,#262626);--nav-border:rgba(100,100,100,.18);--nav-accent:var(--vivid-orange,#ffbf00);color:var(--nav-ink);font-family:'Outfit','Segoe UI',sans-serif}
+.darkmode .lc-nav-overlay,.darkmode .lc-nav-desktop{--nav-surface:var(--DM-bgColor-smoke-white,#1e1e1e);--nav-ink:var(--DM-white,#eee);--nav-border:rgba(255,255,255,.10)}
+body.lc-nav-open{overflow:hidden!important}
+.myDropdown.lc-nav-overlay{position:fixed;inset:0;width:100%;height:100%;z-index:2000000;background:rgba(0,0,0,.46);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;visibility:hidden;pointer-events:none;animation:none!important;transform:none!important;transition:opacity .24s ease-in,visibility 0s .28s;touch-action:none}
+.myDropdown.lc-nav-overlay.lc-nav-is-open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .28s ease-out,visibility 0s}
+.lc-nav-overlay .mobile-homeHeaderNav.lc-nav-drawer{box-sizing:border-box;position:absolute;inset:12px auto 12px 12px;width:min(340px,calc(100vw - 58px));min-width:0;min-height:0;height:auto;max-height:calc(100% - 24px);padding:12px 10px 20px;border:1px solid var(--nav-border);border-radius:22px;background:var(--nav-surface);background-image:none;color:var(--nav-ink);box-shadow:0 22px 70px #0005;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;transform:translateX(calc(-100% - 24px));transition:transform .26s cubic-bezier(.4,0,1,1);scrollbar-width:thin}
+.lc-nav-overlay.lc-nav-is-open .lc-nav-drawer{transform:translateX(0);transition:transform .34s cubic-bezier(.16,1,.3,1)}
+.lc-nav-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 12px 22px;margin-bottom:6px;border-bottom:1px solid var(--nav-border)}
+.lc-nav-brand{display:block;font-size:15px;font-weight:800;letter-spacing:.16em;color:var(--nav-ink)}
+.lc-nav-brand:before{content:'';display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:var(--nav-accent)}
+.lc-nav-caption{display:block;font-size:12px;line-height:1.5;letter-spacing:.02em;opacity:.65;margin-top:4px}
+.lc-nav-overlay .lc-nav-close{position:static;display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;padding:10px;margin:0;border:1px solid var(--nav-border);border-radius:50%;background:transparent;background-image:none!important;color:var(--nav-ink);cursor:pointer}
+.lc-nav-close svg,.lc-nav-trigger svg,.lc-nav-more svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.lc-nav-overlay .mobile-headerLinks{margin:3px 0;padding:0;border:0!important;font-size:16px!important;line-height:1.4}
+.lc-nav-overlay .mobile-headerLinks a{display:flex;align-items:center;box-sizing:border-box;min-height:48px;width:100%;gap:12px;padding:13px 16px!important;margin:0;border:0!important;border-radius:12px;background:transparent;color:var(--nav-ink);font:inherit;font-weight:500;letter-spacing:0;text-decoration:none!important;transition:background-color .18s ease,color .18s ease,transform .18s ease}
+.lc-nav-overlay .mobile-headerLinks a:after{content:'›';margin-left:auto;opacity:.4;font-size:22px;line-height:1}
+.lc-nav-overlay .mobile-headerLinks a:hover,.lc-nav-desktop a:hover{background:rgba(128,128,128,.10);transform:translateX(2px)}
+.lc-nav-overlay .mobile-headerLinks a.active,.lc-nav-overlay .mobile-headerLinks a[aria-current='page'],.lc-nav-desktop a.active{background:var(--nav-accent)!important;color:#171717!important;font-weight:600;box-shadow:none}
+.lc-nav-overlay .mobile-headerLinks a.active:after{opacity:1}
+.mobileButton.lc-nav-trigger{display:grid;place-items:center;box-sizing:border-box;width:44px;height:44px;padding:10px;border:1px solid rgba(128,128,128,.22);border-radius:14px;background:transparent!important;background-image:none!important;color:inherit}
+.lc-nav-more{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.lc-nav-more svg{width:17px;height:17px;transition:transform .2s ease}
+.lc-nav-more[aria-expanded='true'] svg{transform:rotate(180deg)}
+.myDropdownDesk.lc-nav-desktop{position:fixed;box-sizing:border-box;width:280px;max-width:calc(100vw - 24px);z-index:1900000;padding:8px;border:1px solid var(--nav-border);border-radius:18px;background:var(--nav-surface);box-shadow:0 12px 38px #0003;overflow-y:auto;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-8px) scale(.98);transform-origin:top right;animation:none!important;transition:opacity .18s ease-in,transform .18s ease-in,visibility 0s .18s}
+.myDropdownDesk.lc-nav-desktop.lc-nav-is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1);transition:opacity .22s ease-out,transform .25s cubic-bezier(.16,1,.3,1),visibility 0s}
+.lc-nav-desktop .header-links2{min-height:0;padding:0;border:0;background:transparent;color:inherit}
+.lc-nav-desktop .header-links-li{display:block;margin:2px 0;padding:0;border:0!important}
+.lc-nav-desktop .header-links-li a{display:block;box-sizing:border-box;padding:12px 16px!important;min-height:44px;width:100%;margin:0;border:0!important;border-radius:10px;color:inherit;font:inherit;font-size:15px;font-weight:500;text-decoration:none;transition:background-color .18s ease,transform .18s ease}
+.lc-nav-overlay a:focus-visible,.lc-nav-overlay button:focus-visible,.lc-nav-desktop a:focus-visible,.lc-nav-trigger:focus-visible,.lc-nav-more:focus-visible{outline:2px solid var(--vivid-orange,#ffbf00);outline-offset:-3px}
+@supports(padding:max(0px)){.lc-nav-overlay .lc-nav-drawer{top:max(12px,env(safe-area-inset-top));bottom:max(12px,env(safe-area-inset-bottom))}}
+@media(prefers-reduced-motion:reduce){.myDropdown.lc-nav-overlay,.lc-nav-overlay .lc-nav-drawer,.myDropdownDesk.lc-nav-desktop,.lc-nav-overlay a,.lc-nav-desktop a{transition:none!important}}/* Override legacy theme rules on the reused header elements. */
+.lc-nav-overlay .lc-nav-close{background:transparent!important;border:1px solid var(--nav-border)!important;box-shadow:none!important}
+.lc-nav-overlay .lc-nav-close:hover{background:rgba(128,128,128,.12)!important}
+.lc-nav-desktop .header-links-li a,.lc-nav-desktop .header-links-li a span{font-size:15px!important;line-height:1.5;font-weight:500;letter-spacing:0}
+/* Bible reader button styles must not recolor the shared navigation control. */
+button.lc-nav-more,button.lc-nav-more:hover,button.lc-nav-more:focus{background:var(--vivid-orange,#ffbf00)!important;color:var(--black,#262626)!important;border-color:transparent!important}

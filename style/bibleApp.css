@@ -2941,7 +2941,8 @@ body *:has(.pureHTMLtimeline){max-width:100vw;max-height:100vh;overflow:overlay;
 :is(.mouseoverpath, .pathselected, path:hover):not([fill="none"]) {
     fill:#fff7e9!important;
 }
-:is(p,div):has(svg:only-child){
+/* Only the immediate illustration holder; navigation icons must not style ancestors. */
+:is(p,div):has(> svg:only-child){
     display:flex;
     justify-content:space-evenly;
     background:#fffe007d;
