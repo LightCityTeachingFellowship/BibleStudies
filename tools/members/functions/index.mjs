@@ -1,3 +1,4 @@
+import {createStreamReports,notifyStreamReport} from './stream-reports.mjs';
 import {createStudioTests} from './studio-tests.mjs';
 import {syncStudioBackup} from './studio-removal.mjs';
 import {createDirectPublishing} from './direct-publishing.mjs';
@@ -111,4 +112,13 @@ export const finishStudioPublication=onDocumentWritten({document:'churchStudioPu
 export const checkStudioAudioReady=onSchedule({schedule:'every 1 minutes',region:'us-central1',secrets:[livePlaybackKey],timeoutSeconds:120,maxInstances:1},async()=>{
  const pending=await getFirestore().collection('churchStudioPublications').where('state','==','pending').limit(100).get();
  for(const job of pending.docs.sort((a,b)=>(b.data().requestedAt||0)-(a.data().requestedAt||0)).slice(0,10))try{await studioPublishing.promote(job.id);}catch{console.warn('Studio audio readiness will retry.');}
+});
+const streamStatusKey=defineSecret('YOUTUBE_STREAM_STATUS_KEY');
+const streamReports=createStreamReports({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),key:()=>streamStatusKey.value().trim(),live});
+export const reportChurchStreamIssue=onCall({...options,secrets:[streamStatusKey,livePlaybackKey],timeoutSeconds:60},streamReports.submit);
+export const getChurchStreamReports=onCall(options,streamReports.inbox);
+export const resolveChurchStreamReport=onCall(options,streamReports.resolve);
+export const notifyChurchStreamIssueOnWrite=onDocumentWritten({document:'churchStudioPublications/stream-issues/reports/{reportId}',region:'us-central1',retry:true,timeoutSeconds:120,maxInstances:1},async event=>{
+ const after=event.data?.after.data(),before=event.data?.before.data();if(!after||after.resolved||after.delivery!=='pending'||before?.delivery==='pending')return;
+ await notifyStreamReport({id:event.params.reportId,db:getFirestore(),auth:getAuth(),messaging:getMessaging(),emails:()=>adminEmails.value()});
 });

@@ -1,0 +1,19 @@
+export function setupAdminStreamIssues({document,window,api=()=>globalThis.LightCityMembers}){
+ const list=document.getElementById('admin-stream-reports');if(!list)return;
+ let version=0;
+ const status=document.getElementById('admin-stream-report-status');
+ async function load(){const ticket=++version;list.replaceChildren();const uid=api()?.user?.uid;if(!uid){status.textContent='';return;}
+  try{const result=await api().getStreamReports();if(ticket!==version||api()?.user?.uid!==uid)return;const active=result.reports.filter(r=>!r.resolved);status.textContent=active.length?active.length+' stream reports':'No unresolved stream reports.';
+   for(const report of active){const row=document.createElement('article');row.className='studio-stream-report';const heading=document.createElement('h3');heading.textContent=report.issue==='message'?'Question, answer or message':report.issue==='ended'?'Stream ended — confirmed':'Speaker volume too low';row.appendChild(heading);const text=document.createElement('p');text.textContent=report.title;row.appendChild(text);
+    if(report.sender){const sender=document.createElement('p');sender.className='studio-stream-sender';sender.textContent='From: '+report.sender.name+(report.sender.source==='account'?' · Account name':' · Visitor-provided name');row.appendChild(sender);}
+    if(report.message){const message=document.createElement('p');message.className='studio-stream-message';message.textContent=report.message;row.appendChild(message);}
+    if(report.issue!=='message'&&report.senders?.length>1){const senders=document.createElement('p');senders.className='muted';senders.textContent='Reported by: '+report.senders.map(s=>s.name+(s.source==='visitor'?' (visitor)':'')).join(', ');row.appendChild(senders);}
+    const detail=document.createElement('p');detail.className='muted';detail.textContent=new Date(report.createdAt).toLocaleString()+' · '+report.count+' report(s)'+(report.delivery==='no-devices'?' · Register your admin devices to receive pop-up alerts.':'');row.appendChild(detail);
+    const actions=document.createElement('div');actions.className='studio-row-actions';const link=document.createElement('a');link.href='/Watch/?v='+report.videoId;link.textContent='Open stream';link.target='_blank';link.rel='noopener';actions.appendChild(link);const done=document.createElement('button');done.type='button';done.textContent='Mark handled';done.onclick=async()=>{done.disabled=true;try{await api().resolveStreamReport(report.id);await load();}catch{status.textContent='Could not update the report. Please retry.';done.disabled=false;}};actions.appendChild(done);row.appendChild(actions);list.appendChild(row);
+   }
+  }catch{if(ticket===version)status.textContent='Stream reports could not load. Check the reporting deployment, then refresh.';}
+ }
+ document.getElementById('admin-stream-report-refresh').addEventListener('click',()=>void load());window.addEventListener('lightcity-members-changed',()=>void load());
+ const timer=setInterval(()=>{if(document.visibilityState!=='hidden')void load();},30000);window.addEventListener('pagehide',e=>{if(!e.persisted)clearInterval(timer);});void Promise.resolve(api()?.ready).then(load);
+}
+if(typeof document!=='undefined')setupAdminStreamIssues({document,window});

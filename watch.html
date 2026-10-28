@@ -17,13 +17,14 @@ title: Watch a video
   <link rel="stylesheet" href="{{ '/style/lightcity-02.css' | relative_url }}?v=browse-2">
   <link rel="stylesheet" href="{{ '/style/darkMODE.css' | relative_url }}">
   <link id="theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}">
-  <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}?v=watch-menu-1">
+  <link rel="stylesheet" href="{{ '/style/video-watch.css' | relative_url }}?v=stream-messages-1">
   <script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script>
   <script defer src="{{ '/script/video-watch.js' | relative_url }}?v=studio-access-1"></script>
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=direct-publish-1"></script>
 <script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
 <script type="module" src="{{ '/script/watch-share.mjs' | relative_url }}?v=watch-menu-1"></script>
+<script type="module" src="{{ '/script/stream-issues.mjs' | relative_url }}?v=2"></script>
 </head>
 <body class="fonts app-home site-browse">
   {% include homeHeader-pages.html %}
@@ -57,6 +58,8 @@ title: Watch a video
     <p id="watch-help" hidden>If playback doesn’t start automatically, tap Play on the video.</p>
     <div id="watch-personal-actions"></div>
     <div id="watch-audio-choice" class="lc-video-actions" aria-label="Listen to this recording" hidden></div>
+    <button id="stream-report-open" type="button" class="lc-mode-button stream-report-open" hidden>Stream feedback &amp; questions</button>
+    <dialog id="stream-report-dialog" class="stream-report-dialog" aria-labelledby="stream-report-title"><div class="stream-report-heading"><h2 id="stream-report-title">Stream feedback &amp; questions</h2><button id="stream-report-close" type="button" aria-label="Close report">×</button></div><form id="stream-report-form"><label for="stream-report-kind">What is happening?</label><select id="stream-report-kind"><option value="ended">The stream has ended</option><option value="volume">The speaker volume is too low</option><option value="message">Question, answer or other message</option></select><p id="stream-report-identity" class="muted"></p><div id="stream-report-name-row"><label for="stream-report-name">Your name</label><input id="stream-report-name" type="text" autocomplete="name" maxlength="80" required></div><div id="stream-report-message-row" hidden><label for="stream-report-message">Your question, answer or message</label><textarea id="stream-report-message" rows="5" maxlength="2000" placeholder="Type your message to the admin…"></textarea><p class="muted">Up to 2000 characters. Only the admin can read your message; this is not a public chat.</p></div><p class="muted">For an ended-stream report, we check the broadcast before alerting the admin. For low volume, please check your device volume first.</p><button id="stream-report-send" type="submit" class="lc-mode-button">Send report</button></form><p id="stream-report-status" role="status" aria-live="polite"></p><div class="stream-report-actions"><button id="stream-report-refresh" type="button" class="lc-mode-button" hidden>Refresh page</button><button id="stream-report-recheck" type="button" class="lc-mode-button" hidden>Check again</button></div></dialog>
     <section class="lc-study-related" data-study-related hidden><h2>Related study resources</h2><div data-study-related-list></div></section>
     <noscript>Enable JavaScript to play this video, or browse <a href="{{ '/Videos/' | relative_url }}">all videos</a>.</noscript>
   </main>
