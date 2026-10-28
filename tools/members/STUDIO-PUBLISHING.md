@@ -33,3 +33,12 @@ node tools/test-studio-publishing-ui.mjs
 node tools/test-studio-helper.mjs
 node tools/test-admin.mjs
 node tools/test-admin-ui.mjs
+## Private test notifications
+
+Studio has an “Only my devices (private test)” audience. Test videos are held separately under the existing server-only churchStudioPublications tree. They never enter churchVideoLibrary, either TXT list, GitHub backups, the audio helper queue or the normal notification sender. A test notification opens an authenticated video preview at /Admin/?test=VIDEO_ID. It does not enable testing audio playback; regular public/member Watch and Listen publishing remains unchanged.
+
+Deploy with tools/members/deploy-studio-publishing.ps1, then commit/sync the website files. No new secret or Firestore rule is needed: the existing private churchStudioPublications exclusion covers the test records and device subcollections.
+
+On each intended phone/computer, enable notifications in LightCity, open Studio in the same browser/installed app, sign in with the approved admin account, expand “Private test notifications — set up my devices”, and register that device. No other account can register test recipients or open the preview. Tokens are resolved from the registered, cryptographically verified anonymous device identity; user-supplied roles or tokens are not used for selecting recipients. Missing/expired subscriptions never cause fallback to the normal subscriber list. Remove a device with the adjacent button on that device.
+
+Paste a video/stream URL, choose the private test audience and publish. A 30-second rate limit protects against repeated/concurrent sends. FCM acceptance counts do not guarantee physical display (device permissions and OS settings still apply).

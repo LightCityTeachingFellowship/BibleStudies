@@ -1,3 +1,4 @@
+import {createStudioTests} from './studio-tests.mjs';
 import {syncStudioBackup} from './studio-removal.mjs';
 import {createDirectPublishing} from './direct-publishing.mjs';
 import {finishDirectPublication} from './direct-notifications.mjs';
@@ -69,9 +70,11 @@ const studioGitHubToken=defineSecret('STUDIO_GITHUB_TOKEN');
 const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
 const legacyStudioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});
 const studioPublishing=createDirectPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),live,recordings:()=>audio.catalog.registered()});
-export const publishChurchStudioVideo=onCall({...options,secrets:[livePlaybackKey,studioGitHubToken],timeoutSeconds:180},request=>request.data?.direct===true?studioPublishing.publish(request):legacyStudioPublishing.publish(request));
+const studioTests=createStudioTests({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),messaging:getMessaging()});
+export const manageChurchStudioTest=onCall(options,studioTests.manage);
+export const publishChurchStudioVideo=onCall({...options,secrets:[livePlaybackKey,studioGitHubToken],timeoutSeconds:180},request=>request.data?.visibility==='test'?studioTests.publish(request):request.data?.direct===true?studioPublishing.publish(request):legacyStudioPublishing.publish(request));
 export const removeChurchStudioVideo=onCall(options,request=>studioPublishing.remove(request));
-export const getChurchStudioPublication=onCall({...options,secrets:[livePlaybackKey]},studioPublishing.status);
+export const getChurchStudioPublication=onCall({...options,secrets:[livePlaybackKey]},request=>request.data?.visibility==='test'?studioTests.status(request):studioPublishing.status(request));
 // Only the trusted local upload helper can read the desired source lists.
 
 export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubToken,livePlaybackKey]},async(req,res)=>{

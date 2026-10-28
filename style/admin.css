@@ -4,4 +4,4 @@
 .quick-link form{flex-wrap:wrap;align-items:center}
 #admin-ready-dialog{box-sizing:border-box;max-width:min(600px,calc(100vw - 32px));width:100%;border:1px solid #cbd5e1}
 #admin-ready-dialog::backdrop{background:#0008}
-#admin-ready-url{width:100%;box-sizing:border-box;margin-bottom:16px}
+#admin-ready-url{width:100%;box-sizing:border-box;margin-bottom:16px}.studio-test-settings{margin:20px 0}.studio-test-settings summary{cursor:pointer;font-weight:600}.studio-test-settings p{max-width:75ch}#admin-test-frame{aspect-ratio:16/9;background:#111;border-radius:16px;overflow:hidden}#admin-test-frame iframe{width:100%;height:100%;border:0}

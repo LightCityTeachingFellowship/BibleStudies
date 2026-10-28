@@ -254,3 +254,4 @@ api.signOut=async()=>{
 };
 api.publishStudioVideo=async data=>{await api.ready;return call('publishChurchStudioVideo',{...data,accountUid:api.user?.uid});};
 api.getStudioPublication=async data=>{await api.ready;return call('getChurchStudioPublication',{...data,accountUid:api.user?.uid});};
+api.manageStudioTest=async action=>{await api.ready;const device=deviceAuth?.currentUser;if(!device)throw Error('Device sign-in is not ready. Refresh and try again.');return call('manageChurchStudioTest',{action,deviceToken:await device.getIdToken(),accountUid:api.user?.uid});};
