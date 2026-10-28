@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {readinessJson} from './push/readiness-network.mjs';
+let calls=0,waits=[],messages=[];
+const options={headers:{Authorization:'Bearer do-not-print'},wait:async ms=>waits.push(ms),warn:message=>messages.push(message)};
+const data=await readinessJson('Recorded catalogue','https://example.com/private?secret=do-not-print',{...options,send:async()=>{calls++;if(calls===1)throw Object.assign(new TypeError('fetch failed with do-not-print'),{cause:{code:'ECONNRESET'}});if(calls===2)return new Response('',{status:503});return Response.json({recordings:[]});}});
+assert.deepEqual(data,{recordings:[]});assert.equal(calls,3);assert.deepEqual(waits,[1000,2000]);assert.ok(messages.every(v=>!v.includes('do-not-print')));
+calls=0;await assert.rejects(readinessJson('Live catalogue','https://example.com',{...options,send:async()=>{calls++;return new Response('',{status:403});}}),/Live catalogue: HTTP 403/);assert.equal(calls,1,'permission errors are not retried');
+calls=0;await assert.rejects(readinessJson('Playback lookup','https://example.com',{...options,send:async()=>{calls++;throw new TypeError('private token do-not-print');}}),e=>e.message.includes('Playback lookup')&&e.message.includes('4 attempts')&&!e.message.includes('do-not-print'));assert.equal(calls,4);
+calls=0;await readinessJson('Catalogue','https://example.com',{...options,send:async()=>++calls===1?new Response('{partial'):Response.json({recordings:[]})});assert.equal(calls,2,'a truncated body can recover');
+console.log('PASS: bounded readiness retries, safe labelled errors, no credential/URL leakage, no permission-error retry, and truncated-response recovery.');

@@ -1,3 +1,4 @@
+import {readinessJson} from './readiness-network.mjs';
 import { writeVideoSharePages } from '../share-previews.mjs';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -47,20 +48,20 @@ async function main() {
   if (!playbackKey) {
     const project = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT).project_id;
     const token = await credential.getAccessToken();
-    const response = await fetch(`https://secretmanager.googleapis.com/v1/projects/${project}/secrets/LIVE_AUDIO_PLAYBACK_KEY/versions/latest:access`, {
-      headers: { Authorization: `Bearer ${token.access_token}` }, signal: AbortSignal.timeout(20000), redirect: 'error'
+    const secret=await readinessJson('Playback credential lookup',`https://secretmanager.googleapis.com/v1/projects/${project}/secrets/LIVE_AUDIO_PLAYBACK_KEY/versions/latest:access`,{
+      headers:{Authorization:`Bearer ${token.access_token}`},timeoutMs:20000,
+      httpError:'Cannot read the playback key. Grant the GitHub service account Secret Manager Secret Accessor on LIVE_AUDIO_PLAYBACK_KEY, or add that key as a GitHub Actions secret.'
     });
-    if (!response.ok) throw Error('Cannot read the playback key. Grant the GitHub service account Secret Manager Secret Accessor on LIVE_AUDIO_PLAYBACK_KEY, or add that key as a GitHub Actions secret.');
-    playbackKey = Buffer.from((await response.json()).payload.data, 'base64').toString('utf8').trim();
+    playbackKey=Buffer.from(secret.payload.data,'base64').toString('utf8').trim();
   }
+  playbackKey=playbackKey.trim();
   if (!/^[a-f0-9]{64}$/.test(playbackKey)) throw Error('Invalid playback key configuration.');
   const origin = new URL(process.env.LIVE_AUDIO_GATEWAY || 'https://lightcity-live-audio-test.lightcityteachingfellowship.workers.dev');
   if (origin.protocol !== 'https:' || !origin.hostname.endsWith('.workers.dev') || origin.pathname !== '/') throw Error('Invalid audio gateway origin.');
   const catalogue = async path => {
-    const response = await fetch(new URL(path, origin), { headers: { Authorization: `Bearer ${playbackKey}` }, signal: AbortSignal.timeout(30000), redirect: 'error' });
-    if (!response.ok) throw Error('Audio readiness could not be verified. The existing deployment is preserved.');
-    const body = await response.json();
-    if (!Array.isArray(body.recordings)) throw Error('Invalid readiness catalogue.');
+    const label=path==='/catalog'?'Live audio readiness catalogue':'Recorded audio readiness catalogue';
+    const body=await readinessJson(label,new URL(path,origin),{headers:{Authorization:`Bearer ${playbackKey}`}});
+    if(!Array.isArray(body.recordings))throw Error(label+': invalid catalogue. The existing deployment is preserved.');
     return body.recordings;
   };
   const [recordings, live] = await Promise.all([catalogue('/recordings/catalog'), catalogue('/catalog')]);
