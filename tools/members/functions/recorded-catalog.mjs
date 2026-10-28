@@ -21,7 +21,7 @@ export function createRecordedCatalog(config, { staticCatalog, library, send = f
     })();
     try { return await loading; } finally { loading = null; }
   }
-  return async () => {
+  const catalog = async () => {
     // Read access policy every request, including cache hits; the uploader cannot grant access.
     const declarations = await library();
     if (!Array.isArray(declarations)) throw Error('Published library unavailable');
@@ -33,4 +33,6 @@ export function createRecordedCatalog(config, { staticCatalog, library, send = f
     for (const r of dynamic) if (!merged.has(r.videoId)) merged.set(r.videoId, r);
     return [...merged.values()].filter(r => access.has(r.videoId)).map(r => ({ ...r, visibility: access.get(r.videoId) }));
   };
+  catalog.registered = async () => [...new Map([...staticCatalog, ...await remote()].map(r=>[r.videoId,r])).values()];
+  return catalog;
 }

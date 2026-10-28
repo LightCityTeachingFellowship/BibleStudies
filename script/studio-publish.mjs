@@ -24,7 +24,7 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
    }
    status(result.message||'Publishing your video…');
   }catch(error){if(current!==sequence||!owned())return;status(error?.code==='functions/not-found'?'Studio publishing needs its one-time setup and deployment.':'Unable to confirm publication yet. Checking again…');}
-  if(owned())timer=setTimeout(()=>void check(),15000);
+  if(owned())timer=setTimeout(()=>void check(),5000);
  }
  function restore(){
   if(!api()?.user?.uid){sequence++;stop();job=null;busy=false;get('admin-publish').disabled=false;get('admin-ready-dialog')?.close?.();return;}
@@ -39,8 +39,8 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
   try{const Audio=window.AudioContext||window.webkitAudioContext;if(Audio){context||=new Audio();void context.resume();}}catch{}
   if(window.Notification?.permission==='default')void window.Notification.requestPermission().catch(()=>{});
   busy=true;get('admin-publish').disabled=true;get('admin-quick-result').hidden=true;status('Adding the video to your '+visibility+' list…');
-  try{await api().publishStudioVideo({videoId,visibility});if(api()?.user?.uid!==uid)return;
-   job={videoId,visibility,uid};remember();status('Saved to GitHub. Waiting for the finished website and share link…');sequence++;void check();
+  try{await api().publishStudioVideo({videoId,visibility,direct:true});if(api()?.user?.uid!==uid)return;
+   job={videoId,visibility,uid};remember();status('Saved. Checking that video and audio are ready…');sequence++;void check();
   }catch(error){status(error?.message||'Publication could not start. Please retry.');busy=false;get('admin-publish').disabled=false;}
  });
  get('admin-quick-copy').addEventListener('click',()=>void copy());

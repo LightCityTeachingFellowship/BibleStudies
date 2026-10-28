@@ -1,3 +1,4 @@
+import {mergeStudioVideos} from '../members/functions/direct-library.mjs';
 import {readinessJson} from './readiness-network.mjs';
 import { writeVideoSharePages } from '../share-previews.mjs';
 import { initializeApp, cert } from 'firebase-admin/app';
@@ -11,7 +12,8 @@ import { loadVideoLibrary, categoryMatcher } from '../video-library.mjs';
 import { loadReplacements, reconcileReplacements } from '../video-replacements.mjs';
 import { audioReadyPublication } from '../audio-library/publication-gate.mjs';
 
-export async function preparePublication({ root, previous, desired, recordings, live, declared, revision, intent, force = false, output = async () => {} }) {
+export async function preparePublication({ root, previous, desired, recordings, live, declared, revision, intent, studio = {}, force = false, output = async () => {} }) {
+  const sourceIds=desired.map(v=>v.id); desired=mergeStudioVideos(desired,studio,{pending:true,sourceIds});
   const intended = reconcileReplacements(intent?.videos || previous.videos, desired, declared).videos;
   const plan = audioReadyPublication(previous.videos, intended, { recordings, live, planned: true });
   const changed = JSON.stringify(plan.videos) !== JSON.stringify(previous.videos);
@@ -19,7 +21,7 @@ export async function preparePublication({ root, previous, desired, recordings, 
   if (publish) {
     await writeVideoSharePages(root,plan.videos);
     await mkdir(join(root, 'tools/audio-library/work'), { recursive: true });
-    await writeFile(join(root, 'tools/audio-library/work/publication.json'), JSON.stringify({ videos: plan.videos }));
+    await writeFile(join(root, 'tools/audio-library/work/publication.json'), JSON.stringify({ videos: plan.videos, sourceIds }));
     // These are build-only copies. The checkout is disposable; the user's source
     // ID files remain desired input for the Windows helper and later builds.
     for (const audience of ['public', 'members']) await writeFile(join(root, `_includes/video-ids-${audience}.txt`), plan.videos.filter(v => (v.visibility === 'public' ? 'public' : 'members') === audience).map(v => v.id).join('\n') + '\n');
@@ -43,6 +45,7 @@ async function main() {
   const db = getFirestore();
   const snapshot = await db.doc('churchVideoLibrary/current').get();
   const intent = await db.doc('churchVideoLibrary/desired').get();
+  const studio = await db.doc('churchVideoLibrary/studio').get();
   if (!snapshot.exists) throw Error('Publish the existing library baseline before enabling this workflow.');
   let playbackKey = process.env.LIVE_AUDIO_PLAYBACK_KEY;
   if (!playbackKey) {
@@ -74,7 +77,7 @@ async function main() {
     console.log(`Daily titles checked: ${refreshed.successes} refreshed; ${refreshed.failures} unavailable titles kept their previous values.`);
   }
   const revision = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
-  const plan = await preparePublication({ root, previous: snapshot.data(), desired, recordings, live, declared, revision, intent: intent.exists ? intent.data() : null, force: process.env.FORCE_PUBLICATION === 'true',
+  const plan = await preparePublication({ root, studio: studio.data(), previous: snapshot.data(), desired, recordings, live, declared, revision, intent: intent.exists ? intent.data() : null, force: process.env.FORCE_PUBLICATION === 'true',
     output: text => process.env.GITHUB_OUTPUT ? appendFile(process.env.GITHUB_OUTPUT, text) : Promise.resolve() });
   if (process.env.PUBLICATION_VALIDATE_ONLY !== 'true') await db.doc('churchVideoLibrary/desired').set({ videos: plan.intended, revision });
   console.log(`Audio-ready publishing: ${plan.videos.length} available; ${plan.pending.length} waiting. ${plan.publish ? 'Build required.' : 'No publication changes.'}`);

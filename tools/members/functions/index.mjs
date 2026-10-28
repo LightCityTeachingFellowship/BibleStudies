@@ -1,3 +1,10 @@
+import {createDirectPublishing} from './direct-publishing.mjs';
+import {finishDirectPublication} from './direct-notifications.mjs';
+import {publicVideoLibrary} from './direct-library.mjs';
+import {serveVideoShare} from './video-share.mjs';
+import {getMessaging} from 'firebase-admin/messaging';
+import {onDocumentWritten} from 'firebase-functions/v2/firestore';
+import {onSchedule} from 'firebase-functions/v2/scheduler';
 import {githubPublisher,createStudioPublishing,validHelperBearer,markStudioSelection} from './studio-publishing.mjs';
 import { createAdminDashboard } from './admin.mjs';
 import { createReadingActivity } from './reading-activity.mjs';
@@ -10,7 +17,7 @@ import { createMemberHandlers } from './core.mjs';
 import { createVideoActivity } from './video-activity.mjs';
 import { createAudioSigner, createAudioCredentialCheck, checkAudioLink } from './audio.mjs';
 import { createLiveAudio } from './live-audio.mjs';
-import { createRecordedCatalog,validRecording } from './recorded-catalog.mjs';
+import { createRecordedCatalog } from './recorded-catalog.mjs';
 import { readFileSync } from 'node:fs';
 initializeApp();
 const registrationCode = defineSecret('CHURCH_REGISTRATION_CODE');
@@ -59,32 +66,35 @@ const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(),
 export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey] }, adminDashboard);
 const studioGitHubToken=defineSecret('STUDIO_GITHUB_TOKEN');
 const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
-const studioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});
-export const publishChurchStudioVideo=onCall({...options,secrets:[studioGitHubToken],timeoutSeconds:180},studioPublishing.publish);
-export const getChurchStudioPublication=onCall(options,studioPublishing.status);
+const legacyStudioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});
+const studioPublishing=createDirectPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),live,recordings:()=>audio.catalog.registered()});
+export const publishChurchStudioVideo=onCall({...options,secrets:[livePlaybackKey,studioGitHubToken],timeoutSeconds:180},request=>request.data?.direct===true?studioPublishing.publish(request):legacyStudioPublishing.publish(request));
+export const getChurchStudioPublication=onCall({...options,secrets:[livePlaybackKey]},studioPublishing.status);
 // Only the trusted local upload helper can read the desired source lists.
-let studioSourceCache=null;
+
 export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubToken,livePlaybackKey]},async(req,res)=>{
- const provided=Buffer.from(String(req.get('authorization')||'').replace(/^Bearer /,'')),expected=Buffer.from(livePlaybackKey.value());
+
  res.set('Cache-Control','no-store');
  if(req.method!=='POST'||!validHelperBearer(req.get('authorization'),livePlaybackKey.value())){res.status(403).json({error:'Access denied'});return;}
  try{
   if(req.body?.publishReady){
    const id=req.body.publishReady;if(!/^[\w-]{11}$/.test(id)){res.status(400).json({error:'Invalid video ID'});return;}
    const current=await getFirestore().doc('churchVideoLibrary/current').get();
-   if(current.data()?.videos?.some(v=>v.id===id)){res.json({requested:true,published:true});return;}
-   const catalogue=await fetch(liveGateway.value().replace(/\/$/,'')+'/recordings/catalog',{headers:{Authorization:'Bearer '+livePlaybackKey.value().trim()},redirect:'error',signal:AbortSignal.timeout(15000)});
-   if(!catalogue.ok){res.status(503).json({error:'Audio readiness could not be verified'});return;}
-   const data=await catalogue.json();if(!data.recordings?.some(v=>v.videoId===id&&validRecording(v))){res.status(409).json({error:'Matching audio is not registered'});return;}
-   const source=await studioGitHub.snapshot();if(![...source.lists.public,...source.lists.members].includes(id)){res.status(409).json({error:'Video no longer listed'});return;}
-   const marker=getFirestore().doc('churchStudioBuildRequests/'+id),now=Date.now();
-   const acquired=await getFirestore().runTransaction(async tx=>{const snap=await tx.get(marker),previous=snap.data()||{};if(previous.leaseUntil>now||previous.requestedAt>now-120000)return false;tx.set(marker,{leaseUntil:now+60000},{merge:true});return true;});
-   if(!acquired){res.json({requested:false,message:'Publication already requested; waiting for the build.'});return;}
-   try{const result=await studioGitHub.kick();await marker.set({leaseUntil:0,...(result.requested?{requestedAt:Date.now()}:{} )},{merge:true});res.json(result);}
-   catch(error){await marker.set({leaseUntil:0},{merge:true});throw error;}
+   const published=current.data()?.videos?.some(v=>v.id===id)||await studioPublishing.promote(id);
+   res.json({requested:true,published,message:published?'Video and audio are available.':'Waiting for matching audio.'});
    return;
   }
-  if(!studioSourceCache||Date.now()-studioSourceCache.at>10000){const [source,requests]=await Promise.all([studioGitHub.snapshot(),getFirestore().collection('churchStudioPublications').orderBy('requestedAt','desc').limit(1).get()]);const videos=[...source.lists.public.map(id=>({id,visibility:'public'})),...source.lists.members.map(id=>({id,visibility:'members'}))];studioSourceCache={at:Date.now(),videos:markStudioSelection(videos,requests.docs[0]?.data())};}
-  res.json({videos:studioSourceCache.videos});
+  const [videos,requests]=await Promise.all([studioPublishing.source(),getFirestore().collection('churchStudioPublications').orderBy('requestedAt','desc').limit(1).get()]);
+  res.json({videos:markStudioSelection(videos,requests.docs[0]?.data())});
  }catch{res.status(503).json({error:'Source library unavailable'});}
+});
+export const getPublicVideoLibrary=onCall(options,async()=>({videos:await publicVideoLibrary(getFirestore())}));
+export const shareChurchVideo=onRequest({...options,cors:false},(req,res)=>serveVideoShare(req,res,getFirestore()));
+export const finishStudioPublication=onDocumentWritten({document:'churchStudioPublications/{videoId}',region:'us-central1',secrets:[studioGitHubToken],retry:true,timeoutSeconds:180,maxInstances:3},async event=>{
+ if(event.data?.after.data()?.state!=='ready'||event.data?.before.data()?.state==='ready')return;
+ await finishDirectPublication({id:event.params.videoId,db:getFirestore(),auth:getAuth(),messaging:getMessaging(),github:studioGitHub});
+});
+export const checkStudioAudioReady=onSchedule({schedule:'every 1 minutes',region:'us-central1',secrets:[livePlaybackKey],timeoutSeconds:120,maxInstances:1},async()=>{
+ const pending=await getFirestore().collection('churchStudioPublications').where('state','==','pending').limit(100).get();
+ for(const job of pending.docs.sort((a,b)=>(b.data().requestedAt||0)-(a.data().requestedAt||0)).slice(0,10))try{await studioPublishing.promote(job.id);}catch{console.warn('Studio audio readiness will retry.');}
 });

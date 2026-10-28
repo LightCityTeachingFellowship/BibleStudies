@@ -24,9 +24,14 @@ export function githubPublisher({token,send=fetch}){
   const workflow=await request('/contents/.github/workflows/audio-ready-pages.yml?ref=master');
   if(!Buffer.from(workflow.content,'base64').toString('utf8').includes('lightcity-audio-ready'))return {requested:false,message:'Commit and sync the automatic publishing trigger once.'};
   await request('/dispatches','POST',{event_type:'lightcity-audio-ready'});return {requested:true};
- },async add(id,visibility){
+ },async add(id,visibility,replaceVideoId){
   for(let attempt=0;attempt<3;attempt++){
-   const current=await snapshot(),change=planAddition(current.lists,id,visibility);if(!change)return {sha:current.sha,existing:true};
+   const current=await snapshot();let change;
+   if(replaceVideoId&&current.lists[visibility].includes(replaceVideoId)){
+    if(current.lists[visibility==='public'?'members':'public'].includes(id))throw Error('Replacement audience mismatch');
+    change={path:paths[visibility],content:[...new Set(current.lists[visibility].map(v=>v===replaceVideoId?id:v))].join('\n')+'\n'};
+   }else change=planAddition(current.lists,id,visibility);
+   if(!change)return {sha:current.sha,existing:true};
    const tree=await request('/git/trees','POST',{base_tree:current.tree,tree:[{path:change.path,mode:'100644',type:'blob',content:change.content}]});
    const commit=await request('/git/commits','POST',{message:'Studio: add '+visibility+' video '+id,tree:tree.sha,parents:[current.sha]});
    try{await request('/git/refs/heads/master','PATCH',{sha:commit.sha,force:false});return {sha:commit.sha,existing:false};}

@@ -1,4 +1,4 @@
-import {videoShareLink} from './share-links.mjs?v=1';
+import {videoShareLink} from './share-links.mjs?v=direct-publish-1';
 export function watchShare({ base, videoId, title }) {
   if (!/^[\w-]{11}$/.test(videoId || '')) return null;
   const url = new URL(base);

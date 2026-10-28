@@ -1,6 +1,6 @@
 // Member identity is separate from anonymous device identity used by web push.
 const settings = document.querySelector('script[data-lightcity-members]');
-const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
+const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, publicLibrary: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
 let sdk, memberAuth, deviceAuth, functions, version = 0, mediaPrefetch = null;
 const page = document.getElementById('member-page');
 let busy = false, signup = false, notice = '';
@@ -50,6 +50,14 @@ async function checkAccess({ preserveOnTransient = false } = {}) {
   const current = ++version;
   api.user = memberAuth.currentUser;
   api.error = null;
+  try {
+    const publicData = await call('getPublicVideoLibrary');
+    if (current !== version) return;
+    if (!Array.isArray(publicData.videos) || publicData.videos.some(v=>!/^[\w-]{11}$/.test(v.id)||v.visibility!=='public')) throw Error('Invalid public library');
+    api.publicLibrary = publicData.videos;
+    const metadata=document.getElementById('lc-public-video-data');
+    if(metadata)metadata.textContent=JSON.stringify(Object.fromEntries(publicData.videos.map(v=>[v.id,v.title])));
+  } catch { /* Bundled public cards remain available during connection failures. */ }
   if (!api.user || api.user.isAnonymous) { publish(null); renderPage(); return; }
   try {
     const data = await call('getChurchLibrary');
@@ -104,6 +112,25 @@ async function bootstrap() {
   } catch (error) { api.error = error; publish(null); renderPage(); }
 }
 api.ready = bootstrap();
+let libraryPolling=false,lastLibraryPoll=Date.now();
+async function refreshVideoCatalogue(){
+ if(libraryPolling||document.visibilityState==='hidden'||Date.now()-lastLibraryPoll<30000)return;
+ // Never rebuild the cards around an active video/audio player.
+ if(document.querySelector('.lc-audio-mode, lite-youtube.lyt-activated, #videotab-container iframe'))return;
+ libraryPolling=true;lastLibraryPoll=Date.now();
+ try{
+  await api.ready;if(!functions)return;
+  const account=memberAuth.currentUser?.uid;
+  const [publicData,privateData]=await Promise.all([call('getPublicVideoLibrary'),Array.isArray(api.library)?call('getChurchLibrary'):Promise.resolve(null)]);
+  if(account!==memberAuth.currentUser?.uid||!Array.isArray(publicData.videos))return;
+  const changed=JSON.stringify(publicData.videos)!==JSON.stringify(api.publicLibrary)||privateData&&JSON.stringify(privateData.videos)!==JSON.stringify(api.library);
+  api.publicLibrary=publicData.videos;
+  const metadata=document.getElementById('lc-public-video-data');if(metadata)metadata.textContent=JSON.stringify(Object.fromEntries(publicData.videos.map(v=>[v.id,v.title])));
+  if(changed)publish(privateData?.videos||null);
+ }catch{}finally{libraryPolling=false;}
+}
+setInterval(()=>void refreshVideoCatalogue(),30000);
+document.addEventListener('visibilitychange',()=>void refreshVideoCatalogue());
 api.getAudio = async (videoId, diagnose = false) => {
   await api.ready;
   if (!memberAuth || !functions) throw Error('Member sign-in is unavailable. Please reload the page.');

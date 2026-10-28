@@ -42,3 +42,4 @@ tools/live-audio/cloud/tools/live-audio/work/
 
 # Final local video queue: never commit media
 /Audio Queue/
+/tools/members/.firebase/

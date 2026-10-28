@@ -21,7 +21,7 @@ if(page){
   try{if(checkpoint&&controller.restoreListening)await controller.restoreListening(checkpoint);else await controller.switchTo(mode);if(owner!==audience||controllers.get(id)!==controller)return;if(mode==='audio'&&!checkpoint){try{await controller.audio.play();}catch{item.feedback.textContent='Tap Play on the audio player to begin.';item.feedback.hidden=false;}}}
   catch{if(owner===audience&&cards.get(id)===item){item.feedback.textContent='Playback could not start. Please try again.';item.feedback.hidden=false;}}
  }
- function render(){rows=audioLibrary({publicVideos,memberVideos:globalThis.LightCityMembers?.library,recordings,live});const allowed=new Set(rows.map(r=>r.videoId));
+ function render(){rows=audioLibrary({publicVideos:globalThis.LightCityMembers?.publicLibrary || publicVideos,memberVideos:globalThis.LightCityMembers?.library,recordings,live});const allowed=new Set(rows.map(r=>r.videoId));
   for(const [id,item]of cards)if(!allowed.has(id)){controllers.get(id)?.dispose();controllers.delete(id);item.card.remove();cards.delete(id);}
   const filtered=filterAudio(rows,search.value,category),visible=filtered.slice(0,limit);const shown=new Set(visible.map(r=>r.videoId));for(const [id,item]of cards)item.card.hidden=!shown.has(id);
   visible.forEach((r,i)=>{const item=card(r);item.card.hidden=false;item.badge.hidden=r.kind!=='live';item.badge.textContent=r.kind==='live'?(r.replay?'Audio replay':'LIVE'):'';item.badge.className='lc-audio-badge'+(r.kind==='live'&&!r.replay?' lc-audio-live':'');if(grid.children[i]!==item.card)grid.insertBefore(item.card,grid.children[i]||null);});

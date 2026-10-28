@@ -11,7 +11,7 @@ assert.equal(setupStudioPublisher({document:doc,window,navigator:{clipboard:{wri
 const settle=async()=>{for(let i=0;i<5;i++)await new Promise(resolve=>setTimeout(resolve,1));};await settle();
 nodes['admin-quick'].value='https://youtu.be/abcdefghijk';nodes['admin-audience'].value='members';
 await nodes['admin-quick-form'].handlers.submit({preventDefault(){}});await settle();
-assert.equal(calls.length,1);assert.deepEqual(calls[0],{videoId:'abcdefghijk',visibility:'members'});
+assert.equal(calls.length,1);assert.deepEqual(calls[0],{videoId:'abcdefghijk',visibility:'members',direct:true});
 assert.equal(nodes['admin-quick-result'].hidden,true,'no premature link is displayed');
 assert.equal(nodes['admin-publish'].disabled,true);assert.equal(checks,1);
 release({state:'ready',title:'Prayer meeting',url:'https://lightcityfellowship.com/Share/Video/abcdefghijk/'});await settle();

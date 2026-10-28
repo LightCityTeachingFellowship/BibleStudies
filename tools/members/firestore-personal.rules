@@ -52,7 +52,10 @@ service cloud.firestore {
           'churchDevices',
           'churchRateLimits',
           'churchVideoLibrary',
-          'churchVideoActivity'
+          'churchVideoActivity',
+          'churchStudioPublications',
+          'churchStudioBuildRequests',
+          'churchStudioPushBatches'
         ]);
     }
   }

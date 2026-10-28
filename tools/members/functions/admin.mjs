@@ -1,3 +1,4 @@
+import {mergeStudioVideos} from './direct-library.mjs';
 const validId = id => /^[\w-]{11}$/.test(id || '');
 const origin = 'https://lightcityfellowship.com';
 export function createAdminDashboard({ auth, db, fail, emails, audio, live, privateReadings = [], send = fetch }) {
@@ -7,7 +8,7 @@ export function createAdminDashboard({ auth, db, fail, emails, audio, live, priv
   if(request.data?.accountUid&&request.data.accountUid!==uid)throw new fail('permission-denied','The account changed. Sign in again.');
   const user=await auth.getUser(uid),allowed=new Set(String(emails()).split(/[,;\s]+/).map(s=>s.toLowerCase()).filter(Boolean));
   if(user.disabled||!user.emailVerified||!user.providerData?.length||!allowed.has(String(user.email||'').toLowerCase()))throw new fail('permission-denied','This account does not have admin access.');
-  const [published,desired]=await Promise.all(['current','desired'].map(name=>db.doc('churchVideoLibrary/'+name).get()));
+  const [published,desired,studio]=await Promise.all(['current','desired','studio'].map(name=>db.doc('churchVideoLibrary/'+name).get()));
   if(!published.exists||!Array.isArray(published.data()?.videos))throw new fail('unavailable','The published library is temporarily unavailable.');
   const results=await Promise.allSettled([audio(),live.catalog(),(async()=>{
    const response=await send(origin+'/study-catalog.json',{redirect:'error',signal:AbortSignal.timeout(15000)});
@@ -18,7 +19,7 @@ export function createAdminDashboard({ auth, db, fail, emails, audio, live, priv
   const recordings=new Set(checks.audio?results[0].value.map(r=>r.videoId):[]);
   const broadcasts=new Map(checks.live?results[1].value.filter(r=>r.expiresAt>Date.now()).map(r=>[r.videoId,r]):[]);
   const current=published.data().videos,visible=new Set(current.map(v=>v.id));
-  const pending=(desired.exists&&Array.isArray(desired.data()?.videos)?desired.data().videos:[]).filter(v=>!visible.has(v.id));
+  const pending=mergeStudioVideos(desired.data()?.videos||[],studio.data(),{pending:true}).filter(v=>!visible.has(v.id));
   const videos=[...current.map(v=>({...v,published:true})),...pending.map(v=>({...v,published:false}))].filter(v=>validId(v.id)).map(v=>{
    const feed=broadcasts.get(v.id);
    return {id:v.id,title:String(v.title||feed?.title||v.id).slice(0,300),visibility:v.visibility==='public'?'public':'members',published:v.published,

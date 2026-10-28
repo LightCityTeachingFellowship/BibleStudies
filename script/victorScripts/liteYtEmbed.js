@@ -141,10 +141,10 @@ videoCategories.forEach(category => {
 });
 function renderAudienceVideos() {
     if (globalThis.LightCityMembers?.loading) return;
-    const library = globalThis.LightCityMembers?.library;
+    const library = globalThis.LightCityMembers?.library || globalThis.LightCityMembers?.publicLibrary;
     const tabs = document.getElementById('video-category-tabs');
     if (tabs) {
-        const hideTabs = tabs.dataset.publicOnly === 'true' && !Array.isArray(library);
+        const hideTabs = tabs.dataset.publicOnly === 'true' && !Array.isArray(globalThis.LightCityMembers?.library);
         if (tabs.hidden !== hideTabs) {
             tabs.hidden = hideTabs;
             window.dispatchEvent(new Event('resize'));

@@ -1,4 +1,4 @@
-import {videoShareLink} from './share-links.mjs?v=1';
+import {videoShareLink} from './share-links.mjs?v=direct-publish-1';
 const origin='https://lightcityfellowship.com';
 const validId=id=>/^[\w-]{11}$/.test(id||'');
 export function streamId(value){

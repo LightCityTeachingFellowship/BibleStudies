@@ -178,7 +178,7 @@ function applyStyles() {
   }
   function renderFeaturedAudience() {
     if (globalThis.LightCityMembers?.loading) return;
-    updateFeatured(globalThis.LightCityMembers?.library?.[0] || initial);
+    updateFeatured(globalThis.LightCityMembers?.library?.[0] || globalThis.LightCityMembers?.publicLibrary?.[0] || initial);
   }
   renderFeaturedAudience();
   window.addEventListener('lightcity-members-changed', renderFeaturedAudience);
@@ -330,7 +330,9 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
       const publicIds = includeVideos ? [...new Set(validMain ? main.videoIds.filter(id => /^[\w-]{11}$/.test(id)) : (Array.isArray(catalogue) ? catalogue.filter(item => /^[\w-]{11}$/.test(item.id)).map(item => item.id) : []))] : [];
       const memberLibrary = includeVideos && Array.isArray(globalThis.LightCityMembers?.library) ? globalThis.LightCityMembers.library : null;
       if (memberLibrary) memberLibrary.forEach(item => { if (/^[\w-]{11}$/.test(item.id) && typeof item.title === 'string') videoCache.set(item.id, item); });
-      const ids = memberLibrary ? memberLibrary.map(item => item.id) : publicIds;
+            const publicLibrary=globalThis.LightCityMembers?.publicLibrary;
+      if(!memberLibrary&&Array.isArray(publicLibrary))publicLibrary.forEach(item=>videoCache.set(item.id,item));
+      const ids = memberLibrary ? memberLibrary.map(item => item.id) : Array.isArray(publicLibrary)?publicLibrary.map(item=>item.id):publicIds;
       items = validMain ? main.publications.flatMap(item => {
         const url = localLink(item.url);
         return url && typeof item.title === 'string' && ['Article', 'Summary'].includes(item.kind) && (scope === 'All' || item.kind === scope) ? [prepare({ ...item, url })] : [];

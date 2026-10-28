@@ -15,7 +15,7 @@ export async function processingLibrary(root,local,send=fetch){
   const body=await response.json(),seen=new Set();
   if(!Array.isArray(body.videos)||!body.videos.length||body.videos.length>20000)throw Error('Invalid Studio source.');
   const titles=new Map(base.map(v=>[v.id,v]));
-  const videos=body.videos.map(v=>{if(!/^[\w-]{11}$/.test(v.id||'')||!['public','members'].includes(v.visibility)||seen.has(v.id))throw Error('Invalid Studio source.');seen.add(v.id);return {...titles.get(v.id),id:v.id,title:titles.get(v.id)?.title||v.id,visibility:v.visibility,studioSelected:v.studioSelected===true};});
+  const videos=body.videos.map(v=>{if(!/^[\w-]{11}$/.test(v.id||'')||!['public','members'].includes(v.visibility)||seen.has(v.id))throw Error('Invalid Studio source.');seen.add(v.id);return {...titles.get(v.id),id:v.id,title:typeof v.title==='string'&&v.title.trim()?v.title.trim().slice(0,300):titles.get(v.id)?.title||v.id,visibility:v.visibility,studioSelected:v.studioSelected===true};});
   cached={at:Date.now(),videos};return videos;
  })();
  try{return await pending;}finally{pending=null;}

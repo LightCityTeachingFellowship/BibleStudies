@@ -113,7 +113,7 @@ if(!Array.isArray(feed.posts)||!Array.isArray(feed.videos)) throw Error('Invalid
 const visibilityEnabled=feed.videoVisibilityEnabled===true;
 const localVideos=await loadVideoLibrary(fileURLToPath(new URL('../..',import.meta.url)));
 const publishedSnapshot=await db.doc('churchVideoLibrary/current').get();
-const notificationVideos=dryRun||baselineOnly?localVideos:publishedNotificationLibrary(localVideos,publishedSnapshot.exists?publishedSnapshot.data()?.videos:null);
+const notificationVideos=dryRun||baselineOnly?localVideos:publishedSnapshot.data()?.videos;if(!Array.isArray(notificationVideos))throw Error('Published library unavailable');
 const videoEntries=notificationVideos.map(video=>({id:'video:'+video.id,title:video.title||'New LightCity video',url:new URL('Watch/?v='+video.id,origin).href,kind:'video',visibility:video.visibility==='public'?'public':'members',replaces:video.replaces||[]}));
 const entries=[...new Map([...feed.posts,...videoEntries].map(item=>[item.id,item])).values()].map(item=>{
  if(!item.id||!item.title||!item.url) throw Error('Invalid publication');

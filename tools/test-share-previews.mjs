@@ -16,7 +16,7 @@ assert.ok(videoPreview({id,title},{audio:true}).includes('Listen to this recordi
 assert.ok(page.includes('property="og:title" content="Prayer &amp; worship &lt;script&gt;bad()&lt;/script&gt; &quot;Today&quot;"'));
 assert.ok(page.includes(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`));assert.ok(page.includes('location.replace("/Watch/?v='+id+'")'));
 assert.ok(videoPreview({id,title},{audio:true}).includes('location.replace("/Listen/?v='+id+'")'));
-assert.equal(videoShareLink(id),'https://lightcityfellowship.com/Share/Video/'+id+'/');
+assert.equal(videoShareLink(id),'https://auth.lightcityfellowship.com/Share/Video/'+id+'/');
 assert.equal(videoShareLink(id,{base:'https://example.com/BibleStudies/Watch/?t=20',audio:true}),'https://example.com/BibleStudies/Share/Audio/'+id+'/');
 assert.equal(videoShareLink('bad'),null);
 const root=await mkdtemp(join(tmpdir(),'lc-share-'));

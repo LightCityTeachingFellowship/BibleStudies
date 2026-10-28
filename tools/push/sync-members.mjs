@@ -1,3 +1,4 @@
+import {mergeStudioVideos,acknowledgeStudio} from '../members/functions/direct-library.mjs';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { fileURLToPath } from 'node:url';
@@ -15,9 +16,12 @@ if (process.env.DRY_RUN === 'true') { console.log(`Validated ${current.length} l
 else {
  initializeApp({credential:cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))});const db=getFirestore();
  const outcome=await db.runTransaction(async tx=>{const ref=db.doc('churchVideoLibrary/current'),previous=await tx.get(ref);
+  const studioRef=db.doc('churchVideoLibrary/studio'),studio=await tx.get(studioRef),sourceIds=prepared?.sourceIds||current.map(v=>v.id);
+  const latest=mergeStudioVideos(current,studio.data(),{sourceIds});
   if(publicationRevisionDecision(previous.exists?previous.data()?.revision:null,revision,isAncestor)==='skip')return {skipped:true,count:0};
-  const result=reconcileReplacements(previous.exists?previous.data()?.videos:[],current,declared);
+  const result=reconcileReplacements(previous.exists?previous.data()?.videos:[],latest,declared);
   if(Buffer.byteLength(JSON.stringify(result.videos))>850000)throw Error('Library is too large for one document; split it before syncing.');
+  tx.set(studioRef,acknowledgeStudio(studio.data()||{},sourceIds));
   tx.set(ref,{videos:result.videos,...(revision?{revision}:{}),updatedAt:FieldValue.serverTimestamp()});return {skipped:false,count:result.inferred.length};
  });
  if(process.env.GITHUB_OUTPUT)await appendFile(process.env.GITHUB_OUTPUT,'skipped='+outcome.skipped+'\n');

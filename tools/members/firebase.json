@@ -7,5 +7,23 @@
         "node \"$PROJECT_DIR/prepare-reading-catalog.mjs\""
       ]
     }
-  ]
+  ],
+  "hosting": {
+    "site": "perceptive-zoo-424115-j6",
+    "public": "hosting",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "function": {
+          "functionId": "shareChurchVideo",
+          "region": "us-central1"
+        },
+        "source": "/Share/**"
+      }
+    ]
+  }
 }
