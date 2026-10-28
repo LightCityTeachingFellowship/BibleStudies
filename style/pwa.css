@@ -227,3 +227,20 @@ body.app-home .home-bottom-nav {grid-template-columns:repeat(5,minmax(0,1fr));}
 .lc-live-label {color:inherit!important;font-size:13px!important;font-weight:700;letter-spacing:.06em;}
 .lc-live-label::before {content:"";display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:50%;background:#e60032;vertical-align:middle;}
 .video-box .iframe-container.lc-audio-mode > .lc-live-badge,.video-box .iframe-container:has(iframe) > .lc-live-badge {display:none!important;}
+
+/* Shared title menus in the video and audio libraries. */
+.lc-library-menu{position:relative;flex:0 0 40px;z-index:20;margin:0}
+.lc-library-menu>summary{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;cursor:pointer;list-style:none}
+.lc-library-menu>summary::-webkit-details-marker{display:none}
+.lc-library-menu>summary svg{width:24px;height:24px;fill:currentColor;pointer-events:none}
+.lc-library-menu>summary:hover,.lc-library-menu[open]>summary{background:rgba(128,128,128,.15)}
+.lc-library-menu-panel{position:absolute;right:0;top:44px;box-sizing:border-box;width:260px;max-width:calc(100vw - 24px);padding:8px 0;border:1px solid var(--borderColor-muted,#d1d9e0);border-radius:12px;box-shadow:0 5px 20px #0003;background:var(--bgColor-smoke-white,#f6f6f6);overflow:hidden;color:inherit}
+.lc-library-menu-panel button,.lc-library-menu-panel .lc-save-video{display:flex;align-items:center;justify-content:flex-start;gap:14px;box-sizing:border-box;width:100%;height:auto;min-height:48px;margin:0;padding:12px 16px!important;border:0!important;border-radius:0;background:transparent;color:inherit;font:inherit;font-size:15px;text-align:left;cursor:pointer}
+.lc-library-menu-panel button:hover{background:rgba(128,128,128,.15)}
+.lc-library-menu-panel button svg{flex:0 0 22px;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.lc-library-menu-panel .lc-save-video[aria-pressed="true"] svg{fill:currentColor}
+.lc-library-menu>summary:focus-visible,.lc-library-menu-panel button:focus-visible{outline:3px solid var(--vivid-orange,#ffbf00);outline-offset:-3px}
+.video-box:has(.lc-library-menu[open]){position:relative;z-index:30}
+.lc-library-share-feedback{font-size:12px!important;line-height:1.4;margin:8px 0}
+.lc-library-copy-input{display:block;box-sizing:border-box;width:100%;padding:8px;font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-radius:8px}
+.darkmode .lc-library-menu-panel{background:var(--DM-bgColor-smoke-white,#1e1e1e)}

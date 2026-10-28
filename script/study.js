@@ -1,7 +1,7 @@
 import {isLive} from './live-status.mjs';
 import {createStudyStore} from './study-store.mjs';
 import {resourcePath,resourceId,relatedResources,readingPosition} from './study-core.mjs?v=related-date-1';
-import {personal,visibleVideos,timeLabel} from './video-personal.js?v=automatic-replacements-1';
+import {personal,visibleVideos,timeLabel} from './video-personal.js?v=library-menu-1';
 const settings=document.querySelector('script[data-lightcity-study]');
 const base=settings?.dataset.base||'/', origin=location.origin;
 const $=s=>document.querySelector(s), all=s=>[...document.querySelectorAll(s)];

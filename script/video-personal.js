@@ -1,3 +1,4 @@
+import {libraryMenu} from './library-menu.mjs?v=1';
 import {replacementMap,loadRemoteReplacements} from './video-replacements.mjs?v=automatic-1';
 import {isLive,refreshLiveStatus} from './live-status.mjs';
 import { createVideoStore, resumeSeconds } from './video-personal-store.mjs?v=replacements-1';
@@ -133,7 +134,7 @@ function decorate(holder,id,title,search=false) {
     let line=heading.parentNode?.className==='lc-video-title-row'?heading.parentNode:holder.querySelector?.('.lc-video-title-row');
     if(!line){line=node('div','', 'lc-video-title-row');heading.parentNode.insertBefore(line,heading);}
     if(heading.parentNode!==line)line.insertBefore(heading,line.children[0] || null);
-    if(button.parentNode!==line)line.appendChild(button);
+    libraryMenu({document,holder,line,save:button,id,title:()=>heading.textContent||titleFor(id,title),audio:holder.className?.split(' ').includes('lc-audio-card')});
   }
   let actions=holder.querySelector?.('.lc-personal-actions');
   if(!actions){actions=node('div','', 'lc-personal-actions');holder.appendChild(actions);}
