@@ -1,5 +1,5 @@
-{% assign search_scope = include.scope | default: 'Article' %}
-{% case search_scope %}{% when 'Video' %}{% assign search_name = 'videos' %}{% when 'Summary' %}{% assign search_name = 'summaries' %}{% else %}{% assign search_name = 'articles' %}{% endcase %}
+{% assign search_scope = include.scope | default: 'All' %}
+{% case search_scope %}{% when 'Video' %}{% assign search_name = 'videos' %}{% when 'Summary' %}{% assign search_name = 'summaries' %}{% when 'Article' %}{% assign search_name = 'articles' %}{% else %}{% assign search_name = 'all resources' %}{% endcase %}
 <div class="browse-search">
   <form class="home-search-preview" role="search" aria-label="Search {{ search_name }}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>

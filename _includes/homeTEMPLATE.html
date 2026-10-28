@@ -16,7 +16,8 @@
         <div class="loader"></div>
     </div>
     {% include homeHeader-article.html %}
-    {% include site-search.html scope='Article' %}
+    {% assign page_search_scope = page.search_scope | default: 'All' %}
+    {% include site-search.html scope=page_search_scope %}
     {% include theme-toggle.html %}
     {{ content }}
     {% include contact-section.html %}
