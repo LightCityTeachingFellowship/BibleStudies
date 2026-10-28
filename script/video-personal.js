@@ -1,4 +1,4 @@
-import {libraryMenu} from './library-menu.mjs?v=1';
+import {libraryMenu} from './library-menu.mjs?v=2';
 import {replacementMap,loadRemoteReplacements} from './video-replacements.mjs?v=automatic-1';
 import {isLive,refreshLiveStatus} from './live-status.mjs';
 import { createVideoStore, resumeSeconds } from './video-personal-store.mjs?v=replacements-1';
@@ -50,7 +50,7 @@ async function refresh() {
       personal.acceptSaved(watchId,point.saved,titleFor(watchId)); if(point.history)personal.acceptHistory(point.history);
       syncMessage='Saved videos and history sync with your account.';emit();return;
     }
-    const searchOnly=!['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page','study-continue-title'].some(id=>document.getElementById?.(id));
+    const searchOnly=!['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page','study-continue-title'].some(id=>document.getElementById?.(id))||!!document.querySelector?.('.home-featured[data-video-id]');
     for (const view of searchOnly?['saved']:['saved','history']) {
       const rows = []; let cursor = null, pages = 0;
       do {
@@ -113,7 +113,7 @@ function saveButton(holder,id,title) {
     event?.preventDefault();event?.stopPropagation();
     personal.save(id,titleFor(id,holder.getAttribute?.('video-title') || title),!personal.saved(id));void flush();
   };
-  const saved=personal.saved(id), label=saved?'Remove from saved videos':'Save video for later';
+  const saved=personal.saved(id), audio=holder.className?.split(' ').includes('lc-audio-card'), label=saved?(audio?'Remove from saved audio':'Remove from saved videos'):(audio?'Save audio for later':'Save video for later');
   button.disabled=globalThis.LightCityMembers?.loading===true;
   button.setAttribute('aria-pressed',String(saved));button.setAttribute('aria-label',label);button.title=label;
   const menuLabel=button.querySelector?.('.lc-save-label');if(menuLabel)menuLabel.textContent=label;
@@ -123,7 +123,7 @@ function decorate(holder,id,title,search=false) {
   if(!visibleVideos().has(id))return;
   const button=saveButton(holder,id,title);
   if(search) {if(button.parentNode!==holder)holder.appendChild(button);return;}
-  const heading=holder.querySelector?.('.video-title') || (holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-title'):null);
+  const heading=holder.querySelector?.('.video-title') || holder.querySelector?.('.home-video-title') || (holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-title'):null);
   const saveSlot=holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-save-slot'):null;
   if(saveSlot) {
     let label=button.querySelector('.lc-save-label');
@@ -136,6 +136,7 @@ function decorate(holder,id,title,search=false) {
     if(heading.parentNode!==line)line.insertBefore(heading,line.children[0] || null);
     libraryMenu({document,holder,line,save:button,id,title:()=>heading.textContent||titleFor(id,title),audio:holder.className?.split(' ').includes('lc-audio-card')});
   }
+  if(holder.className?.split(' ').includes('home-featured'))return;
   let actions=holder.querySelector?.('.lc-personal-actions');
   if(!actions){actions=node('div','', 'lc-personal-actions');holder.appendChild(actions);}
   let progress=actions.querySelector('.lc-video-resume');const row=personal.history(id);
@@ -170,13 +171,14 @@ function render() {
   if(!active)return;
   const visible=visibleVideos();
   for(const card of document.querySelectorAll?.('.video-box[data-video-id]') || [])decorate(card,card.dataset.videoId,card.querySelector('lite-youtube')?.getAttribute('title'));
+  const featured=document.querySelector?.('.home-featured[data-video-id]');if(featured)decorate(featured,featured.dataset.videoId,featured.querySelector('.home-video-title')?.textContent);
   const watch=document.getElementById?.('watch-personal-actions');const id=new URLSearchParams(location.search).get('v');
   if(watch&&id)decorate(watch,id,document.getElementById('watch-title')?.textContent);
   for(const result of document.querySelectorAll?.('.lc-search-video-result[data-video-id]') || [])decorate(result,result.dataset.videoId,result.querySelector('strong')?.textContent,true);
   renderPage(visible);
 }
 function boot() {
-  const primary=['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page','study-continue-title'].some(id=>document.getElementById?.(id));
+  const primary=['videotab-container','watch-personal-actions','my-video-list','audio-pilot-page','study-continue-title'].some(id=>document.getElementById?.(id))||!!document.querySelector?.('.home-featured[data-video-id]');
   if(!document.querySelector?.('script[data-lightcity-personal]') || (!primary&&!document.getElementById?.('home-search-results')))return;
   let initialized=primary;
   window.addEventListener('lightcity-search-results',()=>{if(!initialized){initialized=true;refreshPromise=refresh();personal.ready=refreshPromise;}schedule();});
@@ -200,6 +202,8 @@ function boot() {
     catch{syncMessage='Could not load more videos. Please try again.';emit();}finally{more.disabled=false;}
   };
   const clear=document.getElementById('clear-video-history');if(clear)clear.onclick=()=>{if(window.confirm('Clear your reading, watch and listening history? Saved resources will be kept.')){personal.clearHistory();window.dispatchEvent(new Event('lc-clear-reading-history'));void flush();}};
+  const featured=document.querySelector?.('.home-featured[data-video-id]');
+  if(featured&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>r.type==='attributes'||r.target===featured.querySelector('.home-video-title')))schedule();}).observe(featured,{attributes:true,attributeFilter:['data-video-id'],childList:true,subtree:true});
   const grid=document.getElementById('videotab-container');
   if(grid&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches?.('.video-box, .video-title')||n.querySelector?.('.video-box')))))schedule();}).observe(grid,{childList:true,subtree:true});
   if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}render();

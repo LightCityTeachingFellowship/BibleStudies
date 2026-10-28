@@ -13,6 +13,7 @@ export function libraryMenu({document,holder,line,save,id,title,audio=false,navi
   toggle.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>';
   const panel=node('div','lc-library-menu-panel');menu.appendChild(toggle);menu.appendChild(panel);line.appendChild(menu);
  }
+ if(menu.dataset.videoId!==id){menu.open=false;holder.querySelector('.lc-library-share-feedback')?.remove();menu.dataset.videoId=id;}
  if(menu.parentNode!==line)line.appendChild(menu);
  const toggle=menu.querySelector('summary'),panel=menu.querySelector('.lc-library-menu-panel');
  menu.onkeydown=event=>{if(event.key==='Escape'&&menu.open){event.preventDefault();menu.open=false;toggle.focus();}};

@@ -244,3 +244,10 @@ body.app-home .home-bottom-nav {grid-template-columns:repeat(5,minmax(0,1fr));}
 .lc-library-share-feedback{font-size:12px!important;line-height:1.4;margin:8px 0}
 .lc-library-copy-input{display:block;box-sizing:border-box;width:100%;padding:8px;font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-radius:8px}
 .darkmode .lc-library-menu-panel{background:var(--DM-bgColor-smoke-white,#1e1e1e)}
+.app-home .home-featured{overflow:visible}
+.app-home .home-video-art,.app-home .home-video-link,.app-home .home-video-image{border-radius:16px 16px 0 0}
+.app-home .home-featured-copy{border-radius:0 0 16px 16px}
+.app-home .lc-video-title-row>.home-video-title{flex:1;min-width:0;color:inherit;text-decoration:none}
+.app-home .home-featured .lc-video-title-row{margin-top:0}
+.app-home .home-featured .lc-library-menu-panel{color:var(--home-ink);background:var(--home-surface)}
+.app-home .home-featured:has(.lc-library-menu[open]){position:relative;z-index:30}

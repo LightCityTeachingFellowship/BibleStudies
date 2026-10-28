@@ -1,4 +1,4 @@
-import { personal } from './video-personal.js?v=library-menu-1';
+import { personal } from './video-personal.js?v=home-menu-2';
 import { createModeSwitch } from './media-mode-core.mjs';
 import { mountLive } from './live-media.js?v=saved-history-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
