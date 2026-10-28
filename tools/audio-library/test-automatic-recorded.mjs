@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { tick, updateQueue, registerRecording, downloadBudget, YOUTUBE_SPACING, DOWNLOAD_WINDOW, DAILY_DOWNLOAD_LIMIT, URGENT_RESERVED_ATTEMPTS } from './automatic.mjs';
+import { tick, updateQueue, recoverSource, registerRecording, downloadBudget, YOUTUBE_SPACING, DOWNLOAD_WINDOW, DAILY_DOWNLOAD_LIMIT, URGENT_RESERVED_ATTEMPTS } from './automatic.mjs';
 const a = 'abcdefghijk', b = 'ABCDEFGHIJK', c = '12345678901';
 const state = { version: 1, seenIds: [a], jobs: {} };
 updateQueue(state, [{ id: a }, { id: b }], [], 1000);
@@ -150,3 +150,10 @@ assert.equal(downloadBudget(JSON.parse(JSON.stringify(trialState)),trialClock,'u
 trialClock+=DOWNLOAD_WINDOW;await trialTick();assert.equal(trialDownloads.length,3,'new upload retries can resume after the rolling window');
 assert.equal(trialState.jobs[a].attempts,0,'backlog never resumed');
 console.log('PASS: new uploads only, existing backlog excluded, two-attempt rolling cap includes failures and persists across restarts.');
+let sourceChecks=0,reports=[],waits=[];
+const retrySource={load:async()=>{if(sourceChecks++===0)throw Error('Access denied with private details');return [{id:a}];},report:async value=>reports.push(value),wait:async ms=>waits.push(ms)};
+assert.equal(await recoverSource(retrySource),null);
+assert.deepEqual(waits,[30000]);assert.equal(reports[0].phase,'waiting-for-source');assert.ok(!JSON.stringify(reports).includes('private details'));
+assert.deepEqual(await recoverSource(retrySource),[{id:a}],'worker can recover on the next cycle without restarting');
+await assert.rejects(recoverSource({...retrySource,load:async()=>{throw Error('offline');},once:true}),/Queue progress is preserved/);
+console.log('PASS: transient Studio source failures preserve progress, back off without downloads, expose safe diagnostics, and recover on the next cycle.');

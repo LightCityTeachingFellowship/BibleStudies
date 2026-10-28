@@ -10,7 +10,7 @@ import { createMemberHandlers } from './core.mjs';
 import { createVideoActivity } from './video-activity.mjs';
 import { createAudioSigner, createAudioCredentialCheck, checkAudioLink } from './audio.mjs';
 import { createLiveAudio } from './live-audio.mjs';
-import { createRecordedCatalog } from './recorded-catalog.mjs';
+import { createRecordedCatalog,validRecording } from './recorded-catalog.mjs';
 import { readFileSync } from 'node:fs';
 initializeApp();
 const registrationCode = defineSecret('CHURCH_REGISTRATION_CODE');
@@ -69,6 +69,21 @@ export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubT
  res.set('Cache-Control','no-store');
  if(req.method!=='POST'||!validHelperBearer(req.get('authorization'),livePlaybackKey.value())){res.status(403).json({error:'Access denied'});return;}
  try{
+  if(req.body?.publishReady){
+   const id=req.body.publishReady;if(!/^[\w-]{11}$/.test(id)){res.status(400).json({error:'Invalid video ID'});return;}
+   const current=await getFirestore().doc('churchVideoLibrary/current').get();
+   if(current.data()?.videos?.some(v=>v.id===id)){res.json({requested:true,published:true});return;}
+   const catalogue=await fetch(liveGateway.value().replace(/\/$/,'')+'/recordings/catalog',{headers:{Authorization:'Bearer '+livePlaybackKey.value().trim()},redirect:'error',signal:AbortSignal.timeout(15000)});
+   if(!catalogue.ok){res.status(503).json({error:'Audio readiness could not be verified'});return;}
+   const data=await catalogue.json();if(!data.recordings?.some(v=>v.videoId===id&&validRecording(v))){res.status(409).json({error:'Matching audio is not registered'});return;}
+   const source=await studioGitHub.snapshot();if(![...source.lists.public,...source.lists.members].includes(id)){res.status(409).json({error:'Video no longer listed'});return;}
+   const marker=getFirestore().doc('churchStudioBuildRequests/'+id),now=Date.now();
+   const acquired=await getFirestore().runTransaction(async tx=>{const snap=await tx.get(marker),previous=snap.data()||{};if(previous.leaseUntil>now||previous.requestedAt>now-120000)return false;tx.set(marker,{leaseUntil:now+60000},{merge:true});return true;});
+   if(!acquired){res.json({requested:false,message:'Publication already requested; waiting for the build.'});return;}
+   try{const result=await studioGitHub.kick();await marker.set({leaseUntil:0,...(result.requested?{requestedAt:Date.now()}:{} )},{merge:true});res.json(result);}
+   catch(error){await marker.set({leaseUntil:0},{merge:true});throw error;}
+   return;
+  }
   if(!studioSourceCache||Date.now()-studioSourceCache.at>10000){const [source,requests]=await Promise.all([studioGitHub.snapshot(),getFirestore().collection('churchStudioPublications').orderBy('requestedAt','desc').limit(1).get()]);const videos=[...source.lists.public.map(id=>({id,visibility:'public'})),...source.lists.members.map(id=>({id,visibility:'members'}))];studioSourceCache={at:Date.now(),videos:markStudioSelection(videos,requests.docs[0]?.data())};}
   res.json({videos:studioSourceCache.videos});
  }catch{res.status(503).json({error:'Source library unavailable'});}

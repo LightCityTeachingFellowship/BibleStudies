@@ -48,3 +48,12 @@ assert.equal(markStudioSelection(declared,{videoId:a,visibility:'members',reques
 assert.equal(markStudioSelection(declared,{videoId:a,visibility:'public',requestedAt:900},1000)[0].studioSelected,false,'audience mismatch is not preferred');
 assert.ok(markStudioSelection(declared,{videoId:a,visibility:'members',requestedAt:900},13*3600000).every(v=>!v.studioSelected),'old requests expire');
 console.log('PASS: only a recent, listed Studio selection with its correct audience is preferred.');
+let dispatched=0;
+const kick=githubPublisher({token:()=> 'test',send:async(url,options)=>{
+ if(url.includes('/contents/.github/workflows/'))return Response.json({content:Buffer.from('repository_dispatch:\n  types: [lightcity-audio-ready]').toString('base64')});
+ assert.ok(url.endsWith('/dispatches'));assert.equal(options.method,'POST');assert.equal(JSON.parse(options.body).event_type,'lightcity-audio-ready');dispatched++;return new Response(null,{status:204});
+}});
+assert.equal((await kick.kick()).requested,true);assert.equal(dispatched,1);
+const notConfigured=githubPublisher({token:()=> 'test',send:async()=>Response.json({content:Buffer.from('workflow_dispatch:').toString('base64')})});
+assert.equal((await notConfigured.kick()).requested,false,'a missing workflow trigger is reported instead of pretending publication started');
+console.log('PASS: verified audio can trigger repository publication; a missing workflow trigger is reported safely.');

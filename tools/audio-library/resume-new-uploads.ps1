@@ -1,4 +1,9 @@
 $ErrorActionPreference = 'Stop'
+$localFile=Join-Path $PSScriptRoot 'work/automatic-recorded/local-source.json'
+if ((Test-Path -LiteralPath $localFile) -and (Get-Content -LiteralPath $localFile -Raw|ConvertFrom-Json).mode -eq 'local') {
+    & (Join-Path $PSScriptRoot 'start-local.ps1')
+    return
+}
 # Stop the old process before lifting the persistent pause.
 & (Join-Path $PSScriptRoot 'stop-automatic.ps1')
 $taskName = 'LightCity Recorded Audio'

@@ -20,3 +20,10 @@ export async function processingLibrary(root,local,send=fetch){
  })();
  try{return await pending;}finally{pending=null;}
 }
+export async function requestAudioPublication(root,videoId,send=fetch){
+ if(!/^[\w-]{11}$/.test(videoId||''))throw Error('Invalid publication video');
+ const keys=JSON.parse(await readFile(join(root,'tools/live-audio/work/cloud-secrets.json'),'utf8'));
+ const response=await send('https://us-central1-perceptive-zoo-424115-j6.cloudfunctions.net/getStudioHelperLibrary',{method:'POST',headers:{Authorization:'Bearer '+keys.LIVE_PLAYBACK_KEY,'Content-Type':'application/json'},body:JSON.stringify({publishReady:videoId}),redirect:'error',signal:AbortSignal.timeout(45000)});
+ if(!response.ok){await response.body?.cancel();throw Error('The automatic publishing check will be retried.');}
+ const data=await response.json();return {requested:data.requested===true,published:data.published===true,message:typeof data.message==='string'?data.message:undefined};
+}

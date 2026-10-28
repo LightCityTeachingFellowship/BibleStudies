@@ -1,8 +1,10 @@
 param([switch]$Once)
 $ErrorActionPreference = 'Stop'
 $work = Join-Path $PSScriptRoot 'work/automatic-recorded'
+$localFile=Join-Path $work 'local-source.json'
+$localMode=(Test-Path -LiteralPath $localFile) -and (Get-Content -LiteralPath $localFile -Raw|ConvertFrom-Json).mode -eq 'local'
 $pauseFile = Join-Path $work 'downloads-paused.json'
-if ((Test-Path -LiteralPath $pauseFile) -and (Get-Content -LiteralPath $pauseFile -Raw | ConvertFrom-Json).paused) {
+if (-not $localMode -and (Test-Path -LiteralPath $pauseFile) -and (Get-Content -LiteralPath $pauseFile -Raw | ConvertFrom-Json).paused) {
     Write-Host 'Recorded YouTube downloads are paused. Existing audio, queued progress, and live streaming are preserved.'
     return
 }

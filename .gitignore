@@ -39,3 +39,6 @@ tools/live-audio/cloud/tools/live-audio/work/
 
 # Sharing preview source pages are generated in the publishing checkout.
 /share-previews/
+
+# Final local video queue: never commit media
+/Audio Queue/

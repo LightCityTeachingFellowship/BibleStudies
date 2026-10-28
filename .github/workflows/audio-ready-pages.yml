@@ -4,6 +4,8 @@ on:
     branches: [master]
   schedule:
     - cron: '*/5 * * * *'
+  repository_dispatch:
+    types: [lightcity-audio-ready]
   workflow_dispatch:
     inputs:
       operation:

@@ -20,7 +20,11 @@ export function githubPublisher({token,send=fetch}){
   const [commit,...files]=await Promise.all([request('/git/commits/'+sha),...Object.values(paths).map(path=>request('/contents/'+path+'?ref='+sha))]);
   return {sha,tree:commit.tree.sha,lists:Object.fromEntries(Object.keys(paths).map((key,i)=>[key,parseIds(Buffer.from(files[i].content,'base64').toString('utf8'))]))};
  }
- return {snapshot,async add(id,visibility){
+ return {snapshot,async kick(){
+  const workflow=await request('/contents/.github/workflows/audio-ready-pages.yml?ref=master');
+  if(!Buffer.from(workflow.content,'base64').toString('utf8').includes('lightcity-audio-ready'))return {requested:false,message:'Commit and sync the automatic publishing trigger once.'};
+  await request('/dispatches','POST',{event_type:'lightcity-audio-ready'});return {requested:true};
+ },async add(id,visibility){
   for(let attempt=0;attempt<3;attempt++){
    const current=await snapshot(),change=planAddition(current.lists,id,visibility);if(!change)return {sha:current.sha,existing:true};
    const tree=await request('/git/trees','POST',{base_tree:current.tree,tree:[{path:change.path,mode:'100644',type:'blob',content:change.content}]});

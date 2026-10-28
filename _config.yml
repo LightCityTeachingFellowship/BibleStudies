@@ -60,6 +60,7 @@ plugins:
 
 # Private and development files must not be published.
 exclude:
+  - Audio Queue/
   - tools/
   - Service-Account-Key/
   - OAuth client/

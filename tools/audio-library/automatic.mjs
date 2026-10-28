@@ -1,4 +1,5 @@
-import {processingLibrary} from '../studio-library.mjs';
+import {prepareLocal,uploadLocal,cleanLocal} from './local-source.mjs';
+import {processingLibrary,requestAudioPublication} from '../studio-library.mjs';
 import { mkdir, open, readFile, unlink, lstat, realpath, statfs } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +18,7 @@ export const DOWNLOAD_WINDOW = 24 * 60 * 60000;
 export const URGENT_RESERVED_ATTEMPTS = 5;
 export const QUEUE_CHECK_MS = 5000;
 export function downloadBudget(state, time = Date.now(), lane = 'backlog') {
+  if(state.sourceMode==='local')return {starts:state.youtubeDownloadStarts||[],remaining:Infinity,nextAllowed:0};
   // On upgrade, conservatively count recent completed jobs so a restart cannot add a fresh daily allowance.
   const previous = state.youtubeDownloadStarts || Object.values(state.jobs || {}).filter(j=>j.completedAt).map(j=>Date.parse(j.completedAt));
   const starts = previous.filter(t => Number.isSafeInteger(t) && t > time - DOWNLOAD_WINDOW).sort((a,b)=>a-b);
@@ -117,8 +119,8 @@ export async function tick({ state, library, catalog, download, remote, register
   try {
     if (!job.record) {
       // Persist the attempt before contacting YouTube, including failed or interrupted attempts.
-      state.youtubeDownloadStarts = [...budget.starts, now()];
-      if (job.lane !== 'urgent') {
+      if(state.sourceMode!=='local')state.youtubeDownloadStarts = [...budget.starts, now()];
+      if (state.sourceMode!=='local' && job.lane !== 'urgent') {
         // Persist slots before requests: crashes and failed attempts cannot reset a batch.
         state.backlogBatchCount++;
         closesBatch = state.backlogBatchCount >= BACKLOG_BATCH_SIZE;
@@ -127,7 +129,7 @@ export async function tick({ state, library, catalog, download, remote, register
       await persist(state);
       const [r] = await download(job.videoId);
       if (!r || !['local audio verified', 'existing local trial audio verified'].includes(r.status)) {
-        if (r?.status === 'waiting for replay') { job.phase = 'waiting'; job.message = r.reason; job.nextAttempt = now() + 10 * 60000; await persist(state); return job; }
+        if (r?.status === 'waiting for replay') { job.phase = 'waiting'; job.message = r.reason; job.nextAttempt = now() + (state.sourceMode==='local'?5000:10*60000); await persist(state); return job; }
         throw Error(r?.reason || 'Download did not complete.');
       }
       job.record = r; job.phase = 'downloaded'; await persist(state);
@@ -138,10 +140,11 @@ export async function tick({ state, library, catalog, download, remote, register
     progress(`${job.videoId}: upload verified; registering Listen…`);
     if (!(await library()).some(v => v.id === job.videoId)) { job.phase = 'removed'; await persist(state); return job; }
     await register(job.record);
+    if(job.record.sourceMode==='local'){job.record.registrationVerified=true;await persist(state);}
     // The remote object and registration were just acknowledged. Only generated audio is deleted.
     progress(`${job.videoId}: registration verified; cleaning generated local audio…`);
     await cleanup(job.record);
-    job.phase = 'published'; job.completedAt = new Date(now()).toISOString(); job.message = 'Listen registered; generated local audio removed.';
+    job.phase = 'published'; job.completedAt = new Date(now()).toISOString(); job.message = job.record.sourceMode==='local'?'Listen registered; verified queued video and generated audio cleaned.':'Listen registered; generated local audio removed.';
     delete job.messageError; await persist(state);
   } catch (error) {
     if (!job.record && youtubeRestricted(error.message)) {
@@ -162,17 +165,28 @@ export async function tick({ state, library, catalog, download, remote, register
   }
   return job;
 }
+export async function recoverSource({load,report,wait,once=false}) {
+ try { return await load(); }
+ catch {
+  await report({phase:'waiting-for-source',message:'The Studio connection is temporarily unavailable. Retrying without downloading or changing the queue.',updatedAt:Date.now()});
+  if(once)throw Error('The Studio connection is temporarily unavailable. Queue progress is preserved.');
+  await wait(30000);return null;
+ }
+}
 async function main() {
   const [action, ...args] = process.argv.slice(2), i = args.indexOf('--id'), id = i < 0 ? undefined : args[i + 1];
   if (action === 'init') { await initialize({ seedId: id }); return; }
-  if (action === 'status') { if ((await json(join(WORK, 'downloads-paused.json'), {})).paused === true) console.log('PAUSED: recorded YouTube downloads, including backlog and new uploads. Existing audio and live streaming are unaffected.'); const state = await json(join(WORK, 'queue.json')); const pause = await json(join(WORK, 'youtube-pause.json'), {}); const policy=await json(join(WORK,'schedule-policy.json'),{});state.dailyDownloadLimit=policy.dailyDownloadLimit;if(policy.newUploadsOnly)console.log('New uploads/replacements only: backlog paused; maximum '+state.dailyDownloadLimit+' download attempts per rolling 24 hours.');const budget = downloadBudget(state); console.log('YouTube attempts: '+budget.starts.length+'/'+(state.dailyDownloadLimit||DAILY_DOWNLOAD_LIMIT)+' per rolling 24 hours.'+(policy.newUploadsOnly?' Backlog downloads are disabled.':' Backlog uses sequential batches of 3 followed by a 40-minute break; urgent additions have reserved capacity.')); console.log('Urgent lane next allowed: '+new Date(downloadBudget(state, Date.now(), 'urgent').nextAllowed || Date.now()).toLocaleString()); const counts={};for(const j of Object.values(state.jobs))counts[j.phase]=(counts[j.phase]||0)+1;console.log('Queue totals: '+JSON.stringify(counts));const until = Math.max(budget.nextAllowed, Number(pause.until || 0)); if(until>Date.now())console.log('Backlog downloads next allowed after '+new Date(until).toLocaleString()+'. Completed audio and queued jobs are preserved.'); for (const j of Object.values(state.jobs)) console.log(`${j.videoId}: ${j.phase}${j.message ? ' — ' + j.message : ''}`); return; }
+  if (action === 'status' && (await json(join(WORK,'local-source.json'),{})).mode==='local'){const state=await json(join(WORK,'queue.json'));console.log('LOCAL FILE MODE: Audio Queue is watched for new uploads/replacements. No YouTube media downloads or download cooldown.');for(const j of Object.values(state.jobs).filter(j=>!id||j.videoId===id))console.log(j.videoId+': '+j.phase+(j.message?' — '+j.message:''));return;}
+  if (action === 'status') { if ((await json(join(WORK, 'downloads-paused.json'), {})).paused === true) console.log('PAUSED: recorded YouTube downloads, including backlog and new uploads. Existing audio and live streaming are unaffected.'); const state = await json(join(WORK, 'queue.json')); const pause = await json(join(WORK, 'youtube-pause.json'), {}); const policy=await json(join(WORK,'schedule-policy.json'),{});state.dailyDownloadLimit=policy.dailyDownloadLimit;if(policy.newUploadsOnly)console.log('New uploads/replacements only: backlog paused; maximum '+state.dailyDownloadLimit+' download attempts per rolling 24 hours.');const budget = downloadBudget(state); console.log('YouTube attempts: '+budget.starts.length+'/'+(state.dailyDownloadLimit||DAILY_DOWNLOAD_LIMIT)+' per rolling 24 hours.'+(policy.newUploadsOnly?' Backlog downloads are disabled.':' Backlog uses sequential batches of 3 followed by a 40-minute break; urgent additions have reserved capacity.')); console.log('Urgent lane next allowed: '+new Date(downloadBudget(state, Date.now(), 'urgent').nextAllowed || Date.now()).toLocaleString()); const counts={};for(const j of Object.values(state.jobs))counts[j.phase]=(counts[j.phase]||0)+1;console.log('Queue totals: '+JSON.stringify(counts));const until = Math.max(budget.nextAllowed, Number(pause.until || 0)); if(until>Date.now())console.log('Backlog downloads next allowed after '+new Date(until).toLocaleString()+'. Completed audio and queued jobs are preserved.'); for (const j of Object.values(state.jobs).filter(j=>!id||j.videoId===id)) console.log(`${j.videoId}: ${j.phase}${j.message ? ' — ' + j.message : ''}`); return; }
   if (action === 'retry') {
     const state = await json(join(WORK, 'queue.json')), job = state.jobs[id];
     if (!job || !/^[\w-]{11}$/.test(id) || job.phase === 'published') throw Error('Select an unfinished queued ID.');
     job.phase = 'pending'; job.attempts = 0; job.nextAttempt = 0; await save(join(WORK, 'queue.json'), state); return;
   }
   if (action !== 'run') throw Error('Use init, run, status, or retry --id VIDEO_ID.');
-  if ((await json(join(WORK, 'downloads-paused.json'), {})).paused === true) { console.log('Recorded YouTube downloads are paused. Completed audio and queued progress are preserved.'); return; }
+  const localConfig=await json(join(WORK,'local-source.json'),{}),localMode=localConfig.mode==='local';
+  if(localMode&&resolve(localConfig.input||'').toLowerCase()!==resolve(ROOT,'Audio Queue').toLowerCase())throw Error('Local mode must use the dedicated project Audio Queue folder.');
+  if (!localMode && (await json(join(WORK, 'downloads-paused.json'), {})).paused === true) { console.log('Recorded YouTube downloads are paused. Completed audio and queued progress are preserved.'); return; }
   await mkdir(WORK, { recursive: true });
   const lockPath = join(WORK, 'worker.lock');
   async function lock() {
@@ -196,8 +210,11 @@ async function main() {
     connection = await client();
     let stopped = false; process.once('SIGTERM', () => { stopped = true; }); process.once('SIGINT', () => { stopped = true; });
     do {
-      if ((await json(join(WORK, 'downloads-paused.json'), {})).paused === true) { console.log('Recorded YouTube downloads are paused.'); break; }
+
+  if (!localMode && (await json(join(WORK, 'downloads-paused.json'), {})).paused === true) { console.log('Recorded YouTube downloads are paused.'); break; }
       const state = await json(join(WORK, 'queue.json'));
+      if(localMode&&!state.localSourceInitialized){for(const job of Object.values(state.jobs))if(job.lane==='urgent'&&!job.record&&!['published','removed'].includes(job.phase)){job.phase='pending';job.attempts=0;job.nextAttempt=0;}state.localSourceInitialized=true;}
+      state.sourceMode=localMode?'local':'youtube';
       const policy = await json(join(WORK, 'schedule-policy.json'), {});
       state.backlogEnabled = policy.includeBacklog === true;
       state.newUploadsOnly = policy.newUploadsOnly === true;
@@ -205,17 +222,29 @@ async function main() {
       const pause = await json(join(WORK, 'youtube-pause.json'), {});
       state.youtubeExternalPauseUntil = Number(pause.until || 0);
       const staticCatalog = await json(join(ROOT, 'tools/members/functions/audio-catalog.json'));
-      await applyRequests(WORK, state, await processingLibrary(ROOT,()=>loadVideoLibrary(ROOT)), staticCatalog);
+      const source=await recoverSource({load:()=>processingLibrary(ROOT,()=>loadVideoLibrary(ROOT)),once:args.includes('--once'),
+        report:value=>save(join(WORK,'runtime-status.json'),value),
+        wait:ms=>new Promise(ok=>{const wake=()=>{clearTimeout(timer);process.removeListener('SIGTERM',wake);process.removeListener('SIGINT',wake);ok();};const timer=setTimeout(wake,ms);process.once('SIGTERM',wake);process.once('SIGINT',wake);})});
+      if(!source)continue;
+      await applyRequests(WORK, state, source, staticCatalog);
       const result = await tick({ state, library: () => processingLibrary(ROOT,()=>loadVideoLibrary(ROOT)), catalog: staticCatalog,
         download: async videoId => {
           const space = await statfs(WORK); if (Number(space.bavail) * Number(space.bsize) < 2 * 1024 ** 3) throw Error('Less than 2 GB free; audio download paused.');
+          if(localMode)return prepareLocal(videoId,{library:source,state,config:localConfig});
           return trial({ id: videoId, limit: 1, download: true, embedded: true });
         },
-        remote: r => uploadDownloaded(r, connection),
+        remote: r => r.sourceMode==='local'?uploadLocal(r,connection):uploadDownloaded(r, connection),
+        cleanup: r => r.sourceMode==='local'?cleanLocal(r,{input:localConfig.input}):cleanDownloaded(r),
         register: r => registerRecording(r, { origin, uploadKey: gateway.LIVE_UPLOAD_KEY }),
         persist: value => save(join(WORK, 'queue.json'), value), progress: message => console.log(message)
       });
+      const budget=downloadBudget(state,Date.now(),'urgent');
+      await save(join(WORK,'runtime-status.json'),{phase:budget.nextAllowed>Date.now()?'waiting-for-download-slot':'running',updatedAt:Date.now(),nextAllowed:budget.nextAllowed||null,newUploadsOnly:state.newUploadsOnly,dailyDownloadLimit:state.dailyDownloadLimit||DAILY_DOWNLOAD_LIMIT,sourceMode:state.sourceMode,message:localMode?'Watching Audio Queue for final local video files.':budget.nextAllowed>Date.now()?'Waiting for the existing download limit or cooldown.':'Watching for new uploads and replacements.'});
       if (result) console.log(`${result.videoId}: ${result.phase}`);
+      if(localMode){
+       const finished=Object.values(state.jobs).find(j=>j.phase==='published'&&j.record?.sourceMode==='local'&&!j.publicationConfirmed&&source.some(v=>v.id===j.videoId)&&Date.now()-(j.publicationCheckedAt||0)>60000);
+       if(finished){finished.publicationCheckedAt=Date.now();try{const response=await requestAudioPublication(ROOT,finished.videoId);finished.publicationConfirmed=response.published;if(response.message)console.log(response.message);}catch{console.log('Automatic website publication will be retried.');}await save(join(WORK,'queue.json'),state);}
+      }
       if (args.includes('--once') || stopped) break;
       await new Promise(ok => { const wake = () => { clearTimeout(timer); process.removeListener('SIGTERM', wake); process.removeListener('SIGINT', wake); ok(); }; const timer = setTimeout(wake, QUEUE_CHECK_MS); process.once('SIGTERM', wake); process.once('SIGINT', wake); });
     } while (!stopped);
