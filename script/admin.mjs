@@ -1,4 +1,4 @@
-import {setupStudioPublisher} from './studio-publish.mjs?v=direct-publish-1';
+import {setupStudioPublisher} from './studio-publish.mjs?v=studio-removal-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=previews-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
@@ -25,6 +25,12 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(item.id||item.date)info.appendChild(node('small',item.id||item.date));row.appendChild(info);
    const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
    actions.appendChild(action('Copy link',()=>void copy(url,row)));
+   if(item.id)actions.appendChild(action('Remove',async()=>{
+    const uid=owner;if(uid!==api()?.user?.uid)return;
+    if(!window.confirm('Remove “'+item.title+'” from LightCity and its ID lists? Your YouTube upload and stored audio file are kept.'))return;
+    try{status('Removing this video…');await api().removeStudioVideo(item.id);if(uid!==api()?.user?.uid)return;rows=rows.filter(v=>v.id!==item.id);render();status('Removed from LightCity. GitHub and this computer’s lists will sync in the background.');}
+    catch(error){if(uid===api()?.user?.uid)status(error?.message||'Removal failed. Please retry.');}
+   }));
    if(item.audio&&item.published&&tab!=='Audio')actions.appendChild(action('Copy audio link',()=>void copy(previewLink(item.id,true),row)));
    if(typeof navigator.share==='function')actions.appendChild(action('Share',()=>{void navigator.share({title:item.title,text:item.title,url}).catch(error=>{if(error.name!=='AbortError')status('Use Copy link to share this item.');});}));
    if(item.published){const open=node('a','Open');open.href=tab==='Audio'&&item.id?watchLink(item.id,true):item.url;open.target='_blank';open.rel='noopener';actions.appendChild(open);}row.appendChild(actions);list.appendChild(row);

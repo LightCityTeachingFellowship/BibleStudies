@@ -111,6 +111,7 @@ async function bootstrap() {
     auth.onAuthStateChanged(deviceAuth, () => { void linkDevice().catch(() => {}); });
   } catch (error) { api.error = error; publish(null); renderPage(); }
 }
+api.removeStudioVideo=async videoId=>{await api.ready;return call('removeChurchStudioVideo',{videoId,accountUid:api.user?.uid});};
 api.ready = bootstrap();
 let libraryPolling=false,lastLibraryPoll=Date.now();
 async function refreshVideoCatalogue(){

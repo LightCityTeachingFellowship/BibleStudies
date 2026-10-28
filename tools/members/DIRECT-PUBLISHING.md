@@ -18,3 +18,11 @@ Publish new streams and uploaded videos from **LightCity Studio → Publish a vi
 4. Commit/sync the frontend and workflow changes once. Older Studio clients retain their existing GitHub flow until the updated frontend loads.
 
 The notification trigger uses the existing default function service account. It needs Firebase Messaging delivery permission, Firestore access and access to the existing GitHub token secret. No browser receives that token, the playback secret or member-only ID lists.
+## Studio removal and local text-file sync
+
+- Use **Remove** beside a video in Studio. The published and pending catalogues are updated immediately; GitHub removes the ID in the background. Saved/history lists no longer expose a removed video. The YouTube upload and stored audio object are kept.
+- Run `tools/start-studio-sync.ps1` once on the streaming computer. It installs the hidden **LightCity Studio Lists** login task, using the existing local helper key; there are no new credentials to enter.
+- While this computer is signed in, on and connected, its two `_includes/video-ids-*.txt` files synchronize about every 15 seconds. Save an ID removal to apply it online. No commit is needed to remove it from the live catalogue.
+- First sync imports the online list without treating an older local copy as a removal. Local-only additions and deliberate reordering are preserved. Missing/invalid files and simultaneous saves pause synchronization rather than overwriting edits. More than 25 removals in one pass require review.
+- A removed video stays removed even if an older website build finishes later. A later explicit re-publication in Studio can restore it; stale local removal requests cannot delete that new publication.
+- The helper changes tracked ID files, so they may appear in VS Code Source Control. Normal Git sync remains available for website code updates; it does not control live removal.

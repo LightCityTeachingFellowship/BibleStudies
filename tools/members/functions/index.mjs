@@ -1,3 +1,4 @@
+import {syncStudioBackup} from './studio-removal.mjs';
 import {createDirectPublishing} from './direct-publishing.mjs';
 import {finishDirectPublication} from './direct-notifications.mjs';
 import {publicVideoLibrary} from './direct-library.mjs';
@@ -69,6 +70,7 @@ const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
 const legacyStudioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});
 const studioPublishing=createDirectPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),live,recordings:()=>audio.catalog.registered()});
 export const publishChurchStudioVideo=onCall({...options,secrets:[livePlaybackKey,studioGitHubToken],timeoutSeconds:180},request=>request.data?.direct===true?studioPublishing.publish(request):legacyStudioPublishing.publish(request));
+export const removeChurchStudioVideo=onCall(options,request=>studioPublishing.remove(request));
 export const getChurchStudioPublication=onCall({...options,secrets:[livePlaybackKey]},studioPublishing.status);
 // Only the trusted local upload helper can read the desired source lists.
 
@@ -77,6 +79,10 @@ export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubT
  res.set('Cache-Control','no-store');
  if(req.method!=='POST'||!validHelperBearer(req.get('authorization'),livePlaybackKey.value())){res.status(403).json({error:'Access denied'});return;}
  try{
+  if(req.body?.removeVideoId){
+   await studioPublishing.removeFromHelper(req.body.removeVideoId,req.body.expectedVersion);
+   res.json(await studioPublishing.listState());return;
+  }
   if(req.body?.publishReady){
    const id=req.body.publishReady;if(!/^[\w-]{11}$/.test(id)){res.status(400).json({error:'Invalid video ID'});return;}
    const current=await getFirestore().doc('churchVideoLibrary/current').get();
@@ -84,14 +90,19 @@ export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubT
    res.json({requested:true,published,message:published?'Video and audio are available.':'Waiting for matching audio.'});
    return;
   }
-  const [videos,requests]=await Promise.all([studioPublishing.source(),getFirestore().collection('churchStudioPublications').orderBy('requestedAt','desc').limit(1).get()]);
-  res.json({videos:markStudioSelection(videos,requests.docs[0]?.data())});
- }catch{res.status(503).json({error:'Source library unavailable'});}
+  const [state,requests]=await Promise.all([studioPublishing.listState(),getFirestore().collection('churchStudioPublications').orderBy('requestedAt','desc').limit(1).get()]);
+  res.json({...state,videos:markStudioSelection(state.videos,requests.docs[0]?.data())});
+ }catch(error){res.status(error.code==='aborted'?409:503).json({error:error.code==='aborted'?'Video changed; refresh the local lists.':'Source library unavailable'});}
 });
 export const getPublicVideoLibrary=onCall(options,async()=>({videos:await publicVideoLibrary(getFirestore())}));
 export const shareChurchVideo=onRequest({...options,cors:false},(req,res)=>serveVideoShare(req,res,getFirestore()));
 export const finishStudioPublication=onDocumentWritten({document:'churchStudioPublications/{videoId}',region:'us-central1',secrets:[studioGitHubToken],retry:true,timeoutSeconds:180,maxInstances:3},async event=>{
- if(event.data?.after.data()?.state!=='ready'||event.data?.before.data()?.state==='ready')return;
+  const after=event.data?.after.data(),before=event.data?.before.data();
+ if(after?.state==='removed'){
+  if(before?.state==='removed'&&before?.operationId===after.operationId)return;
+  await syncStudioBackup({id:event.params.videoId,db:getFirestore(),github:studioGitHub});return;
+ }
+ if(after?.state!=='ready'||before?.state==='ready')return;
  await finishDirectPublication({id:event.params.videoId,db:getFirestore(),auth:getAuth(),messaging:getMessaging(),github:studioGitHub});
 });
 export const checkStudioAudioReady=onSchedule({schedule:'every 1 minutes',region:'us-central1',secrets:[livePlaybackKey],timeoutSeconds:120,maxInstances:1},async()=>{

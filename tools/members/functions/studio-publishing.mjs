@@ -24,6 +24,19 @@ export function githubPublisher({token,send=fetch}){
   const workflow=await request('/contents/.github/workflows/audio-ready-pages.yml?ref=master');
   if(!Buffer.from(workflow.content,'base64').toString('utf8').includes('lightcity-audio-ready'))return {requested:false,message:'Commit and sync the automatic publishing trigger once.'};
   await request('/dispatches','POST',{event_type:'lightcity-audio-ready'});return {requested:true};
+ },async remove(ids){
+  if(!Array.isArray(ids)||!ids.length||ids.some(id=>!valid(id)))throw Error('Invalid removal IDs');
+  const removed=new Set(ids);
+  for(let attempt=0;attempt<3;attempt++){
+   const current=await snapshot(),changes=Object.keys(paths).flatMap(audience=>{
+    const before=current.lists[audience],after=before.filter(id=>!removed.has(id));
+    return before.length===after.length?[]:[{path:paths[audience],mode:'100644',type:'blob',content:after.join('\n')+'\n'}];
+   });
+   if(!changes.length)return {sha:current.sha,existing:true};
+   const tree=await request('/git/trees','POST',{base_tree:current.tree,tree:changes});
+   const commit=await request('/git/commits','POST',{message:'Studio: remove video '+ids[0],tree:tree.sha,parents:[current.sha]});
+   try{await request('/git/refs/heads/master','PATCH',{sha:commit.sha,force:false});return {sha:commit.sha};}catch(error){if(error.status!==422||attempt===2)throw error;}
+  }
  },async add(id,visibility,replaceVideoId){
   for(let attempt=0;attempt<3;attempt++){
    const current=await snapshot();let change;

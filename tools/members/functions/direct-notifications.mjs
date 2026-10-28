@@ -1,3 +1,4 @@
+import {syncStudioBackup} from './studio-removal.mjs';
 import {createHash} from 'node:crypto';
 import {memberDeviceIds,recipients} from './push-audiences.mjs';
 export async function finishDirectPublication({id,db,auth,messaging,github}){
@@ -29,5 +30,5 @@ export async function finishDirectPublication({id,db,auth,messaging,github}){
   }catch(error){await sent.set({leaseUntil:0},{merge:true});throw error;}
  }
  // The live catalogue is already available. This backup never gates Watch/Listen.
- if(!job.backedUp){await github.add(id,video.visibility,job.replaceVideoId);await ref.set({backedUp:true},{merge:true});}
+ await syncStudioBackup({id,db,github});
 }

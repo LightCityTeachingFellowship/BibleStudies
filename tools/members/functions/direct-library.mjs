@@ -1,8 +1,10 @@
 // Studio entries stay authoritative until a GitHub build has observed their ID.
 // Later deliberate source-file removals/replacements can then retire them.
 export function mergeStudioVideos(source, studio = {}, { pending = false, sourceIds } = {}) {
+ const removed=new Set((studio.removed||[]).map(r=>r.id));
+ source=source.filter(v=>!removed.has(v.id));
  const ids = new Set(sourceIds || source.map(v => v.id));
- const extras = (studio.entries || []).filter(e => (pending || e.state === 'ready') && (!e.sourceSeen || ids.has(e.video.id)));
+ const extras = (studio.entries || []).filter(e => !removed.has(e.video.id) && (pending || e.state === 'ready') && (!e.sourceSeen || ids.has(e.video.id)));
  const overrides = new Map(extras.filter(e=>!e.sourceSeen).map(e => [e.video.id, e.video]));
  const aliases = new Set(extras.flatMap(e => e.video.replaces || []));
  const fresh = extras.filter(e => !ids.has(e.video.id)&&!aliases.has(e.video.id)).sort((a,b) => b.createdAt-a.createdAt).map(e => e.video);

@@ -18,6 +18,7 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
  async function check(){
   stop();if(!owned())return;const current=sequence;
   try{const result=await api().getStudioPublication({videoId:job.videoId,visibility:job.visibility});if(current!==sequence||!owned())return;
+   if(result.state==='removed'){status(result.message||'This video was removed from LightCity.');job=null;remember();busy=false;get('admin-publish').disabled=false;return;}
    if(result.state==='ready'){
     get('admin-quick-link').value=result.url;get('admin-quick-result').hidden=false;status('Ready to share: '+result.title);busy=false;get('admin-publish').disabled=false;
     await alertReady(result);job=null;remember();return;
