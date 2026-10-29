@@ -31,7 +31,7 @@ Browser validation covers mobile/desktop, dark/light theme, cancelled account sw
 
 ## Shared navigation update
 
-The responsive shell uses each page’s existing desktop and mobile link order. Desktop has a centered scoped search and an expandable icon rail. Recent resources appear in a floating popup on section hover or keyboard focus, with up to five items. Mobile has ordered page tabs and a More panel, with search and notifications in the logo row. Google photos appear for approved church members; the mobile account button is in the bottom navigation.
+The responsive shell uses each page’s existing desktop and mobile link order. Desktop has a centered scoped search and an expandable icon rail. Recent resources appear in a floating popup on section hover or keyboard focus, with up to five items. Mobile uses a hamburger menu and a hidden drawer containing the page’s original link order. Search, notifications and library/account controls remain in the logo row. The homepage retains its original layout; mobile Watch still has no header. Google photos appear for approved church members; the mobile account button is in the bottom navigation.
 
 The homepage retains its original logo row, page width and smaller search. It has no sidebar. Desktop bottom navigation is present only on the homepage; mobile keeps a fixed icon-only bottom bar with accessible labels and a full-size account photo. Public visitors have a My library shortcut beside the header tools and in the mobile bottom bar. Watch has a hidden desktop drawer that overlays the player without moving or remounting it; mobile Watch has no site header and leads with the player. Appearance is also available in Settings.
 
