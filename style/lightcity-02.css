@@ -542,6 +542,7 @@ h3{
 
 /* Browsing pages share the home style; reading templates omit site-browse. */
 body.site-browse {font-family:'Outfit','Segoe UI',sans-serif!important; font-size:17px; line-height:1.55; letter-spacing:normal;}
+#homeBodyContent{margin-top:20px;}
 .site-browse :is(button,input,select,textarea) {font-family:inherit;}
 .site-browse :is(p,li,a,small,strong,span):not(#context_menu *) {letter-spacing:normal;}
 .site-browse :is(h1,h2,h3,h4,h5,h6):not(#context_menu *) {font-family:'Outfit','Segoe UI',sans-serif!important; font-weight:700; line-height:1.25; letter-spacing:-.025em; text-transform:none!important; color:var(--home-ink)!important; background:transparent!important; box-shadow:none!important; text-shadow:none!important; border:0;}
