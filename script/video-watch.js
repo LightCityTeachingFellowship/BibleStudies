@@ -25,7 +25,7 @@
  const {watchAccess}=await import('./watch-access.mjs');
  let publicIds=[];try{publicIds=Object.keys(JSON.parse(document.getElementById('lc-public-video-data')?.textContent||'{}'));}catch{}
  if(!await watchAccess(videoId,{publicIds,api:globalThis.LightCityMembers})){
-  title.textContent='Video unavailable';status.textContent='This video is not available to this account. Church members should sign in with their registered account, then reopen this link.';return;
+  title.textContent='Video unavailable';status.textContent='This video is unavailable here. Choose another video from the library.';return;
  }
  const metadata=(globalThis.LightCityMembers.library||globalThis.LightCityMembers.publicLibrary||[]).find(v=>v.id===videoId);
  if(metadata?.title){title.textContent=metadata.title;document.title=metadata.title+' | LightCity';}

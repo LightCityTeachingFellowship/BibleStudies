@@ -40,7 +40,7 @@ async function refresh() {
   personal.setIdentity(user && !user.isAnonymous ? user.uid : null);
   const owner = personal.scope;
   await loadRemoteReplacements();if(owner!==personal.scope||ticket!==revision)return;personal.replaceSaved(replacementMap(),id=>titleFor(id));
-  if (!personal.signedIn || !globalThis.LightCityMembers?.getVideoActivity) { syncMessage = 'Saved on this device. Sign in to sync across devices.'; emit(); return; }
+  if (!personal.signedIn || !globalThis.LightCityMembers?.getVideoActivity) { syncMessage = 'Saved on this device.'; emit(); return; }
   await flush();
   try {
     const watchId = document.getElementById?.('watch-personal-actions') && new URLSearchParams(location.search).get('v');
@@ -148,7 +148,7 @@ function renderPage(visible) {
   const list=document.getElementById?.('my-video-list'); if(!list)return;
   document.getElementById('load-more-videos').hidden=!personal.signedIn||!cursors[pageView];
   document.getElementById('my-video-status').textContent=syncMessage;
-  const signIn=document.getElementById('personal-video-signin');if(signIn)signIn.hidden=personal.signedIn;
+  const signIn=document.getElementById('personal-video-signin');if(signIn)signIn.hidden=true;
   const copy=document.getElementById('import-device-videos');if(copy)copy.hidden=!personal.signedIn||!['saved','history'].some(view=>createVideoStore({storage}).rows(view).some(r=>visible.has(r.videoId))); 
   document.getElementById('clear-video-history').hidden=pageView!=='history';
   list.replaceChildren();

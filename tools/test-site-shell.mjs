@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {orderedLinks,latestReadings,navKind} from '../script/site-shell-core.mjs';
+import {isMemberAccount} from '../script/hub-core.mjs';
+const origin='https://lightcityfellowship.com';
+const article=orderedLinks([{label:' Home ',url:'/Home/'},{label:'Articles',url:'/Teaching-Articles/',active:true},{label:'Categories',url:'/categories/'},{label:'Summaries',url:'/summaries/'},{label:'Duplicate',url:'/Home/'},{label:'Member entrance',url:'/members/'},{label:'Bad',url:'javascript:alert(1)'},{label:'External',url:'https://untrusted.example/'},{label:'Bible App',url:'https://lightcitybiblestudyapp.netlify.app/'}],origin);
+assert.deepEqual(article.map(r=>r.label),['Home','Articles','Categories','Summaries','Bible App']);assert.equal(article[1].active,true);assert.equal(navKind('Summaries'),'Summary');assert.equal(navKind('Audio'),'audio');
+const rows=Array.from({length:8},(_,i)=>({kind:'Article',title:'Article '+i,url:'/a'+i+'/',date:'2026-10-'+String(i+1).padStart(2,'0')}));rows.push({kind:'Summary',title:'Different type',url:'/summary/',date:'2027-01-01'},{kind:'Article',title:'Unsafe',url:'https://outside.example/',date:'2028-01-01'});const latest=latestReadings(rows,'Article',origin);assert.equal(latest.length,5);assert.equal(latest[0].title,'Article 7');assert.ok(latest.every(r=>r.url.startsWith(origin)));
+for(const api of [undefined,{user:null,library:null},{user:{uid:'anonymous',isAnonymous:true},library:[]},{user:{uid:'not-approved'},library:null},{user:{uid:'member'},library:[],loading:true}])assert.equal(isMemberAccount(api),false);
+assert.equal(isMemberAccount({user:{uid:'member'},library:[],loading:false}),true);
+console.log('PASS: page link ordering, duplicate/private/unsafe URL filtering, original active links, latest-five dates and member-only account/playlist controls.');

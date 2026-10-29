@@ -1,7 +1,7 @@
 import {isLive} from './live-status.mjs';
 import {createStudyStore} from './study-store.mjs';
 import {resourcePath,resourceId,relatedResources,readingPosition} from './study-core.mjs?v=related-date-1';
-import {personal,visibleVideos,timeLabel} from './video-personal.js?v=study-hub-1';
+import {personal,visibleVideos,timeLabel} from './video-personal.js?v=shell-1';
 const settings=document.querySelector('script[data-lightcity-study]');
 const base=settings?.dataset.base||'/', origin=location.origin;
 const $=s=>document.querySelector(s), all=s=>[...document.querySelectorAll(s)];
@@ -33,7 +33,7 @@ async function refresh(){const ticket=++refreshTicket;const api=globalThis.Light
  if(!api?.loading)study.setIdentity(api?.user&&!api.user.isAnonymous?api.user.uid:null);
  await api?.ready;if(ticket!==refreshTicket)return;const user=globalThis.LightCityMembers?.user;study.setIdentity(user&&!user.isAnonymous?user.uid:null);const owner=study.scope;
  await loadCatalog();if(ticket!==refreshTicket||owner!==study.scope)return;void loadMediaTitles(owner,ticket);
- if(!study.signedIn){syncMessage='Saved on this device. Sign in to sync across devices.';schedule();return;}
+ if(!study.signedIn){syncMessage='Saved on this device.';schedule();return;}
  await flush();
  try{for(const v of ['saved','history']){const rows=[];let cursor=null,pages=0;do{const page=await LightCityMembers.getReadingActivity({view:v,accountUid:owner.slice(5),...(cursor?{cursor}:{})});if(ticket!==refreshTicket||owner!==study.scope)return;if(!Array.isArray(page.rows))throw Error();rows.push(...page.rows);cursor=page.cursor;}while(cursor&&++pages<30);study.hydrate(v,rows);}syncMessage='Your study library syncs with your account.';}
  catch{if(owner===study.scope)syncMessage='Saved on this device. Account sync will retry when available.';}

@@ -36,19 +36,22 @@ setTimeout(() => {
 <script defer src="{{ '/script/pwa.js' | relative_url }}?v=study-hub-1" data-base="{{ '/' | relative_url }}"></script>
 {% endif %}
 <script type="module" src="{{ '/script/members.js' | relative_url }}?v=study-hub-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
-<script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=study-hub-1"></script>
+<script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=shell-1"></script>
 <script defer src="{{ '/script/media-duration.js' | relative_url }}?v=1"></script>
 <script defer src="{{ '/script/audio-links.js' | relative_url }}?v=duration-1" data-lightcity-audio-links data-base="{{ '/' | relative_url }}"></script>
 
 {% include video-list.html %}
 <script type="application/json" id="lc-public-video-data">{ {% assign personal_public_count = 0 %}{% for personal_id in public_video_ids %}{% unless member_video_ids contains personal_id %}{% if personal_id.size == 11 %}{% if personal_public_count > 0 %},{% endif %}{% assign personal_video = site.data.videos | where: 'id', personal_id | first %}{{ personal_id | jsonify }}:{{ personal_video.title | jsonify | replace: '<', '\u003c' }}{% assign personal_public_count = personal_public_count | plus: 1 %}{% endif %}{% endunless %}{% endfor %} }</script>
-<script type="module" src="{{ '/script/video-personal.js' | relative_url }}?v=study-hub-1" data-lightcity-personal data-base="{{ '/' | relative_url }}"></script>
+<script type="module" src="{{ '/script/video-personal.js' | relative_url }}?v=shell-1" data-lightcity-personal data-base="{{ '/' | relative_url }}"></script>
 
-<script type="module" src="{{ '/script/study.js' | relative_url }}?v=study-hub-1" data-lightcity-study data-base="{{ '/' | relative_url }}" data-catalog="{{ '/study-catalog.json' | relative_url }}"></script>
+<script type="module" src="{{ '/script/study.js' | relative_url }}?v=shell-1" data-lightcity-study data-base="{{ '/' | relative_url }}" data-catalog="{{ '/study-catalog.json' | relative_url }}"></script>
 
 <script type="application/json" id="lc-public-video-replacements">{ {% assign replacement_comma = '' %}{% for replacement in site.data.video_replacements %}{% if replacement.visibility == 'public' %}{% if public_video_ids contains replacement.to %}{% unless member_video_ids contains replacement.to %}{{ replacement_comma }}{{ replacement.from | jsonify | replace: '<', '\u003c' }}:{{ replacement.to | jsonify | replace: '<', '\u003c' }}{% assign replacement_comma = ',' %}{% endunless %}{% endif %}{% endif %}{% endfor %} }</script>
 
 {% unless page.studio_app == true %}
-<link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=1">
-<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=1"></script>
+<link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=2">
+<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=2"></script>
+{% include site-shell-config.html %}
+<link rel="stylesheet" href="{{ '/style/site-shell.css' | relative_url }}?v=1">
+<script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=1"></script>
 {% endunless %}

@@ -26,3 +26,5 @@ export function combineResources({view,media,readings,videos,catalog,live=()=>fa
  for(const row of readings.rows(view)){const entry=entries.get(row.resourceId);if(!entry)continue;const point=readings.history(row.resourceId);result.push({type:'reading',id:row.resourceId,title:entry.title,kind:entry.kind,url:entry.url+(point&&!point.completed?'?continue=reading':''),updatedAt:row.updatedAt,point});}
  return result.sort((a,b)=>b.updatedAt-a.updatedAt);
 }
+
+export function isMemberAccount(api=globalThis.LightCityMembers){return Boolean(api?.user&&!api.user.isAnonymous&&!api.loading&&Array.isArray(api.library));}

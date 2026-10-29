@@ -28,3 +28,11 @@ node tools/test-watch-share.mjs
 ```
 
 Browser validation covers mobile/desktop, dark/light theme, cancelled account switching, clearing private data on account changes, outside/Escape dismissal, unread counts, playlist create/add/remove and responsive bounds.
+
+## Shared navigation update
+
+The responsive shell uses each page’s existing desktop and mobile link order. Desktop has a centered scoped search and an expandable icon rail; expanded sections show up to five recent resources. Mobile has ordered page tabs and a More panel, with search and notifications in the logo row. Google photos appear for approved church members; the mobile account button is in the bottom navigation.
+
+The shell moves the original search form rather than replacing its handlers. Article and summary category searches retain their parent scope. Audio search retains its existing library filter. Public visitors keep local saves/history, search and notifications, but see no account/sign-in or playlist controls. Private recent titles are cleared on account changes.
+
+This navigation update changes website files only. Commit/sync the website and refresh the app; no Firebase deployment is required. Test with `node tools/test-site-shell.mjs` as well as the existing search and personal-library checks.
