@@ -246,6 +246,7 @@ api.updateReadingActivity = async data => { await api.ready; return call('update
 api.getVideoReplacements=async()=>{await api.ready;return call('getVideoReplacements',{});};
 
 api.getAdminDashboard=async()=>{await api.ready;return call('getChurchAdminDashboard',{accountUid:api.user?.uid});};
+api.getAdminUsers=async(data={})=>{await api.ready;return call('getChurchAdminUsers',{...(data.pageToken?{pageToken:data.pageToken}:{}),accountUid:api.user?.uid});};
 api.signOut=async()=>{
  await api.ready;if(!memberAuth||!sdk)return;
  ++version;api.user=null;publish(null);

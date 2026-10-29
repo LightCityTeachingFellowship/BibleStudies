@@ -82,3 +82,13 @@ credentials, signed audio URLs or access grants.
 Commit/sync these changes; no Firebase or Cloudflare deployment is needed. Copy a
 new link from Studio or Watch after publishing to test the new preview addresses.
 Checks: node tools/test-share-previews.mjs and node tools/test-watch-share.mjs.
+
+## People who have signed in
+
+Open the “People who have signed in” section inside the authorized Studio dashboard. It shows real Firebase sign-in accounts for this project (shared by the LightCity apps), excluding anonymous identities used for notification devices. Names, email addresses, email verification, church membership, disabled-account status, account creation time and last sign-in are available. Last sign-in is authentication history, not current online presence. Existing accounts are included without signing in again.
+
+The new getChurchAdminUsers callable validates the enabled, verified administrator and configured email allowlist before reading Auth users or membership data. It returns only the fields used by the directory, never password hashes, salts, tokens or custom claims. Firestore public/member rules are unchanged. No contact list is written into website build output or localStorage.
+
+The section loads on opening, follows all account pages, sorts newest sign-ins first, searches the complete loaded list and displays 50 matching rows at a time. Refresh people reloads the list; Show more people expands the display. Private rows are cleared on sign-out/account change and stale responses are ignored. The directory is read-only.
+
+Run deploy-admin.ps1 to deploy both getChurchAdminDashboard and getChurchAdminUsers, then commit/sync the frontend changes. No new key setup or Cloudflare deployment is required. Checks: node tools/test-admin-users.mjs and node tools/test-admin-users-ui.mjs, plus the existing admin checks.

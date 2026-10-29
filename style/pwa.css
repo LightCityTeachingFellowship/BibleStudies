@@ -120,7 +120,7 @@
 .lc-live-badge {position:absolute; right:10px; bottom:10px; z-index:2; display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:5px; background:#e60032; color:#fff!important; font:600 14px/1.2 'Outfit','Segoe UI',sans-serif; letter-spacing:.2px; text-shadow:none; pointer-events:none; box-shadow:0 1px 4px #0003;}
 .lc-live-badge[hidden] {display:none!important;}
 /* Keep the homepage play icon clear of the bottom-right live label. */
-.home-video-art:has(> .lc-live-badge:not([hidden])) .home-play {right:50%; bottom:50%; transform:translate(50%,50%);}
+/* .home-video-art:has(> .lc-live-badge:not([hidden])) .home-play {right:50%; bottom:50%; transform:translate(50%,50%);} */
 
 /* Personal video library: compact controls, private saved/history lists. */
 .lc-personal-library-link {display:inline-block; font-size:15px!important; margin:8px 0 16px; text-decoration:underline;}
@@ -253,4 +253,4 @@ body.app-home .home-bottom-nav {grid-template-columns:repeat(5,minmax(0,1fr));}
 .app-home .home-featured:has(.lc-library-menu[open]){position:relative;z-index:30}/* Completed recording durations come from the saved audio catalogue. */
 .lc-duration-badge{position:absolute;right:8px;bottom:8px;z-index:3;display:block;padding:3px 6px;border-radius:4px;background:rgba(0,0,0,.84)!important;color:#fff!important;font:600 12px/1.2 'Outfit','Segoe UI',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.15px;pointer-events:none;text-shadow:none;white-space:nowrap}
 .lc-duration-badge[hidden],.lc-audio-mode>.lc-duration-badge,.iframe-container:has(iframe)>.lc-duration-badge,.iframe-container:has(lite-youtube.lyt-activated)>.lc-duration-badge{display:none!important}
-.home-video-art>.lc-duration-badge{right:auto;left:10px;bottom:10px}
+.home-video-art>.lc-duration-badge{right:10px;left:auto;bottom:10px}

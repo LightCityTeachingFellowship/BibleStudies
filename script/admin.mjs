@@ -1,3 +1,4 @@
+import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=private-tests-1';
 import {setupStudioPublisher} from './studio-publish.mjs?v=private-tests-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=previews-1';
@@ -5,8 +6,9 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
  let rows=[],tab='All',limit=36,generation=0,owner=null,checks={};
+ const accounts=setupAdminUsers({document,api});
  const status=message=>{byId('admin-status').textContent=message;};
- function clear(){rows=[];owner=null;byId('admin-list').replaceChildren();byId('admin-totals').replaceChildren();byId('admin-content').hidden=true;byId('admin-gate').hidden=false;byId('admin-quick-result').hidden=true;byId('admin-quick-link').value='';byId('admin-quick').value='';}
+ function clear(){accounts?.clear();rows=[];owner=null;byId('admin-list').replaceChildren();byId('admin-totals').replaceChildren();byId('admin-content').hidden=true;byId('admin-gate').hidden=false;byId('admin-quick-result').hidden=true;byId('admin-quick-link').value='';byId('admin-quick').value='';}
  async function copy(url,container){
   try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(url);if(owner===api()?.user?.uid)status('LightCity link copied.');}
   catch{if(owner!==api()?.user?.uid)return;let input=container.querySelector('.studio-copy-input');if(!input){input=node('input',null,'studio-copy-input');input.readOnly=true;input.setAttribute('aria-label','LightCity link to copy');container.appendChild(input);}input.value=url;input.focus();input.select();status('Copy the selected LightCity link.');}
@@ -45,7 +47,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(!client?.enabled){status('Sign-in is not configured yet.');return;}
    if(!client.user||client.user.isAnonymous){status('Sign in to open your admin dashboard.');return;}
    const uid=client.user.uid;const data=await client.getAdminDashboard();if(current!==generation||api()?.user?.uid!==uid)return;
-   owner=uid;checks=data.checks||{};rows=dashboardRows(data);byId('admin-gate').hidden=true;byId('admin-content').hidden=false;byId('admin-refresh').hidden=false;
+   owner=uid;void accounts?.load();checks=data.checks||{};rows=dashboardRows(data);byId('admin-gate').hidden=true;byId('admin-content').hidden=false;byId('admin-refresh').hidden=false;
    const totals=byId('admin-totals');for(const [label,count]of [['Recordings',data.videos.length],['Audio available',data.videos.filter(v=>v.audio&&v.published).length],['Articles',data.readings.filter(r=>r.kind==='Article').length],['Summaries',data.readings.filter(r=>r.kind==='Summary').length]]){const box=node('div',null,'studio-total');box.appendChild(node('strong',String(count)));box.appendChild(node('span',label));totals.appendChild(box);}
    const warnings=Object.entries(checks).filter(([,ok])=>!ok).map(([name])=>name);
    status(warnings.length?'Some status checks are unavailable: '+warnings.join(', ')+'. Refresh to retry.':'Ready to share. Last checked '+new Date(data.updatedAt).toLocaleTimeString());render();

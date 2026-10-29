@@ -1,3 +1,4 @@
+import {createAdminUsers} from './admin-users.mjs';
 import {publishAudioReadyVideo} from './helper-publication.mjs';
 import {createStreamReports,notifyStreamReport} from './stream-reports.mjs';
 import {createStudioTests} from './studio-tests.mjs';
@@ -68,6 +69,7 @@ const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcitytea
 const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live,
  privateReadings:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications });
 export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey] }, adminDashboard);
+export const getChurchAdminUsers=onCall(options,createAdminUsers({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
 const studioGitHubToken=defineSecret('STUDIO_GITHUB_TOKEN');
 const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
 const legacyStudioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});

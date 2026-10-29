@@ -42,7 +42,9 @@ permalink: /Home/
     <div class="home-featured-group">
     <div class="home-featured" data-video-id="{{ latest_video | escape }}" data-watch-url="{{ '/Watch/' | relative_url }}?v={{ latest_video | uri_escape }}">
       <span class="lc-member-loading" role="status" aria-live="polite"><span class="lc-member-load-normal">Loading your library…</span><span class="lc-member-load-slow">Still loading your library. Check your connection or reload the page.</span></span>
-      <div class="home-video-art"><a class="home-video-link" data-featured-watch href="{{ '/Watch/' | relative_url }}?v={{ latest_video | uri_escape }}"><img class="home-video-image" src="https://i.ytimg.com/vi/{{ latest_video | escape }}/maxresdefault.jpg" alt="LightCity’s latest video" fetchpriority="high"><span class="home-play" aria-hidden="true">▶</span></a></div>
+      <div class="home-video-art"><a class="home-video-link" data-featured-watch href="{{ '/Watch/' | relative_url }}?v={{ latest_video | uri_escape }}"><img class="home-video-image" src="https://i.ytimg.com/vi/{{ latest_video | escape }}/maxresdefault.jpg" alt="LightCity’s latest video" fetchpriority="high">
+        <!-- <span class="home-play" aria-hidden="true">▶</span> -->
+      </a></div>
       <div class="home-featured-copy"><span class="home-eyebrow">LATEST VIDEO</span><a class="home-video-title" data-featured-watch href="{{ '/Watch/' | relative_url }}?v={{ latest_video | uri_escape }}">LightCity’s latest video title</a><p>Watch the latest video</p><a class="home-watch-button" data-featured-watch href="{{ '/Watch/' | relative_url }}?v={{ latest_video | uri_escape }}">Watch now <span aria-hidden="true">↗</span></a></div>
     </div>
     </div>
