@@ -1,3 +1,4 @@
+import {publishAudioReadyVideo} from './helper-publication.mjs';
 import {createStreamReports,notifyStreamReport} from './stream-reports.mjs';
 import {createStudioTests} from './studio-tests.mjs';
 import {syncStudioBackup} from './studio-removal.mjs';
@@ -89,9 +90,7 @@ export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubT
   }
   if(req.body?.publishReady){
    const id=req.body.publishReady;if(!/^[\w-]{11}$/.test(id)){res.status(400).json({error:'Invalid video ID'});return;}
-   const current=await getFirestore().doc('churchVideoLibrary/current').get();
-   const published=current.data()?.videos?.some(v=>v.id===id)||await studioPublishing.promote(id);
-   res.json({requested:true,published,message:published?'Video and audio are available.':'Waiting for matching audio.'});
+   res.json(await publishAudioReadyVideo(id,{db:getFirestore(),studio:studioPublishing,recordings:()=>audio.catalog.registered(),kick:()=>studioGitHub.kick()}));
    return;
   }
   const [state,requests]=await Promise.all([studioPublishing.listState(),getFirestore().collection('churchStudioPublications').orderBy('requestedAt','desc').limit(1).get()]);
