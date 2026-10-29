@@ -1,7 +1,7 @@
 import {personal,visibleVideos,timeLabel} from './video-personal.js?v=shell-1';
 import {study} from './study.js?v=shell-1';
 import {isLive} from './live-status.mjs';
-import {hub,avatar} from './account-hub.mjs?v=2';
+import {hub,avatar} from './account-hub.mjs?v=3';
 import {combineResources,element as el,icon,safeUrl} from './hub-core.mjs';
 const root=document.querySelector('[data-study-hub]');
 let view='overview',filter='all',limit=24,scheduled=false;

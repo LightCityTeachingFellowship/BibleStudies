@@ -49,9 +49,9 @@ setTimeout(() => {
 <script type="application/json" id="lc-public-video-replacements">{ {% assign replacement_comma = '' %}{% for replacement in site.data.video_replacements %}{% if replacement.visibility == 'public' %}{% if public_video_ids contains replacement.to %}{% unless member_video_ids contains replacement.to %}{{ replacement_comma }}{{ replacement.from | jsonify | replace: '<', '\u003c' }}:{{ replacement.to | jsonify | replace: '<', '\u003c' }}{% assign replacement_comma = ',' %}{% endunless %}{% endif %}{% endif %}{% endfor %} }</script>
 
 {% unless page.studio_app == true %}
-<link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=2">
-<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=2"></script>
+<link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=3">
+<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=3"></script>
 {% include site-shell-config.html %}
-<link rel="stylesheet" href="{{ '/style/site-shell.css' | relative_url }}?v=1">
-<script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=1"></script>
+<link rel="stylesheet" href="{{ '/style/site-shell.css' | relative_url }}?v=2">
+<script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=2"></script>
 {% endunless %}

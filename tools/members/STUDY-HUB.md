@@ -31,8 +31,12 @@ Browser validation covers mobile/desktop, dark/light theme, cancelled account sw
 
 ## Shared navigation update
 
-The responsive shell uses each page’s existing desktop and mobile link order. Desktop has a centered scoped search and an expandable icon rail; expanded sections show up to five recent resources. Mobile has ordered page tabs and a More panel, with search and notifications in the logo row. Google photos appear for approved church members; the mobile account button is in the bottom navigation.
+The responsive shell uses each page’s existing desktop and mobile link order. Desktop has a centered scoped search and an expandable icon rail. Recent resources appear in a floating popup on section hover or keyboard focus, with up to five items. Mobile has ordered page tabs and a More panel, with search and notifications in the logo row. Google photos appear for approved church members; the mobile account button is in the bottom navigation.
+
+The homepage retains its original logo row, page width and smaller search. It has no sidebar. Desktop bottom navigation is present only on the homepage; mobile keeps a fixed icon-only bottom bar with accessible labels and a full-size account photo. Public visitors have a My library shortcut beside the header tools and in the mobile bottom bar. Watch has a hidden desktop drawer that overlays the player without moving or remounting it; mobile Watch has no site header and leads with the player. Appearance is also available in Settings.
 
 The shell moves the original search form rather than replacing its handlers. Article and summary category searches retain their parent scope. Audio search retains its existing library filter. Public visitors keep local saves/history, search and notifications, but see no account/sign-in or playlist controls. Private recent titles are cleared on account changes.
 
 This navigation update changes website files only. Commit/sync the website and refresh the app; no Firebase deployment is required. Test with `node tools/test-site-shell.mjs` as well as the existing search and personal-library checks.
+
+Navigation browser validation covers the actual homepage and Watch templates in portrait/landscape, other page scopes, public/member UI, fixed bottom bounds before/after scrolling, hover popup entry and dismissal, theme switching from Settings, account changes, and preserving the same player node when toggling the desktop drawer.
