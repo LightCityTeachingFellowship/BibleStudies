@@ -25,8 +25,22 @@ try {
     $env:LIGHTCITY_PYTHON = $config.pythonPath
     $arguments = @((Join-Path $PSScriptRoot 'automatic.mjs'), 'run')
     if ($Once) { $arguments += '--once' }
-    & $config.nodePath @arguments
-    if ($LASTEXITCODE -ne 0) { throw 'Recorded-audio helper stopped. Review setup and queue status.' }
+    do {
+        & $config.nodePath @arguments
+        $workerExit = $LASTEXITCODE
+        if ($workerExit -eq 0) { break }
+        if ($Once) { throw 'Recorded-audio helper stopped. Review setup and queue status.' }
+        # Keep a Windows login worker alive after a temporary local/storage failure.
+        # Existing per-job receipts and the worker lock prevent duplicate uploads.
+        $notice = 'Recorded-audio helper stopped unexpectedly. Retrying in 30 seconds; queue progress is preserved.'
+        Write-Warning $notice
+        try {
+            $status = @{phase='restarting'; updatedAt=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds(); sourceMode=$(if ($localMode) {'local'} else {'youtube'}); message=$notice}
+            $status | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'runtime-status.json') -Encoding utf8
+            Add-Content -LiteralPath (Join-Path $work 'supervisor.log') -Value ([DateTimeOffset]::UtcNow.ToString('o') + ' Worker exit ' + $workerExit + '; retry in 30 seconds.')
+        } catch { Write-Warning 'Recovery status could not be saved. The worker will still retry.' }
+        Start-Sleep -Seconds 30
+    } while (-not $Once)
 } finally {
     foreach ($name in $names) { [Environment]::SetEnvironmentVariable($name, $previous[$name], 'Process') }
 }
