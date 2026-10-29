@@ -151,6 +151,7 @@
       user = authentication.currentUser || (await auth.signInAnonymously(authentication)).user;
       const messaging = msg.getMessaging(instance);
       msg.onMessage(messaging, payload => {
+        window.dispatchEvent(new Event('lightcity-notification-arrived'));
         if (!active || Notification.permission !== 'granted') return;
         // One service worker coordinates displays across all open LightCity tabs.
         void ready.then(async registration => {
@@ -207,6 +208,11 @@
     finally { disable.disabled = false; }
   };
   render();
+  globalThis.LightCityNotificationSettings={
+    getState:()=>({supported:Boolean(canNotify),enabled:active,permission:typeof Notification==='undefined'?'unsupported':Notification.permission}),
+    enable:()=>notify.onclick(),disable:()=>disable.onclick()
+  };
+  window.dispatchEvent(new Event('lightcity-notification-settings-ready'));
   // Existing subscribers still refresh their token and restore their device record.
   if (active) subscribe().catch(console.error);
 })();

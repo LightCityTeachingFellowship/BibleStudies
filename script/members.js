@@ -259,3 +259,8 @@ api.manageStudioTest=async action=>{await api.ready;const device=deviceAuth?.cur
 api.reportStreamIssue=async data=>{await api.ready;if(!deviceAuth.currentUser)await sdk.auth.signInAnonymously(deviceAuth);return call('reportChurchStreamIssue',{...data,deviceToken:await deviceAuth.currentUser.getIdToken()});};
 api.getStreamReports=async()=>{await api.ready;return call('getChurchStreamReports',{accountUid:api.user?.uid});};
 api.resolveStreamReport=async reportId=>{await api.ready;return call('resolveChurchStreamReport',{reportId,accountUid:api.user?.uid});};
+api.getStudyCollections=async()=>{const accountUid=api.user?.uid;await api.ready;return call('getMyStudyCollections',{accountUid});};
+api.updateStudyCollection=async data=>{const accountUid=api.user?.uid;await api.ready;return call('updateMyStudyCollections',{...data,accountUid});};
+async function inboxIdentity(){const owner=api.user?.uid;await api.ready;if(owner!==api.user?.uid)throw Error('Your account changed. Please try again.');if(api.user&&!api.user.isAnonymous)return {accountUid:api.user.uid};if(!deviceAuth.currentUser)await sdk.auth.signInAnonymously(deviceAuth);return {deviceToken:await deviceAuth.currentUser.getIdToken()};}
+api.getNotificationInbox=async()=>call('getMyNotificationInbox',await inboxIdentity());
+api.updateNotificationInbox=async data=>call('updateMyNotificationInbox',{...data,...await inboxIdentity()});

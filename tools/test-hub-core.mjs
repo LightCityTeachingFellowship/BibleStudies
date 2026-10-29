@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';
+import {combineResources,safeUrl} from '../script/hub-core.mjs';
+globalThis.location={origin:'https://lightcityfellowship.com'};
+const source={media:{rows:()=>[{videoId:'abcdefghijk',updatedAt:300},{videoId:'PRIVATE0001',title:'Private',updatedAt:900}],history:()=>({seconds:60,duration:120,mode:'audio'})},readings:{rows:()=>[{resourceId:'a',updatedAt:400},{resourceId:'private',updatedAt:800}],history:()=>({section:2,fraction:.5})},videos:new Map([['abcdefghijk','Public video']]),catalog:[{id:'a',url:'/Article/',title:'Public article',kind:'Article'}],view:'history'};
+const rows=combineResources(source);assert.equal(rows.length,2);assert.equal(rows[0].title,'Public article');assert.equal(rows[1].kind,'Audio');assert.match(rows[1].url,/mode=audio/);assert.match(rows[0].url,/continue=reading/);assert.ok(!JSON.stringify(rows).includes('Private'));assert.equal(safeUrl('https://outside.example/test'),null);assert.equal(safeUrl('javascript:alert(1)'),null);assert.equal(safeUrl('/Article/'),'https://lightcityfellowship.com/Article/');
+console.log('PASS: mixed resource order, audio/reading continuation, private-resource filtering and safe navigation.');

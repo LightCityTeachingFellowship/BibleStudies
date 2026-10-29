@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {createPersonalHub} from './members/functions/personal-hub.mjs';
+const hash=s=>createHash('sha256').update(s).digest('hex');
+class Fail extends Error{constructor(code,message){super(message);this.code=code;}}
+const data=new Map(),reads=[];let clock=1000,user={emailVerified:true,providerData:[{}]};
+const snapshot=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
+const ref=path=>({path,get:async()=>{reads.push(path);return snapshot(path);},set:async value=>data.set(path,value)});
+function query(path,field=null,cap=Infinity){return {doc:id=>ref(path+'/'+id),orderBy:key=>query(path,key,cap),limit:n=>query(path,field,n),get:async()=>{reads.push(path);const rows=[...data].filter(([key,row])=>key.startsWith(path+'/')&&key.slice(path.length+1).indexOf('/')<0&&(!field||row[field]!==undefined)).sort((a,b)=>(b[1][field]||0)-(a[1][field]||0)).slice(0,cap).map(([key])=>snapshot(key));return {docs:rows,size:rows.length};}};}
+const db={doc:ref,collection:query,runTransaction:async fn=>fn({get:async r=>snapshot(r.path),set:(r,v)=>data.set(r.path,v),delete:r=>data.delete(r.path)})};
+const auth={getUser:async()=>user,verifyIdToken:async token=>{if(token==='device-valid')return {uid:'device',firebase:{sign_in_provider:'anonymous'}};if(token==='not-anonymous')return {uid:'alice',firebase:{sign_in_provider:'google.com'}};throw Error();}};
+data.set('churchMembers/alice',{active:true});
+const pub='abcdefghijk',privateId='ABCDEFGHIJK',old='oldvideo001',readId=hash('/Article/'),privateReadId=hash('/Private/');
+data.set('churchVideoLibrary/current',{videos:[{id:pub,title:'Public <script>',visibility:'public',replaces:[old],replacementVisibility:{[old]:'members'}},{id:privateId,title:'Private video',visibility:'members'}]});
+const handler=createPersonalHub({db,auth,fail:Fail,now:()=>clock,catalog:async()=>new Map([[readId,{title:'Public article',url:'/Article/',kind:'Article'}]]),privateCatalog:[{title:'Private summary',url:'/Private/',kind:'Summary'}]});
+const request=(action={})=>({auth:{uid:'alice'},data:{accountUid:'alice',...action}});
+await assert.rejects(handler.collections({data:{accountUid:'alice'}}),e=>e.code==='unauthenticated');assert.equal(reads.length,0);
+await assert.rejects(handler.collections({auth:{uid:'bob'},data:{accountUid:'alice'}}),e=>e.code==='permission-denied');assert.equal(reads.length,0);
+for(const patch of [{disabled:true},{emailVerified:false},{providerData:[]}]){const before=user;user={...user,...patch};await assert.rejects(handler.collections(request()),e=>e.code==='permission-denied');user=before;}
+const p=await handler.updateCollection(request({action:'create',name:'Family study'}));assert.match(p.id,/^[a-f0-9]{32}$/);
+assert.ok(data.has('churchVideoActivity/alice/playlists/'+p.id));
+for(const item of [{type:'media',id:old,mode:'audio'},{type:'media',id:privateId,mode:'video'},{type:'reading',id:readId},{type:'reading',id:privateReadId}])await handler.updateCollection(request({action:'add',playlistId:p.id,item}));
+await handler.updateCollection(request({action:'add',playlistId:p.id,item:{type:'media',id:pub,mode:'audio'}}));
+let result=await handler.collections(request());assert.equal(result.playlists[0].items.length,4);assert.equal(result.playlists[0].items[0].id,pub);assert.equal(result.playlists[0].items[0].url,'/Watch/?v='+pub+'&mode=audio');assert.equal(result.playlists[0].items[0].title,'Public <script>');
+await assert.rejects(handler.updateCollection(request({action:'add',playlistId:p.id,item:{type:'media',id:pub,mode:'invalid'}})),e=>e.code==='invalid-argument');
+await assert.rejects(handler.updateCollection(request({action:'rename',playlistId:p.id,name:' '})),e=>e.code==='invalid-argument');
+const victim='0'.repeat(32);data.set('churchVideoActivity/bob/playlists/'+victim,{name:'Bob',items:[]});await assert.rejects(handler.updateCollection(request({action:'delete',playlistId:victim})),e=>e.code==='not-found');assert.ok(data.has('churchVideoActivity/bob/playlists/'+victim));
+data.set('webPushSent/'+hash('video:'+pub),{sentAt:new Date(500)});data.set('webPushSent/'+hash('video:'+privateId),{sentAt:new Date(700)});data.set('webPushSent/'+hash('video:'+old),{sentAt:new Date(600)});data.set('webPushSent/'+hash('/Article/'),{baseline:true});data.set('webPushSent/'+hash('/Private/'),{silent:true,sentAt:new Date(800)});
+result=await handler.notifications(request());assert.equal(result.items.length,3);assert.equal(result.unread,0,'first activation does not claim historical OS notifications are unread');
+clock=100000;data.set('webPushSent/'+hash('/Article/'),{sentAt:new Date(99500)});result=await handler.notifications(request());assert.equal(result.unread,1);assert.equal(result.items.find(i=>i.id===readId).read,false);
+await handler.updateNotifications(request({action:'read',notificationId:hash('/Article/')}));assert.equal((await handler.notifications(request())).unread,0);
+clock=200000;data.set('webPushSent/'+hash('video:'+pub),{sentAt:new Date(198000)});assert.equal((await handler.notifications(request())).unread,1);await handler.updateNotifications(request({action:'readAll'}));assert.equal((await handler.notifications(request())).unread,0);assert.ok(!data.has('churchVideoActivity/bob/settings/notifications'));
+data.set('churchMembers/alice',{active:false});result=await handler.collections(request());assert.equal(result.playlists[0].items.length,2,'revoked membership hides private playlist entries');assert.equal(result.playlists[0].unavailableCount,2);
+result=await handler.notifications(request());assert.ok(result.items.every(i=>i.id!==privateId));assert.ok(!result.items.some(i=>i.notificationId===hash('video:'+old)),'private original notification cannot leak into a public replacement');
+await assert.rejects(handler.updateCollection(request({action:'add',playlistId:p.id,item:{type:'reading',id:privateReadId}})),e=>e.code==='not-found');
+for(const token of [undefined,'invalid','not-anonymous'])await assert.rejects(handler.notifications({data:{deviceToken:token}}),e=>e.code==='unauthenticated');
+result=await handler.notifications({auth:{uid:'device',token:{firebase:{sign_in_provider:'anonymous'}}},data:{deviceToken:'device-valid'}});assert.ok(result.items.every(i=>i.id!==privateId));assert.ok(data.has('churchVideoActivity/device/settings/notifications'));
+data.get('churchVideoLibrary/current').videos.push({id:pub,visibility:'members'});result=await handler.notifications({data:{deviceToken:'device-valid'}});assert.ok(!result.items.some(i=>i.id===pub),'duplicate private visibility wins');
+await handler.updateCollection(request({action:'rename',playlistId:p.id,name:'Renamed'}));assert.equal(data.get('churchVideoActivity/alice/playlists/'+p.id).name,'Renamed');
+await handler.updateCollection(request({action:'remove',playlistId:p.id,item:{type:'media',id:pub,mode:'audio'}}));assert.equal(data.get('churchVideoActivity/alice/playlists/'+p.id).items.length,3);
+const stored=data.get('churchVideoActivity/alice/playlists/'+p.id);stored.items=[{type:'media',id:old,mode:'audio'}];data.get('churchVideoLibrary/current').videos=data.get('churchVideoLibrary/current').videos.filter(v=>v.title);await handler.updateCollection(request({action:'remove',playlistId:p.id,item:{type:'media',id:pub,mode:'audio'}}));assert.equal(data.get('churchVideoActivity/alice/playlists/'+p.id).items.length,0,'replacement item can be removed even when stored under its old ID');
+await handler.updateCollection(request({action:'delete',playlistId:p.id}));assert.ok(!data.has('churchVideoActivity/alice/playlists/'+p.id));
+console.log('PASS: private mixed playlists, replacement resolution, own-account isolation, membership revocation, guest verification, announcement read state and no private notification leakage.');

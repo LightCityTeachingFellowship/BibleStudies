@@ -21,11 +21,26 @@ title: My study library
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=search-dismiss-1"></script>
 <script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
+<script type="module" src="{{ '/script/study-hub.mjs' | relative_url }}?v=1"></script>
 </head>
 <body class="fonts app-home site-browse">
   {% include homeHeader-pages.html %}
   {% include site-search.html scope='All' %}
   <main class="leftRight-space-16 lc-personal-main">
+    <div class="lc-study-hub" data-study-hub>
+      <section class="lc-hub-profile" data-hub-profile aria-label="Your account"><h1>My study library</h1></section>
+      <nav class="lc-hub-tabs" aria-label="Your library">
+        <button type="button" data-hub-view="overview" aria-pressed="true">Overview</button>
+        <button type="button" data-hub-view="saved" aria-pressed="false">Saved</button>
+        <button type="button" data-hub-view="history" aria-pressed="false">History</button>
+        <button type="button" data-hub-view="playlists" aria-pressed="false">Playlists</button>
+      </nav>
+      <p data-hub-sync role="status" class="lc-hub-small">Loading your library…</p>
+      <button type="button" class="lc-hub-button" data-hub-import hidden>Copy device saves &amp; history to account</button>
+      <p data-hub-playlist-status role="status" class="lc-hub-small"></p>
+      <div data-hub-content></div>
+    </div>
+    <div hidden aria-hidden="true" data-legacy-library>
     <h1>My study library</h1><p>Saved resources and your reading, watching and listening history.</p><div class="lc-study-filters" role="group" aria-label="Content type"><button type="button" data-study-filter="all" aria-pressed="true">All</button><button type="button" data-study-filter="video" aria-pressed="false">Videos &amp; audio</button><button type="button" data-study-filter="Article" aria-pressed="false">Articles</button><button type="button" data-study-filter="Summary" aria-pressed="false">Summaries</button></div>
     <p id="my-video-status" role="status">Loading your study library…</p>
     <div class="lc-personal-tabs" role="tablist" aria-label="Saved and history">
@@ -37,6 +52,7 @@ title: My study library
     <div id="my-video-list" class="lc-personal-grid" role="tabpanel" aria-label="Your saved videos and history"></div>
     <button id="load-more-videos" class="lc-mode-button" type="button" hidden>Load more</button>
     <section data-study-library><h2>Reading</h2><p data-study-library-status role="status"></p><div data-study-library-list class="lc-personal-grid"></div></section>
+    </div>
     <noscript>Enable JavaScript to use saved videos and history.</noscript>
   </main>
       {% include theme-toggle.html %}

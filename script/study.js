@@ -1,7 +1,7 @@
 import {isLive} from './live-status.mjs';
 import {createStudyStore} from './study-store.mjs';
 import {resourcePath,resourceId,relatedResources,readingPosition} from './study-core.mjs?v=related-date-1';
-import {personal,visibleVideos,timeLabel} from './video-personal.js?v=home-menu-2';
+import {personal,visibleVideos,timeLabel} from './video-personal.js?v=study-hub-1';
 const settings=document.querySelector('script[data-lightcity-study]');
 const base=settings?.dataset.base||'/', origin=location.origin;
 const $=s=>document.querySelector(s), all=s=>[...document.querySelectorAll(s)];
@@ -22,7 +22,7 @@ async function loadCatalog(){if(loading)return loading;const ticket=++catalogVer
  if(ticket!==catalogVersion||owner!==study.scope)return catalog;
  catalog=new Map(entries.filter(Boolean).map(e=>[e.id,e]));byPath=new Map([...catalog.values()].map(e=>[e.path,e]));
  const toolbar=$('[data-study-current]');current=toolbar?byPath.get(resourcePath(toolbar.dataset.studyUrl,origin)):null;
- if(current)prepareReading();render();return catalog;
+ if(current)prepareReading();render();window.dispatchEvent(new Event('lightcity-study-catalog'));return catalog;
  })();try{return await loading;}catch(e){loading=null;syncMessage=e.message;render();throw e;}}
 async function flush(){if(flushing||!study.signedIn||!study.pending().length||!globalThis.LightCityMembers?.updateReadingActivity)return;flushing=true;const owner=study.scope;let ok=false;
  try{for(const [k,op]of study.pending()){if(study.scope!==owner)break;let result;do{result=await LightCityMembers.updateReadingActivity({...op,accountUid:owner.slice(5)});}while(op.action==='clearHistory'&&result.more&&study.scope===owner);if(study.scope===owner)study.acknowledge(k,op);}if(study.scope===owner){syncMessage='Your study library syncs with your account.';ok=true;}}
@@ -46,7 +46,7 @@ function card(entry,row,savedView=false){const item=node('article','', 'lc-perso
  const actions=node('div','', 'lc-personal-row');const open=node('a',row&&!row.completed&&(row.section>0||row.fraction>0)?'Continue reading':'Read','lc-personal-remove');open.href=readingUrl(entry,row);actions.appendChild(open);
  if(row?.section>0){const start=node('a','Start over','lc-personal-remove');start.href=readingUrl(entry,null);actions.appendChild(start);}
  if(!savedView){const remove=node('button','Remove from history','lc-personal-remove');remove.type='button';remove.onclick=()=>{study.removeHistory(entry.id);void flush();};actions.appendChild(remove);}item.appendChild(actions);return item;}
-function renderLibrary(){const list=$('[data-study-library-list]');if(!list)return;const rows=study.rows(view).filter(r=>catalog.has(r.resourceId)).filter(r=>['all',catalog.get(r.resourceId).kind].includes(filter));list.replaceChildren(...rows.map(r=>card(catalog.get(r.resourceId),study.history(r.resourceId),view==='saved')));
+function renderLibrary(){const list=$('[data-study-library-list]');if(!list)return;const rows=study.rows(view).filter(r=>catalog.has(r.resourceId)).filter(r=>['all',catalog.get(r.resourceId).kind].includes(filter));list.replaceChildren(...(document.querySelector('[data-study-hub]')?[]:rows.map(r=>card(catalog.get(r.resourceId),study.history(r.resourceId),view==='saved'))));
  const copy=document.getElementById('import-device-videos');if(copy&&study.signedIn){const device=createStudyStore({storage});if(['saved','history'].some(v=>device.rows(v).some(r=>catalog.has(r.resourceId))))copy.hidden=false;}
  const section=$('[data-study-library]');section.hidden=filter==='video';$('[data-study-library-status]').textContent=syncMessage+(rows.length?'':' '+(view==='saved'?'No saved readings here yet.':'No reading history here yet.'));
  const videos=document.getElementById('my-video-list'),videoEmpty=document.getElementById('my-video-empty'),more=document.getElementById('load-more-videos');if(videos)videos.hidden=!['all','video'].includes(filter);if(more&&!['all','video'].includes(filter))more.hidden=true;if(videoEmpty&&(rows.length||!['all','video'].includes(filter)))videoEmpty.hidden=true;
@@ -59,7 +59,7 @@ function render(){if(!active)return;const toolbarNode=$('[data-study-current]');
  renderLibrary();renderContinue();renderRelated();}
 let sections=[];
 function readingSections(){const body=$('[data-study-body]');if(!body)return [];const nodes=[...body.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,blockquote')].filter(n=>n.textContent.trim());return nodes.length?nodes:[body];}
-function prepareReading(){const body=$('[data-study-body]');if(!body)return;sections=readingSections();
+function prepareReading(){const playlist=$('[data-study-playlist]');if(playlist){playlist.disabled=false;playlist.onclick=()=>window.dispatchEvent(new CustomEvent('lightcity-add-to-playlist',{detail:{type:'reading',id:current.id}}));}const body=$('[data-study-body]');if(!body)return;sections=readingSections();
  const finish=$('[data-study-finish]');finish.disabled=false;finish.onclick=()=>{if(globalThis.LightCityMembers?.loading)return;const row=study.history(current.id),completed=!row?.completed;study.progress({resourceId:current.id,section:completed?Math.max(0,sections.length-1):0,fraction:completed?1:0,completed});readingOwner=study.scope;interacted=false;void flush();};
  if(new URLSearchParams(location.search).get('continue')==='reading')void resumeAfterSync();}
 async function resumeAfterSync(){await ready;const row=current&&study.history(current.id);if(row&&!row.completed&&(row.section>0||row.fraction>0))requestAnimationFrame(()=>resumeReading(row));}
@@ -67,6 +67,7 @@ function resumeReading(row){sections=readingSections();const body=$('[data-study
 function saveReading(force=false){if(!current||!interacted||readingOwner!==study.scope||(!force&&document.visibilityState!=='visible')||(!force&&Date.now()-lastWrite<5000))return;lastWrite=Date.now();sections=readingSections();const position=readingPosition(sections.map(n=>({top:n.getClientRects().length?n.getBoundingClientRect().top:Infinity})),160),index=position.section,fraction=position.fraction;const bottom=$('[data-study-body]').getBoundingClientRect().bottom;const completed=Date.now()-started>=10000&&bottom<=innerHeight&&fraction>.95;study.progress({resourceId:current.id,section:index,fraction,completed});}
 function interact(e){if(!e.isTrusted||!current||globalThis.LightCityMembers?.loading)return;readingOwner=study.scope;interacted=true;saveReading();}
 function readingScroll(e){const body=$('[data-study-body]');if(!body)return;const target=e.target;if(target!==document&&target!==window&&target!==document.scrollingElement&&target!==document.documentElement&&target!==document.body&&target!==body&&!body.contains?.(target))return;interact(e);}
+study.catalog=()=>[...catalog.values()];study.flush=flush;globalThis.LightCityStudy=study;
 let ready=Promise.resolve(),initialized=false;
 function begin(){initialized=true;ready=refresh().catch(()=>{});}
 function start(){if(!settings)return;active=true;window.addEventListener('lc-study-changed',schedule);window.addEventListener('lightcity-live-status',schedule);window.addEventListener('lightcity-video-activity',schedule);window.addEventListener('lightcity-members-changed',()=>{readingOwner=null;interacted=false;mediaTitles.clear();catalogVersion++;loading=null;catalog=new Map([...catalog].filter(([,r])=>r.visibility!=='members'));byPath=new Map([...catalog.values()].map(r=>[r.path,r]));current=null;for(const button of all('[data-study-save], [data-study-finish]'))button.disabled=true;const resume=$('[data-study-resume]');if(resume)resume.hidden=true;schedule();ready=refresh().catch(()=>{});});window.addEventListener('online',()=>{ready=refresh().catch(()=>{});});window.addEventListener('lightcity-search-results',()=>{if(!initialized)begin();else schedule();});

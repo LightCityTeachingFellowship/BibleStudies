@@ -1,3 +1,4 @@
+import {createPersonalHub} from './personal-hub.mjs';
 import {createAdminUsers} from './admin-users.mjs';
 import {publishAudioReadyVideo} from './helper-publication.mjs';
 import {createStreamReports,notifyStreamReport} from './stream-reports.mjs';
@@ -64,6 +65,11 @@ export const updateMyVideoActivity = onCall(options, activity.updateMyVideoActiv
 const readingActivity = createReadingActivity({auth:getAuth(),db:getFirestore(),fail:HttpsError,privateCatalog:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications});
 export const getMyReadingActivity = onCall(options, readingActivity.getMyReadingActivity);
 export const updateMyReadingActivity = onCall(options, readingActivity.updateMyReadingActivity);
+const personalHub=createPersonalHub({auth:getAuth(),db:getFirestore(),fail:HttpsError,privateCatalog:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications});
+export const getMyStudyCollections=onCall(options,personalHub.collections);
+export const updateMyStudyCollections=onCall(options,personalHub.updateCollection);
+export const getMyNotificationInbox=onCall(options,personalHub.notifications);
+export const updateMyNotificationInbox=onCall(options,personalHub.updateNotifications);
 
 const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcityteachingfellowship@gmail.com' });
 const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live,

@@ -1,4 +1,4 @@
-import {libraryMenu} from './library-menu.mjs?v=2';
+import {libraryMenu} from './library-menu.mjs?v=3';
 import {replacementMap,loadRemoteReplacements} from './video-replacements.mjs?v=automatic-1';
 import {isLive,refreshLiveStatus} from './live-status.mjs';
 import { createVideoStore, resumeSeconds } from './video-personal-store.mjs?v=replacements-1';
@@ -155,6 +155,7 @@ function renderPage(visible) {
   const rows=personal.rows(pageView).filter(r=>visible.has(r.videoId));
   document.getElementById('my-video-empty').hidden=rows.length>0;
   document.getElementById('my-video-empty').textContent=pageView==='saved'?'No saved videos yet. Use the bookmark beside a video title to keep it here.':'Your watched and listened-to videos will appear here.';
+  if(document.querySelector?.('[data-study-hub]'))return;
   for(const row of rows) {
     const card=node('article','', 'lc-personal-card'), link=node('a');link.href=watchUrl(row.videoId,personal.history(row.videoId));
     const image=node('img');image.src=`https://i.ytimg.com/vi/${row.videoId}/hqdefault.jpg`;image.alt='';image.loading='lazy';link.appendChild(image);

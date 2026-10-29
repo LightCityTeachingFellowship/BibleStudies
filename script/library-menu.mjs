@@ -35,6 +35,9 @@ export function libraryMenu({document,holder,line,save,id,title,audio=false,navi
   try{await navigator.clipboard.writeText(url);show('LightCity link copied.');}
   catch{show('Copy this link to share.');const input=node('input','lc-library-copy-input');input.readOnly=true;input.value=url;input.setAttribute('aria-label','LightCity share link');feedback.appendChild(input);input.focus();input.select();}
  };
+ let playlist=panel.querySelector('.lc-library-playlist');
+ if(!playlist){playlist=node('button','lc-library-playlist');playlist.type='button';playlist.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h16M3 10h16M3 15h9M18 14v8M14 18h8"/></svg>';const caption=node('span','');caption.textContent='Save to playlist';playlist.appendChild(caption);panel.appendChild(playlist);}
+ playlist.onclick=event=>{event?.preventDefault();event?.stopPropagation();close();globalThis.window?.dispatchEvent(new CustomEvent('lightcity-add-to-playlist',{detail:{type:'media',id,mode:audio?'audio':'video'}}));};
  for(const [key,text]of [['share','Share'],['copy','Copy link']]){
   let button=panel.querySelector('.lc-library-'+key);
   if(!button){button=node('button','lc-library-'+key);button.type='button';button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+icons[key]+'</svg>';const caption=node('span','');caption.textContent=text;button.appendChild(caption);panel.appendChild(button);}
