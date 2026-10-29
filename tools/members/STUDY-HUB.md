@@ -1,6 +1,6 @@
 # Personal study hub
 
-The Study Library (`/MyVideos/`) combines existing saved media/reading stores into History and Saved shelves. Account switching uses the existing Google account selector; cancelling leaves the current account intact. Saves, history and resume positions are preserved. Private titles are cleared on identity changes. Resources are still subject to their current public/member access.
+The Study Library (`/MyLibrary/`) combines existing saved media/reading stores into History and Saved shelves. Account switching uses the existing Google account selector; cancelling leaves the current account intact. Saves, history and resume positions are preserved. Private titles are cleared on identity changes. Resources are still subject to their current public/member access.
 
 Playlists are private to a verified signed-in account. A playlist can mix videos, audio, articles and summaries. Create, rename, delete, add and remove are supported. Use **Save to playlist** in video/audio/home menus, on Watch, in reading toolbars or library cards. This release organizes resources; it does not automatically play every item in sequence. Limits: 100 playlists/account, 200 resources/playlist. Removed/inaccessible resources are filtered server-side. Replacement IDs resolve to the current video.
 
@@ -40,3 +40,5 @@ The shell moves the original search form rather than replacing its handlers. Art
 This navigation update changes website files only. Commit/sync the website and refresh the app; no Firebase deployment is required. Test with `node tools/test-site-shell.mjs` as well as the existing search and personal-library checks.
 
 Navigation browser validation covers the actual homepage and Watch templates in portrait/landscape, other page scopes, public/member UI, fixed bottom bounds before/after scrolling, hover popup entry and dismissal, theme switching from Settings, account changes, and preserving the same player node when toggling the desktop drawer.
+
+The library’s canonical route is `/MyLibrary/`. `/MyVideos/` redirects there while preserving query strings and fragments. The bottom profile photo opens the library directly; account switching remains available from the library profile or desktop account menu. The visible sync message and device-import button have been removed from the library overview. Existing saved/history data and storage keys are unchanged.

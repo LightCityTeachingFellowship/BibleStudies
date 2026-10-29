@@ -3,7 +3,7 @@
 ## What ships
 
 - Articles and every summary template receive bookmark, Continue reading and Mark as read controls.
-- `/MyVideos/` remains the stable address and becomes My study library, with shared Saved/History tabs and All, Videos & audio, Articles and Summaries filters.
+- `/MyLibrary/` remains the stable address and becomes My study library, with shared Saved/History tabs and All, Videos & audio, Articles and Summaries filters.
 - Home shows up to six recent unfinished readings/videos/audio recordings. It does not start playback.
 - Related study resources appear below readings and on Watch. Explicit shared video IDs or `study_id` groups are preferred. Title-derived suggestions are labelled as such.
 - Reading bookmarks are also available beside publication search result titles.

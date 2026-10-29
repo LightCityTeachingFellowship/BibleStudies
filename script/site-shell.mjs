@@ -1,4 +1,4 @@
-import {hub} from './account-hub.mjs?v=3';
+import {hub} from './account-hub.mjs?v=4';
 import {element as el,icon,sitePath} from './hub-core.mjs';
 import {orderedLinks,latestReadings} from './site-shell-core.mjs';
 const configNode=document.getElementById('lc-shell-config');
@@ -10,7 +10,7 @@ const owner=()=>hub.canUseCollections?api().user.uid:'public';
 function button(label,name){const b=el('button','','lc-shell-icon');b.type='button';b.setAttribute('aria-label',label);b.title=label;b.innerHTML=draw(name);return b;}
 function prepareBottom(){
  const bottom=document.querySelector('.home-bottom-nav');if(!bottom)return;document.body.append(bottom);
- for(const a of bottom.querySelectorAll('a')){const label=a.textContent.trim()||a.title;a.setAttribute('aria-label',label);a.title=label;}
+ for(const a of bottom.querySelectorAll('a')){const label=a.getAttribute('aria-label')||a.textContent.trim()||a.title;a.setAttribute('aria-label',label);a.title=label;}
 }
 function pill(form){if(!form)return;form.classList.add('lc-shell-search-form');const leading=form.querySelector(':scope>svg');leading?.classList.add('lc-shell-leading-search');if(!form.querySelector('button')){const b=button('Search','search');b.type='submit';form.append(b);}}
 function setupHomepage(){
@@ -41,7 +41,7 @@ export function setupShell(){if(!config||document.body.classList.contains('lc-sh
  menuClose.onclick=()=>setMore(false,true);backdrop.onclick=e=>{if(e.target===backdrop||e.target.closest('a'))setMore(false);};
  const drawerBackdrop=el('div','','lc-shell-rail-backdrop');drawerBackdrop.hidden=true;document.body.append(drawerBackdrop);
  const rail=el('nav','','lc-shell-rail');rail.id='lc-shell-rail';rail.setAttribute('aria-label','Main pages');for(const r of deskLinks){const group=el('div','','lc-shell-group');group.append(link(r,true));if(['Article','Summary','video','audio'].includes(r.kind))group.dataset.recent=r.kind;rail.append(group);}rail.append(libraryLink());document.body.append(rail);
- function libraryLink(){return link({label:'My library',url:sitePath('/MyVideos/'),kind:'bookmark'},true);}
+ function libraryLink(){return link({label:'My library',url:sitePath('/MyLibrary/'),kind:'bookmark'},true);}
  function link(row,withIcon){const a=el('a','','lc-shell-link');a.href=row.url;a.title=row.label;if(withIcon){const i=el('span','','lc-shell-link-icon');i.innerHTML=draw(row.kind);a.append(i);}a.append(el('span',row.label,'lc-shell-link-label'));try{const u=new URL(row.url,location.origin);if(row.active||u.origin===location.origin&&u.pathname.replace(/\/$/,'').toLowerCase()===location.pathname.replace(/\/$/,'').toLowerCase())a.setAttribute('aria-current','page');}catch{}return a;}
  const popup=el('nav','','lc-shell-recent-popup');popup.hidden=true;popup.setAttribute('aria-label','Latest resources');document.body.append(popup);
  let hovered=null,hoverTimer=null,expanded=false,version=0,recentFlight=null,recentOwner='',recentData=null;

@@ -1,6 +1,6 @@
 ---
 layout: null
-permalink: /MyVideos/
+permalink: /MyLibrary/
 title: My study library
 ---
 <!doctype html>
@@ -21,7 +21,7 @@ title: My study library
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=search-dismiss-1"></script>
 <script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
-<script type="module" src="{{ '/script/study-hub.mjs' | relative_url }}?v=3"></script>
+<script type="module" src="{{ '/script/study-hub.mjs' | relative_url }}?v=4"></script>
 </head>
 <body class="fonts app-home site-browse">
   {% include homeHeader-pages.html %}
@@ -35,8 +35,6 @@ title: My study library
         <button type="button" data-hub-view="history" aria-pressed="false">History</button>
         <button type="button" data-hub-view="playlists" aria-pressed="false">Playlists</button>
       </nav>
-      <p data-hub-sync role="status" class="lc-hub-small">Loading your library…</p>
-      <button type="button" class="lc-hub-button" data-hub-import hidden>Copy device saves &amp; history to account</button>
       <p data-hub-playlist-status role="status" class="lc-hub-small"></p>
       <div data-hub-content></div>
     </div>
