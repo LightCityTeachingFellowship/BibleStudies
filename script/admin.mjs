@@ -55,7 +55,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
  }
  for(const [key,label]of [['All','All'],['Live','Live'],['Video','Videos'],['Audio','Audio'],['Article','Articles'],['Summary','Summaries'],['Pending','Pending'],['Page','Site pages']]){const b=action(label,()=>{tab=key;limit=36;render();});b.dataset.tab=key;byId('admin-tabs').appendChild(b);}
  byId('admin-search').addEventListener('input',()=>{limit=36;render();});byId('admin-more').addEventListener('click',()=>{limit+=36;render();});byId('admin-refresh').addEventListener('click',()=>void load());
- byId('admin-signin').addEventListener('click',async()=>{byId('admin-signin').disabled=true;try{await api().signInForVideos();await load();}catch(error){status(window.LightCityDesktop&&error?.message?error.message:'Sign-in did not finish. Please try again.');}finally{byId('admin-signin').disabled=false;}});
+ byId('admin-signin').addEventListener('click',async()=>{byId('admin-signin').disabled=true;try{await api().signInForVideos();await load();}catch(error){const native=window.LightCityDesktop||/Electron\//.test(navigator.userAgent||'')||new URLSearchParams(window.location?.search||'').get('desktop')==='windows';status(native&&error?.message?error.message:'Sign-in did not finish. Please try again.');}finally{byId('admin-signin').disabled=false;}});
  byId('admin-signout').addEventListener('click',async()=>{++generation;clear();status('Signing out…');try{await api().signOut();await load();}catch{status('Sign-out could not finish. Please retry.');}});
  setupStudioTests({document,window,api,status});
  const publishing=setupStudioPublisher({document,window,navigator,api,status});

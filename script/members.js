@@ -160,6 +160,9 @@ api.signInForVideos = async () => {
     const token = await globalThis.LightCityDesktop.connect();
     await sdk.auth.signInWithCustomToken(memberAuth, token); await checkAccess(); return;
   }
+  if (new URLSearchParams(location.search).get('desktop') === 'windows' || /Electron\//.test(navigator.userAgent || '')) {
+    throw Error('The Windows connection did not load. Quit Studio from its tray menu and install the updated Windows app, then try again.');
+  }
   const provider = new sdk.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
   await sdk.auth.signInWithPopup(memberAuth, provider); await checkAccess();
 };

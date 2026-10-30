@@ -8,6 +8,7 @@ const directory=dirname(fileURLToPath(import.meta.url)),smoke=!app.isPackaged&&p
 if(smoke)app.setPath('userData',join(tmpdir(),'lightcity-studio-desktop-qa'));
 app.setAppUserModelId('com.lightcityfellowship.studio');
 let main,alerts,tray,quitting=false,owner=null,reports=[],ready=null,settings=preferences(),lastSync=null,notice='',ring=false,connecting=null;
+const appURL=STUDIO+'?desktop=windows';
 const localPage=pathToFileURL(join(directory,'alerts.html')).href;
 const prefsFile=()=>join(app.getPath('userData'),'preferences.json');
 function state(){return {reports,ready,settings,lastSync,notice};}
@@ -21,12 +22,12 @@ function menu(){if(!tray)return;tray.setContextMenu(Menu.buildFromTemplate([
  {type:'separator'},{label:'Keep Studio above other windows',type:'checkbox',checked:settings.alwaysOnTop,click:item=>void saveSettings({alwaysOnTop:item.checked})},
  {label:'Start with Windows',type:'checkbox',checked:settings.openAtLogin,click:item=>void saveSettings({openAtLogin:item.checked})},
  {label:'Alert sound',type:'checkbox',checked:settings.sound,click:item=>void saveSettings({sound:item.checked})},
- {type:'separator'},{label:'Refresh Studio',click:()=>{if(!smoke)void main?.loadURL(STUDIO);}},{label:'Quit LightCity Studio',click:()=>app.quit()}
+ {type:'separator'},{label:'Refresh Studio',click:()=>{if(!smoke)void main?.loadURL(appURL);}},{label:'Quit LightCity Studio',click:()=>app.quit()}
  ]));}
 function toast(title,body){if(smoke||!Notification.isSupported())return;const n=new Notification({title,body:String(body).slice(0,240),icon:join(directory,'assets/studio.png'),timeoutType:'never',silent:true});n.on('click',()=>showAlerts());n.on('failed',()=>{notice='Windows could not display the banner. Your alerts remain here.';push();});n.show();}
 function trusted(event,local=false){const expected=local?event.sender===alerts?.webContents:event.sender===main?.webContents;if(!expected||event.senderFrame!==event.sender.mainFrame)return false;return local?event.senderFrame.url===localPage:studioURL(event.senderFrame.url);}
 function handle(channel,fn,local=false){ipcMain.handle(channel,async(event,...args)=>{if(!trusted(event,local))throw Error('This action is available only inside LightCity Studio.');return fn(...args);});}
-function secureNavigation(window){window.webContents.setWindowOpenHandler(({url})=>{const target=externalURL(url);if(target&&!smoke)void shell.openExternal(target);return {action:'deny'};});window.webContents.on('will-navigate',(event,url)=>{if(studioURL(url))return;event.preventDefault();const target=externalURL(url);if(target&&!smoke)void shell.openExternal(target);});window.webContents.on('will-attach-webview',event=>event.preventDefault());}
+function secureNavigation(window){window.webContents.setWindowOpenHandler(({url})=>{const target=externalURL(url);if(target&&!smoke)void shell.openExternal(target);return {action:'deny'};});window.webContents.on('will-navigate',(event,url)=>{if(studioURL(url))return;event.preventDefault();const target=externalURL(url);if(target&&!smoke)void shell.openExternal(target);});window.webContents.on('will-redirect',(event,url)=>{if(!studioURL(url))event.preventDefault();});window.webContents.on('will-attach-webview',event=>event.preventDefault());}
 function makeAlerts(){
  alerts=new BrowserWindow({title:'LightCity Studio alerts',width:440,height:640,minWidth:360,minHeight:420,show:false,alwaysOnTop:true,icon:join(directory,'assets/studio.png'),webPreferences:{preload:join(directory,'alerts-preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,autoplayPolicy:'no-user-gesture-required'}});
  alerts.webContents.setWindowOpenHandler(()=>({action:'deny'}));alerts.webContents.on('will-navigate',event=>event.preventDefault());alerts.on('close',event=>{if(!quitting){event.preventDefault();alerts.hide();}});void alerts.loadFile(join(directory,'alerts.html'));
@@ -54,7 +55,7 @@ function makeMain(){main=new BrowserWindow({title:'LightCity Studio',width:1280,
  secureNavigation(main);main.on('close',event=>{if(!quitting){event.preventDefault();main.hide();}});
  main.once('ready-to-show',()=>{if(!smoke&&!process.argv.includes('--background'))main.show();});
  main.webContents.on('did-fail-load',(_event,code,_description,_url,isMainFrame)=>{if(isMainFrame&&code!==-3)void main.loadFile(join(directory,'offline.html'));});
- if(!smoke)void main.loadURL(STUDIO);
+ if(!smoke)void main.loadURL(appURL);
 }
 if(!app.requestSingleInstanceLock())app.quit();else{
  app.on('second-instance',showMain);app.on('before-quit',()=>{quitting=true;});
@@ -63,7 +64,7 @@ if(!app.requestSingleInstanceLock())app.quit();else{
   try{settings=preferences(JSON.parse(await readFile(prefsFile(),'utf8')));}catch{}
   makeMain();makeAlerts();
   tray=new Tray(nativeImage.createFromPath(join(directory,'assets/studio.png')).resize({width:20,height:20}));tray.on('double-click',showMain);menu();
-  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Studio',submenu:[{label:'Unresolved alerts',click:()=>showAlerts()},{label:'Desktop settings',click:()=>{notice='Desktop settings';showAlerts();}},{type:'separator'},{role:'quit'}]},{label:'View',submenu:[{label:'Refresh Studio',click:()=>{if(!smoke)void main.loadURL(STUDIO);}},{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{role:'togglefullscreen'}]}]));
+  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Studio',submenu:[{label:'Unresolved alerts',click:()=>showAlerts()},{label:'Desktop settings',click:()=>{notice='Desktop settings';showAlerts();}},{type:'separator'},{role:'quit'}]},{label:'View',submenu:[{label:'Refresh Studio',click:()=>{if(!smoke)void main.loadURL(appURL);}},{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{role:'togglefullscreen'}]}]));
   handle('studio:connect',connect);
   handle('studio:reports',data=>{
    if(!data||!Array.isArray(data.reports))throw Error('Invalid alert update');
@@ -82,7 +83,7 @@ if(!app.requestSingleInstanceLock())app.quit();else{
    else if(type==='settings'){if(!value||Object.keys(value).some(k=>!['sound','alwaysOnTop','openAtLogin'].includes(k)))throw Error('Invalid settings');return saveSettings(value);}
    else if(type==='copy'&&ready){clipboard.writeText(ready.url);notice='Share link copied.';push();}
    else if(type==='dismiss-ready'){ready=null;push();}
-   else if(type==='retry'){if(!smoke)void main.loadURL(STUDIO);showMain();}
+   else if(type==='retry'){if(!smoke)void main.loadURL(appURL);showMain();}
    else if(type==='hide')alerts.hide();
    return state();
   },true);

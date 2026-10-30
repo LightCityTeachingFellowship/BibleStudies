@@ -12,13 +12,19 @@ Both sign in to the same admin account and use the same Firebase services.
    It uses the existing Firebase CLI login; no service-account key is downloaded.
 2. Commit and sync the website changes. Wait for website publishing to finish.
 3. Run `& .\tools\studio-desktop\build.ps1` in your normal PowerShell window,
-   then install `tools/studio-desktop/dist/LightCity-Studio-Setup-0.1.0.exe`.
+   then install `tools/studio-desktop/dist/LightCity-Studio-Setup-0.1.1.exe`.
 4. Open Studio and select Sign in. Your normal browser opens. Compare the
    connection code shown in Windows, sign in with your admin Google account,
    then approve. Return to the Windows app.
 
 The initial installer is unsigned; Windows may display a publisher warning.
 Only approve an installer built from your own reviewed project.
+
+When upgrading, choose Quit from Studio's tray menu first. Version 0.1.1 fixes
+the Windows connection being absent at page startup and prevents Google sign-in
+from falling back to a browser-only popup inside the desktop app. Commit/sync
+the accompanying website changes as well; no additional backend deployment is
+needed for this upgrade.
 
 ## Daily use
 
