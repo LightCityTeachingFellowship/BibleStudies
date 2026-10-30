@@ -156,6 +156,10 @@ api.getLiveAudio = async videoId => {
 api.signInForVideos = async () => {
   await api.ready;
   if (!memberAuth || !sdk) throw Error('Sign-in is unavailable.');
+  if (globalThis.LightCityDesktop) {
+    const token = await globalThis.LightCityDesktop.connect();
+    await sdk.auth.signInWithCustomToken(memberAuth, token); await checkAccess(); return;
+  }
   const provider = new sdk.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
   await sdk.auth.signInWithPopup(memberAuth, provider); await checkAccess();
 };
@@ -269,3 +273,4 @@ api.updateStudyCollection=async data=>{const accountUid=api.user?.uid;await api.
 async function inboxIdentity(){const owner=api.user?.uid;await api.ready;if(owner!==api.user?.uid)throw Error('Your account changed. Please try again.');if(api.user&&!api.user.isAnonymous)return {accountUid:api.user.uid};if(!deviceAuth.currentUser)await sdk.auth.signInAnonymously(deviceAuth);return {deviceToken:await deviceAuth.currentUser.getIdToken()};}
 api.getNotificationInbox=async()=>call('getMyNotificationInbox',await inboxIdentity());
 api.updateNotificationInbox=async data=>call('updateMyNotificationInbox',{...data,...await inboxIdentity()});
+api.connectStudioDesktop=async data=>{await api.ready;return call('connectChurchStudioDesktop',data);};

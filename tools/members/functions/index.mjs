@@ -1,3 +1,4 @@
+import {createDesktopLogin} from './studio-desktop.mjs';
 import {createPersonalHub} from './personal-hub.mjs';
 import {createAdminUsers} from './admin-users.mjs';
 import {publishAudioReadyVideo} from './helper-publication.mjs';
@@ -72,6 +73,7 @@ export const getMyNotificationInbox=onCall(options,personalHub.notifications);
 export const updateMyNotificationInbox=onCall(options,personalHub.updateNotifications);
 
 const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcityteachingfellowship@gmail.com' });
+export const connectChurchStudioDesktop=onCall({...options,timeoutSeconds:60},createDesktopLogin({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
 const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live,
  privateReadings:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications });
 export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey] }, adminDashboard);

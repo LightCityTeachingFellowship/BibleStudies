@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';import {randomBytes} from 'node:crypto';
+import {createDesktopLogin,desktopChallenge} from './members/functions/studio-desktop.mjs';
+class Failure extends Error{constructor(code,message){super(message);this.code=code;}}
+let clock=1000,enabled=true,tokens=0;const rows=new Map();
+const doc=path=>({path,get:async()=>({exists:rows.has(path),data:()=>rows.get(path)})});
+const db={doc,runTransaction:async fn=>{const writes=[];const result=await fn({get:r=>r.get(),set:(r,data)=>writes.push([r.path,data])});for(const [p,d]of writes)rows.set(p,d);return result;}};
+const auth={getUser:async uid=>({uid,email:'admin@example.com',emailVerified:true,disabled:!enabled,providerData:[{}]}),createCustomToken:async uid=>{tokens++;return 'one-time-token-for-'+uid;}};
+const login=createDesktopLogin({db,auth,emails:()=> 'admin@example.com',fail:Failure,now:()=>clock});
+const id='a'.repeat(32),verifier=randomBytes(32).toString('base64url'),challenge=desktopChallenge(verifier);
+const approve=(overrides={})=>login({auth:{uid:'admin'},data:{action:'approve',id,challenge,...overrides}});
+const redeem=(overrides={})=>login({data:{action:'redeem',id,verifier,...overrides}});
+assert.deepEqual(await redeem(),{state:'waiting'});
+await assert.rejects(login({data:{action:'approve',id,challenge}}),e=>e.code==='unauthenticated');
+await approve();assert.equal(tokens,0);
+await assert.rejects(redeem({verifier:randomBytes(32).toString('base64url')}),e=>e.code==='permission-denied');
+assert.equal(tokens,0);assert.equal((await redeem()).token,'one-time-token-for-admin');assert.equal(tokens,1);
+await assert.rejects(redeem(),e=>e.code==='deadline-exceeded');
+await assert.rejects(approve(),e=>e.code==='already-exists');
+await assert.rejects(approve({id:'b'.repeat(32)}),e=>e.code==='resource-exhausted');
+clock+=11000;await approve({id:'b'.repeat(32)});clock+=180001;
+await assert.rejects(redeem({id:'b'.repeat(32)}),e=>e.code==='deadline-exceeded');
+clock+=11000;await approve({id:'c'.repeat(32)});enabled=false;
+await assert.rejects(redeem({id:'c'.repeat(32)}),e=>e.code==='permission-denied');
+assert.equal(tokens,1,'Disabled admins cannot redeem an earlier approval');
+for(const bad of ['../unsafe','a'.repeat(64),''])await assert.rejects(redeem({id:bad}),e=>e.code==='invalid-argument');
+console.log('PASS: approved admin only, verifier binding, no token before approval, expiry, one-time redemption, throttling and disabled-account rejection.');

@@ -74,7 +74,7 @@ export function createStreamReports(deps){
    await db.runTransaction(async tx=>{const old=await tx.get(ref);if(old.exists){const senders=[...(old.data().senders||[]).filter(s=>s.key!==sender.key),sender].slice(-20);tx.set(ref,{count:(old.data().count||1)+1,lastAt:now(),senders},{merge:true});return;}tx.set(ref,{videoId:id,title:String(video.title||'LightCity stream').slice(0,300),issue,sender,senders:[sender],...(issue==='message'?{message:custom}:{}),verified:issue==='ended',createdAt:now(),lastAt:now(),count:1,resolved:false,delivery:'pending'});});
    return {state:'reported',message:issue==='message'?'Your message has been sent to the admin.':issue==='ended'?'The stream ending was confirmed. Your report has been sent to the admin.':'Your request to increase the speaker volume has been sent to the admin.'};
   },
-  async inbox(request){await requireStudioAdmin(request,deps);const rows=await db.collection(reportsPath).orderBy('createdAt','desc').limit(30).get();return {reports:rows.docs.map(d=>({id:d.id,...d.data()}))};},
+  async inbox(request){await requireStudioAdmin(request,deps);const rows=await db.collection(reportsPath).where('resolved','==',false).get();return {reports:rows.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.createdAt-a.createdAt)};},
   async resolve(request){await requireStudioAdmin(request,deps);const id=request.data?.reportId;if(!/^[a-f0-9]{64}$/.test(id||''))throw new fail('invalid-argument','Choose a report.');const ref=db.doc(reportsPath+'/'+id);if(!(await ref.get()).exists)throw new fail('not-found','Report not found.');await ref.set({resolved:true},{merge:true});return {resolved:true};}
  };
 }

@@ -1,6 +1,6 @@
 import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=private-tests-1';
-import {setupStudioPublisher} from './studio-publish.mjs?v=private-tests-1';
+import {setupStudioPublisher} from './studio-publish.mjs?v=desktop-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=previews-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
@@ -39,23 +39,23 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(item.published){const open=node('a','Open');open.href=tab==='Audio'&&item.id?watchLink(item.id,true):item.url;open.target='_blank';open.rel='noopener';actions.appendChild(open);}row.appendChild(actions);list.appendChild(row);
   }
  }
- async function load(){
-  const current=++generation;clear();status('Checking access…');byId('admin-refresh').hidden=true;
+ async function load({quiet=false}={}){
+  const current=++generation;const silent=quiet&&owner===api()?.user?.uid&&!!owner;if(!silent){clear();status('Checking access…');byId('admin-refresh').hidden=true;}
   const client=api();try{
    await client?.ready;if(current!==generation)return;
    byId('admin-signin').disabled=!client?.enabled;byId('admin-signout').hidden=!client?.user;byId('admin-account').textContent=client?.user?.email||'';
    if(!client?.enabled){status('Sign-in is not configured yet.');return;}
    if(!client.user||client.user.isAnonymous){status('Sign in to open your admin dashboard.');return;}
    const uid=client.user.uid;const data=await client.getAdminDashboard();if(current!==generation||api()?.user?.uid!==uid)return;
-   owner=uid;void accounts?.load();checks=data.checks||{};rows=dashboardRows(data);byId('admin-gate').hidden=true;byId('admin-content').hidden=false;byId('admin-refresh').hidden=false;
-   const totals=byId('admin-totals');for(const [label,count]of [['Recordings',data.videos.length],['Audio available',data.videos.filter(v=>v.audio&&v.published).length],['Articles',data.readings.filter(r=>r.kind==='Article').length],['Summaries',data.readings.filter(r=>r.kind==='Summary').length]]){const box=node('div',null,'studio-total');box.appendChild(node('strong',String(count)));box.appendChild(node('span',label));totals.appendChild(box);}
+   owner=uid;if(!silent)void accounts?.load();checks=data.checks||{};rows=dashboardRows(data);byId('admin-gate').hidden=true;byId('admin-content').hidden=false;byId('admin-refresh').hidden=false;
+   const totals=byId('admin-totals');totals.replaceChildren();for(const [label,count]of [['Recordings',data.videos.length],['Audio available',data.videos.filter(v=>v.audio&&v.published).length],['Articles',data.readings.filter(r=>r.kind==='Article').length],['Summaries',data.readings.filter(r=>r.kind==='Summary').length]]){const box=node('div',null,'studio-total');box.appendChild(node('strong',String(count)));box.appendChild(node('span',label));totals.appendChild(box);}
    const warnings=Object.entries(checks).filter(([,ok])=>!ok).map(([name])=>name);
-   status(warnings.length?'Some status checks are unavailable: '+warnings.join(', ')+'. Refresh to retry.':'Ready to share. Last checked '+new Date(data.updatedAt).toLocaleTimeString());render();
-  }catch(error){if(current!==generation)return;clear();status(error?.code==='functions/permission-denied'?'This account does not have admin access. Sign out and use your admin account.':error?.code==='functions/not-found'?'The admin service needs to be deployed.':error?.code==='functions/unauthenticated'?'Sign in with your admin account.':'The dashboard could not load. Use Refresh to retry.');byId('admin-refresh').hidden=false;}
+   if(!silent)status(warnings.length?'Some status checks are unavailable: '+warnings.join(', ')+'. Refresh to retry.':'Ready to share. Last checked '+new Date(data.updatedAt).toLocaleTimeString());render();
+  }catch(error){if(current!==generation)return;if(silent&&!['functions/permission-denied','functions/unauthenticated'].includes(error?.code)){status('Studio could not refresh. Your current view is kept; reconnecting shortly.');return;}clear();status(error?.code==='functions/permission-denied'?'This account does not have admin access. Sign out and use your admin account.':error?.code==='functions/not-found'?'The admin service needs to be deployed.':error?.code==='functions/unauthenticated'?'Sign in with your admin account.':'The dashboard could not load. Use Refresh to retry.');byId('admin-refresh').hidden=false;}
  }
  for(const [key,label]of [['All','All'],['Live','Live'],['Video','Videos'],['Audio','Audio'],['Article','Articles'],['Summary','Summaries'],['Pending','Pending'],['Page','Site pages']]){const b=action(label,()=>{tab=key;limit=36;render();});b.dataset.tab=key;byId('admin-tabs').appendChild(b);}
  byId('admin-search').addEventListener('input',()=>{limit=36;render();});byId('admin-more').addEventListener('click',()=>{limit+=36;render();});byId('admin-refresh').addEventListener('click',()=>void load());
- byId('admin-signin').addEventListener('click',async()=>{byId('admin-signin').disabled=true;try{await api().signInForVideos();await load();}catch{status('Sign-in did not finish. Please try again.');}finally{byId('admin-signin').disabled=false;}});
+ byId('admin-signin').addEventListener('click',async()=>{byId('admin-signin').disabled=true;try{await api().signInForVideos();await load();}catch(error){status(window.LightCityDesktop&&error?.message?error.message:'Sign-in did not finish. Please try again.');}finally{byId('admin-signin').disabled=false;}});
  byId('admin-signout').addEventListener('click',async()=>{++generation;clear();status('Signing out…');try{await api().signOut();await load();}catch{status('Sign-out could not finish. Please retry.');}});
  setupStudioTests({document,window,api,status});
  const publishing=setupStudioPublisher({document,window,navigator,api,status});
@@ -63,7 +63,9 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
   byId('admin-quick-form').addEventListener('submit',event=>{event.preventDefault();const id=streamId(byId('admin-quick').value);byId('admin-quick-result').hidden=!id;if(!id){status('Enter a valid YouTube link or 11-character video ID.');return;}byId('admin-quick-link').value=previewLink(id);status('LightCity Watch link prepared.');});
   byId('admin-quick-copy').addEventListener('click',()=>{const url=byId('admin-quick-link').value;if(url)void copy(url,byId('admin-quick-result'));});
  }
- window.addEventListener('lightcity-members-changed',()=>void load());void load();
+ window.addEventListener('lightcity-members-changed',()=>void load());
+ const refreshShared=()=>{if(window.LightCityDesktop||document.visibilityState==='visible')void load({quiet:true});};
+ const sharedTimer=setInterval(refreshShared,30000);sharedTimer.unref?.();window.addEventListener('focus',refreshShared);document.addEventListener?.('visibilitychange',()=>{if(document.visibilityState==='visible')refreshShared();});window.addEventListener('pagehide',e=>{if(!e.persisted)clearInterval(sharedTimer);});void load();
  return {load};
 }
 if(typeof document!=='undefined')setupAdmin({document,window,navigator});

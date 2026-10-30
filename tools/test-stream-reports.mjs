@@ -10,7 +10,7 @@ const playlist='#EXTM3U\n#EXT-X-PROGRAM-DATE-TIME:2026-10-28T09:59:55Z\n#EXTINF:
 function fixture({states=[liveItem],fresh=true}={}){
  const rows=new Map([['churchVideoLibrary/current',{videos:[{id,title:'Prayer meeting',visibility:'public'}]}]]),writes=[],requests=[];
  function doc(path){return {path,id:path.split('/').at(-1),get:async()=>({id:path.split('/').at(-1),ref:doc(path),exists:rows.has(path),data:()=>rows.get(path)}),set:async(v,o)=>{writes.push(path);rows.set(path,o?.merge?{...rows.get(path),...v}:v);},delete:async()=>rows.delete(path)};}
- const collection=path=>({get:async()=>({docs:await Promise.all([...rows.keys()].filter(k=>k.startsWith(path+'/')&&!k.slice(path.length+1).includes('/')).map(k=>doc(k).get()))}),orderBy(){return this;},limit(){return this;}});
+ const collection=path=>({get:async()=>({docs:await Promise.all([...rows.keys()].filter(k=>k.startsWith(path+'/')&&!k.slice(path.length+1).includes('/')).map(k=>doc(k).get()))}),where(field,_operator,value){const read=this.get;return {get:async()=>({docs:(await read()).docs.filter(d=>d.data()?.[field]===value)})};},orderBy(){return this;},limit(){return this;}});
  const db={doc,collection,getAll:async(...refs)=>Promise.all(refs.map(r=>r.get())),runTransaction:async fn=>fn({get:r=>r.get(),set:(r,v,o)=>r.set(v,o)})};
  let count=0,clock=now,relayChecks=0;
  const auth={verifyIdToken:async token=>{if(token!=='valid-device')throw Error();return {uid:'device'};},getUser:async uid=>({uid,email:'admin@example.com',emailVerified:true,providerData:[{}]}),getUserByEmail:async()=>({uid:'admin',emailVerified:true})};
@@ -48,3 +48,8 @@ console.log('PASS: required sender names, message length, independent questions/
 assert.equal(sends[0].webpush.notification.requireInteraction,true,'admin feedback requests persistent automatic background display');
 assert.equal(sends[0].data.requireInteraction,'true','foreground delivery retains the persistence request');
 console.log('PASS: admin feedback requests persistent alerts in both delivery paths.');
+f=fixture();
+for(let i=0;i<40;i++)f.rows.set('churchStudioPublications/stream-issues/reports/'+String(i).padStart(64,'0'),{resolved:true,createdAt:now+i});
+const oldId='e'.repeat(64);f.rows.set('churchStudioPublications/stream-issues/reports/'+oldId,{resolved:false,createdAt:now-100000,title:'Older unresolved report'});
+const remaining=await f.service.inbox({auth:{uid:'admin'},data:{}});assert.equal(remaining.reports.length,1);assert.equal(remaining.reports[0].id,oldId);
+console.log('PASS: old unresolved reports remain available after more than 30 recent handled reports.');

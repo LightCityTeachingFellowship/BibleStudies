@@ -22,6 +22,10 @@ await row.querySelectorAll('button').find(b=>b.textContent==='Remove').handlers.
 await row.querySelectorAll('button').find(b=>b.textContent==='Remove').handlers.click();assert.deepEqual(removed,[videoId]);assert.ok(!nodes['admin-list'].children.some(r=>r.querySelector('h3').textContent==='Live prayer'));
 nodes['admin-search'].value='article';nodes['admin-search'].handlers.input();assert.ok(nodes['admin-list'].children.some(row=>row.querySelector('h3').textContent==='Public article'));
 nodes['admin-quick'].value='https://youtube.com/live/'+videoId;nodes['admin-quick-form'].handlers.submit({preventDefault(){}});assert.equal(nodes['admin-quick-link'].value,'https://auth.lightcityfellowship.com/Share/Video/'+videoId+'/');
+// A shared background refresh preserves the current form, results filter and totals.
+nodes['admin-quick'].value='typed unpublished link';
+await ui.load({quiet:true});assert.equal(nodes['admin-search'].value,'article');assert.equal(nodes['admin-quick'].value,'typed unpublished link');assert.equal(nodes['admin-totals'].children.length,4);
+assert.ok(nodes['admin-list'].children.some(row=>row.querySelector('h3').textContent==='Public article'));
 nodes['admin-search'].value='';
 data.videos=Array.from({length:70},(_,i)=>({id:String(i).padStart(11,'0'),title:'Recording '+i,published:true,visibility:'public'}));await ui.load();assert.equal(nodes['admin-list'].children.length,36);nodes['admin-more'].handlers.click();assert.equal(nodes['admin-list'].children.length,72,'large catalogues paginate without opening content pages');
 await nodes['admin-signout'].handlers.click();assert.equal(nodes['admin-content'].hidden,true);assert.equal(nodes['admin-list'].children.length,0);assert.equal(nodes['admin-quick-link'].value,'');

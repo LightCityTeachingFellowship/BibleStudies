@@ -9,9 +9,9 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
  async function copy(){const url=get('admin-quick-link').value;if(!url)return;try{await navigator.clipboard.writeText(url);status('Ready link copied.');}catch{get('admin-quick-link').focus();get('admin-quick-link').select();status('Select and copy the ready link.');}}
  function chime(){try{if(!context||context.state!=='running')return;for(const [delay,freq]of [[0,660],[.2,880]]){const oscillator=context.createOscillator(),gain=context.createGain();oscillator.connect(gain);gain.connect(context.destination);oscillator.frequency.value=freq;gain.gain.setValueAtTime(.08,context.currentTime+delay);gain.gain.exponentialRampToValueAtTime(.001,context.currentTime+delay+.3);oscillator.start(context.currentTime+delay);oscillator.stop(context.currentTime+delay+.3);}}catch{}}
  async function alertReady(item){
-  chime();const heading=get('admin-ready-heading');if(heading)heading.textContent=job.visibility==='test'?'Private test ready':'Ready to share!';const dialog=get('admin-ready-dialog');get('admin-ready-title').textContent=item.title;get('admin-ready-url').value=item.url;
+  if(window.LightCityDesktop)await window.LightCityDesktop.linkReady({uid:api()?.user?.uid,title:item.title,url:item.url});else chime();const heading=get('admin-ready-heading');if(heading)heading.textContent=job.visibility==='test'?'Private test ready':'Ready to share!';const dialog=get('admin-ready-dialog');get('admin-ready-title').textContent=item.title;get('admin-ready-url').value=item.url;
   if(dialog?.showModal&&!dialog.open)dialog.showModal();
-  if(window.Notification?.permission==='granted'){
+  if(!window.LightCityDesktop&&window.Notification?.permission==='granted'){
    try{const registration=await navigator.serviceWorker?.getRegistration('/');if(registration)await registration.showNotification('LightCity link ready',{body:item.title,tag:'studio-ready-'+job.videoId,icon:'/images/icon-192.png',silent:false,data:{lightcity:true,url:'/Admin/'}});}catch{}
   }
  }
@@ -38,7 +38,7 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
   if(!videoId||!uid){status('Sign in and enter a valid YouTube link or ID.');return;}
   // Obtain notification/audio permissions from the user's Publish click, before waiting.
   try{const Audio=window.AudioContext||window.webkitAudioContext;if(Audio){context||=new Audio();void context.resume();}}catch{}
-  if(window.Notification?.permission==='default')void window.Notification.requestPermission().catch(()=>{});
+  if(!window.LightCityDesktop&&window.Notification?.permission==='default')void window.Notification.requestPermission().catch(()=>{});
   busy=true;get('admin-publish').disabled=true;get('admin-quick-result').hidden=true;status(visibility==='test'?'Preparing a private test for your registered devices…':'Adding the video to your '+visibility+' list…');
   try{await api().publishStudioVideo({videoId,visibility,direct:true});if(api()?.user?.uid!==uid)return;
    job={videoId,visibility,uid};remember();status(visibility==='test'?'Test alert sent. Preparing your private preview…':'Saved. Checking that video and audio are ready…');sequence++;void check();

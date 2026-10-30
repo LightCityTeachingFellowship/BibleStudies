@@ -1,0 +1,50 @@
+{
+  "name": "lightcity-studio-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LightCity Studio for Windows",
+  "author": "LightCity Teaching Fellowship",
+  "main": "main.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --experimental-vm-modules --test test-*.mjs",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "45.2.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.lightcityfellowship.studio",
+    "productName": "LightCity Studio",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.mjs",
+      "core.mjs",
+      "preload.cjs",
+      "alerts-preload.cjs",
+      "alerts.html",
+      "alerts.js",
+      "alerts.css",
+      "offline.html",
+      "assets/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/studio.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "LightCity Studio",
+      "artifactName": "LightCity-Studio-Setup-${version}.${ext}"
+    },
+    "electronDist": "node_modules/electron/dist"
+  }
+}
