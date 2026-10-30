@@ -106,3 +106,9 @@
 .lc-hub-profile-button{padding:0!important}
 .lc-hub-profile-button .lc-hub-avatar{width:32px;height:32px;font-size:16px}
 .lc-hub-mobile-account{display:none}
+
+/* Neutral account slot keeps navigation steady while Firebase restores access. */
+.lc-hub-account-pending{display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.lc-hub-account-pending .lc-hub-avatar{width:28px;height:28px;min-width:28px;background:currentColor;opacity:.12;border-radius:50%}
+.lc-hub-account-pending[hidden]{display:none!important}
+.home-bottom-nav>.lc-hub-account-pending{width:auto;min-height:36px;padding:0 0 7px!important}

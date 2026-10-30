@@ -13,7 +13,7 @@ function setup(enabled = true, configMode = 'ready', startup = {}) {
   const nodes = new Map(), get = name => { if (!nodes.has(name)) nodes.set(name, new Element()); return nodes.get(name); };
   const page = get('member-page'); page.querySelectorAll = () => [...nodes.values()];
   const callbacks = new Map(), events = new Map(), announcements = [], calls = [];
-  const state = { verified: !!startup.verified, approved: !!startup.approved, hold: startup.hold || null, waiting: null, emails: 0, googleError: null };
+  const state = { verified: !!startup.verified, approved: !!startup.approved, hold: startup.hold || null, waiting: null, publicHold: !!startup.publicHold, publicWaiting: null, emails: 0, googleError: null };
   const makeUser = anonymous => ({ uid: anonymous ? 'member-anonymous' : 'member-account', isAnonymous: anonymous, email: anonymous ? null : 'member@example.com', getIdToken: async () => 'member-proof' });
   const memberAuth = { currentUser: startup.signedIn ? { ...makeUser(false), providerData: [{ providerId: 'google.com' }] } : null, authStateReady: async () => {} };
   const deviceAuth = { currentUser: { uid: 'notification-device', getIdToken: async () => 'device-proof' }, authStateReady: async () => {} };
@@ -42,6 +42,7 @@ function setup(enabled = true, configMode = 'ready', startup = {}) {
         if (data.code !== 'a-valid-code') throw Object.assign(Error('Incorrect church code'), { code: 'functions/permission-denied' });
         state.approved = true; return { data: { verificationRequired: true } };
       }
+      if (name === 'getPublicVideoLibrary' && state.publicHold) return new Promise(resolve => { state.publicWaiting = resolve; });
       if (name === 'getChurchLibrary') {
         if (state.libraryError) throw Object.assign(Error('Lookup failed'), { code: state.libraryError });
         if (!state.approved) throw Object.assign(Error('No church access'), { code: 'functions/permission-denied' });
@@ -64,7 +65,7 @@ function setup(enabled = true, configMode = 'ready', startup = {}) {
       context.LIGHTCITY_PUSH = { firebase: { apiKey: 'test-public-key', projectId: 'test-project' } };
     },
     mockImport: async file => modules[file],
-    CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } }, console
+    CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } }, console, setInterval: () => ({ unref() {} })
   });
   vm.runInContext(source, context);
   return { get, api: context.LightCityMembers, state, calls, deviceAuth, announcements, rootClasses, events, fireDomReady: () => domReady?.() };
@@ -182,3 +183,21 @@ const beforePrefetch = catalogueCalls();
 await app.api.getAudio(); await app.api.getLiveAudio();
 assert.equal(catalogueCalls(), beforePrefetch, 'The first catalogue reads reuse the prefetched requests');
 console.log('PASS: media catalogues prefetch alongside access verification and reuse results for the verified audience.');
+
+app = setup(true, 'ready', { signedIn: true, approved: true, verified: true, publicHold: true });
+await settle();
+assert.equal(app.api.loading, false, 'A slow public metadata request must not delay restored member access');
+assert.equal(app.api.library.length, 1);
+assert.equal(app.rootClasses.has('lc-member-restoring'), false);
+const latePublic = app.state.publicWaiting;
+app.state.publicHold = false;
+await app.api.signOut(); await settle();
+latePublic({ data: { videos: [{ id: 'lmnopqrstuv', title: 'Stale metadata', visibility: 'public' }] } }); await settle();
+assert.equal(app.api.publicLibrary, null, 'An earlier account request cannot overwrite the new audience');
+assert.equal(app.api.library, null);
+app = setup(true, 'ready', { publicHold: true }); await settle();
+assert.equal(app.api.loading, true, 'Guests wait until the public library is selected');
+app.state.publicWaiting({ data: { videos: [{ id: 'lmnopqrstuv', title: 'Public video', visibility: 'public' }] } });
+await app.api.ready;
+assert.equal(app.api.loading, false);assert.equal(app.api.publicLibrary.length, 1);
+console.log('PASS: member restoration does not wait for public metadata; guest selection and stale-account response isolation remain correct.');

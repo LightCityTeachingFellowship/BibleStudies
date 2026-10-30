@@ -21,14 +21,14 @@ title: My study library
 {% include browse-head.html %}
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=search-dismiss-1"></script>
 <script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
-<script type="module" src="{{ '/script/study-hub.mjs' | relative_url }}?v=4"></script>
+<script type="module" src="{{ '/script/study-hub.mjs' | relative_url }}?v=auth-restore-2"></script>
 </head>
 <body class="fonts app-home site-browse">
   {% include homeHeader-pages.html %}
   {% include site-search.html scope='All' %}
   <main class="leftRight-space-16 lc-personal-main">
     <div class="lc-study-hub" data-study-hub>
-      <section class="lc-hub-profile" data-hub-profile aria-label="Your account"><h1>My study library</h1></section>
+      <section class="lc-hub-profile" data-hub-profile aria-label="Your account"><p role="status">Loading your library…</p></section>
       <nav class="lc-hub-tabs" aria-label="Your library">
         <button type="button" data-hub-view="overview" aria-pressed="true">Overview</button>
         <button type="button" data-hub-view="saved" aria-pressed="false">Saved</button>

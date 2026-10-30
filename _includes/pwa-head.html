@@ -10,6 +10,16 @@ setTimeout(() => {
 {% endif %}
 <style>
 .lc-member-loading {display:none!important;}
+/* Reserve account surfaces before modules run; do not paint the guest view during restoration. */
+.lc-member-restoring [data-hub-library],.lc-member-restoring [data-hub-mobile-library],
+.lc-member-restoring [data-hub-account],.lc-member-restoring [data-hub-mobile-account],
+.lc-member-restoring [data-hub-view="playlists"] {display:none!important;}
+.lc-member-restoring [data-hub-profile] {position:relative;min-height:120px;}
+.lc-member-restoring [data-hub-profile] > * {visibility:hidden;}
+.lc-member-restoring [data-hub-profile]::after {content:'Restoring your account…';position:absolute;inset:0;display:flex;align-items:center;font-size:1rem;font-weight:400;}
+.lc-member-restoring [data-hub-content] {visibility:hidden;}
+.lc-member-restoring #member-google-option,.lc-member-restoring #member-form,
+.lc-member-restoring #member-google-form,.lc-member-restoring #member-verification {display:none!important;}
 .lc-member-restoring .home-featured > :not(.lc-member-loading),
 .lc-member-restoring #video-category-tabs,
 .lc-member-restoring #videotab-container {visibility:hidden;}
@@ -35,7 +45,7 @@ setTimeout(() => {
 {% else %}
 <script defer src="{{ '/script/pwa.js' | relative_url }}?v=study-hub-1" data-base="{{ '/' | relative_url }}"></script>
 {% endif %}
-<script type="module" src="{{ '/script/members.js' | relative_url }}?v=study-hub-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
+<script type="module" src="{{ '/script/members.js' | relative_url }}?v=auth-restore-2" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
 <script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=shell-1"></script>
 <script defer src="{{ '/script/media-duration.js' | relative_url }}?v=1"></script>
 <script defer src="{{ '/script/audio-links.js' | relative_url }}?v=duration-1" data-lightcity-audio-links data-base="{{ '/' | relative_url }}"></script>
@@ -49,9 +59,9 @@ setTimeout(() => {
 <script type="application/json" id="lc-public-video-replacements">{ {% assign replacement_comma = '' %}{% for replacement in site.data.video_replacements %}{% if replacement.visibility == 'public' %}{% if public_video_ids contains replacement.to %}{% unless member_video_ids contains replacement.to %}{{ replacement_comma }}{{ replacement.from | jsonify | replace: '<', '\u003c' }}:{{ replacement.to | jsonify | replace: '<', '\u003c' }}{% assign replacement_comma = ',' %}{% endunless %}{% endif %}{% endif %}{% endfor %} }</script>
 
 {% unless page.studio_app == true %}
-<link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=3">
-<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=4"></script>
+<link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=auth-restore-2">
+<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=auth-restore-2"></script>
 {% include site-shell-config.html %}
 <link rel="stylesheet" href="{{ '/style/site-shell.css' | relative_url }}?v=4">
-<script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=4"></script>
+<script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=auth-restore-2"></script>
 {% endunless %}

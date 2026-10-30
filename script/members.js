@@ -50,15 +50,20 @@ async function checkAccess({ preserveOnTransient = false } = {}) {
   const current = ++version;
   api.user = memberAuth.currentUser;
   api.error = null;
-  try {
+  // Public metadata and member access load together, so a public lookup cannot delay member restoration.
+  const publicRefresh = (async () => { try {
     const publicData = await call('getPublicVideoLibrary');
     if (current !== version) return;
     if (!Array.isArray(publicData.videos) || publicData.videos.some(v=>!/^[\w-]{11}$/.test(v.id)||v.visibility!=='public')) throw Error('Invalid public library');
     api.publicLibrary = publicData.videos;
     const metadata=document.getElementById('lc-public-video-data');
     if(metadata)metadata.textContent=JSON.stringify(Object.fromEntries(publicData.videos.map(v=>[v.id,v.title])));
-  } catch { /* Bundled public cards remain available during connection failures. */ }
-  if (!api.user || api.user.isAnonymous) { publish(null); renderPage(); return; }
+  } catch { /* Bundled public cards remain available during connection failures. */ } })();
+  if (!api.user || api.user.isAnonymous) {
+    await publicRefresh;
+    if (current !== version) return;
+    publish(null); renderPage(); return;
+  }
   try {
     const data = await call('getChurchLibrary');
     if (current !== version) return;
