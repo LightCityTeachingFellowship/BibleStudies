@@ -1,15 +1,17 @@
+import {setupStreamIssueForm} from './stream-issues.mjs?v=no-sound-1';
 export function setupStudioTests({document,window,api,status}){
  const panel=document.getElementById('admin-test-preview');
  if(!panel)return;
  let version=0;
+ const feedback=setupStreamIssueForm({document,window,api,privateTest:true});
  async function preview(){
-  const current=++version;panel.hidden=true;document.getElementById('admin-test-frame').replaceChildren();
+  const current=++version;panel.hidden=true;document.getElementById('admin-test-frame').replaceChildren();feedback?.availability();
   const id=new URL(window.location.href).searchParams.get('test');
   if(!/^[\w-]{11}$/.test(id||'')||!api()?.user?.uid)return;
   const uid=api().user.uid;
   try{const row=await api().getStudioPublication({videoId:id,visibility:'test'});if(current!==version||api()?.user?.uid!==uid)return;
    document.getElementById('admin-test-title').textContent=row.title;
-   const frame=document.createElement('iframe');frame.title=row.title;frame.src='https://www.youtube-nocookie.com/embed/'+id+'?playsinline=1&rel=0';frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';document.getElementById('admin-test-frame').appendChild(frame);panel.hidden=false;
+   const frame=document.createElement('iframe');frame.title=row.title;frame.src='https://www.youtube-nocookie.com/embed/'+id+'?playsinline=1&rel=0';frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';document.getElementById('admin-test-frame').appendChild(frame);panel.hidden=false;feedback?.availability();
   }catch(error){if(current===version&&api()?.user?.uid===uid)status(error?.message||'Sign in with the admin account that created this private test.');}
  }
  for(const [id,action] of [['admin-test-register','register'],['admin-test-unregister','unregister']]){

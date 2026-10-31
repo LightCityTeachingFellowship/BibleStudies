@@ -42,12 +42,21 @@ export function createStreamReports(deps){
  return {
   async submit(request){
    const {videoId:id,issue,deviceToken}=request.data||{};
-   if(!/^[\w-]{11}$/.test(id||'')||!['ended','volume','message'].includes(issue))throw new fail('invalid-argument','Choose a stream and an issue.');
+   if(!/^[\w-]{11}$/.test(id||'')||!['ended','volume','no-sound','message'].includes(issue))throw new fail('invalid-argument','Choose a stream and an issue.');
    if(typeof deviceToken!=='string'||deviceToken.length>10000)throw new fail('unauthenticated','Refresh the page and try again.');
    let device;try{device=(await auth.verifyIdToken(deviceToken,true)).uid;}catch{throw new fail('unauthenticated','Refresh the page and try again.');}
-   const snapshot=await db.doc('churchVideoLibrary/current').get(),video=snapshot.data()?.videos?.find(v=>v.id===id);
+   const privateTest=request.data?.privateTest===true;
+   let video,testOwner;
+   if(privateTest){
+    testOwner=await requireStudioAdmin(request,deps);
+    const record=await db.doc('churchStudioPublications/private-test-'+hash(testOwner)+'/videos/'+id).get();
+    if(!record.exists||record.data()?.videoId!==id)throw new fail('not-found','This private test was not found for your admin account.');
+    video={id,title:record.data().title};
+   }else{
+    const snapshot=await db.doc('churchVideoLibrary/current').get();video=snapshot.data()?.videos?.find(v=>v.id===id);
+   }
    if(!video)throw new fail('not-found','This video is no longer on LightCity. Refresh to open its replacement.');
-   if(video.visibility!=='public'){
+   if(!privateTest&&video.visibility!=='public'){
     const uid=request.auth?.uid;if(!uid)throw new fail('permission-denied','Sign in with your church account first.');
     const [user,membership]=await Promise.all([auth.getUser(uid),db.doc('churchMembers/'+uid).get()]);if(user.disabled||!user.emailVerified||membership.data()?.active!==true)throw new fail('permission-denied','Church access is required for this stream.');
    }
@@ -65,31 +74,34 @@ export function createStreamReports(deps){
    // Neither client roles nor player-ended events can bypass server verification.
    await db.runTransaction(async tx=>{const actor=db.doc('churchRateLimits/stream-actor-'+hash(device+':'+id)),ip=db.doc('churchRateLimits/stream-ip-'+hash(request.rawRequest?.ip||device));const [a,b]=await Promise.all([tx.get(actor),tx.get(ip)]);const window=Math.floor(now()/300000),count=b.data()?.window===window?b.data().count:0;if(a.data()?.nextAt>now()||count>=15)throw new fail('resource-exhausted','Please wait before reporting again.');tx.set(actor,{nextAt:now()+30000});tx.set(ip,{window,count:count+1});});
    // Questions/answers are feedback, not claims about stream status; send without a YouTube check.
-   const state=issue==='message'?{state:'message'}:await verify(id);
+   // Audio faults are viewer feedback. Do not require a healthy audio relay to
+   // report a broken one. Only ended-stream claims require full verification.
+   const audioIssue=issue==='volume'||issue==='no-sound';
+   const state=issue==='message'?{state:'message'}:audioIssue?await youtube(id):await verify(id);
    if(issue==='ended'&&state.state==='live')return {state:'still-live',refresh:true,message:'The stream is still live. Refresh this page to reconnect.'};
-   if(state.state==='unknown')return {state:'uncertain',refresh:true,recheck:true,message:'We could not confirm the stream status yet. YouTube may still be updating. Refresh or check again shortly. No ended-stream alert has been sent.'};
-   if(issue==='volume'&&state.state==='ended')return {state:'ended',refresh:true,message:'This stream has ended. Refresh to check for an updated video.'};
+   if(issue==='ended'&&state.state==='unknown')return {state:'uncertain',refresh:true,recheck:true,message:'We could not confirm the stream status yet. YouTube may still be updating. Refresh or check again shortly. No ended-stream alert has been sent.'};
+   if(audioIssue&&state.state==='ended')return {state:'ended',refresh:true,message:'This stream has ended. Refresh to check for an updated video.'};
    if(issue==='ended'&&now()-state.endedAt>2*3600000)return {state:'ended',refresh:true,message:'This broadcast ended earlier. Refresh to check for its recording or a newer stream.'};
-   const reportId=hash(id+':'+issue+':'+(issue==='message'?randomUUID():Math.floor(now()/300000))),ref=db.doc(reportsPath+'/'+reportId);
-   await db.runTransaction(async tx=>{const old=await tx.get(ref);if(old.exists){const senders=[...(old.data().senders||[]).filter(s=>s.key!==sender.key),sender].slice(-20);tx.set(ref,{count:(old.data().count||1)+1,lastAt:now(),senders},{merge:true});return;}tx.set(ref,{videoId:id,title:String(video.title||'LightCity stream').slice(0,300),issue,sender,senders:[sender],...(issue==='message'?{message:custom}:{}),verified:issue==='ended',createdAt:now(),lastAt:now(),count:1,resolved:false,delivery:'pending'});});
-   return {state:'reported',message:issue==='message'?'Your message has been sent to the admin.':issue==='ended'?'The stream ending was confirmed. Your report has been sent to the admin.':'Your request to increase the speaker volume has been sent to the admin.'};
+   const reportId=hash((privateTest?'private:'+testOwner+':':'')+id+':'+issue+':'+(issue==='message'?randomUUID():Math.floor(now()/300000))),ref=db.doc(reportsPath+'/'+reportId);
+   await db.runTransaction(async tx=>{const old=await tx.get(ref);if(old.exists){const senders=[...(old.data().senders||[]).filter(s=>s.key!==sender.key),sender].slice(-20);tx.set(ref,{count:(old.data().count||1)+1,lastAt:now(),senders},{merge:true});return;}tx.set(ref,{videoId:id,title:String(video.title||'LightCity stream').slice(0,300),issue,sender,senders:[sender],...(privateTest?{privateTest:true,testOwner}:{}),...(issue==='message'?{message:custom}:issue==='no-sound'?{message:'No sound is coming from the stream. Please check the audio feed.'}:{}),verified:issue==='ended',createdAt:now(),lastAt:now(),count:1,resolved:false,delivery:'pending'});});
+   return {state:'reported',message:issue==='message'?'Your message has been sent to the admin.':issue==='ended'?'The stream ending was confirmed. Your report has been sent to the admin.':issue==='no-sound'?'Your no-sound report has been sent to the admin.':'Your request to increase the speaker volume has been sent to the admin.'};
   },
-  async inbox(request){await requireStudioAdmin(request,deps);const rows=await db.collection(reportsPath).where('resolved','==',false).get();return {reports:rows.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.createdAt-a.createdAt)};},
-  async resolve(request){await requireStudioAdmin(request,deps);const id=request.data?.reportId;if(!/^[a-f0-9]{64}$/.test(id||''))throw new fail('invalid-argument','Choose a report.');const ref=db.doc(reportsPath+'/'+id);if(!(await ref.get()).exists)throw new fail('not-found','Report not found.');await ref.set({resolved:true},{merge:true});return {resolved:true};}
+  async inbox(request){const uid=await requireStudioAdmin(request,deps);const rows=await db.collection(reportsPath).where('resolved','==',false).get();return {reports:rows.docs.map(d=>({id:d.id,...d.data()})).filter(r=>!r.privateTest||r.testOwner===uid).sort((a,b)=>b.createdAt-a.createdAt)};},
+  async resolve(request){const uid=await requireStudioAdmin(request,deps);const id=request.data?.reportId;if(!/^[a-f0-9]{64}$/.test(id||''))throw new fail('invalid-argument','Choose a report.');const ref=db.doc(reportsPath+'/'+id),row=await ref.get();if(!row.exists||row.data()?.privateTest&&row.data().testOwner!==uid)throw new fail('not-found','Report not found.');await ref.set({resolved:true},{merge:true});return {resolved:true};}
  };
 }
 export async function notifyStreamReport({id,db,auth,messaging,emails,now=Date.now}){
  const ref=db.doc(reportsPath+'/'+id),row=(await ref.get()).data();if(!row||row.resolved||row.delivery==='sent')return;
  const targets=new Map();
  for(const email of String(emails()).split(/[,;\s]+/).filter(Boolean)){
-  let user;try{user=await auth.getUserByEmail(email);}catch{continue;}if(user.disabled||!user.emailVerified)continue;
+  let user;try{user=await auth.getUserByEmail(email);}catch{continue;}if(user.disabled||!user.emailVerified||row.privateTest&&row.testOwner!==user.uid)continue;
   const devices=await db.collection('churchStudioPublications/private-test-'+hash(user.uid)+'/devices').get();if(!devices.docs.length)continue;
   const subscribers=await db.getAll(...devices.docs.map(d=>db.doc('webPushSubscribers/'+d.id)));for(const d of subscribers)if(typeof d.data()?.token==='string'&&d.data().token)targets.set(d.data().token,d);
  }
  if(!targets.size){await ref.set({delivery:'no-devices'},{merge:true});return;}
  const senderLabel=(row.sender?.name||'A viewer')+(row.sender?.source==='visitor'?' (visitor)':'');
- const url='https://lightcityfellowship.com/Admin/?reports=1',title=row.issue==='message'?'Stream message from '+senderLabel:row.issue==='ended'?'Stream ended — confirmed':'Speaker volume request';
- const body=row.issue==='message'?row.message.slice(0,240)+' · '+row.title:(senderLabel+': '+(row.issue==='ended'?'Stream ending confirmed. ':'Speaker volume is too low. ')+row.title);
+ const url='https://lightcityfellowship.com/Admin/?reports=1',title=(row.privateTest?'Private test · ':'')+(row.issue==='message'?'Stream message from '+senderLabel:row.issue==='ended'?'Stream ended — confirmed':row.issue==='no-sound'?'No sound on the stream':'Speaker volume request');
+ const body=row.issue==='message'?row.message.slice(0,240)+' · '+row.title:(senderLabel+': '+(row.issue==='ended'?'Stream ending confirmed. ':row.issue==='no-sound'?'There is no sound on the stream. ':'Speaker volume is too low. ')+row.title);
  for(const [token,subscriber]of targets){
   const receipt=db.doc(reportsPath+'/'+id+'/delivery/'+hash(token));if((await receipt.get()).exists)continue;
   const result=await messaging.sendEachForMulticast({tokens:[token],notification:{title,body},data:{id:'stream-issue-'+id,title,body,url,requireInteraction:'true'},webpush:{headers:{TTL:'1800',Urgency:'high'},notification:{icon:'https://lightcityfellowship.com/images/pwa-192.png',badge:'https://lightcityfellowship.com/images/notification-badge.png',tag:'stream-issue-'+id,silent:false,renotify:true,requireInteraction:true},fcmOptions:{link:url}}});

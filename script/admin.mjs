@@ -1,5 +1,5 @@
 import {setupAdminUsers} from './admin-users.mjs?v=1';
-import {setupStudioTests} from './studio-tests.mjs?v=private-tests-1';
+import {setupStudioTests} from './studio-tests.mjs?v=stream-alerts-1';
 import {setupStudioPublisher} from './studio-publish.mjs?v=desktop-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=previews-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers}){

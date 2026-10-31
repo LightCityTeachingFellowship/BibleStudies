@@ -20,7 +20,7 @@ Commit/sync the website files and refresh Watch and Studio. Studio shows a Strea
 - The callable validates a signed Firebase device identity, current site video ID and public/member access before contacting YouTube. Guest viewers use the separate anonymous device identity; their member account is not changed.
 - The server reads YouTube videos.list snippet and liveStreamingDetails only when a viewer reports an issue. Actual end time overrides a stale live flag. If no end time exists, it rechecks after seven seconds and checks that the trusted live-audio playlist is fresh and advancing. A stalled or completed audio feed alone is never proof that the video ended.
 - Ended reports alert only after an actual YouTube end timestamp is available, and only within two hours of that timestamp. Older finished broadcasts return guidance. Still-live results offer Refresh. Uncertain results offer Refresh and Check again, with no ended alert. Google status propagation can delay confirmation; the feature cannot guarantee instant or infallible detection. See https://developers.google.com/youtube/v3/docs/videos#liveStreamingDetails.actualEndTime .
-- Volume reports are viewer requests, not automatic volume measurements or adjustments. A live stream is checked before these are accepted.
+- Low volume and No sound are viewer reports, not automatic audio measurements. YouTube is checked for a confirmed end; an unavailable audio relay or uncertain YouTube status does not block these reports. Ended-stream reports still require full end verification.
 - A 30-second per-device/video limit and a 15-attempt/5-minute IP limit apply. Status results are shared briefly to reduce API usage. Reports for the same video and issue within a five-minute bucket are grouped. Inbox data is under the existing server-only churchStudioPublications tree; no broad Firestore rule is added.
 - Push delivery has per-target receipts. Persistent network errors retry through the Firestore trigger; invalid tokens are removed. Delivery is not guaranteed exactly once if a process fails between FCM acceptance and saving a receipt, but a stable notification tag reduces duplicate popups.
 
@@ -34,6 +34,24 @@ node tools/test-stream-reports-ui.mjs
 These use simulated YouTube/relay/FCM responses. After deployment, run a real stream test: a still-live ended report must offer Refresh without an admin ended alert; a volume request must arrive in Studio and on registered admin devices; after ending the stream, the ended report must wait for confirmed YouTube end status.
 
 ## Named questions, answers and custom messages
+
+Private test previews at `/Admin/?test=VIDEO_ID` include the same feedback form.
+They do not enter the public/member video lists. The server verifies the active
+admin and a test record belonging to that admin before accepting feedback.
+Reports carry a private-test label; only their owner can retrieve/handle them,
+and their push alerts target only that owner's registered test devices.
+The Windows app receives them through its existing inbox polling.
+Ended-stream reports still require real end verification. Private volume requests
+can use YouTube's live state without a public audio relay. A custom message is the
+quickest test of the alert path because it does not wait for live-status checks.
+Deploy `deploy-stream-reports.ps1` and publish the website changes for this update;
+the Windows installer does not need rebuilding.
+
+Studio's Stream reports container turns pale red with a slow pulsing red glow
+while unresolved reports exist. The warning persists across refresh failures and
+stops after the last report is handled (including on another device). Reduced
+motion preferences keep the red highlight without animation. No sound reports
+include readable fault text for compatibility with the installed Windows panel.
 
 The feedback form also offers “Question, answer or other message”, up to 2000 characters. This sends private feedback directly to Studio without a YouTube-status check. Each message gets an independent record and alert; different questions are never grouped away. The same access and anti-spam checks apply.
 

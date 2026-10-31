@@ -7,14 +7,14 @@ const liveItem={id,snippet:{liveBroadcastContent:'live'},liveStreamingDetails:{a
 assert.equal(youtubeState({...liveItem,liveStreamingDetails:{...liveItem.liveStreamingDetails,actualEndTime:'2026-10-28T09:59:00Z'}}).state,'ended','end time overrides stale live flag');
 assert.equal(youtubeState({snippet:{liveBroadcastContent:'live'}}).state,'unknown','live label alone is insufficient');
 const playlist='#EXTM3U\n#EXT-X-PROGRAM-DATE-TIME:2026-10-28T09:59:55Z\n#EXTINF:4.0,\nsegment-000001.ts';assert.equal(playlistEvidence(playlist,now).fresh,true);assert.equal(playlistEvidence(playlist+'\n#EXT-X-ENDLIST',now).fresh,false);assert.equal(playlistEvidence(playlist,now+120000).fresh,false);
-function fixture({states=[liveItem],fresh=true}={}){
+function fixture({states=[liveItem],fresh=true,relayPresent=true}={}){
  const rows=new Map([['churchVideoLibrary/current',{videos:[{id,title:'Prayer meeting',visibility:'public'}]}]]),writes=[],requests=[];
  function doc(path){return {path,id:path.split('/').at(-1),get:async()=>({id:path.split('/').at(-1),ref:doc(path),exists:rows.has(path),data:()=>rows.get(path)}),set:async(v,o)=>{writes.push(path);rows.set(path,o?.merge?{...rows.get(path),...v}:v);},delete:async()=>rows.delete(path)};}
  const collection=path=>({get:async()=>({docs:await Promise.all([...rows.keys()].filter(k=>k.startsWith(path+'/')&&!k.slice(path.length+1).includes('/')).map(k=>doc(k).get()))}),where(field,_operator,value){const read=this.get;return {get:async()=>({docs:(await read()).docs.filter(d=>d.data()?.[field]===value)})};},orderBy(){return this;},limit(){return this;}});
  const db={doc,collection,getAll:async(...refs)=>Promise.all(refs.map(r=>r.get())),runTransaction:async fn=>fn({get:r=>r.get(),set:(r,v,o)=>r.set(v,o)})};
  let count=0,clock=now,relayChecks=0;
  const auth={verifyIdToken:async token=>{if(token!=='valid-device')throw Error();return {uid:'device'};},getUser:async uid=>({uid,email:'admin@example.com',emailVerified:true,providerData:[{}]}),getUserByEmail:async()=>({uid:'admin',emailVerified:true})};
- const deps={db,auth,fail:Fail,emails:()=> 'admin@example.com',key:()=> 'private-key',now:()=>clock,pause:async()=>{},live:{catalog:async()=>[{videoId:id,active:true}],sign:async()=>({url:'https://relay.test/audio.m3u8'})},send:async url=>{requests.push(String(url));if(String(url).includes('youtube/v3'))return Response.json({items:[states[Math.min(count++,states.length-1)]]});return new Response(fresh?playlist.replace('segment-000001.ts','segment-'+String(++relayChecks).padStart(6,'0')+'.ts'):playlist+'\n#EXT-X-ENDLIST');}};
+ const deps={db,auth,fail:Fail,emails:()=> 'admin@example.com',key:()=> 'private-key',now:()=>clock,pause:async()=>{},live:{catalog:async()=>relayPresent?[{videoId:id,active:true}]:[],sign:async()=>({url:'https://relay.test/audio.m3u8'})},send:async url=>{requests.push(String(url));if(String(url).includes('youtube/v3'))return Response.json({items:[states[Math.min(count++,states.length-1)]]});return new Response(fresh?playlist.replace('segment-000001.ts','segment-'+String(++relayChecks).padStart(6,'0')+'.ts'):playlist+'\n#EXT-X-ENDLIST');}};
  return {db,auth,rows,writes,requests,service:createStreamReports(deps),advance:()=>clock+=31000};
 }
 const request=issue=>({data:{videoId:id,issue,senderName:'Visitor One',deviceToken:'valid-device'},rawRequest:{ip:'test'}});
@@ -53,3 +53,33 @@ for(let i=0;i<40;i++)f.rows.set('churchStudioPublications/stream-issues/reports/
 const oldId='e'.repeat(64);f.rows.set('churchStudioPublications/stream-issues/reports/'+oldId,{resolved:false,createdAt:now-100000,title:'Older unresolved report'});
 const remaining=await f.service.inbox({auth:{uid:'admin'},data:{}});assert.equal(remaining.reports.length,1);assert.equal(remaining.reports[0].id,oldId);
 console.log('PASS: old unresolved reports remain available after more than 30 recent handled reports.');
+
+// Private tests stay outside the published library, use real status checks and target their owner only.
+const privateRoot='churchStudioPublications/private-test-'+hash('admin');
+const privateRequest=issue=>({...request(issue),auth:{uid:'admin'},data:{...request(issue).data,privateTest:true,message:'Private test question'}});
+const preparePrivate=options=>{const item=fixture(options);item.rows.set('churchVideoLibrary/current',{videos:[]});item.rows.set(privateRoot+'/videos/'+id,{videoId:id,title:'Private prayer test'});return item;};
+f=preparePrivate({relayPresent:false});assert.equal((await f.service.submit(privateRequest('message'))).state,'reported');
+let privateReports=[...f.rows.entries()].filter(([p,r])=>p.includes('/reports/')&&r.privateTest);assert.equal(privateReports.length,1);assert.equal(privateReports[0][1].testOwner,'admin');assert.equal(f.requests.length,0);assert.deepEqual(f.rows.get('churchVideoLibrary/current').videos,[]);
+const privateId=privateReports[0][0].split('/').at(-1);assert.equal((await f.service.inbox({auth:{uid:'other-admin'}})).reports.length,0,'another admin cannot read the private test report');
+await assert.rejects(f.service.resolve({auth:{uid:'other-admin'},data:{reportId:privateId}}),e=>e.code==='not-found');
+f.rows.set(privateRoot+'/devices/phone',{});f.rows.set('webPushSubscribers/phone',{token:'owner-phone'});f.rows.set('churchStudioPublications/private-test-'+hash('other-admin')+'/devices/other',{});f.rows.set('webPushSubscribers/other',{token:'other-admin-phone'});
+let privateSends=[];f.auth.getUserByEmail=async email=>({uid:email==='admin@example.com'?'admin':'other-admin',emailVerified:true});
+await notifyStreamReport({id:privateId,db:f.db,auth:f.auth,emails:()=> 'admin@example.com,other@example.com',messaging:{sendEachForMulticast:async data=>{privateSends.push(data);return {responses:[{}]};}}});assert.equal(privateSends.length,1);assert.deepEqual(privateSends[0].tokens,['owner-phone']);assert.match(privateSends[0].notification.title,/Private test/);
+f=preparePrivate({relayPresent:false});assert.equal((await f.service.submit(privateRequest('volume'))).state,'reported','private volume feedback works without a public relay');
+f=preparePrivate({relayPresent:false});assert.equal((await f.service.submit(privateRequest('ended'))).state,'uncertain');assert.ok(![...f.rows.keys()].some(p=>p.includes('/reports/')),'private tests cannot bypass ended-stream verification');
+f=preparePrivate({states:[ended],relayPresent:false});assert.equal((await f.service.submit(privateRequest('ended'))).state,'reported');
+f=preparePrivate();await assert.rejects(f.service.submit({...privateRequest('message'),auth:{uid:'other-admin'}}),e=>e.code==='not-found');
+await assert.rejects(f.service.submit({...privateRequest('message'),auth:null}),e=>e.code==='unauthenticated');
+f.auth.getUser=async uid=>({uid,email:'member@example.com',emailVerified:true,providerData:[{}]});await assert.rejects(f.service.submit(privateRequest('message')),e=>e.code==='permission-denied');
+console.log('PASS: private preview ownership, real ended-stream verification, volume without a relay, private inbox/resolve access and owner-only notification targets.');
+
+// No-sound feedback must not depend on a healthy relay, and is not proof a stream ended.
+f=fixture({relayPresent:false,states:[{}]});assert.equal((await f.service.submit(request('no-sound'))).state,'reported');
+const noSoundEntry=[...f.rows.entries()].find(([p,r])=>p.includes('/reports/')&&r.issue==='no-sound');assert.equal(noSoundEntry[1].verified,false);assert.match(noSoundEntry[1].message,/No sound/);assert.equal(noSoundEntry[1].sender.name,'Visitor One');
+assert.ok(f.requests.every(url=>!url.includes('relay.test')),'a sound fault can be reported when the relay is unavailable');
+const {cleanReports}=await import('./studio-desktop/core.mjs');const compatible=cleanReports([{id:noSoundEntry[0].split('/').at(-1),...noSoundEntry[1]}]);assert.match(compatible[0].message,/No sound/,'the installed Windows alert panel retains readable fault details');
+f.rows.set(privateRoot+'/devices/phone',{});f.rows.set('webPushSubscribers/phone',{token:'admin-token'});let soundAlert;
+await notifyStreamReport({id:noSoundEntry[0].split('/').at(-1),db:f.db,auth:f.auth,emails:()=> 'admin@example.com',messaging:{sendEachForMulticast:async data=>{soundAlert=data;return {responses:[{}]};}}});assert.equal(soundAlert.notification.title,'No sound on the stream');assert.match(soundAlert.notification.body,/no sound/i);
+f=preparePrivate({relayPresent:false});assert.equal((await f.service.submit(privateRequest('no-sound'))).state,'reported');assert.equal([...f.rows.values()].find(v=>v.issue==='no-sound').testOwner,'admin');
+f=fixture({states:[ended]});assert.equal((await f.service.submit(request('no-sound'))).state,'ended');assert.ok(![...f.rows.keys()].some(p=>p.includes('/reports/')));
+console.log('PASS: no-sound reports, missing-relay tolerance, sender identity, private scope, known-ended guidance, push text and installed-Windows compatibility.');

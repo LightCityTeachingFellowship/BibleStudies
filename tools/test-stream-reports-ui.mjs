@@ -14,3 +14,20 @@ nodes['stream-report-kind'].value='message';nodes['stream-report-message'].value
 answer={state:'reported',message:'Sent'};nodes['stream-report-form'].handlers.submit({preventDefault(){}});await settle();assert.equal(calls.at(-1).message,'A question about the passage');assert.equal(nodes['stream-report-message'].value,'');
 answer=null;nodes['stream-report-kind'].value='ended';nodes['stream-report-form'].handlers.submit({preventDefault(){}});client.user=null;client.library=null;events['lightcity-members-changed']();resolveReport({message:'Private result',refresh:true});await settle();assert.equal(nodes['stream-report-dialog'].open,false);assert.notEqual(nodes['stream-report-status'].textContent,'Private result');assert.equal(nodes['stream-report-open'].hidden,true);
 console.log('PASS: live/recent-live visibility, dialog, Refresh action, uncertain/recheck handling and stale-account response protection.');
+
+const privateNodes=Object.fromEntries(ids.filter(id=>id!=='watch-player').concat('admin-test-preview').map(id=>[id,new Element()]));
+const privateEvents={},privateCalls=[],privateClient={user:{uid:'admin',emailVerified:true,displayName:'Test Admin'},ready:Promise.resolve(),reportStreamIssue:async data=>{privateCalls.push(data);return {state:'reported',message:'Private report sent'};}};
+privateNodes['stream-report-name'].value='';privateNodes['stream-report-message'].value='A private test question';privateNodes['stream-report-kind'].value='message';
+const privateWindow={location:{href:'https://lightcityfellowship.com/Admin/?test=abcdefghijk',reload:()=>privateCalls.push('refresh')},addEventListener:(name,fn)=>privateEvents[name]=fn,dispatchEvent:e=>privateCalls.push(e.type)};
+const privateContext=vm.createContext({document:{getElementById:id=>privateNodes[id]},window:privateWindow,URL,Date,Promise,Event,isLive:()=>false,getLiveRecordings:async()=>{throw Error('Private tests must not depend on the public live catalogue');}});
+vm.runInContext(readFileSync('script/stream-issues.mjs','utf8').replace(/^import .*\n/,'').replace('export function','function'),privateContext);
+privateContext.client=privateClient;vm.runInContext('setupStreamIssueForm({document,window,api:()=>client,privateTest:true})',privateContext);
+await settle();assert.equal(privateNodes['stream-report-open'].hidden,false,'verified Admin preview does not need a published-library entry');
+privateNodes['stream-report-open'].handlers.click();assert.equal(privateNodes['stream-report-dialog'].open,true);
+privateNodes['stream-report-message'].value='A private test question';
+privateNodes['stream-report-form'].handlers.submit({preventDefault(){}});await settle();assert.equal(privateCalls[0].privateTest,true);assert.equal(privateCalls[0].videoId,'abcdefghijk');assert.equal(privateCalls[0].message,'A private test question');assert.ok(privateCalls.includes('lightcity-stream-reports-changed'));
+privateClient.user=null;privateEvents['lightcity-members-changed']();assert.equal(privateNodes['stream-report-open'].hidden,true);assert.equal(privateNodes['stream-report-dialog'].open,false);
+console.log('PASS: feedback on the private Admin player, test-scoped submission, inbox refresh and sign-out cleanup.');
+privateClient.user={uid:'admin',emailVerified:true,displayName:'Test Admin'};privateEvents['lightcity-members-changed']();privateNodes['stream-report-kind'].value='no-sound';privateNodes['stream-report-kind'].handlers.change();assert.equal(privateNodes['stream-report-message-row'].hidden,true);
+privateNodes['stream-report-form'].handlers.submit({preventDefault(){}});await settle();assert.equal(privateCalls.filter(v=>v&&typeof v==='object').at(-1).issue,'no-sound');
+console.log('PASS: No sound uses its own report type without requiring a custom message.');
