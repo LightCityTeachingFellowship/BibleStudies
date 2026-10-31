@@ -1,0 +1,28 @@
+<button type="button" class="lc-reading-settings-button" data-reading-settings-open aria-haspopup="dialog" hidden>
+  <span aria-hidden="true">Aa</span> Text settings
+</button>
+<dialog class="lc-reading-dialog" data-reading-settings aria-labelledby="reading-settings-title">
+  <header class="lc-reading-dialog-heading">
+    <h2 id="reading-settings-title">Text settings</h2>
+    <button type="button" data-reading-settings-close aria-label="Close text settings">×</button>
+  </header>
+  <p>Make this reading comfortable for you. Your choices also apply to other articles and summaries on this device.</p>
+  <label for="reading-font">Font family</label>
+  <select id="reading-font" data-reading-font>
+    <option value="original">Original fonts</option>
+    <option value="system">System sans serif</option>
+    <option value="georgia">Georgia</option>
+    <option value="verdana">Verdana</option>
+    <option value="times">Times New Roman</option>
+  </select>
+  <div class="lc-reading-size-heading"><label for="reading-size">Text size</label><output for="reading-size" data-reading-size-output aria-live="polite">100%</output></div>
+  <div class="lc-reading-size-controls">
+    <button type="button" data-reading-smaller aria-label="Decrease text size">A−</button>
+    <input id="reading-size" type="range" min="80" max="180" step="10" value="100" data-reading-size>
+    <button type="button" data-reading-larger aria-label="Increase text size">A+</button>
+  </div>
+  <div class="lc-reading-dialog-actions">
+    <button type="button" data-reading-reset>Reset to default</button>
+    <button type="button" data-reading-settings-close class="lc-reading-done">Done</button>
+  </div>
+</dialog>

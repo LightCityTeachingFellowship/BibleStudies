@@ -1,0 +1,27 @@
+{% unless page.studio_app == true or page.url == '/Home/' or page.url == '/members/' %}
+<style>
+/* Apply before the body is parsed, while the new navigation is being assembled. */
+html.lc-shell-loading :is(.header-container,#homeHeader,.browse-search,.lc-nav-overlay,.lc-nav-desktop) {display:none!important;}
+html.lc-shell-loading body {box-sizing:border-box;padding-top:66px!important;padding-left:80px!important;}
+html.lc-shell-loading[data-shell-layout="drawer"] body {padding-left:0!important;}
+html.lc-shell-loading body:not(.lc-shell-ready)>.lc-shell-header,
+html.lc-shell-loading body:not(.lc-shell-ready)>.lc-shell-rail {visibility:hidden!important;}
+@media(max-width:900px){html.lc-shell-loading body{padding-top:60px!important;padding-left:0!important;}html.lc-shell-loading[data-shell-watch] body{padding-top:0!important;}}
+</style>
+<script>
+(() => {
+  const root=document.documentElement;
+  root.dataset.shellLayout={% if page.layout contains 'articleTEMPLATE' or page.layout contains 'summaryTEMPLATE' or page.url == '/Watch/' %}'drawer'{% else %}'rail'{% endif %};
+  {% if page.url == '/Watch/' %}root.setAttribute('data-shell-watch','');{% endif %}
+  root.classList.add('lc-shell-loading');
+  const finish=()=>{root.classList.remove('lc-shell-loading');root.removeAttribute('data-shell-layout');root.removeAttribute('data-shell-watch');};
+  window.addEventListener('lightcity-shell-ready',finish,{once:true});
+  // Restore usable original navigation if the module fails. Slow downloads keep
+  // the loading layout until they finish, rather than revealing the old header.
+  window.addEventListener('error',event=>{
+    if(event.target?.matches?.('script[data-lightcity-shell]'))finish();
+  },true);
+  window.addEventListener('load',finish,{once:true});
+})();
+</script>
+{% endunless %}

@@ -1,8 +1,26 @@
-<div class="lc-study-toolbar" data-study-current data-study-url="{{ page.url | relative_url | escape }}">
+<details id="reading-tools" class="lc-study-toolbar" data-study-current data-study-url="{{ page.url | relative_url | escape }}" open>
+  <summary class="lc-study-toolbar-heading">
+    <span>Reading tools</span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+  </summary>
+  <div class="lc-study-toolbar-body">
+  <div class="lc-study-toolbar-actions">
   <button type="button" class="lc-save-video" data-study-save aria-label="Save this reading" title="Save this reading" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-6-4-6 4z"/></svg></button>
   <a href="{{ '/MyLibrary/' | relative_url }}">My study library</a>
   <button type="button" data-study-resume hidden>Continue reading</button>
   <button type="button" data-study-finish>Mark as read</button>
   <button type="button" data-study-playlist disabled>Save to playlist</button>
-  <span data-study-status role="status" aria-live="polite"></span>
-</div>
+  </div>
+  {% if page.layout contains 'articleTEMPLATE' %}
+  <div class="lc-study-toolbar-footer">
+    <label class="lc-reading-expand">
+      <input type="checkbox" id="toggleAllBtn" role="switch" aria-label="Expand all sections" onchange="hideOrShowAllHnum()">
+      <span class="lc-reading-expand-label">Expand All</span>
+      <span class="lc-reading-collapse-label">Collapse All</span>
+      <span class="lc-reading-expand-switch" aria-hidden="true"></span>
+    </label>
+  </div>
+  {% endif %}
+  </div>
+</details>
+{% include reading-settings.html %}

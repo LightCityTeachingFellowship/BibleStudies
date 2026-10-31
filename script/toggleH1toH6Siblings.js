@@ -74,7 +74,7 @@ if(!document.querySelector('#homeBodyContent')){
     // AutoAdjust checked state of #toggleAllBtn -- `Expand All`/`Collapse All`
     const toggleAllBtn = document.body.querySelector('#toggleAllBtn');
     const article = document.body.querySelector('article');
-    document.body.querySelectorAll('article :is(h6,h5,h4,h3,h2,h1):not(header > :is(h6,h5,h4,h3,h2,h1))').forEach(h=>{
+    if(toggleAllBtn)document.body.querySelectorAll('article :is(h6,h5,h4,h3,h2,h1):not(header > :is(h6,h5,h4,h3,h2,h1))').forEach(h=>{
         h.addEventListener('click', ()=>{
             if(!article.querySelector('.hidingsibs')){
                 // All headers are showing lower siblings
