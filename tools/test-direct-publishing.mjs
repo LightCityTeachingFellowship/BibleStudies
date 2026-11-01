@@ -40,3 +40,29 @@ await serveVideoShare({method:'GET',path:'/Share/Video/unknown0000/'},response,d
 const publicRow=rows.get('churchVideoLibrary/current');publicRow.videos.push({id:'yyyyyyyyyyy',title:'Public replacement',visibility:'public',replaces:[a,c],replacementVisibility:{[a]:'members',[c]:'public'}});
 const safe=(await publicVideoLibrary(db)).find(v=>v.id==='yyyyyyyyyyy');assert.deepEqual(safe.replaces,[c]);assert.ok(!JSON.stringify(safe).includes(a));
 console.log('PASS: direct publication, pending audio, live readiness, idempotency, auth/audiences, GitHub outage independence, stale build protection, source retirement, replacements, public privacy, dynamic share previews and Watch access.');
+// Replacing an older item must not displace the newest item, before OR after readiness.
+const newest='newest00001',older='older000001',replacementId='replace0001';
+rows.set('churchVideoLibrary/current',{videos:[{id:newest,title:'Newest',visibility:'members'},{id:older,title:'Older',visibility:'members'},{id:c,title:'Last',visibility:'public'}]});
+rows.set('churchVideoLibrary/desired',structuredClone(rows.get('churchVideoLibrary/current')));rows.set('churchVideoLibrary/studio',{entries:[]});
+recordings=[];live=[];
+await assert.rejects(service.replaceFromHelper({videoId:replacementId,replaceVideoId:older,visibility:'members',expectedVersion:'stale'}),e=>e.code==='aborted');
+await service.replaceFromHelper({videoId:replacementId,replaceVideoId:older,visibility:'members',expectedVersion:'legacy'});
+assert.deepEqual((await service.source()).map(v=>v.id),[newest,replacementId,c]);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newest,older,c]);
+recordings=[{videoId:replacementId,bytes:100,sha256:'a'.repeat(64)}];await service.promote(replacementId);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newest,replacementId,c]);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos[1].replaces,[older]);
+// A recovery is explicit, scoped, and cannot restore an admin removal.
+rows.set('churchVideoLibrary/current',{videos:[{id:newest,title:'Newest',visibility:'members'},{id:c,title:'Last',visibility:'public'}]});rows.set('churchVideoLibrary/desired',structuredClone(rows.get('churchVideoLibrary/current')));
+rows.set('churchVideoLibrary/studio',{entries:[],removed:[{id:older,visibility:'members'}]});
+rows.set('churchStudioPublications/'+older,{state:'removed',title:'Older',visibility:'members',removedBy:'admin'});rows.delete('churchStudioPublications/'+replacementId);recordings=[];
+const recovery={videoId:replacementId,replaceVideoId:older,visibility:'members',expectedVersion:'legacy',recoverRemoved:true,afterId:newest,beforeId:c};
+await assert.rejects(service.replaceFromHelper(recovery),e=>e.code==='failed-precondition');
+rows.get('churchStudioPublications/'+older).removedBy='local-list-helper';
+await service.replaceFromHelper(recovery);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newest,older,c]);
+assert.deepEqual((await service.source()).map(v=>v.id),[newest,replacementId,c]);
+assert.equal(rows.get('churchStudioPublications/'+older).state,'recovered');
+recordings=[{videoId:replacementId,bytes:100,sha256:'a'.repeat(64)}];await service.promote(replacementId);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newest,replacementId,c]);
+console.log('PASS: older replacement preserves slot, keeps original until ready, rejects stale versions and safely recovers helper-only accidental removals.');

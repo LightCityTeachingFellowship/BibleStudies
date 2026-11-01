@@ -95,7 +95,13 @@ export const getStudioHelperLibrary=onRequest({...options,secrets:[studioGitHubT
  res.set('Cache-Control','no-store');
  if(req.method!=='POST'||!validHelperBearer(req.get('authorization'),livePlaybackKey.value())){res.status(403).json({error:'Access denied'});return;}
  try{
+  if(req.body?.replaceVideo){
+   if(req.body.syncProtocol!==2){res.status(409).json({error:'Update the local list helper before syncing changes.'});return;}
+   await studioPublishing.replaceFromHelper(req.body.replaceVideo);
+   res.json(await studioPublishing.listState());return;
+  }
   if(req.body?.removeVideoId){
+   if(req.body.syncProtocol!==2){res.status(409).json({error:'Update the local list helper before syncing removals.'});return;}
    await studioPublishing.removeFromHelper(req.body.removeVideoId,req.body.expectedVersion);
    res.json(await studioPublishing.listState());return;
   }

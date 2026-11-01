@@ -37,12 +37,19 @@ export function githubPublisher({token,send=fetch}){
    const commit=await request('/git/commits','POST',{message:'Studio: remove video '+ids[0],tree:tree.sha,parents:[current.sha]});
    try{await request('/git/refs/heads/master','PATCH',{sha:commit.sha,force:false});return {sha:commit.sha};}catch(error){if(error.status!==422||attempt===2)throw error;}
   }
- },async add(id,visibility,replaceVideoId){
+ },async add(id,visibility,replaceVideoId,placement){
   for(let attempt=0;attempt<3;attempt++){
    const current=await snapshot();let change;
    if(replaceVideoId&&current.lists[visibility].includes(replaceVideoId)){
     if(current.lists[visibility==='public'?'members':'public'].includes(id))throw Error('Replacement audience mismatch');
     change={path:paths[visibility],content:[...new Set(current.lists[visibility].map(v=>v===replaceVideoId?id:v))].join('\n')+'\n'};
+   }else if(replaceVideoId&&placement){
+    if(current.lists[visibility==='public'?'members':'public'].includes(id))throw Error('Replacement audience mismatch');
+    const list=current.lists[visibility].filter(v=>v!==id);
+    const before=list.indexOf(placement.beforeId),after=list.indexOf(placement.afterId);
+    const index=before>=0?before:after>=0?after+1:Number.isInteger(placement.index)?Math.min(placement.index,list.length):0;
+    list.splice(index,0,id);
+    change=list.join(',')===current.lists[visibility].join(',')?null:{path:paths[visibility],content:list.join('\n')+'\n'};
    }else change=planAddition(current.lists,id,visibility);
    if(!change)return {sha:current.sha,existing:true};
    const tree=await request('/git/trees','POST',{base_tree:current.tree,tree:[{path:change.path,mode:'100644',type:'blob',content:change.content}]});

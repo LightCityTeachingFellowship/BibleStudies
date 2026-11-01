@@ -13,10 +13,27 @@ try{
  const remove=async(id,version)=>{calls.push({id,version});remote={...remote,videos:remote.videos.filter(v=>v.id!==id),removed:[...remote.removed,id]};return remote;};
  await syncLocalVideoLists(work,remote,{remove});assert.ok((await readFile(publicFile,'utf8')).includes(b),'Studio addition mirrored');assert.ok((await readFile(publicFile,'utf8')).includes(d),'unpublished local addition kept');assert.equal(calls.length,0,'first sync never infers removal');
  await syncLocalVideoLists(work,remote,{remove});assert.ok((await readFile(publicFile,'utf8')).includes(d),'local-only addition persists across passes');
- await writeFile(publicFile,d+'\n'+a+'\n');await syncLocalVideoLists(work,remote,{remove});assert.deepEqual(calls,[{id:b,version:'1'}],'saved deletion reaches server with lifecycle version');
+ await writeFile(publicFile,d+'\n'+a+'\n');await syncLocalVideoLists(work,remote,{remove,removalDelayMs:0});assert.deepEqual(calls,[{id:b,version:'1'}],'saved deletion reaches server with lifecycle version');
  await writeFile(publicFile,d+'\n');remote.versions[a]='2';await syncLocalVideoLists(work,remote,{remove});assert.equal(calls.length,1,'stale deletion cannot remove republished ID');assert.ok((await readFile(publicFile,'utf8')).includes(a));
  remote={...remote,videos:remote.videos.filter(v=>v.id!==a),removed:[...remote.removed,a]};await syncLocalVideoLists(work,remote,{remove});assert.equal(await readFile(publicFile,'utf8'),d+'\n','Studio removal mirrored; local-only addition retained');
- await writeFile(publicFile,'invalid ID!\n');await assert.rejects(syncLocalVideoLists(work,remote,{remove}),/invalid/);assert.equal(calls.length,1);
+ // A single saved replacement of an older item is atomic and retains its slot.
+ const next='replace0001';remote={videos:[{id:b,visibility:'public'},{id:a,visibility:'public'},{id:c,visibility:'members'}],versions:{[a]:'3',[b]:'2'},removed:[]};
+ await writeFile(publicFile,b+'\n'+a+'\n'+d+'\n');await writeFile(membersFile,c+'\n');
+ // Establish a fresh verified baseline for this independent scenario.
+ await rm(join(work,'tools/audio-library/work/studio-sync/baseline.json'));
+ await syncLocalVideoLists(work,remote,{remove});
+ await writeFile(publicFile,b+'\n'+next+'\n'+d+'\n');let replacements=0;
+ const replace=async data=>{replacements++;assert.equal(data.replaceVideoId,a);assert.equal(data.expectedVersion,'3');remote={...remote,videos:remote.videos.map(v=>v.id===a?{...v,id:next,replaces:[a]}:v)};return remote;};
+ await syncLocalVideoLists(work,remote,{remove,replace});assert.equal(replacements,1);assert.equal(calls.length,1);
+ assert.equal(await readFile(publicFile,'utf8'),b+'\n'+next+'\n'+d+'\n');
+ await syncLocalVideoLists(work,remote,{remove,replace});assert.equal(replacements,1,'replacement is not repeated on polling');
+ // A transient omission is kept local until stable, and cancelling it never deletes online.
+ let clock=1000;await writeFile(publicFile,next+'\n'+d+'\n');
+ await syncLocalVideoLists(work,remote,{remove,replace,now:()=>clock});assert.equal(calls.length,1);assert.ok(!(await readFile(publicFile,'utf8')).includes(b));
+ clock+=15000;await writeFile(publicFile,b+'\n'+next+'\n'+d+'\n');await syncLocalVideoLists(work,remote,{remove,replace,now:()=>clock});assert.equal(calls.length,1);
+ await writeFile(publicFile,next+'\n'+d+'\n');await syncLocalVideoLists(work,remote,{remove,replace,now:()=>clock});clock+=60001;
+ await syncLocalVideoLists(work,remote,{remove,replace,now:()=>clock});assert.equal(calls.length,2,'stable standalone removal still works');
+ await writeFile(publicFile,'invalid ID!\n');await assert.rejects(syncLocalVideoLists(work,remote,{remove}),/invalid/);assert.equal(calls.length,2);
 }finally{await rm(work,{recursive:true,force:true});}
 class Fail extends Error{constructor(code,message){super(message);this.code=code;}}
 const rows=new Map([['churchVideoLibrary/current',{videos:[{id:a,visibility:'members',replaces:[b]}]}],['churchVideoLibrary/desired',{videos:[{id:a,visibility:'members'}]}],['churchVideoLibrary/studio',{entries:[{video:{id:a,visibility:'members'},state:'ready',operationId:'live-generation'}]}]]);

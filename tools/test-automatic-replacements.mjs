@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import {mergeStudioVideos,acknowledgeStudio} from './members/functions/direct-library.mjs';
 import {readFile} from 'node:fs/promises';
 import {reconcileReplacements,splitReplacementNotifications,publishedNotificationLibrary,publicationRevisionDecision} from './video-replacements.mjs';
 const a='abcdefghijk',b='ABCDEFGHIJK',c='12345678901',d='98765432109',e='ADDED000001';
@@ -20,6 +21,6 @@ assert.equal(publishedNotificationLibrary([video(c),video(d)],result.videos)[0].
 assert.equal(publicationRevisionDecision('new','old',(a,b)=>a==='old'&&b==='new'),'skip');assert.equal(publicationRevisionDecision('old','new',(a,b)=>a==='old'&&b==='new'),'apply');assert.throws(()=>publicationRevisionDecision('unrelated','new',()=>false),/unrelated/);
 // Exercise the actual Firestore transaction body without credentials or network access.
 const source=await readFile('tools/push/sync-members.mjs','utf8'),body=source.slice(source.indexOf("if (process.env.DRY_RUN"));
-async function sync(previous,current,previousRevision){const writes=[];await vm.runInNewContext('(async()=>{'+body+'})()',{current,declared:[],revision:'new',isAncestor:()=>true,publicationRevisionDecision,reconcileReplacements,Buffer,process:{env:{FIREBASE_SERVICE_ACCOUNT:'{}'}},cert:v=>v,initializeApp(){},FieldValue:{serverTimestamp:()=>1},getFirestore:()=>({doc:()=>({path:'library'}),runTransaction:async fn=>fn({get:async()=>({exists:true,data:()=>({videos:previous,revision:previousRevision})}),set:(ref,value)=>writes.push(value)})}),console:{log(){}}});return writes;}
+async function sync(previous,current,previousRevision){const writes=[];await vm.runInNewContext('(async()=>{'+body+'})()',{current,prepared:null,mergeStudioVideos,acknowledgeStudio,declared:[],revision:'new',isAncestor:()=>true,publicationRevisionDecision,reconcileReplacements,Buffer,process:{env:{FIREBASE_SERVICE_ACCOUNT:'{}'}},cert:v=>v,initializeApp(){},FieldValue:{serverTimestamp:()=>1},getFirestore:()=>({doc:path=>({path}),runTransaction:async fn=>fn({get:async()=>({exists:true,data:()=>({videos:previous,revision:previousRevision})}),set:(ref,value)=>{if(ref.path==='churchVideoLibrary/current')writes.push(value);}})}),console:{log(){}}});return writes;}
 const writes=await sync([video(a)],[video(c)]);assert.deepEqual(Array.from(writes[0].videos[0].replaces),[a]);assert.equal((await sync([video(c)],[video(a)],'newer')).length,0,'an older deployment leaves published state untouched');await assert.rejects(sync([video(a)],[video(c),video(d)]),/Ambiguous/);
 console.log('PASS: automatic replacement/addition/removal/reorder detection, audience boundaries, repeated versions, ambiguous batches, stale deploy protection, synchronized notification metadata and actual sync transaction.');

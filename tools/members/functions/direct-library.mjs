@@ -7,8 +7,24 @@ export function mergeStudioVideos(source, studio = {}, { pending = false, source
  const extras = (studio.entries || []).filter(e => !removed.has(e.video.id) && (pending || e.state === 'ready') && (!e.sourceSeen || ids.has(e.video.id)));
  const overrides = new Map(extras.filter(e=>!e.sourceSeen).map(e => [e.video.id, e.video]));
  const aliases = new Set(extras.flatMap(e => e.video.replaces || []));
- const fresh = extras.filter(e => !ids.has(e.video.id)&&!aliases.has(e.video.id)).sort((a,b) => b.createdAt-a.createdAt).map(e => e.video);
- const rows = [...fresh, ...source.filter(v => !aliases.has(v.id)).map(v => overrides.has(v.id) ? {...v,...overrides.get(v.id)} : v)];
+ // A replacement occupies its original video's slot, even in a stale build.
+ const replacing = new Map();
+ for (const entry of extras) for (const alias of entry.video.replaces || []) if (!replacing.has(alias)) replacing.set(alias, entry.video);
+ const slotted = new Set();
+ const existing = source.flatMap(v => {
+  const replacement = replacing.get(v.id);
+  if (replacement) { if (slotted.has(replacement.id)) return []; slotted.add(replacement.id); return [replacement]; }
+  if (aliases.has(v.id)) return [];
+  slotted.add(v.id); return [overrides.has(v.id) ? {...v,...overrides.get(v.id)} : v];
+ });
+ const fresh = extras.filter(e => !ids.has(e.video.id) && !aliases.has(e.video.id) && !slotted.has(e.video.id)).sort((a,b) => b.createdAt-a.createdAt);
+ const rows = [...existing];
+ for (const entry of [...fresh].reverse()) {
+  const before = rows.findIndex(v => v.id === entry.placement?.beforeId);
+  const after = rows.findIndex(v => v.id === entry.placement?.afterId);
+  const index = before >= 0 ? before : after >= 0 ? after+1 : Number.isInteger(entry.placement?.index) ? Math.min(entry.placement.index, rows.length) : 0;
+  rows.splice(index,0,entry.video);
+ }
  return [...new Map(rows.map(v => [v.id,v])).values()];
 }
 export function acknowledgeStudio(studio, sourceIds) {

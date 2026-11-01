@@ -19,7 +19,7 @@ export async function removeStudioVideo({db,fail,videoId:id,expectedVersion,acto
   tx.set(refs[0],{...current.data(),videos:prune(current.data().videos),updatedAt:new Date(now())});
   if(desired.exists)tx.set(refs[1],{...desired.data(),videos:prune(desired.data()?.videos)});
   tx.set(refs[2],{...studio,entries:(studio.entries||[]).filter(e=>!ids.has(e.video.id)),removed});
-  tx.set(db.doc('churchStudioPublications/'+id),{direct:true,videoId:id,visibility:row?.visibility||existing?.visibility||'members',state:'removed',removedIds:[...ids],operationId,removedAt:now(),removedBy:actor,backedUp:false},{merge:true});
+  tx.set(db.doc('churchStudioPublications/'+id),{direct:true,videoId:id,visibility:row?.visibility||existing?.visibility||'members',state:'removed',removedIds:[...ids],operationId,removedAt:now(),removedBy:actor,...(row?{removedVideo:row}:{}),backedUp:false},{merge:true});
   return {removed:true,videoId:id};
  });
 }
@@ -28,7 +28,7 @@ export async function syncStudioBackup({id,db,github}){
  for(let attempt=0;attempt<3;attempt++){
   const job=(await ref.get()).data();if(!job?.direct||!['ready','removed'].includes(job.state)||(job.backedUp&&!repair))return;
   const version=job.operationId||job.requestedAt;
-  if(job.state==='removed')await github.remove(job.removedIds||[id]);else await github.add(id,job.visibility,job.replaceVideoId);
+  if(job.state==='removed')await github.remove(job.removedIds||[id]);else await github.add(id,job.visibility,job.replaceVideoId,job.placement);
   const confirmed=await db.runTransaction(async tx=>{const latest=(await tx.get(ref)).data();if((latest?.operationId||latest?.requestedAt)!==version||latest?.state!==job.state)return false;tx.set(ref,{backedUp:true},{merge:true});return true;});
   if(confirmed)return;repair=true;
  }
