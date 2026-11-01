@@ -1,6 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $work = Join-Path $PSScriptRoot 'work/automatic-recorded'
 New-Item -ItemType Directory -Path $work -Force | Out-Null
+@{disabled=$true;updatedAt=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'supervisor-disabled.json') -Encoding ascii
 @{ paused=$true; reason='Paused while switching backlog processing to Takeout'; pausedAt=[DateTime]::UtcNow.ToString('o') } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'downloads-paused.json') -Encoding ascii
 $taskName = 'LightCity Recorded Audio'
 $expectedRunner = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot 'run-automatic.ps1'))

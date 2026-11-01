@@ -13,6 +13,7 @@ if (-not ($task.Actions.Arguments | Where-Object { $_.Contains('"' + $runner + '
 $work = Join-Path $PSScriptRoot 'work/automatic-recorded'
 @{ includeBacklog=$false; newUploadsOnly=$true; dailyDownloadLimit=2 } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'schedule-policy.json') -Encoding ascii
 @{ paused=$false } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'downloads-paused.json') -Encoding ascii
+@{disabled=$false;updatedAt=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'supervisor-disabled.json') -Encoding ascii
 Enable-ScheduledTask -TaskName $taskName | Out-Null
 Start-ScheduledTask -TaskName $taskName
 Write-Host 'New-upload and replacement audio enabled: maximum TWO download attempts per rolling 24 hours, including retries.'

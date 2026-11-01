@@ -49,17 +49,9 @@ if ($ManualStart) { Write-Host 'Setup saved. Run run-automatic.ps1 -Once for the
 } else {
     if (-not (Test-Path -LiteralPath (Join-Path $work 'config.private.json')) -or -not (Test-Path -LiteralPath (Join-Path $work 'queue.json'))) { throw 'Complete setup and the first upload test before enabling automatic startup.' }
 }
-$taskName = 'LightCity Recorded Audio'
-$existing = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
-if ($existing -and -not ($existing.Actions.Arguments -contains ('-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $runPath + '"'))) { throw 'A different task already uses the chosen name; it was kept unchanged. Local setup is saved.' }
-$taskArguments = '-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + $runPath + '"'
-$identity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $taskArguments
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $identity
-$principal = New-ScheduledTaskPrincipal -UserId $identity -LogonType Interactive -RunLevel Limited
-$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 5)
-Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description 'Downloads audio for newly listed LightCity uploads, uploads verified audio, registers Listen, and removes generated local files.' -Force | Out-Null
-Start-ScheduledTask -TaskName $taskName
-Write-Host 'Automatic recorded audio is installed for this Windows account and started. It also starts when you sign in.'
-Write-Host 'Only the verified Day 27 sample and future newly added IDs are queued. Existing videos remain for Takeout.'
-Write-Host 'This computer must be on and connected. Upload credentials are encrypted for this Windows account.'
+. (Join-Path $PSScriptRoot '../helper-startup.ps1')
+@{disabled=$false;updatedAt=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'supervisor-disabled.json') -Encoding ascii
+Register-LightCityHelperTask -Name 'LightCity Recorded Audio' -Runner $runPath -WorkingDirectory ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))) -Description 'Watch final local recordings, upload verified audio, register Listen, and recover stopped workers.'
+Write-Host 'Automatic recorded audio startup and recovery are enabled for this Windows account.'
+Write-Host 'Windows starts it at sign-in and checks every 3 minutes. Active copies are not duplicated.'
+Write-Host 'This computer must be on and signed in. Existing queue progress and encrypted credentials are preserved.'

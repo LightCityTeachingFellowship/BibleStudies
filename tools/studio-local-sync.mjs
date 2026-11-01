@@ -1,6 +1,7 @@
 import {readFile,writeFile,mkdir,open,unlink,stat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
+import {startHelperHeartbeat} from './helper-heartbeat.mjs';
 const valid=id=>/^[\w-]{11}$/.test(id||'');
 const digest=s=>createHash('sha256').update(s).digest('hex');
 export function parseLocalIds(text){const ids=text.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);if(ids.some(id=>!valid(id))||new Set(ids).size!==ids.length)throw Error('An ID list is invalid or contains duplicates; local sync left it unchanged.');return ids;}
@@ -46,9 +47,11 @@ export async function runLocalSync(root,{once=false,send=fetch}={}){
   const response=await send('https://us-central1-perceptive-zoo-424115-j6.cloudfunctions.net/getStudioHelperLibrary',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(20000)});
   if(!response.ok){await response.body?.cancel();throw Error(response.status===409?'The online video changed. Local sync will recheck it.':'Studio list sync is temporarily unavailable.');}return response.json();
  };
- do{
-  try{await syncLocalVideoLists(root,await request({}),{remove:(id,expectedVersion)=>request({removeVideoId:id,expectedVersion})});if(once)console.log('Studio and local ID lists synchronized.');}
-  catch(error){if(once)throw error;console.warn(error.message);}
+ let phase='checking',lastSuccessAt=null;
+ const heartbeat=once?null:startHelperHeartbeat(join(root,'tools/audio-library/work/studio-sync'),{name:'Studio ID lists',details:()=>({phase,lastSuccessAt})});
+ try{do{
+  try{const result=await syncLocalVideoLists(root,await request({}),{remove:(id,expectedVersion)=>request({removeVideoId:id,expectedVersion})});phase=result.busy?'waiting-for-list-lock':'watching';if(result.synced)lastSuccessAt=Date.now();if(once)console.log(result.busy?'Another list synchronization is still finishing.':'Studio and local ID lists synchronized.');}
+  catch(error){phase='retrying';if(once)throw error;console.warn(error.message);}
   if(!once)await new Promise(resolve=>setTimeout(resolve,15000));
- }while(!once);
+ }while(!once);}finally{await heartbeat?.stop();}
 }

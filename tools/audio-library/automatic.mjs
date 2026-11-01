@@ -1,4 +1,5 @@
 import {prepareLocal,uploadLocal,cleanLocal} from './local-source.mjs';
+import {startHelperHeartbeat} from '../helper-heartbeat.mjs';
 import {processingLibrary,requestAudioPublication} from '../studio-library.mjs';
 import { mkdir, open, readFile, unlink, lstat, realpath, statfs } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
@@ -201,6 +202,7 @@ async function main() {
     }
   }
   await lock();
+  const heartbeat=startHelperHeartbeat(WORK,{name:'Recorded audio'});
   let connection;
   try {
     const config = await json(join(WORK, 'config.private.json'));
@@ -248,6 +250,6 @@ async function main() {
       if (args.includes('--once') || stopped) break;
       await new Promise(ok => { const wake = () => { clearTimeout(timer); process.removeListener('SIGTERM', wake); process.removeListener('SIGINT', wake); ok(); }; const timer = setTimeout(wake, QUEUE_CHECK_MS); process.once('SIGTERM', wake); process.once('SIGINT', wake); });
     } while (!stopped);
-  } finally { connection?.s3.destroy(); await unlink(lockPath).catch(() => {}); }
+  } finally { await heartbeat.stop(); connection?.s3.destroy(); await unlink(lockPath).catch(() => {}); }
 }
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(() => { console.error('Automatic recorded audio could not continue. Check setup and status; no stream settings were changed.'); process.exitCode = 1; });
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => { const reason=String(error?.message||error?.code||'Unknown worker failure').replace(/https?:\/\/\S+/g,'[address omitted]').slice(0,400);console.error('Recorded-audio worker stopped: '+reason+'. Saved progress is preserved.'); process.exitCode = 1; });

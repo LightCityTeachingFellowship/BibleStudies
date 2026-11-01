@@ -20,3 +20,5 @@ OBS live audio uses its existing capture path and is unchanged. Don't place uned
 If audio is registered for an ordinary TXT-list addition/replacement, getStudioHelperLibrary requests the audio-ready GitHub build instead of treating it as a missing Studio job. Repeated polls share a ten-minute dispatch lease; failed dispatches release it for retry. Studio publications retain direct Firebase promotion. Deploy getStudioHelperLibrary after updating helper-publication.mjs and index.mjs.
 
 The continuous Windows wrapper retries an unexpected worker failure after 30 seconds, keeping queue receipts and the Node worker lock. A recovery notice is written to runtime-status.json and supervisor.log in the ignored work folder. A manual -Once run still reports failure immediately. This does not run while the computer is off.
+
+Both Windows helpers now share startup-failure recovery, redacted logs and ten-second worker heartbeats. Run tools/repair-background-helpers.ps1 once to update the installed tasks with three-minute restart checks. See tools/BACKGROUND-HELPERS.md. Existing active processing is not interrupted; updated runners apply on their next start.

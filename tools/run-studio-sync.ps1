@@ -1,3 +1,7 @@
 $ErrorActionPreference='Stop'
-& (Get-Command node -ErrorAction Stop).Source (Join-Path $PSScriptRoot 'run-studio-sync.mjs')
-if($LASTEXITCODE -ne 0){throw 'Studio list synchronization stopped. Run start-studio-sync.ps1 to retry.'}
+. (Join-Path $PSScriptRoot 'helper-supervisor.ps1')
+$work=Join-Path $PSScriptRoot 'audio-library/work/studio-sync'
+Invoke-LightCitySupervisor -Name 'Studio ID lists' -WorkDirectory $work -Attempt {
+    $node=(Get-Command node -ErrorAction Stop).Source
+    Invoke-LightCityWorker -Executable $node -Arguments @((Join-Path $PSScriptRoot 'run-studio-sync.mjs')) -WorkDirectory $work
+}
