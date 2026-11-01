@@ -280,3 +280,6 @@ async function inboxIdentity(){const owner=api.user?.uid;await api.ready;if(owne
 api.getNotificationInbox=async()=>call('getMyNotificationInbox',await inboxIdentity());
 api.updateNotificationInbox=async data=>call('updateMyNotificationInbox',{...data,...await inboxIdentity()});
 api.connectStudioDesktop=async data=>{await api.ready;return call('connectChurchStudioDesktop',data);};
+
+api.getServiceSchedule=async()=>{await api.ready;return call('manageChurchServiceSchedule',{action:'get',accountUid:api.user?.uid});};
+api.saveServiceSchedule=async(schedule,expectedRevision)=>{await api.ready;return call('manageChurchServiceSchedule',{action:'save',schedule,expectedRevision,accountUid:api.user?.uid});};

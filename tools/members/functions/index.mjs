@@ -1,3 +1,4 @@
+import {createServiceSchedule} from './service-schedule.mjs';
 import {createDesktopLogin} from './studio-desktop.mjs';
 import {createPersonalHub} from './personal-hub.mjs';
 import {createAdminUsers} from './admin-users.mjs';
@@ -79,6 +80,9 @@ const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(),
  privateReadings:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications });
 export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey] }, adminDashboard);
 export const getChurchAdminUsers=onCall(options,createAdminUsers({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
+const serviceSchedule=createServiceSchedule({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()});
+export const getChurchServiceSchedule=onRequest({...options,cors:true},async(req,res)=>{res.set('Cache-Control','no-store');if(req.method!=='GET'){res.status(405).json({error:'Use GET'});return;}try{res.json(await serviceSchedule.publicSchedule());}catch{res.status(503).json({error:'Service schedule unavailable'});}});
+export const manageChurchServiceSchedule=onCall(options,request=>serviceSchedule.manage(request));
 const studioGitHubToken=defineSecret('STUDIO_GITHUB_TOKEN');
 const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
 const legacyStudioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});
