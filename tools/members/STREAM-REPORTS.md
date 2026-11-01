@@ -57,7 +57,7 @@ The feedback form also offers “Question, answer or other message”, up to 200
 
 The server obtains the display name from a verified, enabled account when available and ignores an attempted client override. Otherwise, a name is required and is explicitly labelled “Visitor-provided name” in Studio and “visitor” in alerts. An account display name is a profile label, not proof of a person's real-world identity. Sender names also accompany the two preset reports; grouped preset reports retain up to 20 distinct recent sender labels. Text is displayed with textContent, including preserved message line breaks, never interpreted as HTML.
 
-Redeploy using deploy-stream-reports.ps1, then commit/sync and refresh. The YouTube key setup needs no repeat if already completed. There is no public chat or in-app reply channel in this version.
+Redeploy using deploy-stream-reports.ps1, then commit/sync and refresh. The YouTube key setup needs no repeat if already completed. Viewer messages stay private; the admin can now reply privately or send a separate message to everyone watching.
 
 ## Existing HTTP function name
 
@@ -67,3 +67,13 @@ The Firestore notification handler is deployed as notifyChurchStreamIssueOnWrite
 Feedback push messages request requireInteraction:true in both the automatic Firebase background notification and the service-worker foreground/data-only display paths. This asks supporting browsers to keep the popup visible until it is clicked or dismissed; browser and operating-system settings can override the request. This does not prevent dismissal or guarantee an always-visible desktop popup. Ordinary publication alerts are unaffected. Reports remain stored in the private Studio inbox and can be marked handled there.
 
 After updating, deploy-stream-reports.ps1 deploys the notification change. Commit/sync service-worker.js and refresh the installed app to load its new worker before testing the foreground path. PowerToys Always On Top can pin the Studio window over OBS (default shortcut Windows+Ctrl+T); a web page cannot itself force an operating-system window to stay on top.
+
+## Private replies and stream announcements
+
+Select **Reply** on a report in Studio. The composer defaults to **Original sender only**. For grouped reports, choose one of the original senders. To reply to the whole stream, choose **Everyone watching this stream**; only the admin-written text is broadcast, never the original question or sender name. The same composer sends standalone announcements by selecting a stream without selecting a report. Mark handled remains separate from replying.
+
+Messages appear below the Watch player or private-test player, or as a dismissible panel while playing live video/audio in a library. They arrive on the next visible-page check (normally within 10 seconds) without reloading or pausing playback. Checks pause in the background and resume on return; this is in-app delivery, not a new system push notification. Messages are available for 24 hours, up to the latest 30 broadcasts and 30 private replies per stream. Dismissal is remembered for the browser session. Signed-in recipients receive replies on devices using the same account; visitors receive them only in the original browser/device identity.
+
+Only the verified configured admin can send. The backend derives private recipients from the original report and authenticated viewer identity, verifies current public/member/test access on every read, and scopes broadcasts to one stream. Private test broadcasts stay inside their owner's test preview. Sending uses retry-safe IDs and a 20-message/minute admin limit. Data stays in the already server-only churchStudioPublications tree; no Firestore rules, API keys or new secrets are required.
+
+Run deploy-stream-reports.ps1, commit/sync the website changes, and refresh Studio and viewer pages. The Windows app loads the same web UI, so its installer needs no rebuild. Test a private reply with two different viewer accounts, then a stream announcement, and verify an unrelated stream cannot see either.

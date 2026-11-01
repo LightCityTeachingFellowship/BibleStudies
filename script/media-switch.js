@@ -2,6 +2,7 @@ import { personal } from './video-personal.js?v=shell-1';
 import { createModeSwitch } from './media-mode-core.mjs';
 import { mountLive } from './live-media.js?v=saved-history-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
+import {showPlayingStreamMessages} from './stream-messages.mjs?v=1';
 
 const framePlayers = new WeakMap(), frameOwners = new WeakMap(), youtubePlayers = new Set(), controllers = new Set();
 let apiPromise, activeAudio;
@@ -67,6 +68,7 @@ export function trackYouTube(frame, { autoplay = false } = {}) {
         if (event.data !== 1) return;
         if (frameOwners.get(frame)?.mode === 'audio') { event.target.pauseVideo(); return; }
         pauseOthers(null, event.target);
+        try { const id=new URL(frame.src,location.href).pathname.split('/').pop();if(/^[\w-]{11}$/.test(id))void showPlayingStreamMessages(id).catch(()=>{}); } catch {}
       },
       onError: () => { clearTimeout(timer); reject(Error('Video unavailable')); },
       onAutoplayBlocked: () => frameOwners.get(frame)?.onAutoplayBlocked?.()
@@ -91,6 +93,7 @@ function remember(id, audio) {
   try { localStorage.setItem(storageKey(id), JSON.stringify({ seconds: audio.currentTime, rate: audio.playbackRate })); } catch {}
 }
 function session(item) {
+  void showPlayingStreamMessages(item.videoId).catch(()=>{});
   if (!navigator.mediaSession) return;
   activeAudio = item;
   navigator.mediaSession.playbackState = item.audio.paused ? 'paused' : 'playing';

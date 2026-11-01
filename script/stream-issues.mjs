@@ -1,7 +1,9 @@
 import {getLiveRecordings,isLive} from './live-status.mjs';
+import {setupStreamInbox} from './stream-messages.mjs?v=1';
 export function setupStreamIssueForm({document,window,api=()=>globalThis.LightCityMembers,privateTest=false}){
  const get=id=>document.getElementById(id),open=get('stream-report-open'),dialog=get('stream-report-dialog');if(!open||!dialog)return;
  const id=new URL(window.location.href).searchParams.get(privateTest?'test':'v');if(!/^[\w-]{11}$/.test(id||''))return;
+ const inbox=setupStreamInbox({document,window,api,videoId:id,privateTest});
  const message=get('stream-report-status'),submit=get('stream-report-send'),refresh=get('stream-report-refresh'),recheck=get('stream-report-recheck'),kind=get('stream-report-kind'),sender=get('stream-report-name'),note=get('stream-report-message'),nameRow=get('stream-report-name-row'),textRow=get('stream-report-message-row'),identity=get('stream-report-identity'),storageKey='lc-recent-live-'+id;
  let busy=false,revision=0,sessionOwner='';
  function currentOwner(){return (api()?.user?.uid||'public')+':'+!!api()?.library;}
@@ -16,6 +18,8 @@ export function setupStreamIssueForm({document,window,api=()=>globalThis.LightCi
   fields();let seen=0;try{const old=JSON.parse(window.sessionStorage.getItem(storageKey)||'null');if(old?.owner===owner)seen=old.at;}catch{}
   if(allowed&&isLive(id)){seen=Date.now();try{window.sessionStorage.setItem(storageKey,JSON.stringify({at:seen,owner}));}catch{}}
   open.hidden=!allowed||(!privateTest&&(get('watch-player')?.hidden===true||!(isLive(id)||seen>0&&Date.now()-seen<2*3600000)));
+  // Replies do not depend on a healthy audio relay or YouTube's live label.
+  inbox?.setEnabled(allowed&&(privateTest||get('watch-player')?.hidden!==true));
   if(!allowed)dialog.close();
  }
  async function report(){

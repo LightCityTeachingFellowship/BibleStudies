@@ -3,6 +3,7 @@ import {createPersonalHub} from './personal-hub.mjs';
 import {createAdminUsers} from './admin-users.mjs';
 import {publishAudioReadyVideo} from './helper-publication.mjs';
 import {createStreamReports,notifyStreamReport} from './stream-reports.mjs';
+import {createStreamMessages} from './stream-messages.mjs';
 import {createStudioTests} from './studio-tests.mjs';
 import {syncStudioBackup} from './studio-removal.mjs';
 import {createDirectPublishing} from './direct-publishing.mjs';
@@ -127,6 +128,10 @@ const streamReports=createStreamReports({auth:getAuth(),db:getFirestore(),fail:H
 export const reportChurchStreamIssue=onCall({...options,secrets:[streamStatusKey,livePlaybackKey],timeoutSeconds:60},streamReports.submit);
 export const getChurchStreamReports=onCall(options,streamReports.inbox);
 export const resolveChurchStreamReport=onCall(options,streamReports.resolve);
+const streamMessages=createStreamMessages({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()});
+export const getChurchStreamMessageTargets=onCall(options,streamMessages.targets);
+export const sendChurchStreamMessage=onCall(options,streamMessages.send);
+export const getMyChurchStreamMessages=onCall(options,streamMessages.inbox);
 export const notifyChurchStreamIssueOnWrite=onDocumentWritten({document:'churchStudioPublications/stream-issues/reports/{reportId}',region:'us-central1',retry:true,timeoutSeconds:120,maxInstances:1},async event=>{
  const after=event.data?.after.data(),before=event.data?.before.data();if(!after||after.resolved||after.delivery!=='pending'||before?.delivery==='pending')return;
  await notifyStreamReport({id:event.params.reportId,db:getFirestore(),auth:getAuth(),messaging:getMessaging(),emails:()=>adminEmails.value()});

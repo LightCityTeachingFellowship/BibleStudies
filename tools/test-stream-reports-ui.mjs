@@ -4,8 +4,8 @@ const ids=['stream-report-open','stream-report-dialog','stream-report-status','s
 const nodes=Object.fromEntries(ids.map(id=>[id,new Element()])),events={},stored=new Map();let live=true,calls=[],answer={state:'still-live',refresh:true,message:'Still live'},resolveReport;
 const client={user:{uid:'member',emailVerified:true,displayName:'Member Name'},library:[{id:'abcdefghijk'}],ready:Promise.resolve(),reportStreamIssue:async data=>{calls.push(data);return answer||new Promise(r=>resolveReport=r);}};
 const document={getElementById:id=>nodes[id]},window={location:{href:'https://lightcityfellowship.com/Watch/?v=abcdefghijk',reload:()=>calls.push('refresh')},sessionStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)},addEventListener:(k,fn)=>events[k]=fn};
-const context={document,window,URL,Date,Promise,MutationObserver:class{observe(){}},getLiveRecordings:async()=>({recordings:[]}),isLive:()=>live,globalThis:null};context.globalThis=context;context.LightCityMembers=client;vm.createContext(context);
-vm.runInContext(readFileSync('script/stream-issues.mjs','utf8').replace(/^import .*\n/,'').replace('export function','function'),context);
+const context={document,window,URL,Date,Promise,MutationObserver:class{observe(){}},setupStreamInbox:()=>null,getLiveRecordings:async()=>({recordings:[]}),isLive:()=>live,globalThis:null};context.globalThis=context;context.LightCityMembers=client;vm.createContext(context);
+vm.runInContext(readFileSync('script/stream-issues.mjs','utf8').replace(/^import .*\r?\n/gm,'').replace('export function','function'),context);
 const settle=()=>new Promise(r=>setTimeout(r,5));await settle();assert.equal(nodes['stream-report-open'].hidden,false);nodes['stream-report-open'].handlers.click();assert.equal(nodes['stream-report-dialog'].open,true);
 await nodes['stream-report-form'].handlers.submit({preventDefault(){}});await settle();assert.equal(nodes['stream-report-refresh'].hidden,false);assert.equal(nodes['stream-report-status'].textContent,'Still live');nodes['stream-report-refresh'].handlers.click();assert.ok(calls.includes('refresh'));
 answer={state:'uncertain',refresh:true,recheck:true,message:'Not confirmed'};await nodes['stream-report-recheck'].handlers.click();await settle();assert.equal(nodes['stream-report-recheck'].hidden,false);
@@ -19,8 +19,8 @@ const privateNodes=Object.fromEntries(ids.filter(id=>id!=='watch-player').concat
 const privateEvents={},privateCalls=[],privateClient={user:{uid:'admin',emailVerified:true,displayName:'Test Admin'},ready:Promise.resolve(),reportStreamIssue:async data=>{privateCalls.push(data);return {state:'reported',message:'Private report sent'};}};
 privateNodes['stream-report-name'].value='';privateNodes['stream-report-message'].value='A private test question';privateNodes['stream-report-kind'].value='message';
 const privateWindow={location:{href:'https://lightcityfellowship.com/Admin/?test=abcdefghijk',reload:()=>privateCalls.push('refresh')},addEventListener:(name,fn)=>privateEvents[name]=fn,dispatchEvent:e=>privateCalls.push(e.type)};
-const privateContext=vm.createContext({document:{getElementById:id=>privateNodes[id]},window:privateWindow,URL,Date,Promise,Event,isLive:()=>false,getLiveRecordings:async()=>{throw Error('Private tests must not depend on the public live catalogue');}});
-vm.runInContext(readFileSync('script/stream-issues.mjs','utf8').replace(/^import .*\n/,'').replace('export function','function'),privateContext);
+const privateContext=vm.createContext({document:{getElementById:id=>privateNodes[id]},window:privateWindow,URL,Date,Promise,Event,setupStreamInbox:()=>null,isLive:()=>false,getLiveRecordings:async()=>{throw Error('Private tests must not depend on the public live catalogue');}});
+vm.runInContext(readFileSync('script/stream-issues.mjs','utf8').replace(/^import .*\r?\n/gm,'').replace('export function','function'),privateContext);
 privateContext.client=privateClient;vm.runInContext('setupStreamIssueForm({document,window,api:()=>client,privateTest:true})',privateContext);
 await settle();assert.equal(privateNodes['stream-report-open'].hidden,false,'verified Admin preview does not need a published-library entry');
 privateNodes['stream-report-open'].handlers.click();assert.equal(privateNodes['stream-report-dialog'].open,true);
