@@ -14,6 +14,26 @@ const special={...schedule(),override:{name:'Changed service',local:'2026-11-03T
 assert.equal(nextService(special,at('2026-11-01T06:00:00Z')).startAt,at('2026-11-03T18:00:00Z'));
 assert.equal(nextService(special,at('2026-11-03T18:30:00Z')).startAt,at('2026-11-04T16:30:00Z'));
 assert.equal(nextService({...schedule(),weekly:[],override:null},at('2026-11-01T06:00:00Z')),null);
+const programme={name:'Five days of prayer',startDate:'2026-11-02',endDate:'2026-11-06',time:'18:00'},fiveDays={...schedule(),programme};
+assert.deepEqual(validateServiceSchedule(fiveDays).programme,programme);
+assert.equal(validateServiceSchedule({...schedule(),programme:undefined}).programme,null,'existing settings remain compatible');
+assert.equal(nextService(fiveDays,at('2026-11-01T06:00:00Z')).name,'Sunday Fellowship','weekly services before the programme are retained');
+assert.equal(nextService(fiveDays,at('2026-11-01T07:30:00Z')).name,programme.name,'upcoming programme replaces a weekly event in its date range');
+for(let day=2;day<=6;day++){
+ const date='2026-11-0'+day;
+ assert.equal(nextService(fiveDays,nigeriaInstant(date+'T00:00')).startAt,nigeriaInstant(date+'T18:00'));
+ assert.equal(nextService(fiveDays,nigeriaInstant(date+'T18:29')).startAt,nigeriaInstant(date+'T18:00'),'holds each daily starting message');
+ if(day<6)assert.equal(nextService(fiveDays,nigeriaInstant(date+'T18:30')).startAt,nigeriaInstant('2026-11-0'+(day+1)+'T18:00'),'moves to tomorrow, including over a regular weekly service');
+}
+assert.equal(nextService(fiveDays,nigeriaInstant('2026-11-06T18:30')).name,'Sunday Fellowship','normal weekly schedule resumes immediately after final hold');
+assert.equal(nextService(fiveDays,nigeriaInstant('2026-11-09T17:00')).programme,undefined,'expired programme never repeats');
+assert.equal(nextService({...fiveDays,weekly:[]},nigeriaInstant('2026-11-06T18:30')),null);
+assert.equal(nextService({...fiveDays,override:{name:'One-time priority',local:'2026-11-03T12:00'}},nigeriaInstant('2026-11-03T10:00')).name,'One-time priority');
+assert.equal(nextService({...fiveDays,override:{name:'One-time priority',local:'2026-11-03T12:00'}},nigeriaInstant('2026-11-03T12:30')).name,programme.name);
+const newYear={...fiveDays,programme:{...programme,startDate:'2026-12-30',endDate:'2027-01-03',time:'00:15'}};
+assert.equal(nextService(newYear,nigeriaInstant('2026-12-31T00:45')).startAt,at('2026-12-31T23:15:00Z'),'programme crosses year and Nigeria/UTC date boundaries');
+assert.equal(nextService({...fiveDays,programme:{...programme,endDate:programme.startDate}},nigeriaInstant('2026-11-02T18:30')).name,'Bible Study','single-day programme also expires');
+for(const change of [{startDate:'2026-02-30'},{endDate:'2026-11-01'},{endDate:'2027-11-03'},{time:'24:00'},{time:'1:00'},{name:' '},{startDate:'2026-1-01'}])assert.throws(()=>validateServiceSchedule({...fiveDays,programme:{...programme,...change}}));
 for(const change of [{holdMinutes:0},{weekly:[{id:'bad',day:7,time:'10:00',name:'Test',enabled:true}]},{weekly:[{id:'bad',day:1,time:'25:00',name:'Test',enabled:true}]},{heading:' '},{override:{name:'Test',local:'2026-02-30T09:00'}}])assert.throws(()=>validateServiceSchedule({...schedule(),...change}));
 const winter=at('2026-12-06T07:00:00Z'),summer=at('2026-07-05T07:00:00Z');
 assert.equal(serviceClocks(winter,'Africa/Lagos','en-GB').nigeria,null);
@@ -41,4 +61,9 @@ await assert.rejects(service.manage(request),e=>e.code==='aborted','stale phone/
 const invalid={...request,data:{...request.data,expectedRevision:saved.schedule.revision,schedule:{...special,override:{name:'Past',local:'2026-10-01T08:00'}}}};
 await assert.rejects(service.manage(invalid),e=>e.code==='invalid-argument');
 assert.equal(stored.override.name,'Changed service');
-console.log('PASS: Nigeria schedule, invalid dates, week/date rollover, zero hold, one-time changes, no-service state, DST, matching-offset deduplication, local date boundaries, countdown, admin-only writes, cached public reads and concurrent-edit protection.');
+const programRequest={auth:{uid:'u'},data:{action:'save',schedule:fiveDays,expectedRevision:saved.schedule.revision}};
+const programSaved=await service.manage(programRequest);assert.deepEqual(stored.programme,programme);
+clock=nigeriaInstant('2026-11-04T10:00');assert.equal((await service.publicSchedule()).next.name,programme.name);
+clock=nigeriaInstant('2026-11-06T18:30');assert.equal((await service.publicSchedule()).next.name,'Sunday Fellowship','automatic expiry requires no settings write');
+await assert.rejects(service.manage({...programRequest,data:{...programRequest.data,expectedRevision:programSaved.schedule.revision,schedule:{...fiveDays,programme:{...programme,startDate:'2028-01-01',endDate:'2028-01-05'}}}}),e=>e.code==='invalid-argument');
+console.log('PASS: Nigeria schedule, invalid dates, week/date rollover, zero hold, one-time changes, daily programmes with automatic expiry, no-service state, DST, matching-offset deduplication, local date boundaries, countdown, admin-only writes, cached public reads and concurrent-edit protection.');
