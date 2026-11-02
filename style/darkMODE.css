@@ -14,7 +14,8 @@ body{
     color: var(--DM-white)!important;
 }
 
-:is(h1,h2,h3,h4,h5,h6):not(.visible-titles h4,h5.all-links,.footerLinks-header h3,.Contact-section h3,.Contact-section h5,h3.video-title,.lc-continue-study *){
+:is(h1,h2,h3,h4,h5,h6):not(.visible-titles h4,h5.all-links,.footerLinks-header h3,.Contact-section h3,.Contact-section h5,h3.video-title,.lc-continue-study *
+,.lc-calendar *, .lc-hub-dialog *){
     --shd4: rgba(0, 0, 0, 0.8);
     box-shadow: var(--shd4) 0px 12px 8px -11px, var(--shd4) 0px -10px 2px -10px, var(--shd4) 0px 13px 2px -11px!important;
 }
