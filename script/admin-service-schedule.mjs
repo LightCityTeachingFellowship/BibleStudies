@@ -11,9 +11,25 @@ export function setupAdminServiceSchedule({document,window,api=()=>globalThis.Li
   const remove=create('button',{type:'button',text:'Remove','aria-label':'Remove this service time'});remove.addEventListener('click',()=>{item.remove();dirty=true;});
   item.append(field('Service',name),field('Day',day),field('Nigeria time',time),field('Enabled',enabled),remove);get('admin-service-weekly').append(item);
  }
+ function monthlyRow(value){
+  const item=create('div',{'class':'studio-service-monthly-row'});item.dataset.serviceId=value.id;
+  const name=create('input',{type:'text',maxlength:'80',required:'',value:value.name}),nth=create('select'),day=create('select'),time=create('input',{type:'time',required:'',value:value.time}),enabled=create('input',{type:'checkbox'}),replace=create('input',{type:'checkbox'});
+  for(const [input,key]of [[name,'name'],[nth,'nth'],[day,'day'],[time,'time'],[enabled,'enabled'],[replace,'replaceWeekly']])input.dataset.field=key;
+  ['First','Second','Third','Fourth','Fifth','Last'].forEach((label,index)=>nth.append(create('option',{value:String(index===5?-1:index+1),text:label})));nth.value=String(value.nth);
+  ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].forEach((label,index)=>day.append(create('option',{value:String(index),text:label})));day.value=String(value.day);enabled.checked=value.enabled;replace.checked=value.replaceWeekly;
+  const remove=create('button',{type:'button',text:'Remove','aria-label':'Remove this monthly meeting'});remove.addEventListener('click',()=>{item.remove();dirty=true;});
+  item.append(field('Meeting',name),field('Week of month',nth),field('Day',day),field('Nigeria time',time),field('Enabled',enabled),field('Replace weekly services on this date',replace),remove);get('admin-service-monthly').append(item);
+ }
+ function exceptionRow(value={date:'',time:''}){
+  const item=create('div',{'class':'studio-service-exception-row'}),date=create('input',{type:'date',required:'',value:value.date}),time=create('input',{type:'time',required:'',value:value.time});date.dataset.field='date';time.dataset.field='time';
+  const remove=create('button',{type:'button',text:'Remove','aria-label':'Remove this programme time change'});remove.addEventListener('click',()=>{item.remove();dirty=true;programmeFields();});
+  item.append(field('Programme date in Nigeria',date),field('Time on this date in Nigeria',time),remove);get('admin-service-exceptions').append(item);
+ }
  function render(value){
   schedule=value;dirty=false;get('admin-service-heading').value=value.heading;get('admin-service-message').value=value.message;get('admin-service-starting').value=value.startingMessage;get('admin-service-hold').value=value.holdMinutes;
   get('admin-service-weekly').replaceChildren();value.weekly.forEach(row);
+  get('admin-service-monthly').replaceChildren();(value.monthly||[]).forEach(monthlyRow);
+  get('admin-service-exceptions').replaceChildren();(value.programme?.exceptions||[]).forEach(exceptionRow);
   const programme=value.programme;get('admin-service-programme').checked=!!programme;get('admin-service-programme-name').value=programme?.name||'Prayer Meeting';get('admin-service-programme-time').value=programme?.time||'18:00';get('admin-service-programme-start').value=programme?.startDate||'';get('admin-service-programme-end').value=programme?.endDate||'';programmeFields();
   const override=value.override&&Date.parse(value.override.local+'+01:00')+value.holdMinutes*60000>Date.now()?value.override:null;get('admin-service-override').checked=!!override;get('admin-service-one-name').value=override?.name||'Special service';get('admin-service-one-time').value=override?.local||'';overrideFields();get('admin-service-form').hidden=false;
  }
@@ -22,10 +38,13 @@ export function setupAdminServiceSchedule({document,window,api=()=>globalThis.Li
   const on=get('admin-service-programme').checked;get('admin-service-programme-fields').hidden=!on;
   for(const key of ['name','time','start','end']){const input=get('admin-service-programme-'+key);input.required=on;input.disabled=!on;}
   const start=get('admin-service-programme-start').value,end=get('admin-service-programme-end').value,time=get('admin-service-programme-time').value;
+  get('admin-service-exception-fields').hidden=!on;
+  for(const item of get('admin-service-exceptions').children){const date=item.querySelector('[data-field="date"]');date.min=start;date.max=end;for(const input of item.querySelectorAll('input')){input.disabled=!on;input.required=on;}}
   get('admin-service-programme-end').min=start;
   const days=(Date.parse(end+'T00:00:00+01:00')-Date.parse(start+'T00:00:00+01:00'))/86400000+1;
-  const expired=Date.parse(end+'T'+time+':00+01:00')+Number(get('admin-service-hold').value)*60000<=Date.now();
-  get('admin-service-programme-summary').textContent=on&&Number.isInteger(days)&&days>0?(expired?'This programme has ended. The normal weekly schedule has resumed.':days+' daily meeting'+(days===1?'':'s')+' · '+time+' Nigeria time. The normal weekly schedule resumes automatically.'):'';
+  const changes=[...get('admin-service-exceptions').children],finalTime=changes.find(item=>item.querySelector('[data-field="date"]').value===end)?.querySelector('[data-field="time"]').value||time;
+  const expired=Date.parse(end+'T'+finalTime+':00+01:00')+Number(get('admin-service-hold').value)*60000<=Date.now();
+  get('admin-service-programme-summary').textContent=on&&Number.isInteger(days)&&days>0?(expired?'This programme has ended. The normal schedule has resumed.':days+' daily meeting'+(days===1?'':'s')+' · '+time+' Nigeria time'+(changes.length?' with '+changes.length+' date-specific time change'+(changes.length===1?'':'s'):'')+'. The normal schedule resumes automatically.'):'';
  }
  function clear(){++generation;schedule=null;owner=null;dirty=false;busy=false;get('admin-service-save').disabled=false;get('admin-service-reload').disabled=false;get('admin-service-form').hidden=true;status('Open this section to load the service times.');}
  async function load(){if(busy)return;busy=true;const ticket=++generation,uid=api()?.user?.uid;
@@ -36,12 +55,15 @@ export function setupAdminServiceSchedule({document,window,api=()=>globalThis.Li
  panel.addEventListener('toggle',()=>{if(panel.open&&!schedule)void load();});
  get('admin-service-reload').addEventListener('click',()=>{if(dirty&&!window.confirm('Reload service times and discard your unsaved changes?'))return;void load();});
  get('admin-service-add').addEventListener('click',()=>{if(get('admin-service-weekly').children.length>=14){status('Use up to 14 weekly times.');return;}row({id:'service-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6),name:'Service',day:0,time:'08:00',enabled:true});dirty=true;});
+ get('admin-service-monthly-add').addEventListener('click',()=>{if(get('admin-service-monthly').children.length>=24){status('Use up to 24 monthly meetings.');return;}monthlyRow({id:'monthly-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6),name:'Communion',nth:3,day:1,time:'18:00',enabled:true,replaceWeekly:true});dirty=true;});
+ get('admin-service-exception-add').addEventListener('click',()=>{if(get('admin-service-exceptions').children.length>=366)return;exceptionRow({date:'',time:get('admin-service-programme-time').value});dirty=true;programmeFields();});
  get('admin-service-form').addEventListener('input',()=>{dirty=true;programmeFields();});get('admin-service-override').addEventListener('change',overrideFields);get('admin-service-programme').addEventListener('change',programmeFields);
  get('admin-service-form').addEventListener('submit',async event=>{
   event.preventDefault();if(busy||!schedule||api()?.user?.uid!==owner)return;const ticket=generation,uid=owner;busy=true;get('admin-service-save').disabled=true;status('Saving service times…');
   const weekly=[...get('admin-service-weekly').children].map(item=>({id:item.dataset.serviceId,name:item.querySelector('[data-field="name"]').value,day:Number(item.querySelector('[data-field="day"]').value),time:item.querySelector('[data-field="time"]').value,enabled:item.querySelector('[data-field="enabled"]').checked}));
   const value={heading:get('admin-service-heading').value,message:get('admin-service-message').value,startingMessage:get('admin-service-starting').value,holdMinutes:Number(get('admin-service-hold').value),weekly,override:get('admin-service-override').checked?{name:get('admin-service-one-name').value,local:get('admin-service-one-time').value}:null};
-  value.programme=get('admin-service-programme').checked?{name:get('admin-service-programme-name').value,startDate:get('admin-service-programme-start').value,endDate:get('admin-service-programme-end').value,time:get('admin-service-programme-time').value}:null;
+  value.monthly=[...get('admin-service-monthly').children].map(item=>({id:item.dataset.serviceId,name:item.querySelector('[data-field="name"]').value,nth:Number(item.querySelector('[data-field="nth"]').value),day:Number(item.querySelector('[data-field="day"]').value),time:item.querySelector('[data-field="time"]').value,enabled:item.querySelector('[data-field="enabled"]').checked,replaceWeekly:item.querySelector('[data-field="replaceWeekly"]').checked}));
+  value.programme=get('admin-service-programme').checked?{name:get('admin-service-programme-name').value,startDate:get('admin-service-programme-start').value,endDate:get('admin-service-programme-end').value,time:get('admin-service-programme-time').value,exceptions:[...get('admin-service-exceptions').children].map(item=>({date:item.querySelector('[data-field="date"]').value,time:item.querySelector('[data-field="time"]').value}))}:null;
   try{const result=await api().saveServiceSchedule(value,schedule.revision);if(ticket!==generation||api()?.user?.uid!==uid)return;render(result.schedule);status('Saved. Open countdown screens pick up changes within 30 seconds.');}
   catch(error){if(ticket===generation)status(error?.code==='functions/aborted'?'Another device changed the schedule. Reload before saving your changes.':error?.code==='functions/invalid-argument'?error.message:'Service times could not save. Your edits are kept; try again.');}
   finally{if(ticket===generation){busy=false;get('admin-service-save').disabled=false;}}
