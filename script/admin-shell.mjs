@@ -1,6 +1,6 @@
 export function setupStudioShell({document,window,api=()=>globalThis.LightCityMembers}={}){
  const get=id=>document.getElementById(id),content=get('admin-content'),sidebar=get('studio-sidebar');if(!content||!sidebar)return;
- const views=[...content.querySelectorAll('[data-studio-view]')],routes=new Set(views.map(v=>v.dataset.studioView)),labels={overview:'Overview',publishing:'Publish',reports:'Stream reports',countdown:'Service countdown',library:'Content library',people:'People',devices:'My devices',preview:'Private test preview'};
+ const views=[...content.querySelectorAll('[data-studio-view]')],routes=new Set(views.map(v=>v.dataset.studioView)),labels={overview:'Overview',publishing:'Publish',reports:'Stream reports',countdown:'Service countdown',library:'Content library',prayer:'Prayer groups',people:'People',devices:'My devices',preview:'Private test preview'};
  const media=window.matchMedia('(max-width: 1050px)'),workspace=get('studio-workspace'),menu=get('studio-menu');let active=new URLSearchParams(window.location.search).get('reports')==='1'?'reports':'overview',drawer=false,lastFocus=null,previewOpened=false,lastAllowed=null;
  const allowed=()=>!content.hidden,fromHash=()=>window.location.hash.slice(1),previewReady=()=>!get('admin-test-preview').hidden;
  function closeMenu({restore=true}={}){drawer=false;sidebar.removeAttribute('role');sidebar.removeAttribute('aria-modal');document.body.classList.remove('studio-menu-open');workspace.inert=false;get('studio-menu-backdrop').hidden=true;menu.setAttribute('aria-expanded','false');sidebar.inert=media.matches;if(restore&&lastFocus?.isConnected&&!lastFocus.hidden)lastFocus.focus();lastFocus=null;}
@@ -10,7 +10,7 @@ export function setupStudioShell({document,window,api=()=>globalThis.LightCityMe
   for(const view of views)view.hidden=view.dataset.studioView!==route;
   document.querySelectorAll('[data-studio-route]').forEach(link=>{if(link.closest('nav')){if(link.dataset.studioRoute===route)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}});
   get('studio-section-label').textContent=labels[route];document.title=labels[route]+' | LightCity Studio';
-  for(const [key,id]of [['countdown','admin-service-panel'],['people','admin-users-panel'],['devices','admin-devices-panel']])if(route===key)get(id).open=true;
+  for(const [key,id]of [['prayer','admin-prayer-panel'],['countdown','admin-service-panel'],['people','admin-users-panel'],['devices','admin-devices-panel']])if(route===key)get(id).open=true;
   if(history&&fromHash()!==route)window.history.pushState(null,'','#'+route);
   closeMenu({restore:false});
   if(focus){const heading=views.find(v=>v.dataset.studioView===route)?.querySelector('h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}window.scrollTo({top:0,behavior:'instant'});}

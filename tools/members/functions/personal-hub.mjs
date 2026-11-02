@@ -81,6 +81,8 @@ export function createPersonalHub({auth,db,fail,privateCatalog=[],catalog=publis
    const person=await identity(request,true),{announcements}=await resources(person),page=await announced();
    const ref=inbox(person.uid);const state=await db.runTransaction(async tx=>{const old=await tx.get(ref);if(old.exists)return old.data();const initial={seenThrough:now(),readIds:[]};tx.set(ref,initial);return initial;});
    const items=[];for(const doc of page.docs){const row=doc.data(),item=announcements.get(doc.id);if(!item||row.silent||row.baseline||!millis(row.sentAt))continue;items.push({...item,notificationId:doc.id,sentAt:millis(row.sentAt),read:millis(row.sentAt)<=state.seenThrough||(state.readIds||[]).includes(doc.id)});}
+   if(person.member){const prayer=await db.collection('churchVideoActivity/'+person.uid+'/prayerInbox').orderBy('sentAt','desc').limit(100).get();for(const doc of prayer.docs){const row=doc.data();if(!validReading(doc.id)||!['Prayer reminder','Service reminder'].includes(row.kind))continue;items.push({type:'event',id:doc.id,title:row.title,body:row.body,kind:row.kind,url:row.url,notificationId:doc.id,sentAt:millis(row.sentAt),read:millis(row.sentAt)<=state.seenThrough||(state.readIds||[]).includes(doc.id)});}}
+   items.sort((a,b)=>b.sentAt-a.sentAt);
    return {items,unread:items.filter(item=>!item.read).length};
   },
   async updateNotifications(request){

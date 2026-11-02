@@ -1,3 +1,4 @@
+import {createPrayerCalendar} from './prayer-calendar.mjs';
 import {createServiceSchedule} from './service-schedule.mjs';
 import {createDesktopLogin} from './studio-desktop.mjs';
 import {createPersonalHub} from './personal-hub.mjs';
@@ -146,3 +147,10 @@ export const notifyChurchStreamIssueOnWrite=onDocumentWritten({document:'churchS
  const after=event.data?.after.data(),before=event.data?.before.data();if(!after||after.resolved||after.delivery!=='pending'||before?.delivery==='pending')return;
  await notifyStreamReport({id:event.params.reportId,db:getFirestore(),auth:getAuth(),messaging:getMessaging(),emails:()=>adminEmails.value()});
 });
+
+const prayerCalendar=createPrayerCalendar({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),messaging:getMessaging(),youtubeKey:()=>streamStatusKey.value().trim(),privateCatalog:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications,recordings:()=>audio.catalog()});
+export const getChurchCalendar=onCall({...options,secrets:[livePlaybackKey,streamStatusKey],timeoutSeconds:120},prayerCalendar.calendar);
+export const getMyPrayerGroup=onCall(options,prayerCalendar.mine);
+export const preparePrayerJoin=onCall(options,prayerCalendar.join);
+export const manageChurchPrayerGroups=onCall({...options,timeoutSeconds:120},prayerCalendar.manage);
+export const sendChurchPrayerReminders=onSchedule({schedule:'every 1 minutes',region:'us-central1',timeoutSeconds:120,maxInstances:1},prayerCalendar.reminders);
