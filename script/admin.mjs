@@ -1,6 +1,6 @@
 import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=stream-messages-1';
-import {setupStudioPublisher} from './studio-publish.mjs?v=desktop-1';
+import {setupStudioPublisher} from './studio-publish.mjs?v=clear-ready-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=previews-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;

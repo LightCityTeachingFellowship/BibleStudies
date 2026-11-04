@@ -20,6 +20,10 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
   try{const result=await api().getStudioPublication({videoId:job.videoId,visibility:job.visibility});if(current!==sequence||!owned())return;
    if(result.state==='removed'){status(result.message||'This video was removed from LightCity.');job=null;remember();busy=false;get('admin-publish').disabled=false;return;}
    if(result.state==='ready'){
+    // Keep a newly typed next video, but clear the completed publication.
+    if(streamId(get('admin-quick').value)===job.videoId)get('admin-quick').value='';
+    try{storage()?.setItem('lc-studio-published-'+job.uid,job.videoId);}catch{}
+    window.dispatchEvent(new window.CustomEvent('lightcity-studio-published',{detail:{videoId:job.videoId}}));
     get('admin-quick-link').value=result.url;get('admin-quick-result').hidden=false;status(job.visibility==='test'?'Private test ready. Alerts were sent only to your registered test devices.':'Ready to share: '+result.title);busy=false;get('admin-publish').disabled=false;
     await alertReady(result);job=null;remember();return;
    }
