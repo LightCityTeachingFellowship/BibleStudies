@@ -1,7 +1,7 @@
-import {mountAudioControls} from './audio-controls.mjs?v=2';
+import {mountAudioControls} from './audio-controls.mjs?v=artwork-1';
 import { personal } from './video-personal.js?v=shell-1';
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js?v=audio-controls-2';
+import { mountLive } from './live-media.js?v=artwork-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
 import {showPlayingStreamMessages} from './stream-messages.mjs?v=1';
 
