@@ -66,3 +66,13 @@ assert.equal(rows.get('churchStudioPublications/'+older).state,'recovered');
 recordings=[{videoId:replacementId,bytes:100,sha256:'a'.repeat(64)}];await service.promote(replacementId);
 assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newest,replacementId,c]);
 console.log('PASS: older replacement preserves slot, keeps original until ready, rejects stale versions and safely recovers helper-only accidental removals.');
+// A ready source must not wait for an unrelated stalled source.
+for(const readyKind of ['recorded','live']){
+ const id=readyKind==='recorded'?'fastrec0001':'fastliv0001';
+ const fast=createDirectPublishing({db,auth:{getUser:async()=>({email:'owner@example.com',emailVerified:true,providerData:[{}]})},fail:Fail,emails:()=> 'owner@example.com',now:()=>clock,
+ recordings:()=>readyKind==='recorded'?Promise.resolve([{videoId:id,bytes:100,sha256:'a'.repeat(64)}]):new Promise(()=>{}),
+ live:{catalog:()=>readyKind==='live'?Promise.resolve([{videoId:id,active:true,expiresAt:clock+10000}]):new Promise(()=>{})},send:async()=>Response.json({title:'Fast publication'})});
+ let timer;try{await Promise.race([fast.publish({auth:{uid:'owner'},data:{videoId:id,visibility:'members'}}),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Ready publication waited for stalled source')),1000);})]);}finally{clearTimeout(timer);}
+ assert(rows.get('churchVideoLibrary/current').videos.some(v=>v.id===id));
+}
+console.log('PASS: ready live or recorded audio publishes while the unrelated source is stalled.');

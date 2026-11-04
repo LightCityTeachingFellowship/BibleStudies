@@ -3,3 +3,7 @@
 /* Small library viewports must fit the controls without horizontal scrolling. */
 .lc-inline-audio{container-type:inline-size}.lc-audio-controls-actions{flex-wrap:wrap;gap:6px}.lc-inline-audio .lc-audio-controls button{padding:6px 10px;min-height:32px}.lc-audio-controls{flex-shrink:0}
 @container(max-width:480px){.lc-inline-kind,.lc-inline-title,.lc-inline-status{display:none!important}.lc-audio-controls{padding:2px!important}.lc-audio-controls-actions{gap:4px}.lc-audio-controls button{font-size:12px!important;padding:4px 8px!important;min-height:28px!important}.lc-audio-controls-time{margin:3px 0;font-size:12px}.lc-audio-controls input[type=range]{height:24px!important}}
+
+/* A late YouTube iframe must never cover a restored audio surface. */
+.lc-media-viewport.lc-audio-mode>.lc-inline-audio{z-index:2}
+.lc-media-viewport.lc-audio-mode>iframe,.lc-media-viewport.lc-audio-mode>lite-youtube{visibility:hidden}

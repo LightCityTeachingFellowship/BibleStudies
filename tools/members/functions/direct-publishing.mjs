@@ -5,13 +5,16 @@ import {mergeStudioVideos,shareVideoUrl} from './direct-library.mjs';
 const valid=id=>typeof id==='string'&&/^[\w-]{11}$/.test(id);
 export function createDirectPublishing(deps) {
  const {db,fail,live,recordings,send=fetch,now=Date.now}=deps;
- async function promote(id) {
+ async function promote(id,availability) {
   const request=await db.doc('churchStudioPublications/'+id).get(),job=request.data();
   if(!job?.direct||job.state==='removed')return false;
   if(job.state==='ready')return true;
-  const checks=await Promise.allSettled([recordings(),live.catalog()]);
-  const audio=checks[0].status==='fulfilled'?checks[0].value:[],feeds=checks[1].status==='fulfilled'?checks[1].value:[];
-  const recording=audio.find(r=>r.videoId===id&&r.bytes>0&&/^[a-f0-9]{64}$/.test(r.sha256||'')),feed=feeds.find(r=>r.videoId===id&&r.active===true&&!r.replay&&r.expiresAt>now());
+  const sources=availability||{audio:Promise.resolve().then(recordings),feeds:Promise.resolve().then(()=>live.catalog())};
+  let recording,feed;
+  try{const match=await Promise.any([
+   sources.audio.then(rows=>{const recording=rows.find(r=>r.videoId===id&&r.bytes>0&&/^[a-f0-9]{64}$/.test(r.sha256||''));if(!recording)throw Error('Not ready');return {recording};}),
+   sources.feeds.then(rows=>{const feed=rows.find(r=>r.videoId===id&&r.active===true&&!r.replay&&r.expiresAt>now());if(!feed)throw Error('Not ready');return {feed};})
+  ]);({recording,feed}=match);}catch{return false;}
   if(!recording&&!feed)return false;
   return db.runTransaction(async tx=>{
    const currentRef=db.doc('churchVideoLibrary/current'),studioRef=db.doc('churchVideoLibrary/studio'),jobRef=db.doc('churchStudioPublications/'+id);
@@ -62,10 +65,12 @@ export function createDirectPublishing(deps) {
  async function queuePublication(data,uid,expectedVersion){
    const {videoId:id,visibility,replaceVideoId:from}=data||{};
    if(!valid(id)||!['public','members'].includes(visibility)||(from!==undefined&&(!valid(from)||from===id)))throw new fail('invalid-argument','Enter a valid YouTube link and audience.');
+   const availability={audio:Promise.resolve().then(recordings),feeds:Promise.resolve().then(()=>live.catalog())};
+   availability.audio.catch(()=>{});availability.feeds.catch(()=>{});
    let title;
    try{const result=await send('https://www.youtube.com/oembed?url='+encodeURIComponent('https://www.youtube.com/watch?v='+id)+'&format=json',{redirect:'error',signal:AbortSignal.timeout(10000)});if(result.ok)title=(await result.json()).title;else await result.body?.cancel();}catch{}
    if(typeof title!=='string'||!title.trim()){
-    try{title=(await live.catalog()).find(v=>v.videoId===id)?.title;}catch{}
+    try{title=(await availability.feeds).find(v=>v.videoId===id)?.title;}catch{}
     if(!title)throw new fail('failed-precondition','YouTube could not confirm this video yet. Check that it is available, then retry.');
    }
    title=title.trim().slice(0,300);
@@ -105,7 +110,7 @@ export function createDirectPublishing(deps) {
     tx.set(studioRef,{...studio.data(),removed:removed.filter(r=>r.id!==id),entries:[{video,state:'pending',operationId,createdAt:now(),sourceSeen:false,...(placement?{placement}:{})},...entries.filter(e=>e.video.id!==id)]});
     tx.set(jobRef,{direct:true,videoId:id,visibility,title,operationId,requestedBy:uid,requestedAt:now(),state:'pending',...(from?{replaceVideoId:from,placement}:{})});
    });
-   try{await promote(id);}catch{/* The readiness poll/helper retries without losing the publication. */}
+   try{await promote(id,availability);}catch{/* The readiness poll/helper retries without losing the publication. */}
    return {state:'publishing',videoId:id,visibility};
   }
 
