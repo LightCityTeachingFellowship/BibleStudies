@@ -33,7 +33,7 @@ export async function main() {
   const status = (phase, message, detail = {}) => { state = { phase, message, ...detail }; };
   const saveState = () => {
     const snapshot = { app: 'lightcity-automatic-audio', pid: process.pid, updatedAt: Date.now(), ...state };
-    writes = writes.then(async () => { const temp = join(WORK, 'state.' + process.pid + '.tmp'); await writeFile(temp, JSON.stringify(snapshot)); await rename(temp, join(WORK, 'state.json'));if(handoffFolder){const temp=join(handoffFolder,'live-broadcast.'+process.pid+'.tmp');await writeFile(temp,JSON.stringify({version:1,updatedAt:Date.now(),broadcast:current&&!current.context.ended?current.broadcast||null:null}));await rename(temp,join(handoffFolder,'live-broadcast.json'));} }).catch(() => {});
+    writes = writes.then(async () => { const temp = join(WORK, 'state.' + process.pid + '.tmp'); await writeFile(temp, JSON.stringify(snapshot)); await rename(temp, join(WORK, 'state.json'));if(handoffFolder){const temp=join(handoffFolder,'live-broadcast.'+process.pid+'.tmp');await writeFile(temp,JSON.stringify({version:1,updatedAt:Date.now(),activeSession:current&&!current.context.ended?{session:current.context.streamSession,startedAt:current.context.streamStartedAt,channelId:config.channelId}:null,broadcast:current&&!current.context.ended?current.broadcast||null:null}));await rename(temp,join(handoffFolder,'live-broadcast.json'));} }).catch(() => {});
   };
   const server = createServer(socket => {
     socket.pause(); socket.on('error', () => {});

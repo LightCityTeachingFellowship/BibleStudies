@@ -47,3 +47,6 @@ tools/live-audio/cloud/tools/live-audio/work/
 # Windows Studio installers and build output
 /tools/studio-desktop/dist/
 /tools/studio-desktop/work/
+
+# Local Google desktop OAuth configuration
+client_secret*.json
