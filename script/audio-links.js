@@ -67,10 +67,10 @@
           controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: (document.getElementById('watch-title')?.textContent!=='LightCity video'?document.getElementById('watch-title')?.textContent:null) || holder.closest('.video-box')?.getAttribute('video-title') || recording.title || 'LightCity recording', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
             feedback(holder, message);liveBadge(viewport,id);
-            if (holder === watch) {
-              const help = document.getElementById('watch-help');
-              if (help) help.textContent = mode === 'audio' ? 'Audio mode. You can switch apps or lock your screen while listening.' : 'If playback doesn’t start automatically, tap Play on the video.';
-            }
+            // if (holder === watch) {
+            //   const help = document.getElementById('watch-help');
+            //   if (help) help.textContent = mode === 'audio' ? 'Audio mode. You can switch apps or lock your screen while listening.' : 'If playback doesn’t start automatically, tap Play on the video.';
+            // }
           } });
           mounted.set(viewport, controller);
         }
