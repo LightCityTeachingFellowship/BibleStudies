@@ -1,4 +1,4 @@
-import {mountAudioControls} from './audio-controls.mjs';
+import {mountAudioControls} from './audio-controls.mjs?v=2';
 import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition, replayBoundaryTarget } from './media-live-core.mjs?v=replay-feedback-1';
 const node = (tag, className, text) => { const value = document.createElement(tag); if (className) value.className = className; if (text) value.textContent = text; return value; };
 let hlsReady;

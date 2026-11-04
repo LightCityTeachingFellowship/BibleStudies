@@ -1,7 +1,7 @@
-import {mountAudioControls} from './audio-controls.mjs';
+import {mountAudioControls} from './audio-controls.mjs?v=2';
 import { personal } from './video-personal.js?v=shell-1';
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js?v=audio-controls-1';
+import { mountLive } from './live-media.js?v=audio-controls-2';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
 import {showPlayingStreamMessages} from './stream-messages.mjs?v=1';
 
@@ -127,7 +127,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   const surfaces = Array.from(viewport.children).filter(child => child !== audio);
   audio.controls = true; audio.preload = 'metadata'; audio.crossOrigin = 'anonymous';
   panel.append(kind, heading, audio, message);
-  const releaseControls=mountAudioControls(audio);
+  const releaseControls=mountAudioControls(audio,{videoId,title});
   let speed;
   if (!existingAudio) {
     speed = element('select'); speed.setAttribute('aria-label', 'Audio playback speed');
@@ -186,7 +186,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
         if (signal.aborted || disposed) return;
         const url = new URL(result.url);
         if (url.protocol !== 'https:' || !/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/.test(url.hostname) || result.videoId !== videoId || !(result.expiresAt > Date.now())) throw Error('Invalid audio link');
-        expiresAt = result.expiresAt; audio.src = url.href; audio.load();
+        if(result.title){heading.textContent=result.title;item.title=result.title;}expiresAt = result.expiresAt; audio.src = url.href; audio.load();
       }
       await waitForMetadata(audio, signal);
     },

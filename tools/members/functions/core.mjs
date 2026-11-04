@@ -110,7 +110,7 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
       if (!recording) throw new fail('not-found', 'This recording is not available in the audio pilot.');
       if (recording.visibility !== 'public') await member(request);
       try {
-        const signed = await audio.sign(recording.objectKey);
+        const signed = await audio.sign(recording.objectKey,{title:recording.title,download:request.data?.download===true});
         if (request.data?.diagnose === true) {
           const [diagnostic, credentials] = await Promise.all([audio.check(signed.url), audio.credentials(recording.objectKey)]);
           return { diagnostic: { ...diagnostic, credentials } };

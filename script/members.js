@@ -144,13 +144,13 @@ async function refreshVideoCatalogue(){
 }
 setInterval(()=>void refreshVideoCatalogue(),30000);
 document.addEventListener('visibilitychange',()=>void refreshVideoCatalogue());
-api.getAudio = async (videoId, diagnose = false) => {
+api.getAudio = async (videoId, diagnose = false, download = false) => {
   await api.ready;
   if (!memberAuth || !functions) throw Error('Member sign-in is unavailable. Please reload the page.');
   if (videoId === undefined && mediaPrefetch?.uid === (memberAuth.currentUser?.uid || null) && mediaPrefetch.members === Array.isArray(api.library) && mediaPrefetch.getChurchAudio) {
     const pending = mediaPrefetch.getChurchAudio; delete mediaPrefetch.getChurchAudio; return pending;
   }
-  return call('getChurchAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId, diagnose });
+  return call('getChurchAudio', videoId === undefined ? { includeMembers: Array.isArray(api.library) } : { videoId, diagnose, download });
 };
 api.getLiveAudio = async videoId => {
   await api.ready;

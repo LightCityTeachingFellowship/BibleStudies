@@ -27,7 +27,7 @@
  if(!await watchAccess(videoId,{publicIds,api:globalThis.LightCityMembers})){
   title.textContent='Video unavailable';status.textContent='This video is unavailable here. Choose another video from the library.';return;
  }
- const metadata=(globalThis.LightCityMembers.library||globalThis.LightCityMembers.publicLibrary||[]).find(v=>v.id===videoId)||globalThis.LightCityMembers.sharedVideo;
+ const metadata=[...(globalThis.LightCityMembers.library||[]),...(globalThis.LightCityMembers.publicLibrary||[])].find(v=>v.id===videoId)||globalThis.LightCityMembers.sharedVideo;
  if(metadata?.title){title.textContent=metadata.title;document.title=metadata.title+' | LightCity';}
  const player=document.createElement('iframe');
  player.title='LightCity video player';

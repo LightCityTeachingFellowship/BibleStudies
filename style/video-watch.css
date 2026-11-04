@@ -62,3 +62,16 @@ a:focus-visible{outline:3px solid var(--vivid-orange);outline-offset:5px}
  .lc-shell-watch .lc-study-related{border-top:1px solid var(--shell-border);padding-top:18px;margin-top:8px!important}
  .lc-shell-watch .lc-study-related h2{font-size:20px}
 }
+/* Desktop Watch: player and actions on the left, related resources on the right. */
+@media(min-width:901px){
+.lc-shell-watch .watch-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;column-gap:24px;align-items:start;max-width:1680px!important;width:calc(100% - 48px)!important;margin:24px auto!important}
+.lc-shell-watch .watch-main>*{grid-column:1;min-width:0}
+.lc-shell-watch .watch-player{grid-row:1;width:100%;max-height:calc(100dvh - 260px);aspect-ratio:16/9;border-radius:14px;overflow:hidden;min-height:0}
+.lc-shell-watch .watch-player iframe{min-height:0}
+.lc-shell-watch .watch-title-row{grid-row:2;margin-top:12px}
+.lc-shell-watch .watch-main>.lc-study-related{grid-column:2;grid-row:1 / span 12;margin:0!important;padding:0}
+.lc-shell-watch .lc-study-related h2{font-size:19px;margin-top:0}
+.lc-shell-watch #watch-title{font-size:22px;margin:0}
+.lc-shell-watch .watch-menu{margin-top:0}
+.lc-shell-watch #watch-help{font-size:13px;margin:8px 0}
+}

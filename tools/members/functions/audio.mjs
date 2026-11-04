@@ -41,11 +41,11 @@ export async function checkAudioLink(signedUrl, request = fetch) {
 }
 // Only server-approved catalogue keys reach this signer. It performs no download.
 export function createAudioSigner(config, now = () => Date.now()) {
-  return async objectKey => {
+  return async (objectKey,{title,download=false}={}) => {
     if (!/^audio\/[\w-]{11}\.m4a$/.test(objectKey)) throw Error('Invalid audio key');
     const { client, bucket } = audioClient(config);
     try {
-      const url = await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: objectKey, ResponseContentType: 'audio/mp4' }), { expiresIn: AUDIO_LINK_SECONDS });
+      const url = await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: objectKey, ResponseContentType: 'audio/mp4', ...(download?{ResponseContentDisposition: "attachment; filename=\"LightCity audio.m4a\"; filename*=UTF-8''"+encodeURIComponent(String(title||'LightCity audio').replace(/[\\/:*?"<>|\x00-\x1f]/g,' ').trim().slice(0,180)+'.m4a').replace(/['()*]/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase())}:{}) }), { expiresIn: AUDIO_LINK_SECONDS });
       return { url, expiresAt: now() + AUDIO_LINK_SECONDS * 1000 };
     } finally { client.destroy(); }
   };
