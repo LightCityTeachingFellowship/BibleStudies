@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { declaredLibrary, youtubeVideos, activeChannelLink } from './discovery.mjs';
 import { AutomaticPublisher } from './engine.mjs';
 import { startCapture } from './capture.mjs';
+import { findBroadcast } from './live-handoff.mjs';
 import { validSecret, workerOrigin } from '../cloud/auth.mjs';
 const HERE = dirname(fileURLToPath(import.meta.url)), ROOT = resolve(HERE, '../../..'), WORK = resolve(HERE, '../work/automatic');
 export const AUDIO_PORT = 19354;
@@ -25,12 +26,14 @@ export async function main() {
   const origin = workerOrigin(config.workerOrigin), secret = await readJson(resolve(HERE, '../work/cloud-secrets.json'));
   if (!validSecret(secret.LIVE_UPLOAD_KEY)) throw Error('The existing gateway upload setup is unavailable');
   const key = await apiKey();
+  const handoffFolder=process.env.APPDATA?join(process.env.APPDATA,'LightCity Studio'):null;
+  if(handoffFolder)await mkdir(handoffFolder,{recursive:true});
   let current = null, stopped = false, lastControl = null, lastSeen = Date.now(), writes = Promise.resolve(), nextSession = Date.now();
   let state = { phase: 'ready', message: 'Automatic audio is ready. Start Streaming in your normal OBS profile.' };
   const status = (phase, message, detail = {}) => { state = { phase, message, ...detail }; };
   const saveState = () => {
     const snapshot = { app: 'lightcity-automatic-audio', pid: process.pid, updatedAt: Date.now(), ...state };
-    writes = writes.then(async () => { const temp = join(WORK, 'state.' + process.pid + '.tmp'); await writeFile(temp, JSON.stringify(snapshot)); await rename(temp, join(WORK, 'state.json')); }).catch(() => {});
+    writes = writes.then(async () => { const temp = join(WORK, 'state.' + process.pid + '.tmp'); await writeFile(temp, JSON.stringify(snapshot)); await rename(temp, join(WORK, 'state.json'));if(handoffFolder){const temp=join(handoffFolder,'live-broadcast.'+process.pid+'.tmp');await writeFile(temp,JSON.stringify({version:1,updatedAt:Date.now(),broadcast:current&&!current.context.ended?current.broadcast||null:null}));await rename(temp,join(handoffFolder,'live-broadcast.json'));} }).catch(() => {});
   };
   const server = createServer(socket => {
     socket.pause(); socket.on('error', () => {});
@@ -42,11 +45,9 @@ export async function main() {
       const context = { session, folder: resolve(HERE, '../work', session), streamSession: control.streamSession, streamStartedAt: control.streamStartedAt, captureStartedAt, ended: false };
       const job = { context, socket, capture: null, engine: null, settling: false, failed: false, abort: new AbortController() };
       current = job;
-      // Copy only a single verified broadcast, once per OBS session. Unlisted or
-      // ambiguous broadcasts remain a manual paste; never guess another video.
-      void activeChannelLink({apiKey:key,channelId:config.channelId,startedAt:context.streamStartedAt}).then(url=>{
+      void findBroadcast({lookup:()=>activeChannelLink({apiKey:key,channelId:config.channelId,startedAt:context.streamStartedAt}),active:()=>current===job&&!context.ended&&!stopped}).then(url=>{
         if(!url||current!==job||context.ended)return;
-        execFile('powershell.exe',['-NoLogo','-NoProfile','-NonInteractive','-Command','Set-Clipboard -Value '+url],{windowsHide:true,timeout:10000},()=>{});
+        job.broadcast={session:context.streamSession,url,startedAt:context.streamStartedAt};saveState();
       }).catch(()=>{});
       status('capturing', 'OBS started. Matching the live video against your ID files.');
       try {

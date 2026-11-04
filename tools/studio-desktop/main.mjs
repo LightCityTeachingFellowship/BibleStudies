@@ -3,6 +3,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {join,dirname} from 'node:path';
 import {tmpdir} from 'node:os';
+import {validBroadcast} from './live-handoff.mjs';
 import {STUDIO,ENDPOINT,studioURL,externalURL,pairing,cleanReports,reconcile,preferences,reportHeading} from './core.mjs';
 const directory=dirname(fileURLToPath(import.meta.url)),smoke=!app.isPackaged&&process.argv.includes('--smoke-test');
 if(smoke)app.setPath('userData',join(tmpdir(),'lightcity-studio-desktop-qa'));
@@ -65,6 +66,8 @@ if(!app.requestSingleInstanceLock())app.quit();else{
   makeMain();makeAlerts();
   tray=new Tray(nativeImage.createFromPath(join(directory,'assets/studio.png')).resize({width:20,height:20}));tray.on('double-click',showMain);menu();
   Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Studio',submenu:[{label:'Unresolved alerts',click:()=>showAlerts()},{label:'Desktop settings',click:()=>{notice='Desktop settings';showAlerts();}},{type:'separator'},{role:'quit'}]},{label:'View',submenu:[{label:'Refresh Studio',click:()=>{if(!smoke)void main.loadURL(appURL);}},{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{role:'togglefullscreen'}]}]));
+  let lastBroadcast=null;
+  handle('studio:live-broadcast',async()=>{let row;try{row=JSON.parse(await readFile(join(app.getPath('appData'),'LightCity Studio','live-broadcast.json'),'utf8'));}catch{return null;}const broadcast=validBroadcast(row);if(!broadcast)return null;if(lastBroadcast!==broadcast.session){lastBroadcast=broadcast.session;if(!smoke&&Notification.isSupported()){const n=new Notification({title:'Livestream detected',body:'Open Publish in LightCity Studio to choose the audience and prepare its link.',icon:join(directory,'assets/studio.png'),silent:!settings.sound});n.on('click',showMain);n.show();}}return broadcast;});
   handle('studio:connect',connect);
   handle('studio:reports',data=>{
    if(!data||!Array.isArray(data.reports))throw Error('Invalid alert update');

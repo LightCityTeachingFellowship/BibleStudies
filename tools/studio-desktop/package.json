@@ -1,6 +1,6 @@
 {
   "name": "lightcity-studio-desktop",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "LightCity Studio for Windows",
   "author": "LightCity Teaching Fellowship",
@@ -30,7 +30,8 @@
       "alerts.js",
       "alerts.css",
       "offline.html",
-      "assets/**"
+      "assets/**",
+      "live-handoff.mjs"
     ],
     "win": {
       "target": "nsis",

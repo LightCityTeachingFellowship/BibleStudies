@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {validBroadcast} from './live-handoff.mjs';
+import {findBroadcast} from '../live-audio/automatic/live-handoff.mjs';
+const now=Date.now(),row={version:1,updatedAt:now,broadcast:{session:'stream-'+now,startedAt:now,url:'https://youtube.com/watch?v=abcdefghijk'}};
+assert.equal(validBroadcast(row,now).url,row.broadcast.url);
+assert.equal(validBroadcast({...row,updatedAt:now-31000},now),null);
+assert.equal(validBroadcast({...row,broadcast:{...row.broadcast,url:'https://evil.example/watch?v=abcdefghijk'}},now),null);
+assert.equal(validBroadcast({...row,broadcast:null},now),null);
+let n=0,waits=[];assert.equal(await findBroadcast({lookup:async()=>++n===3?row.broadcast.url:null,active:()=>true,wait:async ms=>waits.push(ms)}),row.broadcast.url);assert.equal(n,3);assert.deepEqual(waits,[20000,20000]);
+n=0;assert.equal(await findBroadcast({lookup:async()=>{n++;return null;},active:()=>true,wait:async()=>{}}),null);assert.equal(n,4);
+n=0;assert.equal(await findBroadcast({lookup:async()=>{n++;return row.broadcast.url;},active:()=>false}),null);assert.equal(n,0);
+console.log('PASS: verified local handoff, stale/foreign rejection, bounded discovery retries and stopped-session cancellation.');

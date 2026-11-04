@@ -10,7 +10,7 @@ test('desktop connection is exposed during an opaque preload, only in the main f
   vm.runInNewContext(source,{require:name=>{assert.equal(name,'electron');return electron;},process:{isMainFrame:mainFrame},location:{origin:'null',pathname:'/'}});
   return {exposed,calls};
  };
- const {exposed,calls}=run(true);assert.ok(exposed.LightCityDesktop);assert.equal(exposed.LightCityDesktop.version,'0.1.1');
+ const {exposed,calls}=run(true);assert.ok(exposed.LightCityDesktop);assert.equal(exposed.LightCityDesktop.version,'0.1.2');
  assert.equal(await exposed.LightCityDesktop.connect(),'one-use-test-token');assert.equal(calls[0][0],'studio:connect');
  assert.equal(run(false).exposed.LightCityDesktop,undefined,'child frames never receive desktop actions');
 });
