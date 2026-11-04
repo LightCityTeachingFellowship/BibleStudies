@@ -1,8 +1,9 @@
+import {watchPlayback,playbackDiagnostics,recordPlaybackEvent} from './playback-health.mjs?v=1';
 import {mountAudioControls} from './audio-controls.mjs?v=artwork-1';
 import { personal } from './video-personal.js?v=shell-1';
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js?v=artwork-1';
-import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
+import { mountLive } from './live-media.js?v=health-1';
+import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs?v=health-1';
 import {showPlayingStreamMessages} from './stream-messages.mjs?v=1';
 
 const framePlayers = new WeakMap(), frameOwners = new WeakMap(), youtubePlayers = new Set(), controllers = new Set();
@@ -197,7 +198,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
     playVideo: () => { pauseOthers(null, player); player.playVideo(); },
     onState: (mode, text) => { message.textContent = text || 'Continue listening with your screen locked.'; onState(mode, text); },
     dispose: () => {
-      disposed = true; releaseControls(); clearTimeout(retryTimer); listeners.forEach(remove => remove()); controllers.delete(item); clearSession();
+      disposed = true; health.dispose(); releaseControls(); clearTimeout(retryTimer); listeners.forEach(remove => remove()); controllers.delete(item); clearSession();
       if (frame) frameOwners.delete(frame);
       if (existingAudio && originalParent) originalParent.appendChild(audio);
       else { audio.removeAttribute('src'); audio.load(); }
@@ -218,10 +219,10 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   on(audio, 'pause', () => { if (!changing && !recovering && !audio.error) wantsPlayback = false; if (audio.readyState >= 1) remember(videoId, audio); if (activeAudio === item && navigator.mediaSession) navigator.mediaSession.playbackState = 'paused'; });
   on(audio, 'timeupdate', () => { positionState(item); if (Date.now() - lastSaved > 5000) { lastSaved = Date.now(); remember(videoId, audio); } });
   on(audio, 'ratechange', () => positionState(item));
-  const recover = async () => {
+  const recover = async (stalled = false) => {
     if (disposed || changing || recovering || !wantsPlayback || item.mode !== 'audio' || retries >= 3) return;
-    if (!audio.error && audio.readyState >= 3) { session(item); return; }
-    recovering = true; retries++; expiresAt = 0;
+    if (!stalled && !audio.error && audio.readyState >= 3) { session(item); return; }
+    recovering = true; retries++; expiresAt = 0;recordPlaybackEvent('recorded-recovery',{readyState:audio.readyState,error:audio.error?.code||0});
     try { await item.switchTo('audio'); if (!disposed && item.mode === 'audio' && !audio.error) await audio.play(); }
     catch {} finally { recovering = false; }
   };
@@ -230,6 +231,8 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
     message.textContent = 'Audio connection interrupted. Reconnecting…';
     if (!retryTimer && wantsPlayback && retries < 3) retryTimer = setTimeout(() => { retryTimer = null; void recover(); }, 2000);
   });
+  const health=watchPlayback(audio,{active:()=>!disposed&&!changing&&!recovering&&wantsPlayback&&item.mode==='audio',recover:()=>recover(true)});
+  on(document,'resume',()=>{health.check();void recover();});
   on(window, 'online', () => void recover()); on(window, 'pageshow', () => void recover());
   on(document, 'visibilitychange', () => { if (document.visibilityState !== 'hidden') void recover(); });
   if (speed) on(speed, 'change', () => { audio.playbackRate = Number(speed.value); remember(videoId, audio); });
@@ -239,7 +242,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   personal.attachAudio(item);
   return keepListening(item,controllers);
 }
-globalThis.LightCityMedia = { mount, trackYouTube, savedListening };
+globalThis.LightCityMedia = { mount, trackYouTube, savedListening, playbackDiagnostics };
 
 window.dispatchEvent?.(new Event('lightcity-media-ready'));
 for (const frame of document.querySelectorAll?.('#videotab-container iframe, #watch-player iframe') || []) void trackYouTube(frame).catch(() => {});

@@ -1,3 +1,4 @@
+import {watchPlayback,recordPlaybackEvent} from './playback-health.mjs?v=1';
 import {mountAudioControls} from './audio-controls.mjs?v=artwork-1';
 import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition, replayBoundaryTarget } from './media-live-core.mjs?v=replay-feedback-1';
 const node = (tag, className, text) => { const value = document.createElement(tag); if (className) value.className = className; if (text) value.textContent = text; return value; };
@@ -100,7 +101,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
   async function recover() {
     if (disposed || recovering || core.mode !== 'audio' || !wantsPlayback) return;
     if (requested) { scheduleRecovery(); return; }
-    recovering = true; retries++;
+    recovering = true; retries++;recordPlaybackEvent('live-recovery',{readyState:audio.readyState,error:audio.error?.code||0});
     try {
       if (audioFailure || expiresAt <= Date.now() + 60000) {
         await item.switchTo('audio');
@@ -158,7 +159,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     },
     dispose() {
       if (disposed) return;
-      disposed = true; releaseControls(); revision++; core.dispose(); clearTimeout(renewalTimer); clearTimeout(retryTimer); pending.forEach(cancel => cancel()); listeners.forEach(remove => remove());
+      disposed = true; health.dispose(); releaseControls(); revision++; core.dispose(); clearTimeout(renewalTimer); clearTimeout(retryTimer); pending.forEach(cancel => cancel()); listeners.forEach(remove => remove());
       hls?.destroy(); audio.removeAttribute('src'); audio.load(); panel.remove();
       surfaces.forEach(surface => { surface.hidden = false; }); viewport.classList.remove('lc-media-viewport', 'lc-audio-mode');
       if (frame) { releaseFrame(frame, createdFrame ? player : null); if (createdFrame) { player?.destroy(); frame.remove(); } else frame.hidden = false; }
@@ -221,12 +222,13 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
   on(audio, 'pause', () => { if (!requested && !recovering && !audio.error && !audioFailure) wantsPlayback = false; if (navigator.mediaSession && core.mode === 'audio') navigator.mediaSession.playbackState = 'paused'; });
   on(audio, 'timeupdate', () => position(item));
   on(audio, 'error', () => { if (!disposed && core.mode === 'audio') { audioFailure = 'Live audio could not load. Press Listen to retry.'; status(audioFailure); scheduleRecovery(); } });
-  on(audio, 'waiting', scheduleRecovery); on(audio, 'stalled', scheduleRecovery);
+  const health=watchPlayback(audio,{active:()=>!disposed&&!requested&&!recovering&&wantsPlayback&&core.mode==='audio',recover:()=>recover()});
   const returnToAudio = () => {
     if (core.mode !== 'audio' || !wantsPlayback) return;
     activate(item);
     if (audioFailure || audio.readyState < 3 || expiresAt <= Date.now() + 60000) void recover();
   };
+  on(document,'resume',()=>{health.check();returnToAudio();});
   on(window, 'online', returnToAudio); on(window, 'pageshow', returnToAudio);
   on(document, 'visibilitychange', () => { if (document.visibilityState !== 'hidden') returnToAudio(); });
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch {}

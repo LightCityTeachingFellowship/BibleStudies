@@ -1,3 +1,4 @@
+import {recordPlaybackEvent} from './playback-health.mjs?v=1';
 // Per-tab playback checkpoint only. Never persist capability URLs or credentials.
 const KEY = 'lc-listening-session';
 let leaving = false;
@@ -18,10 +19,12 @@ export function keepListening(item, controllers) {
     if (leaving || !controllers.has(item) || item.mode !== 'audio') return;
     try { sessionStorage.setItem(KEY, JSON.stringify({ version: 1, page: page(), videoId: item.videoId, seconds: item.audio.currentTime, rate: item.audio.playbackRate, playing: !item.audio.paused && !item.audio.ended, session: item.liveSession || null, savedAt: Date.now() })); } catch {}
   };
-  for (const event of ['play', 'pause', 'ratechange']) item.audio.addEventListener(event, save);
+  const events=['play','pause','ratechange','error','waiting','stalled','ended'];
+  const observed=event=>{save();if(event.type!=='ratechange')recordPlaybackEvent(event.type,{seconds:Math.round(item.audio.currentTime||0),readyState:item.audio.readyState||0,error:item.audio.error?.code||0});};
+  for(const event of events)item.audio.addEventListener(event,observed);
   item.audio.addEventListener('timeupdate', () => { if (Date.now() - lastSaved > 5000) { lastSaved = Date.now(); save(); } });
   const dispose = item.dispose;
-  item.dispose = () => { if (!leaving) forget(item); dispose.call(item); };
+  item.dispose = () => { for(const event of events)item.audio.removeEventListener(event,observed);if (!leaving) forget(item); dispose.call(item); };
   item.saveListening = save;
   item.restoreListening = async value => {
     if (value.videoId !== item.videoId || value.session !== (item.liveSession || null)) return;
@@ -39,6 +42,10 @@ export function keepListening(item, controllers) {
   return item;
 }
 export function listeningLifecycle(controllers) {
+  recordPlaybackEvent('page-start',{discarded:document.wasDiscarded===true,navigation:globalThis.performance?.getEntriesByType?.('navigation')?.[0]?.type||'unknown'});
+  document.addEventListener?.('freeze',()=>{for(const item of controllers)item.saveListening?.();recordPlaybackEvent('freeze');});
+  document.addEventListener?.('resume',()=>recordPlaybackEvent('resume'));
+  window.addEventListener?.('pageshow',event=>recordPlaybackEvent('pageshow',{persisted:event.persisted===true}));
   document.addEventListener?.('visibilitychange', () => { for (const item of controllers) item.saveListening?.(); });
   window.addEventListener?.('pagehide', event => { for (const item of controllers) item.saveListening?.(); leaving = !event.persisted; });
   window.addEventListener?.('pageshow', () => { leaving = false; });

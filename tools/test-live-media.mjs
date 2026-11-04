@@ -8,6 +8,10 @@ globalThis.setTimeout = (callback, delay, ...args) => {
   return nativeTimeout(() => { clock += Math.min(delay, 100); callback(...args); }, 1);
 };
 class Node extends EventTarget {
+  get parentElement(){return this.parentNode;}
+  style={setProperty(){},removeProperty(){}};
+  after(node){const parent=this.parentNode;if(parent)parent.appendChild(node);}
+
   constructor(tag = 'div') { super(); this.tagName = tag; this.children = []; this.attributes = {}; this.hidden = false; this.isConnected = true; this.classes = new Set(); this.classList = { add: (...names) => names.forEach(name => this.classes.add(name)), remove: (...names) => names.forEach(name => this.classes.delete(name)), toggle: (name, on) => on ? this.classes.add(name) : this.classes.delete(name) }; }
   append(...items) { items.forEach(item => this.appendChild(item)); }
   appendChild(item) { item.remove(); item.parentNode = this; this.children.push(item); return item; }

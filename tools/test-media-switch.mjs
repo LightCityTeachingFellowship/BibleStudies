@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 class Node extends EventTarget {
+  get parentElement(){return this.parentNode;}
+  style={setProperty(){},removeProperty(){}};
+  after(node){const parent=this.parentNode;if(parent)parent.appendChild(node);}
+
   constructor(tag = 'div') { super(); this.tagName = tag; this.children = []; this.attributes = {}; this.hidden = false; this.isConnected = true; this.classes = new Set(); this.classList = { add: (...items) => items.forEach(item => this.classes.add(item)), remove: (...items) => items.forEach(item => this.classes.delete(item)), toggle: (item, on) => on ? this.classes.add(item) : this.classes.delete(item) }; }
   appendChild(child) { child.remove(); this.children.push(child); child.parentNode = this; return child; }
   append(...children) { children.forEach(child => this.appendChild(child)); }
