@@ -3,6 +3,8 @@ const settings = document.querySelector('script[data-lightcity-members]');
 const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, publicLibrary: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
 let sdk, memberAuth, deviceAuth, functions, version = 0, mediaPrefetch = null;
 const page = document.getElementById('member-page');
+let invitation='';
+if(page){try{const token=new URLSearchParams(location.hash.slice(1)).get('invite');if(/^[a-f0-9]{64}$/.test(token||'')){sessionStorage.setItem('lc-member-invitation',token);history.replaceState(null,'',location.pathname+location.search);}invitation=sessionStorage.getItem('lc-member-invitation')||'';}catch{}}
 let busy = false, signup = false, notice = '';
 const field = id => document.getElementById(id);
 function publish(videos) {
@@ -65,11 +67,13 @@ async function checkAccess({ preserveOnTransient = false } = {}) {
     publish(null); renderPage(); return;
   }
   try {
+    if(invitation){try{await call('redeemChurchInvitation',{invitation});sessionStorage.removeItem('lc-member-invitation');invitation='';notice='Welcome! Your church membership is ready.';}catch(error){notice=error.message||'The invitation could not be accepted.';}}
     const data = await call('getChurchLibrary');
     if (current !== version) return;
     if (!Array.isArray(data.videos) || data.videos.some(video => !/^[\w-]{11}$/.test(video.id))) throw Error('The video library could not be loaded. Please try again.');
     const seen = new Set();
     publish(data.videos.filter(video => !seen.has(video.id) && seen.add(video.id)));
+    try{localStorage.setItem('lc-returning-member','1');}catch{}
     try { await linkDevice(); } catch { notice = 'Video access is ready. Refresh access to finish setting up member notifications.'; }
   } catch (error) {
     if (current !== version) return;
@@ -94,7 +98,7 @@ async function bootstrap() {
     sdk = { app, auth, functions: fn };
     const deviceApp = app.getApps().find(item => item.name === '[DEFAULT]') || app.initializeApp(config);
     const memberApp = app.getApps().find(item => item.name === 'lightcity-members') || app.initializeApp(config, 'lightcity-members');
-    memberAuth = auth.getAuth(memberApp); deviceAuth = auth.getAuth(deviceApp);
+    try{memberAuth=typeof auth.initializeAuth==='function'?auth.initializeAuth(memberApp,{persistence:[auth.indexedDBLocalPersistence,auth.browserLocalPersistence],popupRedirectResolver:auth.browserPopupRedirectResolver}):auth.getAuth(memberApp);}catch(error){if(error.code!=='auth/already-initialized')throw error;memberAuth=auth.getAuth(memberApp);}deviceAuth=auth.getAuth(deviceApp);
     functions = fn.getFunctions(memberApp, 'us-central1');
     await Promise.all([memberAuth.authStateReady(), deviceAuth.authStateReady()]);
     await new Promise(resolve => {
@@ -117,6 +121,9 @@ async function bootstrap() {
   } catch (error) { api.error = error; publish(null); renderPage(); }
 }
 api.removeStudioVideo=async videoId=>{await api.ready;return call('removeChurchStudioVideo',{videoId,accountUid:api.user?.uid});};
+api.retryPublication=async videoId=>{await api.ready;return call('retryChurchStudioPublication',{videoId,accountUid:api.user?.uid});};
+api.manageInvitations=async data=>{await api.ready;return call('manageChurchInvitations',{...data,accountUid:api.user?.uid});};
+api.getSharedVideo=async videoId=>{await api.ready;return call('getSharedChurchVideo',{videoId});};
 api.ready = bootstrap();
 let libraryPolling=false,lastLibraryPoll=Date.now();
 async function refreshVideoCatalogue(){
@@ -246,6 +253,7 @@ if (page) {
   field('member-signout').onclick = () => void action(async () => {
     ++version; publish(null);
     if (deviceAuth.currentUser) await call('unlinkChurchDevice', { deviceToken: await deviceAuth.currentUser.getIdToken() });
+    try{localStorage.removeItem('lc-returning-member');}catch{}
     await sdk.auth.signOut(memberAuth);
     notice = 'You are signed out. Public content is still available.';
   });
@@ -263,7 +271,8 @@ api.signOut=async()=>{
  await api.ready;if(!memberAuth||!sdk)return;
  ++version;api.user=null;publish(null);
  try{if(deviceAuth.currentUser)await call('unlinkChurchDevice',{deviceToken:await deviceAuth.currentUser.getIdToken()});}catch{}
- await sdk.auth.signOut(memberAuth);
+ try{localStorage.removeItem('lc-returning-member');}catch{}
+    await sdk.auth.signOut(memberAuth);
 };
 api.publishStudioVideo=async data=>{await api.ready;return call('publishChurchStudioVideo',{...data,accountUid:api.user?.uid});};
 api.getStudioPublication=async data=>{await api.ready;return call('getChurchStudioPublication',{...data,accountUid:api.user?.uid});};

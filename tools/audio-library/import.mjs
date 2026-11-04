@@ -1,6 +1,6 @@
-import { readFile, writeFile, mkdir, readdir, stat, rename } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, stat, rename, unlink } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname, resolve, join, extname, basename } from 'node:path';
@@ -17,11 +17,22 @@ export async function json(path, fallback) {
   try { return JSON.parse(await readFile(path, 'utf8')); }
   catch (error) { if (error.code === 'ENOENT' && fallback !== undefined) return fallback; throw error; }
 }
+const pendingSaves = new Map();
 export async function save(path, value) {
-  await mkdir(dirname(path), { recursive: true });
-  const temp = path + '.tmp';
-  await writeFile(temp, JSON.stringify(value, null, 2) + '\n');
-  await rename(temp, path);
+  const content=JSON.stringify(value,null,2)+'\n',key=resolve(path);
+  const pending=(pendingSaves.get(key)||Promise.resolve()).catch(()=>{}).then(async()=>{
+    await mkdir(dirname(path),{recursive:true});
+    const temp=path+'.'+process.pid+'.'+randomUUID()+'.tmp';
+    try{
+      await writeFile(temp,content,{flag:'wx'});
+      for(let attempt=0;;attempt++){
+        try{await rename(temp,path);break;}
+        catch(error){if(!['EPERM','EACCES','EBUSY'].includes(error.code)||attempt>=8)throw error;await new Promise(done=>setTimeout(done,Math.min(2000,100*2**attempt)));}
+      }
+    }finally{await unlink(temp).catch(()=>{});}
+  });
+  pendingSaves.set(key,pending);
+  try{await pending;}finally{if(pendingSaves.get(key)===pending)pendingSaves.delete(key);}
 }
 async function* walk(folder) {
   for (const entry of await readdir(folder, { withFileTypes: true })) {

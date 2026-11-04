@@ -1,6 +1,7 @@
+import {mountAudioControls} from './audio-controls.mjs';
 import { personal } from './video-personal.js?v=shell-1';
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js?v=saved-history-1';
+import { mountLive } from './live-media.js?v=audio-controls-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs';
 import {showPlayingStreamMessages} from './stream-messages.mjs?v=1';
 
@@ -126,6 +127,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   const surfaces = Array.from(viewport.children).filter(child => child !== audio);
   audio.controls = true; audio.preload = 'metadata'; audio.crossOrigin = 'anonymous';
   panel.append(kind, heading, audio, message);
+  const releaseControls=mountAudioControls(audio);
   let speed;
   if (!existingAudio) {
     speed = element('select'); speed.setAttribute('aria-label', 'Audio playback speed');
@@ -195,7 +197,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
     playVideo: () => { pauseOthers(null, player); player.playVideo(); },
     onState: (mode, text) => { message.textContent = text || 'Continue listening with your screen locked.'; onState(mode, text); },
     dispose: () => {
-      disposed = true; clearTimeout(retryTimer); listeners.forEach(remove => remove()); controllers.delete(item); clearSession();
+      disposed = true; releaseControls(); clearTimeout(retryTimer); listeners.forEach(remove => remove()); controllers.delete(item); clearSession();
       if (frame) frameOwners.delete(frame);
       if (existingAudio && originalParent) originalParent.appendChild(audio);
       else { audio.removeAttribute('src'); audio.load(); }

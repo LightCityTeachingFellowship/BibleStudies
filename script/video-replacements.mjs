@@ -19,5 +19,5 @@ export function replacementMap(){
 export async function resolveWatchReplacement(id){
  let map=replacementMap();if(map.has(id))return map.get(id);
  if(Object.hasOwn(json('lc-public-video-data'),id))return id;
- await globalThis.LightCityMembers?.ready;map=replacementMap();if(map.has(id))return map.get(id);if(globalThis.LightCityMembers?.library?.some(video=>video.id===id))return id;await loadRemoteReplacements();map=replacementMap();return map.get(id)||id;
+ await globalThis.LightCityMembers?.ready;map=replacementMap();if(map.has(id))return map.get(id);if(globalThis.LightCityMembers?.library?.some(video=>video.id===id))return id;await loadRemoteReplacements();map=replacementMap();if(map.has(id))return map.get(id);try{const shared=await globalThis.LightCityMembers?.getSharedVideo?.(id);if(valid(shared?.video?.id)){globalThis.LightCityMembers.sharedVideo=shared.video;return shared.video.id;}}catch{}return id;
 }

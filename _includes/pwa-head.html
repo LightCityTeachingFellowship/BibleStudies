@@ -46,9 +46,10 @@ setTimeout(() => {
 {% else %}
 <script defer src="{{ '/script/pwa.js' | relative_url }}?v=study-hub-1" data-base="{{ '/' | relative_url }}"></script>
 {% endif %}
-<script type="module" src="{{ '/script/members.js' | relative_url }}?v=prayer-calendar-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
+<script type="module" src="{{ '/script/members.js' | relative_url }}?v=invitation-player-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
 <link rel="stylesheet" href="{{ '/style/stream-feedback.css' | relative_url }}?v=messages-1">
-<script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=stream-messages-1"></script>
+<link rel="stylesheet" href="{{ '/style/audio-controls.css' | relative_url }}?v=1">
+<script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=audio-controls-1"></script>
 <script defer src="{{ '/script/media-duration.js' | relative_url }}?v=1"></script>
 <script defer src="{{ '/script/audio-links.js' | relative_url }}?v=duration-1" data-lightcity-audio-links data-base="{{ '/' | relative_url }}"></script>
 
@@ -64,6 +65,7 @@ setTimeout(() => {
 <link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=auth-restore-2">
 <script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=auth-restore-2"></script>
 <link rel="stylesheet" href="{{ '/style/calendar.css' | relative_url }}?v=1"><script type="module" src="{{ '/script/prayer-member.mjs' | relative_url }}?v=1"></script>
+<script type="module" src="{{ '/script/returning-member.mjs' | relative_url }}?v=1"></script>
 {% include site-shell-config.html %}
 <link rel="stylesheet" href="{{ '/style/site-shell.css' | relative_url }}?v=loading-1">
 <script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=calendar-1" data-lightcity-shell></script>

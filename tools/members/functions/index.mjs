@@ -1,3 +1,4 @@
+import {createMemberInvitations} from './member-invitations.mjs';
 import {createPrayerCalendar} from './prayer-calendar.mjs';
 import {createServiceSchedule} from './service-schedule.mjs';
 import {createDesktopLogin} from './studio-desktop.mjs';
@@ -154,3 +155,8 @@ export const getMyPrayerGroup=onCall(options,prayerCalendar.mine);
 export const preparePrayerJoin=onCall(options,prayerCalendar.join);
 export const manageChurchPrayerGroups=onCall({...options,timeoutSeconds:120},prayerCalendar.manage);
 export const sendChurchPrayerReminders=onSchedule({schedule:'every 1 minutes',region:'us-central1',timeoutSeconds:120,maxInstances:1},prayerCalendar.reminders);
+const memberInvitations=createMemberInvitations({db:getFirestore(),auth:getAuth(),fail:HttpsError,emails:()=>adminEmails.value()});
+export const manageChurchInvitations=onCall(options,memberInvitations.manage);
+export const redeemChurchInvitation=onCall(options,memberInvitations.redeem);
+export const getSharedChurchVideo=onCall(options,memberInvitations.sharedVideo);
+export const retryChurchStudioPublication=onCall(options,memberInvitations.retryPublication);

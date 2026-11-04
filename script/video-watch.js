@@ -17,17 +17,17 @@
  }
  if(!globalThis.LightCityMembers)await import('./members.js?v=studio-removal-1');
  await globalThis.LightCityMembers?.ready;
- const {resolveWatchReplacement}=await import('./video-replacements.mjs?v=automatic-1');
+ const {resolveWatchReplacement}=await import('./video-replacements.mjs?v=shared-link-1');
  const replacement=await resolveWatchReplacement(videoId);
  if(replacement!==videoId){const url=new URL(location.href);url.searchParams.set('v',replacement);for(const key of ['t','start','live'])url.searchParams.delete(key);status.textContent='Opening the updated recording…';location.replace(url.href);return;}
  // Share links must respect the selected site audience before mounting YouTube.
 
- const {watchAccess}=await import('./watch-access.mjs');
+ const {watchAccess}=await import('./watch-access.mjs?v=shared-link-1');
  let publicIds=[];try{publicIds=Object.keys(JSON.parse(document.getElementById('lc-public-video-data')?.textContent||'{}'));}catch{}
  if(!await watchAccess(videoId,{publicIds,api:globalThis.LightCityMembers})){
   title.textContent='Video unavailable';status.textContent='This video is unavailable here. Choose another video from the library.';return;
  }
- const metadata=(globalThis.LightCityMembers.library||globalThis.LightCityMembers.publicLibrary||[]).find(v=>v.id===videoId);
+ const metadata=(globalThis.LightCityMembers.library||globalThis.LightCityMembers.publicLibrary||[]).find(v=>v.id===videoId)||globalThis.LightCityMembers.sharedVideo;
  if(metadata?.title){title.textContent=metadata.title;document.title=metadata.title+' | LightCity';}
  const player=document.createElement('iframe');
  player.title='LightCity video player';

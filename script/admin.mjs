@@ -28,6 +28,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(item.id||item.date)info.appendChild(node('small',item.id||item.date));row.appendChild(info);
    const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
    actions.appendChild(action('Copy link',()=>void copy(url,row)));
+   if(item.id&&!item.published)actions.appendChild(action('Retry audio processing',async()=>{try{await api().retryPublication(item.id);status('Audio retry requested. Keep the streaming computer on; Studio will update when it is ready.');}catch(error){status(error.message||'Could not request a retry.');}}));
    if(item.id)actions.appendChild(action('Remove',async()=>{
     const uid=owner;if(uid!==api()?.user?.uid)return;
     if(!window.confirm('Remove “'+item.title+'” from LightCity and its ID lists? Your YouTube upload and stored audio file are kept.'))return;

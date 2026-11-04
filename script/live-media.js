@@ -1,3 +1,4 @@
+import {mountAudioControls} from './audio-controls.mjs';
 import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition, replayBoundaryTarget } from './media-live-core.mjs?v=replay-feedback-1';
 const node = (tag, className, text) => { const value = document.createElement(tag); if (className) value.className = className; if (text) value.textContent = text; return value; };
 let hlsReady;
@@ -28,6 +29,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
   const markReplay = value => { if (value === true) replay = true; kind.textContent = replay ? '♫ AUDIO REPLAY' : '♫ LIVE AUDIO'; panel.setAttribute('aria-label', replay ? 'Audio replay player' : 'Live audio player'); };
   markReplay(replay);
   panel.append(kind, node('p', 'lc-inline-title', title), audio, message);
+  const releaseControls=mountAudioControls(audio);
   panel.hidden = true; viewport.classList.add('lc-media-viewport'); viewport.appendChild(panel);
   let disposed = false, requested = null, frame = null, player = null, createdFrame = false, hls = null, details = null, expiresAt = 0, blocked = false, audioFailure = null, renewalTimer = null, revision = 0, playbackToken = null, recovering = false, wantsPlayback = false, retryTimer = null, retries = 0;
   const pending = new Set(), listeners = [];
@@ -156,7 +158,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     },
     dispose() {
       if (disposed) return;
-      disposed = true; revision++; core.dispose(); clearTimeout(renewalTimer); clearTimeout(retryTimer); pending.forEach(cancel => cancel()); listeners.forEach(remove => remove());
+      disposed = true; releaseControls(); revision++; core.dispose(); clearTimeout(renewalTimer); clearTimeout(retryTimer); pending.forEach(cancel => cancel()); listeners.forEach(remove => remove());
       hls?.destroy(); audio.removeAttribute('src'); audio.load(); panel.remove();
       surfaces.forEach(surface => { surface.hidden = false; }); viewport.classList.remove('lc-media-viewport', 'lc-audio-mode');
       if (frame) { releaseFrame(frame, createdFrame ? player : null); if (createdFrame) { player?.destroy(); frame.remove(); } else frame.hidden = false; }

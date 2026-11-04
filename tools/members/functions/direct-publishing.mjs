@@ -37,7 +37,7 @@ export function createDirectPublishing(deps) {
   promote,
   async remove(request){const uid=await requireStudioAdmin(request,deps);return removeStudioVideo({db,fail,videoId:request.data?.videoId,actor:uid,now});},
   async removeFromHelper(id,expectedVersion){if(typeof expectedVersion!=='string'||expectedVersion.length>100)throw new fail('invalid-argument','A current list version is required.');return removeStudioVideo({db,fail,videoId:id,expectedVersion,actor:'local-list-helper',now});},
-  async listState(){const studio=(await db.doc('churchVideoLibrary/studio').get()).data()||{};const videos=await this.source();return {videos,versions:Object.fromEntries(videos.map(v=>[v.id,listVersion(studio,v.id)])),removed:(studio.removed||[]).map(r=>r.id)};},
+  async listState(){const studio=(await db.doc('churchVideoLibrary/studio').get()).data()||{};const videos=await this.source();return {videos,retryRequests:studio.retryRequests||{},versions:Object.fromEntries(videos.map(v=>[v.id,listVersion(studio,v.id)])),removed:(studio.removed||[]).map(r=>r.id)};},
   async source(){
    const [desired,current,studio]=await Promise.all(['desired','current','studio'].map(name=>db.doc('churchVideoLibrary/'+name).get()));
    const base=desired.data()?.videos||current.data()?.videos;
