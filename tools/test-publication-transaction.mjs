@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {publicationTransaction} from './push/publication-transaction.mjs';
+let calls=0,reads=[],delays=[];
+const expired=Object.assign(new Error('3 INVALID_ARGUMENT: The referenced transaction has expired or is no longer valid.'),{code:3});
+const db={runTransaction:async update=>{const result=await update({revision:++calls});if(calls<3)throw expired;return result;}};
+assert.equal(await publicationTransaction(db,async tx=>{reads.push(tx.revision);return tx.revision;},{sleep:async ms=>delays.push(ms)}),3);
+assert.deepEqual(reads,[1,2,3]);assert.deepEqual(delays,[2000,4000]);
+calls=0;await assert.rejects(publicationTransaction({runTransaction:async()=>{calls++;throw expired;}},()=>{}, {sleep:async()=>{}}),e=>e===expired);assert.equal(calls,3);
+calls=0;const invalid=Object.assign(new Error('Invalid video mapping'),{code:3});await assert.rejects(publicationTransaction({runTransaction:async()=>{calls++;throw invalid;}},()=>{}),e=>e===invalid);assert.equal(calls,1);
+console.log('PASS: expired transactions re-read fresh state, retries are bounded, and invalid mappings are never retried.');

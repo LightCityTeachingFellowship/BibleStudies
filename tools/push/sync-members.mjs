@@ -1,3 +1,4 @@
+import {publicationTransaction} from './publication-transaction.mjs';
 import {mergeStudioVideos,acknowledgeStudio} from '../members/functions/direct-library.mjs';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -15,7 +16,7 @@ const isAncestor=(a,b)=>{try{execFileSync('git',['merge-base','--is-ancestor',a,
 if (process.env.DRY_RUN === 'true') { console.log(`Validated ${current.length} library records. No remote changes.`); }
 else {
  initializeApp({credential:cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))});const db=getFirestore();
- const outcome=await db.runTransaction(async tx=>{const ref=db.doc('churchVideoLibrary/current'),previous=await tx.get(ref);
+ const outcome=await publicationTransaction(db,async tx=>{const ref=db.doc('churchVideoLibrary/current'),previous=await tx.get(ref);
   const studioRef=db.doc('churchVideoLibrary/studio'),studio=await tx.get(studioRef),sourceIds=prepared?.sourceIds||current.map(v=>v.id);
   const latest=mergeStudioVideos(current,studio.data(),{sourceIds});
   if(publicationRevisionDecision(previous.exists?previous.data()?.revision:null,revision,isAncestor)==='skip')return {skipped:true,count:0};
@@ -23,7 +24,7 @@ else {
   if(Buffer.byteLength(JSON.stringify(result.videos))>850000)throw Error('Library is too large for one document; split it before syncing.');
   tx.set(studioRef,acknowledgeStudio(studio.data()||{},sourceIds));
   tx.set(ref,{videos:result.videos,...(revision?{revision}:{}),updatedAt:FieldValue.serverTimestamp()});return {skipped:false,count:result.inferred.length};
- });
+ },{report:message=>console.log(message)});
  if(process.env.GITHUB_OUTPUT)await appendFile(process.env.GITHUB_OUTPUT,'skipped='+outcome.skipped+'\n');
  console.log(outcome.skipped?'Skipped an older deployment; newer replacement history is already published.':`Synced ${current.length} library records; detected ${outcome.count} silent replacements. No notifications sent by the sync step.`);
 }
