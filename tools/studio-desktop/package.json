@@ -1,6 +1,6 @@
 {
   "name": "lightcity-studio-desktop",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "description": "LightCity Studio for Windows",
   "author": "LightCity Teaching Fellowship",
@@ -24,6 +24,7 @@
     "files": [
       "main.mjs",
       "core.mjs",
+      "archive-upload.mjs",
       "preload.cjs",
       "alerts-preload.cjs",
       "alerts.html",

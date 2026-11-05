@@ -3,6 +3,7 @@ import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {join,dirname} from 'node:path';
 import {tmpdir} from 'node:os';
+import {createArchiveUpload} from './archive-upload.mjs';
 import {createYouTubeConnection} from './youtube-connection.mjs';
 import {validBroadcast} from './live-handoff.mjs';
 import {STUDIO,ENDPOINT,studioURL,externalURL,pairing,cleanReports,reconcile,preferences,reportHeading} from './core.mjs';
@@ -72,6 +73,26 @@ if(!app.requestSingleInstanceLock())app.quit();else{
   handle('studio:youtube-disconnect',()=>{if(!owner)throw Error('Sign in to Studio first.');return youtube.disconnect();});
   let lastBroadcast=null;
   handle('studio:live-broadcast',async()=>{let row;try{row=JSON.parse(await readFile(join(app.getPath('appData'),'LightCity Studio','live-broadcast.json'),'utf8'));}catch{return null;}const broadcast=await youtube.detect(row,owner)||validBroadcast(row);if(!broadcast)return null;if(lastBroadcast!==broadcast.session){lastBroadcast=broadcast.session;if(!smoke&&Notification.isSupported()){const n=new Notification({title:'Livestream detected',body:'Open Publish in LightCity Studio to choose the audience and prepare its link.',icon:join(directory,'assets/studio.png'),silent:!settings.sound});n.on('click',showMain);n.show();}}return broadcast;});
+  const archive = createArchiveUpload({
+   preferencesFile: join(app.getPath('userData'), 'archive-project.json'),
+   selectProject: async () => {
+    const result = await dialog.showOpenDialog(main, {
+     title: 'Select the LightCity website project folder', properties: ['openDirectory'],
+    });
+    return result.canceled ? null : result.filePaths[0];
+   },
+   approveResume: async () => {
+    const result = await dialog.showMessageBox(main, {
+     type: 'question', title: 'Resume older message uploads?',
+     message: 'Resume uploading older messages to LightCity on this computer?',
+     buttons: ['Resume upload', 'Cancel'], defaultId: 0, cancelId: 1,
+    });
+    return result.response === 0;
+   },
+  });
+  handle('studio:archive-status', () => archive.status());
+  handle('studio:archive-configure', () => archive.configure());
+  handle('studio:archive-resume', () => archive.resume());
   handle('studio:connect',connect);
   handle('studio:reports',data=>{
    if(!data||!Array.isArray(data.reports))throw Error('Invalid alert update');
