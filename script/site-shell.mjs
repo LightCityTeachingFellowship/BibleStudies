@@ -1,4 +1,4 @@
-import {hub} from './account-hub.mjs?v=auth-restore-2';
+import {hub} from './account-hub.mjs?v=settings-install-1';
 import {element as el,icon,sitePath} from './hub-core.mjs';
 import {orderedLinks,latestReadings} from './site-shell-core.mjs';
 const configNode=document.getElementById('lc-shell-config');

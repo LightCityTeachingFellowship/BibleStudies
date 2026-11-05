@@ -121,23 +121,41 @@
   dismiss.onclick = snoozeInstall;
   later.onclick = snoozeInstall;
   notificationLater.onclick = notificationDismiss.onclick = snoozeNotifications;
-  install.onclick = async () => {
-    if (ios) {
-      installCard.body.textContent = 'Open Share, then Add to Home Screen. Open the installed LightCity app to enable notifications.';
-      install.hidden = true;
-      return;
-    }
-    if (!prompt) return;
-    install.disabled = true;
+  const iosInstallHelp = 'Open Share, then Add to Home Screen. Open the installed LightCity app to enable notifications.';
+
+  async function requestInstall() {
+    if (installed) return 'LightCity is already installed.';
+    if (ios) return iosInstallHelp;
+    if (!prompt) return 'Open your browser menu and look for Install app or Add to Home Screen.';
     const request = prompt;
+    prompt = null;
+    install.disabled = true;
     try {
       await request.prompt();
       const choice = await request.userChoice;
-      if (choice?.outcome === 'accepted') installed = true;
-      else snoozeInstall();
+      if (choice?.outcome === 'accepted') {
+        installed = true;
+        return 'LightCity was installed.';
+      }
+      snoozeInstall();
+      return 'Installation canceled.';
+    } catch (error) {
+      console.error(error);
+      return 'The install prompt could not open. Try installing from your browser menu.';
+    } finally {
+      install.disabled = false;
+      render();
     }
-    catch (error) { console.error(error); }
-    finally { prompt = null; install.disabled = false; render(); }
+  }
+
+  globalThis.LightCityInstall = { request: requestInstall, isInstalled: () => installed };
+
+  install.onclick = async () => {
+    const message = await requestInstall();
+    if (ios) {
+      installCard.body.textContent = message;
+      install.hidden = true;
+    }
   };
   async function initialize() {
     if (modulesPromise) return modulesPromise;
