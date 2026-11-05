@@ -1,0 +1,2 @@
+const endpoint='https://us-central1-perceptive-zoo-424115-j6.cloudfunctions.net/getChurchAudioArchive';
+export async function archiveRequest(data={}){const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data}),signal:AbortSignal.timeout(25000)});const body=await response.json();if(!response.ok||body.error)throw Error(body.error?.message||'The archive could not load.');return body.result||body.data;}

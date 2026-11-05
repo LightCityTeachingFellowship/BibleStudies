@@ -13,8 +13,16 @@ const document={getElementById:id=>nodes[id],createElement:tag=>new Element(tag)
 const videoId='abcdefghijk';const data={account:'owner@example.com',videos:[{id:videoId,title:'Live prayer',live:true,audio:true,published:true,visibility:'members'}],readings:[{title:'Public article',url:'/article/',kind:'Article',visibility:'public'}],checks:{audio:true,live:true,readings:true},updatedAt:Date.now()};
 let copied,shared,confirmed=false,removed=[];window.confirm=()=>confirmed;const navigator={clipboard:{writeText:async url=>{copied=url;}},share:async item=>{shared=item;}};
 const client={enabled:true,user:{uid:'owner',email:data.account},ready:Promise.resolve(),getAdminDashboard:async()=>data,removeStudioVideo:async id=>{removed.push(id);data.videos=data.videos.filter(v=>v.id!==id);},signOut:async()=>{client.user=null;}};
-const ui=setupAdmin({document,window,navigator,api:()=>client});const settle=async()=>{for(let i=0;i<20;i++)await Promise.resolve();};await settle();
+const ui=setupAdmin({document,window,navigator,api:()=>client,loadArchive:async()=>({recordings:[{id:'a'.repeat(32),title:'Old fellowship message',group:'Fellowship Days',year:'2018'}]})});const settle=async()=>{for(let i=0;i<20;i++)await Promise.resolve();};await settle();
 assert.equal(nodes['admin-content'].hidden,false);assert.equal(nodes['admin-gate'].hidden,true);assert.equal(nodes['admin-totals'].children.length,4);
+assert.equal(nodes['admin-totals'].children[1].children[0].textContent,'2');
+const audioTab=nodes['admin-tabs'].children.find(button=>button.dataset.tab==='Audio');
+audioTab.handlers.click();
+assert.match(nodes['admin-results'].textContent,/^2 items/);
+const archiveRow=nodes['admin-list'].children.find(row=>row.querySelector('h3').textContent==='Old fellowship message');
+assert.equal(archiveRow.querySelector('a').href,'https://lightcityfellowship.com/Listen/?archive='+'a'.repeat(32));
+assert.ok(!archiveRow.querySelectorAll('button').some(button=>button.textContent==='Remove'));
+nodes['admin-tabs'].children.find(button=>button.dataset.tab==='All').handlers.click();
 let row=nodes['admin-list'].children[0];await row.querySelectorAll('button')[0].handlers.click();await settle();assert.equal(copied,'https://auth.lightcityfellowship.com/Share/Video/'+videoId+'/');
 await row.querySelectorAll('button').find(b=>b.textContent==='Copy audio link').handlers.click();await settle();assert.equal(copied,'https://auth.lightcityfellowship.com/Share/Audio/'+videoId+'/');
 await row.querySelectorAll('button').find(b=>b.textContent==='Share').handlers.click();assert.equal(shared.url,'https://auth.lightcityfellowship.com/Share/Video/'+videoId+'/');

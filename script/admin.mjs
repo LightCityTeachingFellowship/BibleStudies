@@ -1,8 +1,9 @@
+import {archiveRequest} from './audio-archive-api.mjs';
 import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=stream-messages-1';
 import {setupStudioPublisher} from './studio-publish.mjs?v=clear-ready-1';
-import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=previews-1';
-export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers}){
+import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=archive-1';
+export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers,loadArchive=archiveRequest}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
  let rows=[],tab='All',limit=36,generation=0,owner=null,checks={};
@@ -23,7 +24,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    const row=node('article',null,'studio-row');
    if(item.id){const image=node('img');image.src='https://i.ytimg.com/vi/'+item.id+'/mqdefault.jpg';image.alt='';image.loading='lazy';row.appendChild(image);}else{row.appendChild(node('span',item.kind,'muted'));}
    const info=node('div',null,'studio-row-info');info.appendChild(node('span',item.visibility==='members'?'Members':'Public','studio-badge'));
-   const label=!item.published?(item.replacement?'Replacement pending':'Waiting for publication'):item.live?'LIVE':item.replay?'Audio replay':item.audio?'Audio ready':item.kind==='Video'?(checks.audio===false?'Audio status unavailable':'Published'):item.kind;
+   const label=!item.published?(item.replacement?'Replacement pending':'Waiting for publication'):item.live?'LIVE':item.replay?'Audio replay':item.archive?'Older message':item.audio?'Audio ready':item.kind==='Video'?(checks.audio===false?'Audio status unavailable':'Published'):item.kind;
    info.appendChild(node('span',label,'studio-badge'+(item.live?' live':!item.published?' pending':'')));info.appendChild(node('h3',item.title));
    if(item.id||item.date)info.appendChild(node('small',item.id||item.date));row.appendChild(info);
    const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
@@ -35,7 +36,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
     try{status('Removing this video…');await api().removeStudioVideo(item.id);if(uid!==api()?.user?.uid)return;rows=rows.filter(v=>v.id!==item.id);render();status('Removed from LightCity. GitHub and this computer’s lists will sync in the background.');}
     catch(error){if(uid===api()?.user?.uid)status(error?.message||'Removal failed. Please retry.');}
    }));
-   if(item.audio&&item.published&&tab!=='Audio')actions.appendChild(action('Copy audio link',()=>void copy(previewLink(item.id,true),row)));
+   if(item.id&&item.audio&&item.published&&tab!=='Audio')actions.appendChild(action('Copy audio link',()=>void copy(previewLink(item.id,true),row)));
    if(typeof navigator.share==='function')actions.appendChild(action('Share',()=>{void navigator.share({title:item.title,text:item.title,url}).catch(error=>{if(error.name!=='AbortError')status('Use Copy link to share this item.');});}));
    if(item.published){const open=node('a','Open');open.href=tab==='Audio'&&item.id?watchLink(item.id,true):item.url;open.target='_blank';open.rel='noopener';actions.appendChild(open);}row.appendChild(actions);list.appendChild(row);
   }
@@ -48,8 +49,20 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(!client?.enabled){status('Sign-in is not configured yet.');return;}
    if(!client.user||client.user.isAnonymous){status('Sign in to open your admin dashboard.');return;}
    const uid=client.user.uid;const data=await client.getAdminDashboard();if(current!==generation||api()?.user?.uid!==uid)return;
-   owner=uid;if(!silent)void accounts?.load();checks=data.checks||{};rows=dashboardRows(data);byId('admin-gate').hidden=true;byId('admin-content').hidden=false;byId('admin-refresh').hidden=false;
-   const totals=byId('admin-totals');totals.replaceChildren();for(const [label,count]of [['Recordings',data.videos.length],['Audio available',data.videos.filter(v=>v.audio&&v.published).length],['Articles',data.readings.filter(r=>r.kind==='Article').length],['Summaries',data.readings.filter(r=>r.kind==='Summary').length]]){const box=node('div',null,'studio-total');box.appendChild(node('strong',String(count)));box.appendChild(node('span',label));totals.appendChild(box);}
+   owner=uid;if(!silent)void accounts?.load();checks={...data.checks};
+   let archive;
+   try {
+    const result=await loadArchive();
+    if(!Array.isArray(result?.recordings))throw Error('Invalid audio archive');
+    archive=result.recordings;
+   }catch{
+    checks['older messages']=false;
+   }
+   if(current!==generation||api()?.user?.uid!==uid)return;
+   const previousArchive=rows.filter(row=>row.archive);
+   rows=dashboardRows({...data,archive});
+   if(!archive&&silent)rows.push(...previousArchive);byId('admin-gate').hidden=true;byId('admin-content').hidden=false;byId('admin-refresh').hidden=false;
+   const totals=byId('admin-totals');totals.replaceChildren();for(const [label,count]of [['Recordings',data.videos.length],['Audio available',filterRows(rows,'Audio').length],['Articles',data.readings.filter(r=>r.kind==='Article').length],['Summaries',data.readings.filter(r=>r.kind==='Summary').length]]){const box=node('div',null,'studio-total');box.appendChild(node('strong',String(count)));box.appendChild(node('span',label));totals.appendChild(box);}
    const warnings=Object.entries(checks).filter(([,ok])=>!ok).map(([name])=>name);
    if(!silent)status(warnings.length?'Some status checks are unavailable: '+warnings.join(', ')+'. Refresh to retry.':'Ready to share. Last checked '+new Date(data.updatedAt).toLocaleTimeString());render();
   }catch(error){if(current!==generation)return;if(silent&&!['functions/permission-denied','functions/unauthenticated'].includes(error?.code)){status('Studio could not refresh. Your current view is kept; reconnecting shortly.');return;}clear();status(error?.code==='functions/permission-denied'?'This account does not have admin access. Sign out and use your admin account.':error?.code==='functions/not-found'?'The admin service needs to be deployed.':error?.code==='functions/unauthenticated'?'Sign in with your admin account.':'The dashboard could not load. Use Refresh to retry.');byId('admin-refresh').hidden=false;}

@@ -13,6 +13,15 @@ export function watchLink(id,audio=false){if(!validId(id))return null;return ori
 export function siteLink(path){try{const url=new URL(path,origin);return url.origin===origin&&!/%2f|%5c/i.test(url.pathname)?url.href:null;}catch{return null;}}
 export function dashboardRows(data){
  const rows=(data.videos||[]).filter(v=>validId(v.id)).map(v=>({...v,kind:'Video',url:watchLink(v.id),shareUrl:videoShareLink(v.id)}));
+ for (const recording of data.archive || []) {
+  if (!/^[a-f0-9]{32}$/.test(recording?.id || '') || typeof recording.title !== 'string' || !recording.title.trim()) continue;
+  rows.push({
+   kind: 'Audio', archive: true, audio: true, published: true, visibility: 'public',
+   title: recording.title,
+   date: [recording.group, recording.year, recording.series].filter(Boolean).join(' · '),
+   url: siteLink('/Listen/?archive=' + recording.id),
+  });
+ }
  for(const r of data.readings||[])if(['Article','Summary'].includes(r.kind)&&siteLink(r.url))rows.push({...r,url:siteLink(r.url),published:true});
  for(const [title,path]of [['Home','/Home/'],['Video library','/Videos/'],['Audio library','/Listen/'],['Articles','/Teaching-Articles/'],['Summaries','/teaching-summary/']])rows.push({title,url:siteLink(path),kind:'Page',visibility:'public',published:true});
  return rows;
