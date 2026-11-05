@@ -1,7 +1,36 @@
 import {mergeStudioVideos} from './direct-library.mjs';
 const validId = id => /^[\w-]{11}$/.test(id || '');
 const origin = 'https://lightcityfellowship.com';
-export function createAdminDashboard({ auth, db, fail, emails, audio, live, privateReadings = [], send = fetch }) {
+async function loadViewerCounts(ids, key, send) {
+ const counts = new Map();
+ if (!key || !ids.length) return counts;
+ const batches = [];
+ for (let i = 0; i < ids.length; i += 50) batches.push(ids.slice(i, i + 50));
+ await Promise.all(batches.map(async batch => {
+  try {
+   const url = new URL('https://www.googleapis.com/youtube/v3/videos');
+   url.search = new URLSearchParams({
+    part: 'liveStreamingDetails', id: batch.join(','), key,
+    fields: 'items(id,liveStreamingDetails(actualEndTime,concurrentViewers))'
+   });
+   const response = await send(url, {redirect: 'error', signal: AbortSignal.timeout(5000)});
+   if (!response.ok) return;
+   const {items} = await response.json();
+   for (const item of items || []) {
+    const details = item.liveStreamingDetails;
+    const value = details?.concurrentViewers;
+    if (!batch.includes(item.id) || details?.actualEndTime || typeof value !== 'string' || !/^\d+$/.test(value)) continue;
+    const count = Number(value);
+    if (Number.isSafeInteger(count)) counts.set(item.id, count);
+   }
+  } catch {
+   // A failed YouTube lookup leaves the count unavailable.
+  }
+ }));
+ return counts;
+}
+
+export function createAdminDashboard({ auth, db, fail, emails, audio, live, privateReadings = [], youtubeKey = () => '', send = fetch }) {
  return async request => {
   const uid=request.auth?.uid;
   if(!uid)throw new fail('unauthenticated','Sign in with your admin account.');
@@ -25,6 +54,11 @@ export function createAdminDashboard({ auth, db, fail, emails, audio, live, priv
    return {id:v.id,title:String(v.title||feed?.title||v.id).slice(0,300),visibility:v.visibility==='public'?'public':'members',published:v.published,
     audio:recordings.has(v.id)||!!feed,live:feed?.active===true&&!feed.replay,replay:feed?.replay===true,replacement:!!v.replaces?.length};
   });
+  const liveVideos = videos.filter(video => video.live);
+  if (liveVideos.length) {
+   const counts = await loadViewerCounts([...new Set(liveVideos.map(video => video.id))], youtubeKey(), send);
+   for (const video of liveVideos) video.concurrentViewers = counts.get(video.id) ?? null;
+  }
   const readings=[];
   for(const r of [...(checks.readings?results[2].value:[]),...privateReadings]){
    if(!['Article','Summary'].includes(r.kind)||typeof r.url!=='string')continue;

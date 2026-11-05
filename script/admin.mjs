@@ -26,6 +26,13 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    const info=node('div',null,'studio-row-info');info.appendChild(node('span',item.visibility==='members'?'Members':'Public','studio-badge'));
    const label=!item.published?(item.replacement?'Replacement pending':'Waiting for publication'):item.live?'LIVE':item.replay?'Audio replay':item.archive?'Older message':item.audio?'Audio ready':item.kind==='Video'?(checks.audio===false?'Audio status unavailable':'Published'):item.kind;
    info.appendChild(node('span',label,'studio-badge'+(item.live?' live':!item.published?' pending':'')));info.appendChild(node('h3',item.title));
+   if(item.live){
+    const count=item.concurrentViewers;
+    const viewers=Number.isSafeInteger(count)&&count>=0
+      ? count.toLocaleString()+' watching on YouTube'
+      : 'YouTube viewer count unavailable';
+    info.appendChild(node('span',viewers,'studio-badge'));
+   }
    if(item.id||item.date)info.appendChild(node('small',item.id||item.date));row.appendChild(info);
    const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
    actions.appendChild(action('Copy link',()=>void copy(url,row)));

@@ -80,9 +80,10 @@ export const updateMyNotificationInbox=onCall(options,personalHub.updateNotifica
 
 const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcityteachingfellowship@gmail.com' });
 export const connectChurchStudioDesktop=onCall({...options,timeoutSeconds:60},createDesktopLogin({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
-const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live,
+const streamStatusKey=defineSecret('YOUTUBE_STREAM_STATUS_KEY');
+const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live, youtubeKey:()=>streamStatusKey.value().trim(),
  privateReadings:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications });
-export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey] }, adminDashboard);
+export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey,streamStatusKey] }, adminDashboard);
 export const getChurchAdminUsers=onCall(options,createAdminUsers({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
 const serviceSchedule=createServiceSchedule({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()});
 export const getChurchServiceSchedule=onRequest({...options,cors:true},async(req,res)=>{res.set('Cache-Control','no-store');if(req.method!=='GET'){res.status(405).json({error:'Use GET'});return;}try{res.json(await serviceSchedule.publicSchedule());}catch{res.status(503).json({error:'Service schedule unavailable'});}});
@@ -137,7 +138,6 @@ export const checkStudioAudioReady=onSchedule({schedule:'every 1 minutes',region
  const pending=await getFirestore().collection('churchStudioPublications').where('state','==','pending').limit(100).get();
  for(const job of pending.docs.sort((a,b)=>(b.data().requestedAt||0)-(a.data().requestedAt||0)).slice(0,10))try{await studioPublishing.promote(job.id);}catch{console.warn('Studio audio readiness will retry.');}
 });
-const streamStatusKey=defineSecret('YOUTUBE_STREAM_STATUS_KEY');
 const streamReports=createStreamReports({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),key:()=>streamStatusKey.value().trim(),live});
 export const reportChurchStreamIssue=onCall({...options,secrets:[streamStatusKey,livePlaybackKey],timeoutSeconds:60},streamReports.submit);
 export const getChurchStreamReports=onCall(options,streamReports.inbox);

@@ -10,7 +10,7 @@ class Element{
 const ids=['content','account','gate','signin','signout','refresh','status','totals','quick','quick-result','quick-link','quick-copy','quick-form','search','tabs','results','list','more'];
 const nodes=Object.fromEntries(ids.map(id=>['admin-'+id,new Element()]));
 const document={getElementById:id=>nodes[id],createElement:tag=>new Element(tag)};const window={handlers:{},addEventListener(event,fn){this.handlers[event]=fn;}};
-const videoId='abcdefghijk';const data={account:'owner@example.com',videos:[{id:videoId,title:'Live prayer',live:true,audio:true,published:true,visibility:'members'}],readings:[{title:'Public article',url:'/article/',kind:'Article',visibility:'public'}],checks:{audio:true,live:true,readings:true},updatedAt:Date.now()};
+const videoId='abcdefghijk';const data={account:'owner@example.com',videos:[{id:videoId,title:'Live prayer',live:true,concurrentViewers:0,audio:true,published:true,visibility:'members'}],readings:[{title:'Public article',url:'/article/',kind:'Article',visibility:'public'}],checks:{audio:true,live:true,readings:true},updatedAt:Date.now()};
 let copied,shared,confirmed=false,removed=[];window.confirm=()=>confirmed;const navigator={clipboard:{writeText:async url=>{copied=url;}},share:async item=>{shared=item;}};
 const client={enabled:true,user:{uid:'owner',email:data.account},ready:Promise.resolve(),getAdminDashboard:async()=>data,removeStudioVideo:async id=>{removed.push(id);data.videos=data.videos.filter(v=>v.id!==id);},signOut:async()=>{client.user=null;}};
 const ui=setupAdmin({document,window,navigator,api:()=>client,loadArchive:async()=>({recordings:[{id:'a'.repeat(32),title:'Old fellowship message',group:'Fellowship Days',year:'2018'}]})});const settle=async()=>{for(let i=0;i<20;i++)await Promise.resolve();};await settle();
@@ -23,7 +23,7 @@ const archiveRow=nodes['admin-list'].children.find(row=>row.querySelector('h3').
 assert.equal(archiveRow.querySelector('a').href,'https://lightcityfellowship.com/Listen/?archive='+'a'.repeat(32));
 assert.ok(!archiveRow.querySelectorAll('button').some(button=>button.textContent==='Remove'));
 nodes['admin-tabs'].children.find(button=>button.dataset.tab==='All').handlers.click();
-let row=nodes['admin-list'].children[0];await row.querySelectorAll('button')[0].handlers.click();await settle();assert.equal(copied,'https://auth.lightcityfellowship.com/Share/Video/'+videoId+'/');
+let row=nodes['admin-list'].children[0];assert.ok(row.querySelectorAll('span').some(badge=>badge.textContent==='0 watching on YouTube'));await row.querySelectorAll('button')[0].handlers.click();await settle();assert.equal(copied,'https://auth.lightcityfellowship.com/Share/Video/'+videoId+'/');
 await row.querySelectorAll('button').find(b=>b.textContent==='Copy audio link').handlers.click();await settle();assert.equal(copied,'https://auth.lightcityfellowship.com/Share/Audio/'+videoId+'/');
 await row.querySelectorAll('button').find(b=>b.textContent==='Share').handlers.click();assert.equal(shared.url,'https://auth.lightcityfellowship.com/Share/Video/'+videoId+'/');
 await row.querySelectorAll('button').find(b=>b.textContent==='Remove').handlers.click();assert.equal(removed.length,0,'cancel keeps video');confirmed=true;
