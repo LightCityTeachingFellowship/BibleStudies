@@ -10,8 +10,8 @@ if(section){
  function remember(){if(!audio||!current)return;try{localStorage.setItem('lc-archive-position:'+current.id,String(audio.currentTime||0));}catch{}}
  async function play(row){
   remember();audio?.pause();dispose?.();panel.replaceChildren();panel.hidden=false;current=row;
-  const heading=make('h2',row.title),meta=make('p',[row.group,row.year,row.series].filter(Boolean).join(' · '));audio=make('audio');audio.controls=true;audio.dataset.archiveAudio='';audio.preload='metadata';panel.append(heading,meta,audio);panel.scrollIntoView({block:'center',behavior:'smooth'});
-  const note=make('p','Loading audio…');panel.append(note);const selected=audio;
+  const heading=make('h2',row.title),meta=make('p',[row.group,row.year,row.series].filter(Boolean).join(' Â· '));audio=make('audio');audio.controls=true;audio.dataset.archiveAudio='';audio.preload='metadata';panel.append(heading,meta,audio);panel.scrollIntoView({block:'center',behavior:'smooth'});
+  const note=make('p','Loading audioâ€¦');panel.append(note);const selected=audio;
   try{const result=await archiveRequest({id:row.id});if(selected!==audio)return;audio.src=result.url;
    audio.addEventListener('loadedmetadata',()=>{try{const position=Number(localStorage.getItem('lc-archive-position:'+row.id));if(position>0&&position<audio.duration-5)audio.currentTime=position;}catch{}},{once:true});
    dispose=mountAudioControls(audio,{title:row.title,downloadAudio:()=>archiveRequest({id:row.id,download:true})});audio.addEventListener('pause',remember);audio.addEventListener('timeupdate',remember);
@@ -22,12 +22,12 @@ if(section){
  }
  function render(){const query=search.value.trim().toLocaleLowerCase(),filtered=rows.filter(r=>(!group.value||r.group===group.value)&&[r.title,r.year,r.series,r.group].join(' ').toLocaleLowerCase().includes(query));grid.replaceChildren();
   for(const row of filtered.slice(0,limit)){
-   const card=make('article','', 'video-box lc-archive-card'),cover=make('button','', 'lc-archive-cover');cover.type='button';cover.setAttribute('aria-label','Listen to '+row.title);cover.append(make('span','LIGHTCITY · MESSAGE ARCHIVE'),make('strong',row.series||row.group),make('span',[row.year,stamp(row.durationSeconds)].filter(Boolean).join(' · ')));cover.onclick=()=>play(row);
-   card.append(cover,make('h2',row.title,'video-title'),make('p',[row.group,row.year,row.series].filter(Boolean).join(' · ')));
+   const card=make('article','', 'video-box lc-archive-card'),cover=make('button','', 'lc-archive-cover');cover.type='button';cover.setAttribute('aria-label','Listen to '+row.title);cover.append(make('span','LIGHTCITY Â· MESSAGE ARCHIVE'),make('strong',row.series||row.group),make('span',[row.year,stamp(row.durationSeconds)].filter(Boolean).join(' Â· ')));cover.onclick=()=>play(row);
+   card.append(cover,make('h2',row.title,'video-title'),make('p',[row.group,row.year,row.series].filter(Boolean).join(' Â· ')));
    const actions=make('div','', 'lc-personal-row'),listen=make('button','Listen','lc-personal-remove'),copy=make('button','Copy link','lc-personal-remove');listen.type=copy.type='button';listen.onclick=()=>play(row);copy.onclick=async()=>{const url=new URL(location.pathname,location.origin);url.searchParams.set('archive',row.id);try{await navigator.clipboard.writeText(url.href);copy.textContent='Copied';}catch{status.textContent=url.href;}};actions.append(listen,copy);card.append(actions);grid.append(card);
   }
-  status.textContent=filtered.length+' older messages'+(filtered.length>limit?' · Showing '+limit:'');more.hidden=filtered.length<=limit;
+  status.textContent=filtered.length+' older messages'+(filtered.length>limit?' Â· Showing '+limit:'');more.hidden=filtered.length<=limit;
  }
- async function load(){status.textContent='Loading older messages…';try{rows=(await archiveRequest()).recordings||[];group.replaceChildren(new Option('All collections',''),...[...new Set(rows.map(r=>r.group))].sort().map(g=>new Option(g,g)));render();const id=new URLSearchParams(location.search).get('archive'),row=rows.find(r=>r.id===id);if(row)void play(row);}catch(e){status.textContent=e.message;}}
+ async function load(){status.textContent='Loading older messagesâ€¦';try{rows=(await archiveRequest()).recordings||[];group.replaceChildren(new Option('All collections',''),...[...new Set(rows.map(r=>r.group))].sort().map(g=>new Option(g,g)));render();const id=new URLSearchParams(location.search).get('archive'),row=rows.find(r=>r.id===id);if(row)void play(row);}catch(e){status.textContent=e.message;}}
  search.oninput=group.onchange=()=>{limit=24;render();};more.onclick=()=>{limit+=24;render();};$('[data-archive-retry]').onclick=load;window.addEventListener('pagehide',remember);void load();
 }
