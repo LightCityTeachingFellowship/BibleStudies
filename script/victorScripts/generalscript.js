@@ -262,7 +262,7 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
       const li = document.createElement('li');
       const link = document.createElement('a');
       link.href = item.url;
-      addText(link, 'span', item.kind, 'home-result-kind');
+      addText(link, 'span', item.kind === 'Archive' ? 'Older audio' : item.kind, 'home-result-kind');
       addText(link, 'strong', item.title);
       const text = String(item.text || '').replace(/\s+/g, ' ').trim();
       if (text) {
@@ -309,6 +309,24 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
     if (failed) problems.push('Some video titles could not be loaded. Retry when you are online.');
     if (dialog.open) render();
   }
+  async function loadArchive(current) {
+    if (scope !== 'All' || !dialog.dataset.archiveApi) return;
+    try {
+      const { archiveRecordings } = await import(dialog.dataset.archiveApi);
+      const rows = await archiveRecordings();
+      if (current !== loadVersion) return;
+      for (const row of rows) {
+        const link = new URL(dialog.dataset.listen, location.href);
+        link.searchParams.set('archive', row.id);
+        items.push(prepare({
+          title: row.title, url: link.href, kind: 'Archive',
+          categories: [row.group, row.year, row.series].filter(Boolean).join(' '),
+        }));
+      }
+    } catch {
+      if (current === loadVersion) problems.push('Older audio messages could not be loaded. Retry when you are online.');
+    }
+  }
   async function load() {
     if (loadPromise) return loadPromise;
     const current = ++loadVersion;
@@ -339,9 +357,12 @@ for (const homeResourcesGridContainter of categoriesChildrenToRev) {
       }) : [];
       if (!validMain && scope !== 'Video') problems.push((scope === 'All' ? 'Articles and summaries' : scope === 'Article' ? 'Articles' : 'Summaries') + ' could not be loaded. Retry when you are online.');
       items.push(...ids.flatMap(id => videoCache.has(id) ? [videoItem(videoCache.get(id))] : []));
-      loading = false;
       render();
-      if (includeVideos) await updateMissing(ids, current, publicIds);
+      await Promise.all([loadArchive(current).then(() => {
+        if (current !== loadVersion) return;
+        loading = false;
+        if (dialog.open) render();
+      }), includeVideos ? updateMissing(ids, current, publicIds) : Promise.resolve()]);
       if (current !== loadVersion) return;
       if (includeVideos && !catalogue && !ids.length) problems.push('Videos could not be loaded. Retry when you are online.');
       if (dialog.open) render();

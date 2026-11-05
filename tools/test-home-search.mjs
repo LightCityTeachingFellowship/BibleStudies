@@ -17,12 +17,20 @@ class Element {
   close() { this.open = false; this.dispatch('close'); }
 }
 const settle = () => new Promise(resolve => setTimeout(resolve, 160));
-function setup({ failIndex = false, failCatalogue = false, staleCache = false, missingVideo = false, manyResults = false, scope = 'All' } = {}) {
+function setup({ failIndex = false, failCatalogue = false, staleCache = false, missingVideo = false, manyResults = false, archive = false, scope = 'All' } = {}) {
   const nodes = new Map(['dialog', 'desktop', 'query', 'results', 'status', 'warning', 'retry', 'more'].map(name => [name, new Element()]));
   const get = name => nodes.get(name);
   const form = new Element(), mobile = new Element(), close = new Element();
   const filters = ['All', 'Video', 'Article', 'Summary'].map(kind => { const button = new Element(); button.dataset.kind = kind; return button; });
   get('dialog').dataset = { index: '/BibleStudies/search-home.json', videos: '/BibleStudies/search-video-catalog.json', watch: '/BibleStudies/Watch/', scope };
+  if (archive) {
+    const rows = [{id: 'a'.repeat(32), title: 'Ephesians 2', series: 'Ephesians Series', group: 'Fellowship Days', year: 2018}];
+    get('dialog').dataset.archiveApi = 'data:text/javascript,' + encodeURIComponent('export const archiveRecordings = () => ' + JSON.stringify(rows));
+    get('dialog').dataset.listen = '/BibleStudies/Listen/';
+    const filter = new Element();
+    filter.dataset.kind = 'Archive';
+    filters.push(filter);
+  }
   get('dialog').querySelectorAll = () => filters;
   get('dialog').querySelector = () => close;
   get('desktop').closest = () => form;
@@ -60,7 +68,7 @@ function setup({ failIndex = false, failCatalogue = false, staleCache = false, m
       }
       return { ok: true, json: async () => ({ title: 'New video prayer' }) };
     }
-  });
+  }, { importModuleDynamically: vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER });
   return { get, form, mobile, close, filters, calls, storage, memberState, events };
 }
 let app = setup();
@@ -120,3 +128,21 @@ app.memberState.library = null; app.events['lightcity-members-changed']();
 assert.equal(app.get('results').children.length, 0, 'Signing out immediately removes private results');
 await settle(); assert.equal(app.get('results').children.length, 0);
 console.log('PASS: member search results stay in memory and disappear immediately on sign-out.');
+
+app = setup({archive: true});
+app.get('desktop').value = 'fellowship 2018';
+app.get('desktop').dispatch('input');
+await settle();
+assert.equal(app.get('results').children.length, 1);
+assert.match(app.get('results').textContent, /Older audio.*Ephesians 2/);
+assert.equal(app.get('results').children[0].children[0].href, 'https://example.com/BibleStudies/Listen/?archive=' + 'a'.repeat(32));
+app.filters[1].dispatch('click');
+assert.equal(app.get('results').children.length, 0);
+app.filters.at(-1).dispatch('click');
+assert.equal(app.get('results').children.length, 1);
+app = setup({archive: true, scope: 'Article'});
+app.get('desktop').value = 'fellowship 2018';
+app.get('desktop').dispatch('input');
+await settle();
+assert.equal(app.get('results').children.length, 0);
+console.log('PASS: archive metadata, direct Listen links, filter and article scope isolation.');

@@ -16,8 +16,8 @@ permalink: /Listen/
 <script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=shared-header-2"></script>
 <link rel="stylesheet" href="{{ '/style/videos.css' | relative_url }}">
 <script type="module" src="{{ '/script/audio-library.js' | relative_url }}?v=shell-1" data-audio-library></script>
-<script type="module" src="{{ '/script/audio-archive.js' | relative_url }}?v=2"></script>
-<link rel="stylesheet" href="{{ '/style/audio-archive.css' | relative_url }}?v=1">
+<script type="module" src="{{ '/script/audio-archive.js' | relative_url }}?v=collections-1"></script>
+<link rel="stylesheet" href="{{ '/style/audio-archive.css' | relative_url }}?v=collections-1">
 </head><body class="fonts app-home site-browse">
 {% include homeHeader-pages.html %}
 <div class="browse-search"><form class="home-search-preview" role="search" aria-label="Search audio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="audio-library-search" type="search" placeholder="Search audioâ€¦" aria-label="Search audio" autocomplete="off"></form></div>
@@ -31,6 +31,11 @@ permalink: /Listen/
 <section id="message-archive" aria-labelledby="message-archive-title">
 <h2 id="message-archive-title">Older messages</h2><p>Explore older messages from Fellowship Days, Programs and Retreats.</p>
 <div class="lc-archive-filters"><input data-archive-search type="search" aria-label="Search older messages" placeholder="Search titles, years or series…"><select data-archive-group aria-label="Archive collection"><option value="">All collections</option></select></div>
+<section data-archive-series hidden aria-labelledby="archive-series-heading">
+<h3 id="archive-series-heading">Browse by series</h3>
+<div data-archive-series-list class="lc-archive-series-list" role="group" aria-label="Archive series"></div>
+</section>
+<script type="application/json" id="archive-transcripts">{{ site.data.archive_transcripts | jsonify | replace: '<', '\u003c' }}</script>
 <p data-archive-status role="status"></p><button data-archive-retry type="button" class="lc-personal-remove">Refresh archive</button>
 <div data-archive-player class="lc-archive-player" hidden></div><div data-archive-grid class="lc-audio-grid"></div><button data-archive-more class="lc-personal-remove" type="button" hidden>Show more messages</button>
 </section>
