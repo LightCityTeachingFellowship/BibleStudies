@@ -1,3 +1,4 @@
+import {createAudioArchive} from './audio-archive.mjs';
 import {createMemberInvitations} from './member-invitations.mjs';
 import {createPrayerCalendar} from './prayer-calendar.mjs';
 import {createServiceSchedule} from './service-schedule.mjs';
@@ -59,6 +60,7 @@ export const unlinkChurchDevice = onCall(options, handlers.unlinkChurchDevice);
 
 export const registerGoogleChurchMember = onCall({ ...options, secrets: [registrationCode] }, handlers.registerGoogleChurchMember);
 
+export const getChurchAudioArchive = onCall({...options,cors:[...options.cors,'https://auth.lightcityfellowship.com'],secrets:[r2Access,r2Secret]},createAudioArchive(audioConfig,HttpsError));
 export const getChurchAudio = onCall({ ...options, secrets: [r2Access, r2Secret, livePlaybackKey] }, handlers.getChurchAudio);
 export const getChurchLiveAudio = onCall({ ...options, secrets: [livePlaybackKey] }, handlers.getChurchLiveAudio);
 

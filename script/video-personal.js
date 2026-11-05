@@ -1,4 +1,4 @@
-import {libraryMenu} from './library-menu.mjs?v=3';
+import {libraryMenu} from './library-menu.mjs?v=search-1';
 import {replacementMap,loadRemoteReplacements} from './video-replacements.mjs?v=automatic-1';
 import {isLive,refreshLiveStatus} from './live-status.mjs';
 import { createVideoStore, resumeSeconds } from './video-personal-store.mjs?v=replacements-1';
@@ -122,7 +122,7 @@ function saveButton(holder,id,title) {
 function decorate(holder,id,title,search=false) {
   if(!visibleVideos().has(id))return;
   const button=saveButton(holder,id,title);
-  if(search) {if(button.parentNode!==holder)holder.appendChild(button);return;}
+  if(search) {libraryMenu({document,holder,line:holder,save:button,id,title:()=>holder.querySelector('strong')?.textContent||titleFor(id,title)});return;}
   const heading=holder.querySelector?.('.video-title') || holder.querySelector?.('.home-video-title') || (holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-title'):null);
   const saveSlot=holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-save-slot'):null;
   if(saveSlot) {

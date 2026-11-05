@@ -1,4 +1,4 @@
-import {personal,visibleVideos,timeLabel} from './video-personal.js?v=shell-1';
+import {personal,visibleVideos,timeLabel} from './video-personal.js?v=search-1';
 import {study} from './study.js?v=shell-1';
 import {isLive} from './live-status.mjs';
 import {hub,avatar} from './account-hub.mjs?v=auth-restore-2';

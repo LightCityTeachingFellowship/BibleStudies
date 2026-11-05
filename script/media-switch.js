@@ -1,6 +1,6 @@
 import {watchPlayback,playbackDiagnostics,recordPlaybackEvent} from './playback-health.mjs?v=1';
-import {mountAudioControls} from './audio-controls.mjs?v=artwork-1';
-import { personal } from './video-personal.js?v=shell-1';
+import {mountAudioControls} from './audio-controls.mjs?v=archive-1';
+import { personal } from './video-personal.js?v=search-1';
 import { createModeSwitch } from './media-mode-core.mjs';
 import { mountLive } from './live-media.js?v=health-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs?v=health-1';
@@ -29,6 +29,7 @@ function youtubeAPI() {
   return apiPromise;
 }
 function pauseOthers(audio, video) {
+  for (const other of document.querySelectorAll?.('audio[data-archive-audio]') || []) if(other!==audio)other.pause();
   for (const item of controllers) if (item.audio !== audio) item.audio.pause();
   for (const player of youtubePlayers) if (player !== video) try { if (player.getIframe?.()?.isConnected === false) youtubePlayers.delete(player); else player.pauseVideo(); } catch {}
 }
@@ -242,7 +243,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
   personal.attachAudio(item);
   return keepListening(item,controllers);
 }
-globalThis.LightCityMedia = { mount, trackYouTube, savedListening, playbackDiagnostics };
+globalThis.LightCityMedia = { mount, trackYouTube, savedListening, playbackDiagnostics, pauseOthers };
 
 window.dispatchEvent?.(new Event('lightcity-media-ready'));
 for (const frame of document.querySelectorAll?.('#videotab-container iframe, #watch-player iframe') || []) void trackYouTube(frame).catch(() => {});
