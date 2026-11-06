@@ -1,4 +1,4 @@
-import {setupStreamIssueForm} from './stream-issues.mjs?v=stream-messages-1';
+import {setupStreamIssueForm} from './stream-issues.mjs?v=stream-reply-1';
 export function setupStudioTests({document,window,api,status}){
  const panel=document.getElementById('admin-test-preview');
  if(!panel)return;

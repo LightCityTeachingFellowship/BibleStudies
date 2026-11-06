@@ -1,5 +1,5 @@
 import {getLiveRecordings,isLive} from './live-status.mjs';
-import {setupStreamInbox} from './stream-messages.mjs?v=1';
+import {setupStreamInbox} from './stream-messages.mjs?v=reply-1';
 export function setupStreamIssueForm({document,window,api=()=>globalThis.LightCityMembers,privateTest=false}){
  const get=id=>document.getElementById(id),open=get('stream-report-open'),dialog=get('stream-report-dialog');if(!open||!dialog)return;
  const id=new URL(window.location.href).searchParams.get(privateTest?'test':'v');if(!/^[\w-]{11}$/.test(id||''))return;

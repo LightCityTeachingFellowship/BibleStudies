@@ -4,7 +4,7 @@ import { personal } from './video-personal.js?v=search-1';
 import { createModeSwitch } from './media-mode-core.mjs';
 import { mountLive } from './live-media.js?v=health-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs?v=health-1';
-import {showPlayingStreamMessages} from './stream-messages.mjs?v=1';
+import {showPlayingStreamMessages} from './stream-messages.mjs?v=reply-1';
 
 const framePlayers = new WeakMap(), frameOwners = new WeakMap(), youtubePlayers = new Set(), controllers = new Set();
 let apiPromise, activeAudio;

@@ -3,20 +3,64 @@ export function setupStreamInbox({document,window,api,videoId,privateTest=false,
  const panel=providedPanel||document.getElementById('stream-admin-messages'),list=providedList||document.getElementById('stream-admin-message-list');
  if(!panel||!list)return;
  let enabled=false,flight=false,revision=0,lastOwner='',rows=[],dismissed=new Set(),destroyed=false;
+ const cards=new Map();
  const listeners=[],listen=(target,event,fn)=>{target.addEventListener?.(event,fn);listeners.push(()=>target.removeEventListener?.(event,fn));};
  const owner=()=>api()?.user?.uid||'visitor',key=()=> 'lc-stream-messages-dismissed:'+owner()+':'+(privateTest?'test:':'')+videoId;
- function clear(){revision++;rows=[];list.replaceChildren();panel.hidden=true;}
+ function clear(){revision++;rows=[];cards.clear();list.replaceChildren();panel.hidden=true;}
  function account(){if(lastOwner===owner())return;lastOwner=owner();clear();try{dismissed=new Set(JSON.parse(window.sessionStorage.getItem(key())||'[]'));}catch{dismissed=new Set();}}
+ function addReply(card,actions,row){
+  const reply=document.createElement('button');reply.type='button';reply.textContent='Reply privately';reply.setAttribute('aria-expanded','false');
+  const form=document.createElement('form');form.className='stream-admin-reply';form.hidden=true;
+  const label=document.createElement('label');label.textContent='Your reply to LightCity';
+  const input=document.createElement('textarea');input.required=true;input.maxLength=2000;input.rows=3;label.appendChild(input);
+  const send=document.createElement('button');send.type='submit';send.textContent='Send reply';
+  const status=document.createElement('div');status.className='stream-admin-reply-status';status.setAttribute('role','status');
+  form.append(label,send);
+  let pending=null,busy=false;
+  function toggle(open){form.hidden=!open;reply.setAttribute('aria-expanded',String(open));}
+  reply.addEventListener('click',()=>{if(busy)return;const open=form.hidden;toggle(open);status.textContent='';if(open)input.focus();});
+  form.addEventListener('submit',async event=>{
+   event.preventDefault();
+   const message=input.value.trim();
+   if(busy||!message)return;
+   if(!pending||pending.message!==message)pending={message,requestId:window.crypto.randomUUID()};
+   const ticket=revision,identity=owner();
+   const current=()=>ticket===revision&&identity===owner()&&card.isConnected;
+   busy=true;input.readOnly=send.disabled=reply.disabled=true;status.textContent='Sending reply…';
+   try{
+    const result=await api().reportStreamIssue({videoId,privateTest,issue:'message',replyTo:row.id,...pending});
+    if(!current())return;
+    if(result?.state!=='reported')throw new Error('Your reply could not be confirmed. Please retry.');
+    const restoreFocus=form.contains(document.activeElement)||document.activeElement===document.body;
+    pending=null;input.value='';toggle(false);status.textContent='Private reply sent to LightCity.';
+    reply.disabled=false;if(restoreFocus)reply.focus();
+    if(privateTest)window.dispatchEvent(new Event('lightcity-stream-reports-changed'));
+   }catch(error){if(current())status.textContent=error?.message||'Your reply could not be sent. Please retry.';}
+   finally{busy=false;input.readOnly=send.disabled=reply.disabled=false;}
+  });
+  actions.appendChild(reply);card.append(form,status);
+ }
+ function createCard(row){
+  const card=document.createElement('article');card.className='stream-admin-message';
+  const heading=document.createElement('strong');heading.textContent=row.audience==='sender'?'Private reply from LightCity':'Message to everyone watching';
+  const body=document.createElement('p');body.textContent=row.message;
+  const time=document.createElement('small');time.textContent=new Date(row.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const actions=document.createElement('div');actions.className='stream-admin-message-actions';actions.appendChild(time);
+  const close=document.createElement('button');close.type='button';close.textContent='Dismiss';close.addEventListener('click',()=>{dismissed.add(row.id);try{window.sessionStorage.setItem(key(),JSON.stringify([...dismissed].slice(-200)));}catch{}render();});
+  card.append(heading,body,actions);
+  if(row.audience==='sender'&&row.canReply===true)addReply(card,actions,row);
+  actions.appendChild(close);
+  return card;
+ }
  function render(){
-  list.replaceChildren();const visible=rows.filter(row=>!dismissed.has(row.id));panel.hidden=!visible.length;
-  for(const row of visible){
-   const card=document.createElement('article');card.className='stream-admin-message';
-   const heading=document.createElement('strong');heading.textContent=row.audience==='sender'?'Private reply from LightCity':'Message to everyone watching';
-   const body=document.createElement('p');body.textContent=row.message;
-   const time=document.createElement('small');time.textContent=new Date(row.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-   const close=document.createElement('button');close.type='button';close.textContent='Dismiss';close.addEventListener('click',()=>{dismissed.add(row.id);try{window.sessionStorage.setItem(key(),JSON.stringify([...dismissed].slice(-200)));}catch{}render();});
-   card.append(heading,body,time,close);list.appendChild(card);
-  }
+  const visible=rows.filter(row=>!dismissed.has(row.id)),ids=new Set(visible.map(row=>row.id));
+  panel.hidden=!visible.length;
+  for(const [id,card] of cards){if(!ids.has(id)){card.remove();cards.delete(id);}}
+  visible.forEach((row,index)=>{
+   if(!cards.has(row.id))cards.set(row.id,createCard(row));
+   const card=cards.get(row.id),position=list.children[index];
+   if(card!==position)list.insertBefore(card,position||null);
+  });
  }
  async function refresh(){
   account();if(destroyed||!enabled||flight||document.visibilityState==='hidden'||typeof api()?.getStreamMessages!=='function')return;

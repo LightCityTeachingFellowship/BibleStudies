@@ -5,3 +5,14 @@
 .stream-admin-messages{margin:16px 0;max-width:760px}.stream-admin-messages[hidden]{display:none!important}.stream-admin-message{padding:16px 18px;border:1px solid var(--home-border,#ccd3da);border-left:4px solid var(--home-accent,#ffbf00);border-radius:14px;background:var(--home-surface,#fff);color:var(--home-ink,#262626);margin:10px 0}.stream-admin-message strong{font-size:14px}.stream-admin-message p{font-size:15px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0}.stream-admin-message small{font-size:12px;opacity:.8}.stream-admin-message button{font:inherit;font-size:13px;margin-left:16px;padding:6px 12px;border:1px solid var(--home-border,#ccd3da);border-radius:20px;background:transparent;color:inherit;cursor:pointer}
 
 .stream-admin-messages-floating{position:fixed;bottom:90px;right:16px;z-index:1400;width:min(540px,calc(100vw - 32px));max-height:45dvh;overflow:auto;box-sizing:border-box;filter:drop-shadow(0 6px 16px #0004)}
+
+.stream-admin-message-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.stream-admin-message-actions button{margin-left:0}
+.stream-admin-reply{margin-top:12px}
+.stream-admin-reply[hidden],.stream-admin-reply-status:empty{display:none}
+.stream-admin-reply label,.stream-admin-reply-status{display:block;font-size:13px}
+.stream-admin-reply textarea{display:block;box-sizing:border-box;width:100%;margin:6px 0 10px;padding:8px 10px;resize:vertical;border:1px solid var(--home-border,#ccd3da);border-radius:10px;background:transparent;color:inherit;font:inherit;font-size:16px}
+.stream-admin-reply button{margin-left:0;background:var(--home-accent,#ffbf00);color:#171717;border-color:transparent}
+.stream-admin-message button:disabled{opacity:.65;cursor:wait}
+.stream-admin-reply-status{margin-top:8px}
+.studio-stream-reply-context{white-space:pre-wrap;overflow-wrap:anywhere}

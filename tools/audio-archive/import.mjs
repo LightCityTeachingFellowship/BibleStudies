@@ -22,6 +22,8 @@ try{
  await save(join(work,'inventory.json'),files.map(path=>({path,relative:relative(source,path)})));
  console.log(`Found ${files.length} MP3 files. Originals will be preserved.`);
  const statusPath=join(work,'status.json');
+ const skippedPath=join(work,'skipped.json');
+ const skipped=[];
  let completed=0, lastTitle=null;
  const recordProgress=()=>save(statusPath,{completed,total:files.length,lastTitle,updatedAt:new Date().toISOString()});
  for(const path of files){
@@ -30,8 +32,20 @@ try{
   if(existing?.sha256&&existing.bytes===before.size){const verified=await s3.send(new sdk.HeadObjectCommand({Bucket,Key}));if(verified.Metadata?.sha256===existing.sha256&&Number(verified.ContentLength)===before.size){completed++;lastTitle=existing.title;continue;}}
   currentTitle = rel.split('/').at(-1).replace(/\.mp3$/i, '');
   await recordActivity('running');
-  const info=await probe(path),stream=info.streams?.find(s=>s.codec_type==='audio'),durationSeconds=Number(info.format?.duration);
-  if(!stream||!Number.isFinite(durationSeconds)||durationSeconds<=0)throw Error(`Unusable audio: ${rel}`);
+  let info;
+  try {
+   info=await probe(path);
+  } catch(error) {
+   if (!/^Media processing failed \(\d+\):/.test(error.message) ||
+       !/Invalid data found when processing input|Failed to find two consecutive MPEG audio frames|Failed to read frame size/i.test(error.message)) throw error;
+  }
+  const stream=info?.streams?.find(s=>s.codec_type==='audio'),durationSeconds=Number(info?.format?.duration);
+  if(!stream||!Number.isFinite(durationSeconds)||durationSeconds<=0){
+   skipped.push({id,relative:rel,title:currentTitle,reason:'No readable audio with a valid duration'});
+   await save(skippedPath,skipped);
+   console.warn('Skipped unreadable audio: '+rel);
+   continue;
+  }
   const parts=rel.split('/'),filename=parts.at(-1).replace(/\.mp3$/i,''),title=filename.replace(/\s*\(\(?LightCity\)?\)\s*/gi,' ').trim()||filename;
   const year=parts.slice(0,-1).find(x=>/^(19|20)\d{2}$/.test(x))||'';
   const sha256=await digest(path);let head;
@@ -50,9 +64,17 @@ try{
   console.log(`Published ${completed}/${files.length}: ${title}`);
  }
  await recordProgress();
- currentTitle = null;
- await recordActivity('complete');
- console.log('Archive import complete. All original files preserved.');
+ await save(skippedPath,skipped);
+ if(skipped.length){
+  currentTitle=skipped[0].title;
+  const message=skipped.length+' unreadable recording(s) skipped. All readable recordings were uploaded. See skipped.json for the list, then retry after replacing any damaged files.';
+  await recordActivity('failed',message);
+  console.warn(message);
+ }else{
+  currentTitle=null;
+  await recordActivity('complete');
+  console.log('Archive import complete. All original files preserved.');
+ }
 }catch(error){
  const message = /unusable audio|media processing failed/i.test(error.message)
   ? 'The recording could not be read as audio. Check that the file opens and is available locally.'

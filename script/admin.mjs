@@ -1,6 +1,6 @@
 import {archiveRequest} from './audio-archive-api.mjs';
 import {setupAdminUsers} from './admin-users.mjs?v=1';
-import {setupStudioTests} from './studio-tests.mjs?v=stream-messages-1';
+import {setupStudioTests} from './studio-tests.mjs?v=stream-reply-1';
 import {setupStudioPublisher} from './studio-publish.mjs?v=clear-ready-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=archive-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers,loadArchive=archiveRequest}){

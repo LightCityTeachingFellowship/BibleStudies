@@ -1,7 +1,9 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {requireStudioAdmin} from './studio-publishing.mjs';
+import {canReplyToStreamMessage,privateStreamMessagesPath} from './stream-messages.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const reportsPath='churchStudioPublications/stream-issues/reports';
+const reportedMessage={state:'reported',message:'Your message has been sent to the admin.'};
 export function youtubeState(item){
  const d=item?.liveStreamingDetails;
  // actualEndTime overrides a stale liveBroadcastContent flag.
@@ -39,6 +41,49 @@ export function createStreamReports(deps){
    await ref.set({checkedAt:now(),result});return result;
   })();pending.set(id,work);try{return await work;}finally{pending.delete(id);}
  }
+ async function applyReportLimit(tx,request,device,id){
+  const actor=db.doc('churchRateLimits/stream-actor-'+hash(device+':'+id));
+  const ip=db.doc('churchRateLimits/stream-ip-'+hash(request.rawRequest?.ip||device));
+  const [a,b]=await Promise.all([tx.get(actor),tx.get(ip)]);
+  const at=now(),window=Math.floor(at/300000),count=b.data()?.window===window?b.data().count:0;
+  if(a.data()?.nextAt>at||count>=15)throw new fail('resource-exhausted','Please wait before reporting again.');
+  tx.set(actor,{nextAt:at+30000});
+  tx.set(ip,{window,count:count+1});
+ }
+ async function reply(request,{video,privateTest,testOwner,device,accountName,supplied,message}){
+  const {replyTo,requestId}=request.data;
+  if(typeof replyTo!=='string'||!/^[a-f0-9]{64}$/.test(replyTo)||typeof requestId!=='string'||!/^[\w-]{16,80}$/.test(requestId))
+   throw new fail('invalid-argument','Choose a private message and try again.');
+  const recipient=hash(request.auth?.uid||device);
+  const scope=privateTest?'test:'+testOwner:'published';
+  const original=db.doc(privateStreamMessagesPath({scope,id:video.id},recipient)+'/'+replyTo);
+  const reportId=hash(JSON.stringify(['stream-message-reply',scope,video.id,recipient,requestId]));
+  const report=db.doc(reportsPath+'/'+reportId);
+  return db.runTransaction(async tx=>{
+   const [previous,parent]=await Promise.all([tx.get(report),tx.get(original)]);
+   if(previous.exists){
+    if(previous.data()?.replyTo!==replyTo||previous.data()?.message!==message)
+     throw new fail('already-exists','This send was already used for a different reply.');
+    return reportedMessage;
+   }
+   const row=parent.data(),at=now();
+   if(!canReplyToStreamMessage(row,at))
+    throw new fail('not-found','This private message is no longer available to reply to.');
+   await applyReportLimit(tx,request,device,video.id);
+   const sender={
+    name:accountName||row.recipientName||(supplied.length<=80?supplied:'')||'Viewer',
+    source:accountName||row.recipientSource==='account'?'account':'visitor',
+    key:recipient
+   };
+   tx.set(report,{
+    videoId:video.id,title:String(video.title||'LightCity stream').slice(0,300),
+    issue:'message',sender,senders:[sender],message,replyTo,replyToMessage:row.message.slice(0,2000),
+    ...(row.replyOwner?{replyOwner:row.replyOwner}:{}),...(privateTest?{privateTest:true,testOwner}:{}),
+    verified:false,createdAt:at,lastAt:at,count:1,resolved:false,delivery:'pending'
+   });
+   return reportedMessage;
+  });
+ }
  return {
   async submit(request){
    const {videoId:id,issue,deviceToken}=request.data||{};
@@ -65,14 +110,18 @@ export function createStreamReports(deps){
    const cleanName=value=>typeof value==='string'?value.replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim():'';
    const accountName=account?.emailVerified&&account.providerData?.length?cleanName(account.displayName).slice(0,80):'';
    const supplied=cleanName(request.data?.senderName);
-   if(!accountName&&(!supplied||supplied.length>80))throw new fail('invalid-argument','Please enter your name (up to 80 characters).');
-   const sender={name:accountName||supplied,source:accountName?'account':'visitor',key:hash(request.auth?.uid||device)};
    let custom='';if(issue==='message'){
     if(typeof request.data?.message!=='string'||request.data.message.length>2000)throw new fail('invalid-argument','Use a message between 1 and 2000 characters.');
     custom=request.data.message.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'').trim();if(!custom)throw new fail('invalid-argument','Please type your question, answer or message.');
    }
+   if(request.data?.replyTo!==undefined){
+    if(issue!=='message')throw new fail('invalid-argument','Choose a private message to reply to.');
+    return reply(request,{video,privateTest,testOwner,device,accountName,supplied,message:custom});
+   }
+   if(!accountName&&(!supplied||supplied.length>80))throw new fail('invalid-argument','Please enter your name (up to 80 characters).');
+   const sender={name:accountName||supplied,source:accountName?'account':'visitor',key:hash(request.auth?.uid||device)};
    // Neither client roles nor player-ended events can bypass server verification.
-   await db.runTransaction(async tx=>{const actor=db.doc('churchRateLimits/stream-actor-'+hash(device+':'+id)),ip=db.doc('churchRateLimits/stream-ip-'+hash(request.rawRequest?.ip||device));const [a,b]=await Promise.all([tx.get(actor),tx.get(ip)]);const window=Math.floor(now()/300000),count=b.data()?.window===window?b.data().count:0;if(a.data()?.nextAt>now()||count>=15)throw new fail('resource-exhausted','Please wait before reporting again.');tx.set(actor,{nextAt:now()+30000});tx.set(ip,{window,count:count+1});});
+   await db.runTransaction(tx=>applyReportLimit(tx,request,device,id));
    // Questions/answers are feedback, not claims about stream status; send without a YouTube check.
    // Audio faults are viewer feedback. Do not require a healthy audio relay to
    // report a broken one. Only ended-stream claims require full verification.
@@ -86,21 +135,22 @@ export function createStreamReports(deps){
    await db.runTransaction(async tx=>{const old=await tx.get(ref);if(old.exists){const senders=[...(old.data().senders||[]).filter(s=>s.key!==sender.key),sender].slice(-20);tx.set(ref,{count:(old.data().count||1)+1,lastAt:now(),senders},{merge:true});return;}tx.set(ref,{videoId:id,title:String(video.title||'LightCity stream').slice(0,300),issue,sender,senders:[sender],...(privateTest?{privateTest:true,testOwner}:{}),...(issue==='message'?{message:custom}:issue==='no-sound'?{message:'No sound is coming from the stream. Please check the audio feed.'}:{}),verified:issue==='ended',createdAt:now(),lastAt:now(),count:1,resolved:false,delivery:'pending'});});
    return {state:'reported',message:issue==='message'?'Your message has been sent to the admin.':issue==='ended'?'The stream ending was confirmed. Your report has been sent to the admin.':issue==='no-sound'?'Your no-sound report has been sent to the admin.':'Your request to increase the speaker volume has been sent to the admin.'};
   },
-  async inbox(request){const uid=await requireStudioAdmin(request,deps);const rows=await db.collection(reportsPath).where('resolved','==',false).get();return {reports:rows.docs.map(d=>({id:d.id,...d.data()})).filter(r=>!r.privateTest||r.testOwner===uid).sort((a,b)=>b.createdAt-a.createdAt)};},
-  async resolve(request){const uid=await requireStudioAdmin(request,deps);const id=request.data?.reportId;if(!/^[a-f0-9]{64}$/.test(id||''))throw new fail('invalid-argument','Choose a report.');const ref=db.doc(reportsPath+'/'+id),row=await ref.get();if(!row.exists||row.data()?.privateTest&&row.data().testOwner!==uid)throw new fail('not-found','Report not found.');await ref.set({resolved:true},{merge:true});return {resolved:true};}
+  async inbox(request){const uid=await requireStudioAdmin(request,deps);const rows=await db.collection(reportsPath).where('resolved','==',false).get();return {reports:rows.docs.map(d=>({id:d.id,...d.data()})).filter(r=>canManageReport(r,uid)).sort((a,b)=>b.createdAt-a.createdAt)};},
+  async resolve(request){const uid=await requireStudioAdmin(request,deps);const id=request.data?.reportId;if(!/^[a-f0-9]{64}$/.test(id||''))throw new fail('invalid-argument','Choose a report.');const ref=db.doc(reportsPath+'/'+id),row=await ref.get();if(!row.exists||!canManageReport(row.data(),uid))throw new fail('not-found','Report not found.');await ref.set({resolved:true},{merge:true});return {resolved:true};}
  };
 }
+const canManageReport=(row,uid)=>(!row.privateTest||row.testOwner===uid)&&(!row.replyOwner||row.replyOwner===uid);
 export async function notifyStreamReport({id,db,auth,messaging,emails,now=Date.now}){
  const ref=db.doc(reportsPath+'/'+id),row=(await ref.get()).data();if(!row||row.resolved||row.delivery==='sent')return;
  const targets=new Map();
  for(const email of String(emails()).split(/[,;\s]+/).filter(Boolean)){
-  let user;try{user=await auth.getUserByEmail(email);}catch{continue;}if(user.disabled||!user.emailVerified||row.privateTest&&row.testOwner!==user.uid)continue;
+  let user;try{user=await auth.getUserByEmail(email);}catch{continue;}if(user.disabled||!user.emailVerified||!canManageReport(row,user.uid))continue;
   const devices=await db.collection('churchStudioPublications/private-test-'+hash(user.uid)+'/devices').get();if(!devices.docs.length)continue;
   const subscribers=await db.getAll(...devices.docs.map(d=>db.doc('webPushSubscribers/'+d.id)));for(const d of subscribers)if(typeof d.data()?.token==='string'&&d.data().token)targets.set(d.data().token,d);
  }
  if(!targets.size){await ref.set({delivery:'no-devices'},{merge:true});return;}
  const senderLabel=(row.sender?.name||'A viewer')+(row.sender?.source==='visitor'?' (visitor)':'');
- const url='https://lightcityfellowship.com/Admin/?reports=1',title=(row.privateTest?'Private test · ':'')+(row.issue==='message'?'Stream message from '+senderLabel:row.issue==='ended'?'Stream ended — confirmed':row.issue==='no-sound'?'No sound on the stream':'Speaker volume request');
+ const url='https://lightcityfellowship.com/Admin/?reports=1',title=(row.privateTest?'Private test · ':'')+(row.replyTo?'Stream reply from '+senderLabel:row.issue==='message'?'Stream message from '+senderLabel:row.issue==='ended'?'Stream ended — confirmed':row.issue==='no-sound'?'No sound on the stream':'Speaker volume request');
  const body=row.issue==='message'?row.message.slice(0,240)+' · '+row.title:(senderLabel+': '+(row.issue==='ended'?'Stream ending confirmed. ':row.issue==='no-sound'?'There is no sound on the stream. ':'Speaker volume is too low. ')+row.title);
  for(const [token,subscriber]of targets){
   const receipt=db.doc(reportsPath+'/'+id+'/delivery/'+hash(token));if((await receipt.get()).exists)continue;
