@@ -26,7 +26,7 @@ function setup({ enabled = true, supported = true, permission = 'default', subsc
     'firebase-firestore.js': { getFirestore: () => ({}), doc: (...args) => args, serverTimestamp: () => 123, setDoc: async () => { if (subscriptionFails) throw Error('Offline'); state.saved++; }, deleteDoc: async () => { state.deleted++; } },
     'firebase-messaging.js': { onMessage: (messaging, callback) => { state.onMessage = callback; }, isSupported: async () => true, getMessaging: () => ({}), getToken: async () => { state.tokens++; return 'device-token'; }, deleteToken: async () => { state.tokenDeleted++; } }
   };
-  vm.runInNewContext(source, {
+  const context = {
     document: { currentScript: { dataset: { base: '/BibleStudies/' } }, body, getElementById: id => memberPage && id === 'member-page' ? {} : null, createElement: tag => new Element(tag), querySelector: selector => selector === 'dialog[open]' ? (state.dialogOpen ? {} : null) : ({ before: node => { body.append(node); state.placedBeforeNav = true; } }), addEventListener: (name, handler) => { events[name] = handler; } },
     navigator, window, Event, Notification: supported ? notification : undefined,
     matchMedia: () => ({ matches: standalone }), location: { origin: 'https://example.com' }, URL,
@@ -35,12 +35,13 @@ function setup({ enabled = true, supported = true, permission = 'default', subsc
     mockImport: async file => modules[file], console: { error() {} },
     setTimeout: (fn, delay) => { timers.set(++timerId, { fn, delay }); return timerId; },
     clearTimeout: id => timers.delete(id)
-  });
+  };
+  vm.runInNewContext(source, context);
   const area = body.children[0];
   const popup = body.children.find(node => node.className.includes('lc-install-popup'));
   const notificationPopup = body.children.find(node => node.className.includes('lc-notification-popup'));
   const install = popup?.children[0], notify = notificationPopup?.children[0], settings = area?.children[0];
-  return { state, events, area, popup, notificationPopup, install, notify, settings, cache,
+  return { state, events, notification, controls: context.LightCityNotificationSettings, area, popup, notificationPopup, install, notify, settings, cache,
     advance: delay => { for (const [id, timer] of [...timers]) if (timer.delay === delay) { timers.delete(id); timer.fn(); } }
   };
 }
@@ -113,3 +114,27 @@ app.state.foregroundMessage = null;
 app.state.onMessage({ messageId: 'disabled-message' }); await tick();
 assert.equal(app.state.foregroundMessage, null, 'Opted-out subscribers must not show foreground notifications');
 console.log('PASS: foreground messages reach the service worker and respect notification opt-out.');
+
+app = setup();
+app.advance(10000);
+app.notify.children[1].children[1].onclick();
+app.state.dialogOpen = true;
+assert.equal(app.notificationPopup.hidden, true);
+assert.equal(app.state.permissionRequests, 0);
+assert.equal(await app.controls.enable(), '');
+assert.equal(app.state.permissionRequests, 1);
+assert.equal(app.state.saved, 1);
+assert.equal(app.controls.getState().enabled, true);
+
+app = setup({ permission: 'denied' });
+assert.match(await app.controls.enable(), /Allow notifications/);
+assert.equal(app.state.permissionRequests, 0);
+app.notification.permission = 'granted';
+assert.equal(await app.controls.enable(), '');
+assert.equal(app.state.permissionRequests, 0);
+assert.equal(app.state.saved, 1);
+
+app = setup({ subscriptionFails: true });
+assert.equal(await app.controls.enable(), 'Offline');
+assert.equal(app.controls.getState().enabled, false);
+console.log('PASS: manual Settings activation bypasses invitation snooze and reports blocked or failed requests.');

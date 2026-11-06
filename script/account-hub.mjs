@@ -38,8 +38,41 @@ function installSetting(dialog) {
   section.append(el('h3', 'App'), install, status);
   return section;
 }
-function settings(){const d=modal('Settings'),appearance=el('section','','lc-hub-setting'),themeButton=action('',()=>{const control=document.getElementById('theme-toggle');if(control)control.click();else{const dark=!document.body.classList.contains('darkmode'),sheet=document.getElementById('theme-stylesheet');document.body.classList.toggle('darkmode',dark);if(sheet)sheet.href=new URL('style/'+(dark?'darkMODE':'lightMODE')+'.css',new URL(sitePath('/'),location.origin)).href;try{localStorage.setItem('theme',dark?'darkMODE':'lightMODE');}catch{}}paintTheme();});function paintTheme(){const dark=document.body.classList.contains('darkmode');themeButton.textContent=dark?'Switch to light mode':'Switch to dark mode';themeButton.setAttribute('aria-pressed',String(dark));}appearance.append(el('h3','Appearance'),themeButton);d.append(appearance,installSetting(d));paintTheme();const observer=new MutationObserver(paintTheme);observer.observe(document.body,{attributes:true,attributeFilter:['class']});d.addEventListener('close',()=>observer.disconnect(),{once:true});const box=el('section','','lc-hub-setting'),title=el('h3','Notifications'),status=el('p','','lc-hub-muted'),toggle=action('Loading…',async()=>{toggle.disabled=true;try{const controls=globalThis.LightCityNotificationSettings;if(controls.getState().enabled)await controls.disable();else await controls.enable();}finally{paint();}});function paint(){if(!d.isConnected)return;const state=globalThis.LightCityNotificationSettings?.getState();toggle.disabled=!state?.supported||state.permission==='denied';toggle.textContent=state?.enabled?'Turn off on this device':'Enable on this device';status.textContent=!state?'Notification controls are loading…':!state.supported?'Push notifications are unavailable here. On iPhone, install the app first.':state.permission==='denied'?'Notifications are blocked. Allow them in your browser or phone settings.':state.enabled?'Notifications are enabled on this device.':'Notifications are off on this device.';}
-box.append(title,status,toggle,el('p','The bell keeps recent announcements here even when push notifications are off.','lc-hub-small'));d.append(box);paint();window.addEventListener('lightcity-notification-settings-ready',paint,{once:true});d.append(action('Open notification inbox',inbox));if(document.getElementById('clear-video-history'))d.append(action('Clear reading, watch and listening history',()=>{document.getElementById('clear-video-history').click();}),el('p',isMemberAccount()?'Saved resources and playlists are kept.':'Saved resources are kept.','lc-hub-small'));}
+function settings(){const d=modal('Settings'),appearance=el('section','','lc-hub-setting'),themeButton=action('',()=>{const control=document.getElementById('theme-toggle');if(control)control.click();else{const dark=!document.body.classList.contains('darkmode'),sheet=document.getElementById('theme-stylesheet');document.body.classList.toggle('darkmode',dark);if(sheet)sheet.href=new URL('style/'+(dark?'darkMODE':'lightMODE')+'.css',new URL(sitePath('/'),location.origin)).href;try{localStorage.setItem('theme',dark?'darkMODE':'lightMODE');}catch{}}paintTheme();});function paintTheme(){const dark=document.body.classList.contains('darkmode');themeButton.textContent=dark?'Switch to light mode':'Switch to dark mode';themeButton.setAttribute('aria-pressed',String(dark));}appearance.append(el('h3','Appearance'),themeButton);d.append(appearance,installSetting(d));paintTheme();const observer=new MutationObserver(paintTheme);observer.observe(document.body,{attributes:true,attributeFilter:['class']});d.addEventListener('close',()=>observer.disconnect(),{once:true});const box=el('section','','lc-hub-setting'),title=el('h3','Notifications'),status=el('p','','lc-hub-muted');
+status.setAttribute('role','status');
+let busy=false,message='';
+const toggle=action('Loading…',async()=>{
+  const controls=globalThis.LightCityNotificationSettings;
+  if(!controls||busy)return;
+  busy=true;
+  message='';
+  paint();
+  try{message=(await (controls.getState().enabled?controls.disable():controls.enable()))||'';}
+  catch{message='Could not change notifications. Please try again.';}
+  finally{busy=false;paint();}
+});
+function paint(){
+  if(!d.isConnected)return;
+  const state=globalThis.LightCityNotificationSettings?.getState();
+  toggle.disabled=busy||!state?.supported;
+  toggle.textContent=state?.enabled?'Turn off on this device':'Enable on this device';
+  status.textContent=busy?'Updating notifications…':!state?'Notification controls are loading…'
+    :!state.supported?'Push notifications are unavailable here. On iPhone, install the app first.'
+    :state.permission==='denied'?'Notifications are blocked. Allow notifications for LightCity in your phone or browser settings, then try again here.'
+    :message||(state.enabled?'Notifications are enabled on this device.':'Notifications are off on this device.');
+}
+box.append(title,status,toggle,el('p','The bell keeps recent announcements here even when push notifications are off.','lc-hub-small'));
+d.append(box);
+paint();
+window.addEventListener('lightcity-notification-settings-ready',paint,{once:true});
+window.addEventListener('focus',paint);
+document.addEventListener('visibilitychange',paint);
+d.addEventListener('close',()=>{
+  window.removeEventListener('lightcity-notification-settings-ready',paint);
+  window.removeEventListener('focus',paint);
+  document.removeEventListener('visibilitychange',paint);
+},{once:true});
+d.append(action('Open notification inbox',inbox));if(document.getElementById('clear-video-history'))d.append(action('Clear reading, watch and listening history',()=>{document.getElementById('clear-video-history').click();}),el('p',isMemberAccount()?'Saved resources and playlists are kept.':'Saved resources are kept.','lc-hub-small'));}
 async function loadPlaylists(force=false){await api()?.ready;if(!isMemberAccount()){playlists=[];return [];}if(!force&&playlistUntil>Date.now())return playlists;if(playlistFlight){if(!force)return playlistFlight;await playlistFlight.catch(()=>{});return loadPlaylists(true);}const owner=key(),ticket=revision;playlistFlight=(async()=>{const result=await api().getStudyCollections();if(ticket!==revision||owner!==key())return [];playlists=result.playlists||[];playlistUntil=Date.now()+30000;signal();return playlists;})();const flight=playlistFlight;try{return await flight;}finally{if(playlistFlight===flight)playlistFlight=null;}}
 async function mutate(data){const owner=key(),ticket=revision;const result=await api().updateStudyCollection(data);if(owner!==key()||ticket!==revision)return null;playlistUntil=0;await loadPlaylists(true);return result;}
 function createForm(d,item){const form=el('form','','lc-hub-create'),label=el('label','New playlist'),input=el('input'),submit=el('button','Create playlist','lc-hub-button lc-hub-primary'),feedback=el('p','','lc-hub-small');input.maxLength=80;input.required=true;input.placeholder='e.g. Prayer, Family study';input.id='lc-playlist-name';label.htmlFor=input.id;submit.type='submit';form.append(label,input,submit,feedback);form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;feedback.textContent='Creating…';try{const result=await mutate({action:'create',name:input.value});if(!result||!d.isConnected)return;if(item)await mutate({action:'add',playlistId:result.id,item});if(d.isConnected){feedback.textContent=item?'Saved to your new playlist.':'Playlist created.';input.value='';}}catch(error){if(d.isConnected)feedback.textContent=friendly(error);}finally{submit.disabled=false;}};d.append(form);}

@@ -190,27 +190,38 @@
     window.dispatchEvent(new Event('lightcity-push-ready'));
     return m;
   }
-  notify.onclick = async () => {
+  const blockedHelp = 'Notifications are blocked. Allow notifications for LightCity in your phone or browser settings, then try again here.';
+
+  // The snooze controls automatic invitations only. Settings can call this at any time.
+  async function enableNotifications() {
+    if (!canNotify) return 'Push notifications are unavailable on this device.';
+    if (Notification.permission === 'denied') return blockedHelp;
+    if (permissionBusy) return 'A notification request is already in progress.';
     notify.disabled = true;
     permissionBusy = true;
     render();
     notificationStatus.textContent = '';
     try {
       // Keep the native permission request directly attached to the user's click.
-      const permission = await Notification.requestPermission();
+      const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
       if (permission !== 'granted') {
-        notificationStatus.textContent = permission === 'denied' ? 'Notifications are blocked. You can change this in your browser settings.' : 'Notifications were not enabled.';
-        return;
+        return permission === 'denied' ? blockedHelp : 'Notifications were not enabled. You can try again anytime.';
       }
       await subscribe();
       write(localStorage, 'lc-push-enabled', 'yes');
       active = true;
       pauseInstall();
-      notificationStatus.textContent = '';
+      return '';
+    } catch (error) {
+      console.error(error);
+      return error.message || 'Could not enable notifications. Please try again.';
+    } finally {
+      notify.disabled = false;
+      permissionBusy = false;
       render();
-    } catch (error) { console.error(error); notificationStatus.textContent = error.message || 'Could not enable notifications. Please try again.'; }
-    finally { notify.disabled = false; permissionBusy = false; render(); }
-  };
+    }
+  }
+  notify.onclick = async () => { notificationStatus.textContent = await enableNotifications(); };
   disable.onclick = async () => {
     disable.disabled = true;
     settingsStatus.textContent = '';
@@ -222,13 +233,13 @@
       active = false;
       settings.open = false;
       render();
-    } catch (error) { console.error(error); settingsStatus.textContent = error.message || 'Could not disable notifications. Please try again.'; }
+    } catch (error) { console.error(error); return settingsStatus.textContent = error.message || 'Could not disable notifications. Please try again.'; }
     finally { disable.disabled = false; }
   };
   render();
   globalThis.LightCityNotificationSettings={
     getState:()=>({supported:Boolean(canNotify),enabled:active,permission:typeof Notification==='undefined'?'unsupported':Notification.permission}),
-    enable:()=>notify.onclick(),disable:()=>disable.onclick()
+    enable:enableNotifications,disable:()=>disable.onclick()
   };
   window.dispatchEvent(new Event('lightcity-notification-settings-ready'));
   // Existing subscribers still refresh their token and restore their device record.
