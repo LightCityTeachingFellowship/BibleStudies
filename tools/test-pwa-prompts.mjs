@@ -23,7 +23,7 @@ function setup({ enabled = true, supported = true, permission = 'default', subsc
   const modules = {
     'firebase-app.js': { initializeApp: () => ({}) },
     'firebase-auth.js': { getAuth: () => ({ authStateReady: async () => {}, currentUser: { uid: 'device-user' } }) },
-    'firebase-firestore.js': { getFirestore: () => ({}), doc: (...args) => args, serverTimestamp: () => 123, setDoc: async () => { if (subscriptionFails) throw Error('Offline'); state.saved++; }, deleteDoc: async () => { state.deleted++; } },
+    'firebase-firestore.js': { getFirestore: () => ({}), doc: (...args) => args, serverTimestamp: () => 123, setDoc: async () => { if (state.savePending) await state.savePending; if (subscriptionFails) throw Error('Offline'); state.saved++; }, deleteDoc: async () => { state.deleted++; } },
     'firebase-messaging.js': { onMessage: (messaging, callback) => { state.onMessage = callback; }, isSupported: async () => true, getMessaging: () => ({}), getToken: async () => { state.tokens++; return 'device-token'; }, deleteToken: async () => { state.tokenDeleted++; } }
   };
   const context = {
@@ -138,3 +138,25 @@ app = setup({ subscriptionFails: true });
 assert.equal(await app.controls.enable(), 'Offline');
 assert.equal(app.controls.getState().enabled, false);
 console.log('PASS: manual Settings activation bypasses invitation snooze and reports blocked or failed requests.');
+
+app = setup();
+app.notification.requestPermission = () => new Promise(() => {});
+const stalledPermission = app.controls.enable();
+app.advance(45000);
+assert.match(await stalledPermission, /permission request did not finish/);
+assert.equal(app.state.tokens, 0);
+app.notification.permission = 'granted';
+assert.equal(await app.controls.enable(), '');
+
+app = setup({ permission: 'granted' });
+app.state.savePending = new Promise(() => {});
+const stalledSave = app.controls.enable();
+await tick();
+assert.equal(app.state.tokens, 1);
+app.advance(12000);
+assert.match(await stalledSave, /could not confirm that notifications were saved/);
+assert.equal(app.controls.getState().enabled, false);
+app.state.savePending = null;
+assert.equal(await app.controls.enable(), '');
+assert.equal(app.controls.getState().enabled, true);
+console.log('PASS: stalled permission and subscriber save time out and allow a successful retry.');

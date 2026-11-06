@@ -1,8 +1,24 @@
 (() => {
   const base = new URL(document.currentScript.dataset.base, location.origin);
   if (!('serviceWorker' in navigator)) return;
-  const ready = navigator.serviceWorker.register(new URL('service-worker.js', base), { scope: base.pathname, updateViaCache: 'none' });
-  ready.catch(console.error);
+  let registrationRequest;
+  function registerWorker() {
+    if (!registrationRequest) {
+      registrationRequest = withDeadline(
+        navigator.serviceWorker.register(new URL('service-worker.js', base), { scope: base.pathname, updateViaCache: 'none' }),
+        'LightCity could not start its notification service. Please try again.'
+      ).catch(error => { registrationRequest = null; throw error; });
+    }
+    return registrationRequest;
+  }
+  function withDeadline(request, message, milliseconds = 12000) {
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(Error(message)), milliseconds);
+    });
+    return Promise.race([request, timeout]).finally(() => clearTimeout(timer));
+  }
+  void registerWorker().catch(console.error);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const config = globalThis.LIGHTCITY_PUSH;
@@ -161,18 +177,23 @@
     if (modulesPromise) return modulesPromise;
     modulesPromise = (async () => {
       const root = 'https://www.gstatic.com/firebasejs/10.14.1/';
-      const [app, auth, db, msg] = await Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js', 'firebase-messaging.js'].map(file => import(root + file)));
-      if (!(await msg.isSupported())) throw Error('Push notifications are not supported in this browser.');
+      const [app, auth, db, msg] = await withDeadline(
+        Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js', 'firebase-messaging.js'].map(file => import(root + file))),
+        'Notification services could not load. Check your connection and try again.'
+      );
+      if (!(await withDeadline(msg.isSupported(), 'The notification support check timed out. Please try again.'))) throw Error('Push notifications are not supported in this browser.');
       const instance = app.initializeApp(config.firebase);
       const authentication = auth.getAuth(instance);
-      await authentication.authStateReady();
-      user = authentication.currentUser || (await auth.signInAnonymously(authentication)).user;
+      await withDeadline(authentication.authStateReady(), 'LightCity could not finish checking your sign-in. Please try again.');
+      user = authentication.currentUser || (await withDeadline(
+        auth.signInAnonymously(authentication), 'LightCity could not register this device. Check your connection and try again.'
+      )).user;
       const messaging = msg.getMessaging(instance);
       msg.onMessage(messaging, payload => {
         window.dispatchEvent(new Event('lightcity-notification-arrived'));
         if (!active || Notification.permission !== 'granted') return;
         // One service worker coordinates displays across all open LightCity tabs.
-        void ready.then(async registration => {
+        void registerWorker().then(async registration => {
           const worker = registration.active || (await navigator.serviceWorker.ready).active;
           worker?.postMessage({ type: 'LIGHTCITY_FOREGROUND_PUSH', payload });
         }).catch(console.error);
@@ -183,10 +204,19 @@
   }
   async function subscribe() {
     const m = await initialize();
-    const registration = await ready;
-    const token = await m.msg.getToken(m.messaging, { vapidKey: config.vapidKey, serviceWorkerRegistration: registration });
+    const registered = await registerWorker();
+    const registration = registered.active ? registered : await withDeadline(
+      navigator.serviceWorker.ready, 'LightCity’s notification service is still starting. Please try again.'
+    );
+    const token = await withDeadline(
+      m.msg.getToken(m.messaging, { vapidKey: config.vapidKey, serviceWorkerRegistration: registration }),
+      'This device did not finish connecting to push notifications. Please try again.'
+    );
     if (!token) throw Error('Could not enable notifications. Please try again.');
-    await m.db.setDoc(m.db.doc(m.store, 'webPushSubscribers', user.uid), { token, updatedAt: m.db.serverTimestamp() });
+    await withDeadline(
+      m.db.setDoc(m.db.doc(m.store, 'webPushSubscribers', user.uid), { token, updatedAt: m.db.serverTimestamp() }),
+      'LightCity could not confirm that notifications were saved. Check your connection and try again.'
+    );
     window.dispatchEvent(new Event('lightcity-push-ready'));
     return m;
   }
@@ -203,7 +233,9 @@
     notificationStatus.textContent = '';
     try {
       // Keep the native permission request directly attached to the user's click.
-      const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+      const permission = Notification.permission === 'granted' ? 'granted' : await withDeadline(
+        Notification.requestPermission(), 'The device permission request did not finish. Try again or check your notification permissions.', 45000
+      );
       if (permission !== 'granted') {
         return permission === 'denied' ? blockedHelp : 'Notifications were not enabled. You can try again anytime.';
       }
@@ -227,8 +259,11 @@
     settingsStatus.textContent = '';
     try {
       const m = await initialize();
-      await m.db.deleteDoc(m.db.doc(m.store, 'webPushSubscribers', user.uid));
-      await m.msg.deleteToken(m.messaging);
+      await withDeadline(
+        m.db.deleteDoc(m.db.doc(m.store, 'webPushSubscribers', user.uid)),
+        'LightCity could not confirm that notifications were turned off. Check your connection and try again.'
+      );
+      await withDeadline(m.msg.deleteToken(m.messaging), 'The device did not finish turning off notifications. Please try again.');
       write(localStorage, 'lc-push-enabled', null);
       active = false;
       settings.open = false;
