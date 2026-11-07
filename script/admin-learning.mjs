@@ -21,6 +21,7 @@ async function load(){
 form.onsubmit=async e=>{e.preventDefault();if(owner!==api()?.user?.uid)return;queue.disabled=true;try{await api().manageLearning({action:'queue',videoId:select.value,teachingEndedAt:new Date(end.value).getTime()});await load();}catch(error){status.textContent=error.message;}finally{queue.disabled=false;}};
 async function review(id){await load();const r=data?.resources.find(v=>v.id===id);if(!r||owner!==api()?.user?.uid)return;const uid=owner,{d,body,status:message}=dialog(r.kind+' · '+r.title);d.showModal();
  body.append(node('p',r.visibility==='members'?'Church members only · follows the source video':'Public access'));
+ if(!r.legacy&&['draft','approved','published'].includes(r.state)){const preview=node('a','Preview in app');preview.href='/StudyResource/?id='+encodeURIComponent(r.id)+'&preview=1';preview.target='_blank';preview.rel='noopener';preview.className='btn';body.append(preview);}
  if(!r.legacy){body.append(node('p',r.kind==='Summary'?'Eligible from '+new Date(r.teachingEndedAt+3*3600000).toLocaleString():'Eligible one hour after the summary is published.'));}
  const title=input(r.title);body.append(field('Title',title));let sections=[],questions=[];
  const editor=node('div');body.append(editor);

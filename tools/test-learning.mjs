@@ -26,6 +26,15 @@ await ai.manage(request('admin',{action:'saveSettings',enabled:true,monthlyAllow
 await ai.manage(request('admin',{action:'saveSettings',enabled:true,monthlyAllowance:5e6}));await ai.manage(request('admin',{action:'retry',videoId:a}));assert.equal((await ai.process()).prepared,a);assert.equal(transcriptions,1);assert.equal(generations,1);assert.ok(data.get(base+'transcripts/'+a).text);assert.equal(data.get(base+'resources/summary-'+a).state,'draft');
 assert.deepEqual(await ai.process(),{idle:true});assert.equal(transcriptions,1,'transcript not requested again');
 await assert.rejects(ai.manage(request('admin',{action:'retry',videoId:a})),e=>e.code==='failed-precondition');
+// Private previews never release drafts, expose answer keys, or write attempts.
+const previewId='quiz-'+a;
+await assert.rejects(learning.read({data:{id:previewId,preview:true}}));
+await assert.rejects(learning.read(request('member',{id:previewId,preview:true})),e=>e.code==='permission-denied');
+const preview=(await learning.read(request('admin',{id:previewId,preview:true}))).resource;
+assert.equal(preview.preview,true);assert.equal(preview.questions[0].correct,undefined);
+assert.equal((await learning.read(request('admin',{id:previewId,preview:true,action:'practice',answers:[[0,2]]}))).result.percentage,100);
+assert.equal(data.get(base+'resources/'+previewId).state,'draft');
+assert.equal([...data.keys()].some(k=>k.includes('/learningAttempts/')),false);
 for(const kind of ['summary','quiz'])await learning.manage(request('admin',{action:'approve',id:kind+'-'+a,version:2}));
 assert.equal((await learning.release()).released,0);clock+=3*3600000;assert.equal((await learning.release()).released,1);assert.equal(data.get(base+'resources/summary-'+a).state,'published');assert.equal(data.get(base+'resources/quiz-'+a).state,'approved');clock+=3600000;assert.equal((await learning.release()).released,1);
 await assert.rejects(learning.read({data:{id:'quiz-'+a}}),e=>e.code==='permission-denied');const r=(await learning.read(request('member',{id:'quiz-'+a}))).resource;assert.equal(r.questions[0].correct,undefined);assert.equal(r.questions[0].multiple,true);

@@ -56,6 +56,12 @@ export function createLearning(deps){
   });if(released)count++;}return {released:count};
  }
  async function read(request){const person=await identity(request),data=request.data||{};
+  if(data.preview===true){
+   await admin(request);
+   const r=await get(data.id);if(!r||r.legacy||!['draft','approved','published'].includes(r.state))throw new fail('not-found','This draft is not ready to preview.');
+   if(data.action==='practice'){if(r.kind!=='Quiz')invalid('Choose a quiz.');try{return {result:gradeQuiz(r,data.answers),preview:true};}catch(e){invalid(e.message);}}
+   return {resource:{...publicResource(r,accessFor(r,await videos())||'members'),preview:true}};
+  }
   if(data.action==='practice'){const {r}=await allowed(data.id,person);if(r.kind!=='Quiz')invalid('Choose a quiz.');try{return {result:gradeQuiz(r,data.answers)};}catch(e){invalid(e.message);}}
   if(data.id){const {r,visibility}=await allowed(data.id,person);return {resource:publicResource(r,visibility)};}
   const library=await videos(),resources=await all();return {resources:resources.filter(r=>r.state==='published').flatMap(r=>{const visibility=accessFor(r,library);return visibility&&(visibility==='public'||person?.member)?[publicResource(r,visibility)]:[];}).map(({sections,questions,...r})=>({...r,questionCount:questions?.length||0}))};
