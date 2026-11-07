@@ -18,13 +18,14 @@ try{
  }
  document.querySelector('.QandA-Board').append(ol);document.querySelector('#quizCatName span').textContent=r.title;
  // These are the links resolved by the original Adult Quiz template.
- document.querySelectorAll('.quizCatLink,#newBtn,.corAnswers-btn button:last-child').forEach(n=>{n.replaceChildren();const a=el('a','New Quiz');a.href='/QuizQuestions-Adult/A0-Home-Adult.html';n.append(a);});
+ const newQuiz=document.querySelector('.quizCatLink');newQuiz.textContent='New Quiz';newQuiz.href='/QuizQuestions-Adult/A0-Home-Adult.html';
+ document.querySelectorAll('#newBtn,.corAnswers-btn button:last-child').forEach(n=>{n.replaceChildren();const a=el('a','New Quiz');a.href='/QuizQuestions-Adult/A0-Home-Adult.html';n.append(a);});
  document.querySelectorAll('#settingsContent a').forEach(a=>a.href='/QuizQuestions-Adult/A0-Home-Adult.html');
- // The old preload uses only this jQuery operation; no external dependency is needed here.
- window.$||=(selector)=>({fadeToggle:()=>document.querySelectorAll(selector).forEach(n=>n.remove())});
- await script('/script/victorScripts/QandAscriptsFontsandThemes.js');
- await script('/script/victorScripts/QandAscripts.js?v=classic-quiz-1');
+ await script('/script/victorScripts/QandAscriptsFontsandThemes.js?v=quiz-repair-2');
+ await script('/script/victorScripts/QandAscripts.js?v=quiz-repair-2');
+ if(!window.LightCityQuizEngineReady)throw Error('Quiz controls did not initialize. Refresh to retry.');
  content.hidden=false;status.textContent=preview?'Private preview · not published · no notifications. Scores here do not affect your history.':'';
- await import('./legacy-quiz-session.mjs?v=classic-quiz-1');
+ await script('/script/victorScripts/recentposts.js');
+ await import('./legacy-quiz-session.mjs?v=quiz-repair-2');
  window.addEventListener('lightcity-members-changed',()=>{content.hidden=true;location.reload();});
 }catch(e){content.hidden=true;status.textContent=e.message||'This quiz could not load.';const retry=el('button','Retry');retry.onclick=()=>location.reload();status.append(retry);}

@@ -1,6 +1,6 @@
 //PAGE PRELOAD
 setTimeout(function() {
-    $('.loader-bg-bibleQuiz').fadeToggle();
+    document.querySelectorAll('.loader-bg-bibleQuiz').forEach(node => node.remove());
 }, 1500);
 
 // FOR TOGGLING THEMES

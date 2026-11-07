@@ -1,3 +1,6 @@
+{% if page.layout contains 'QandA' or page.url == '/TeachingQuiz/' %}
+{% include quiz-app-head.html %}
+{% else %}
 {% include social-preview.html %}
 {% include site-shell-start.html %}
 {% if site.members_enabled == true %}
@@ -73,4 +76,6 @@ setTimeout(() => {
 {% if page.layout contains 'articleTEMPLATE' or page.layout contains 'summaryTEMPLATE' %}
 <link rel="stylesheet" href="{{ '/style/reading-settings.css' | relative_url }}?v=3">
 <script type="module" src="{{ '/script/reading-settings.mjs' | relative_url }}?v=2"></script>
+{% endif %}
+
 {% endif %}

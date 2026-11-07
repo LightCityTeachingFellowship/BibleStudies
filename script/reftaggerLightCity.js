@@ -3409,6 +3409,8 @@ function slide_OLUL_UpDown(elm, upOrDown){
 }
 // LIST COLLAPSER
 function htmlListCollapser(e) {
+    // Quiz answers and settings own their click behavior; do not collapse their lists.
+    if (e.target.closest('#QandA-section, #CorrectedAnswers-section, #quizResult-section, #catSettingsContent')) return;
     let clicked_li = e.target.closest('li');
     let c_li_descendants_olul = clicked_li ? clicked_li.querySelectorAll('li>:is(ol,ul)'):null;
     if (!(clicked_li && c_li_descendants_olul)){return}

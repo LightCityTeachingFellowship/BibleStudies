@@ -6,18 +6,8 @@ subsection: [Adult]
 ---
 {% include QandA-head.html %}
 {% include QandA-headCSS.html %}
-<link rel="stylesheet" href="/style/learning.css?v=classic-quiz-1">
-<style>#classic-quiz-status{padding:12px 20px;text-align:center}#classic-quiz-status:empty{display:none}.lc-quiz-sync{font-family:Arial,sans-serif;min-height:72px;height:auto}.lc-quiz-sync [hidden]{display:none!important}#QandA-section[hidden]{display:none!important}
-/* Account/progress controls add a row; let the original board grow instead of overlapping its footer. */
-#QandA-section{display:block;min-height:100dvh}
-#opacityBG{grid-template-rows:auto auto auto minmax(0,1fr) auto;min-height:100dvh;height:auto}
-#CountHint{min-height:64px;padding:12px 20px;box-sizing:border-box}
-.QandAbody-section{width:100%;min-width:0}
-.QandA-BoardLinks{position:relative;margin-top:24px;padding-bottom:20px}
-.quizCatLink{background:transparent;color:inherit;border:1px solid currentColor;border-radius:6px}
-.quizCatLink a{color:inherit}
-@media(max-width:657px){#opacityBG{display:flex;flex-direction:column}.QandA-BoardLinks{flex:none;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:none;gap:12px}#quizCatName{font-size:1rem}#confirmButton{grid-area:auto}.QandAbody-section{flex:1}}
-</style>
+<link rel="stylesheet" href="/style/learning.css?v=quiz-repair-2">
+
 </head><body class="newBG">
 <p id="classic-quiz-status" role="status">Loading quiz…</p>
 <div id="classic-quiz-content" hidden>
@@ -25,5 +15,5 @@ subsection: [Adult]
 {% include QandA-Quiz-Result.html %}
 {% include QandA-Corrected-Answers.html %}
 </div>
-<script type="module" src="/script/teaching-quiz.mjs?v=1"></script>
+<script type="module" src="/script/teaching-quiz.mjs?v=2"></script>
 </body></html>

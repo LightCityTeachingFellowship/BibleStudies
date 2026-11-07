@@ -1,14 +1,5 @@
 <div id="headerbar" class="QandA-header">
-        <button class="quizCatLink">
-            {% assign caty = page.subsection[0] | prepend: 'HomePage-' %}
-            {% for aaa in site.pages %}
-                {% if aaa.subsection contains caty %}
-                <a href="{% if site.baseurl == "" %}{{aaa.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{aaa.url}}{% endif %}">
-                    <span><i class="fas fa-thin fa-power-off"></i> New Quiz</span>
-                </a>
-            {% endif %}
-            {% endfor %}
-        </button>
+        <a class="quizCatLink" href="{% if page.subsection contains 'Children' %}{{ '/QuizQuestions-Children/A0-Home-Children.html' | relative_url }}{% else %}{{ '/QuizQuestions-Adult/A0-Home-Adult.html' | relative_url }}{% endif %}">New Quiz</a>
         <button id="settings" class="settings" onclick="showSettings()" title="general settings"><img src="../images/settings-svgrepo-com.svg" alt="&#9881;"></button>
         <div id="nextPrevButton">
             <div id="prevquestionbutton" onclick="goToPreviousQuestion()" title="Previous Question">

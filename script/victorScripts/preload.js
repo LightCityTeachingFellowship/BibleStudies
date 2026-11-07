@@ -1,5 +1,5 @@
 setTimeout(function() {
-  $('.loader-bg').fadeToggle();
+  document.querySelectorAll('.loader-bg').forEach(node => node.remove());
 }, 1500);
 //Remove the - in Articles and Summaries Categories name
 const artSumCatNameElements = document.querySelectorAll('.ArtSumCatName');

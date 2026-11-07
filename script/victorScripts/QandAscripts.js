@@ -683,9 +683,7 @@ function showAllQuestionsWithAnswers() {
         var summary = document.createElement('summary');
         summary.append(removeinsertedDivClass);
         details.prepend(summary);
-        var questionDIV = document.querySelector('.QandA-Board>OL>LI>DIV');
-        questionDIV.classList.add('collapsible');
-        questionDIV.nextElementSibling.classList.add('content');
+        // Review only changes the cloned questions; the live board must remain playable.
         // removeinsertedDivClass.classList.add('collapsible');
         // removeinsertedDivClass.nextElementSibling.classList.add('content');
     });
@@ -801,3 +799,5 @@ function bgSoundPlayButtonFromResult() {
         }
     }
 }
+
+window.LightCityQuizEngineReady = true;
