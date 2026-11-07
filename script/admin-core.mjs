@@ -23,6 +23,7 @@ export function dashboardRows(data){
   });
  }
  for(const r of data.readings||[])if(['Article','Summary'].includes(r.kind)&&siteLink(r.url))rows.push({...r,url:siteLink(r.url),published:true});
+ for(const r of data.learning||[])if(['Summary','Quiz'].includes(r.kind)&&siteLink(r.url))rows.push({...r,url:siteLink(r.url)});
  for(const [title,path]of [['Home','/Home/'],['Video library','/Videos/'],['Audio library','/Listen/'],['Articles','/Teaching-Articles/'],['Summaries','/teaching-summary/']])rows.push({title,url:siteLink(path),kind:'Page',visibility:'public',published:true});
  return rows;
 }

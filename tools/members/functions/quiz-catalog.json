@@ -1,0 +1,5509 @@
+[
+  {
+    "id": "legacy-89e74f138ee4b95aa4b73e48",
+    "kind": "Quiz",
+    "title": "AoY · Adult",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Adult/AngelofYahwehQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Who did Moses meet at the Burning Bush",
+        "options": [
+          "Angel Gabriel",
+          "The Angel of Yahweh",
+          "Satan",
+          "Angel Michael"
+        ],
+        "correct": [
+          1,
+          3
+        ],
+        "hint": "This question has multiple answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Who is the Angel of Yahweh",
+        "options": [
+          "Gabriel",
+          "Jesus",
+          "Michael",
+          "Moses"
+        ],
+        "correct": [
+          1,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Is the Angel of Yahweh GOD",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "What is the meaning of Michael",
+        "options": [
+          "GOD is Great",
+          "One like GOD",
+          "The Great Prince",
+          "The Mighty Angel"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "What is the meaning of Archon Megas",
+        "options": [
+          "Your Prince",
+          "The Great Prince",
+          "One like GOD",
+          "The Creator of all things"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "Who brought the Israelites out of Egypt and into the Promise Land",
+        "options": [
+          "Angel Gabriel",
+          "Archon Megas",
+          "The Angel of Yahweh",
+          "The Captain of the Host"
+        ],
+        "correct": [
+          1,
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-9acca0e5279afa3ca9857167",
+    "kind": "Quiz",
+    "title": "General Knowledge · Adult",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Adult/GenKnowQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Who is Jesus",
+        "options": [
+          "A mere Man",
+          "The Son of Man",
+          "The Son of GOD",
+          "GOD'S Superior"
+        ],
+        "correct": [
+          1,
+          2
+        ],
+        "hint": "This Question has multiple Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Who was the first Man Created?",
+        "options": [
+          "Moses",
+          "Jesus",
+          "Adam",
+          "Judah"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "GOD is a",
+        "options": [
+          "Man",
+          "Spirit",
+          "Angel",
+          "Cherubim"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Who was the first Man to be Changed",
+        "options": [
+          "Moses",
+          "Jesus",
+          "Melkezedek",
+          "Elijah"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "Has any Man seen GOD?",
+        "options": [
+          "All Men have seen GOD",
+          "GOD is invisible and cannot be seen",
+          "No",
+          "Two Men have seen GOD"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "GOD created ____ on Day 6",
+        "options": [
+          "Animals and Man",
+          "Fish and Birds",
+          "The Elements",
+          "Day and Night"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Who is the Mother of all the Living",
+        "options": [
+          "Sarah",
+          "Racheal",
+          "Eve",
+          "Mary"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "Is Swearing a Sin",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Which is the Oldest Covenant",
+        "options": [
+          "The Old Covenant",
+          "The Abrahamic Covenant",
+          "The New Covenant",
+          "The Davidic Covenant"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "When Adam left the Garden, He left the Presence of GOD",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "GOD made all things through",
+        "options": [
+          "Man",
+          "Angels",
+          "Jesus",
+          "He did it Himself"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "Heading Covering is not important",
+        "options": [
+          "No it is not",
+          "It is very important",
+          "It's our choice to make",
+          "The Doctrine is not for us"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "Who is the Last Adam",
+        "options": [
+          "Moses",
+          "Noah",
+          "Adam (the only Adam)",
+          "Jesus"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "Jesus was born a",
+        "options": [
+          "Spirit",
+          "Human Being (Flesh)",
+          "It's unknown",
+          "He was not born, he just came to the Earth"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "Enoch surely died",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "Who did Moses encounter at the Burning Bush",
+        "options": [
+          "The Angel of Yahweh",
+          "GOD the Father",
+          "Hayah",
+          "Aaron"
+        ],
+        "correct": [
+          0,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "What was David's sin in the matter of Bathsheba",
+        "options": [
+          "Murder",
+          "Lie",
+          "Hypocrisy",
+          "Adultery"
+        ],
+        "correct": [
+          0,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "The World was made by",
+        "options": [
+          "The Word of GOD",
+          "The wishes of the Angels",
+          "The great power of Heaven",
+          "The idea of Men"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "[Heb 11:3]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "Who is the maker of the New Jerusalem",
+        "options": [
+          "Angel Gabriel",
+          "GOD",
+          "Men",
+          "Moses"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q20",
+        "prompt": "Is Moses an Apostle",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q21",
+        "prompt": "GOD _____ the _____ of His people",
+        "options": [
+          "Is angry at, Bowing down",
+          "Inhabits, Praise",
+          "Glorfies, Truth",
+          "Delights in, Singing"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q22",
+        "prompt": "Women are to be silent in Church because",
+        "options": [
+          "They are not talented",
+          "They are not to usurp authority",
+          "The Bible commands it",
+          "They cannot understand the Bible"
+        ],
+        "correct": [
+          1,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q23",
+        "prompt": "Women can lead worship in Church",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q24",
+        "prompt": "Why did Moses’ Mother keep Moses",
+        "options": [
+          "She hoped for payment for raising Moses",
+          "Miriam needed another brother",
+          "She was a Woman of Faith",
+          "She saw He was no ordinary child"
+        ],
+        "correct": [
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q25",
+        "prompt": "Man looks at the _______, GOD looks at the ________",
+        "options": [
+          "Heart, Outward",
+          "Character, Behaviour",
+          "Outward, Heart",
+          "Works, Faith"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-be57a4934d0d77fd10a62b8b",
+    "kind": "Quiz",
+    "title": "Parables · Adult",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Adult/ParablesQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "(The Parable of the Sower)What do the four different grounds on which the Sower sowed seeds represent",
+        "options": [
+          "Soil types",
+          "Different Religions",
+          "Different Churches",
+          "The hearers of the Gospel"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "(The Parable of the Sower)Who does the Sower represent",
+        "options": [
+          "Cain",
+          "Jesus",
+          "Abraham",
+          "All farmers"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "(The Parable of the Sower)Who is the enemy of the man who sowed the good seed in the field",
+        "options": [
+          "Cain",
+          "The devil",
+          "The Philistines",
+          "Opposing farmers"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "(The Parable of the Sower)What was the seed that the Sower sowed on the four different types of ground",
+        "options": [
+          "The word of God",
+          "The Holy Spirit",
+          "The Church",
+          "Israel"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "(The Parable of the Sower)What does the scattering of the seeds by the Sower represent",
+        "options": [
+          "Planting",
+          "Going to war",
+          "Having godly children",
+          "Preaching the Gospel"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "(The Parable of the Wheat and Weeds)Who are the servants of the man who sowed the good seed",
+        "options": [
+          "The Angels",
+          "The demons",
+          "Farm workers",
+          "The Sower’s sons"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "(The Parable of the Wheat and Weeds)What were the good seeds that were sown in the field",
+        "options": [
+          "Corn",
+          "Wheat",
+          "The Children of Israel",
+          "The Sons of the Kingdom"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "(The Parable of the Wheat and Weeds)What were the bad weeds that were sowed among the good seeds in the field",
+        "options": [
+          "The sons of the devil, the unrighteous",
+          "GMO seeds",
+          "Weeds",
+          "Rice"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "(The Parable of the Wheat and Weeds)What does the field represent",
+        "options": [
+          "A farm",
+          "Israel",
+          "The World",
+          "The Church"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "(The Parable of the Wheat and Weeds)What does the planting of the good seeds represent",
+        "options": [
+          "Establishing the Israel",
+          "Establishing the Church",
+          "Creation of human beings",
+          "Preaching the Word of God"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "(The Parable of the Wheat and Weeds)What does the planting of the bad seeds by the enemy represent",
+        "options": [
+          "Planting of weeds",
+          "The creation of bad people by the devil",
+          "The bringing of the Gentiles into the Church",
+          "The planting of evil men among the righteous"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "(The Parable of the Wheat and Weeds)What does the separation of wheat and weeds at the time of the harvest represent",
+        "options": [
+          "Separating between the righteous (i.e., the sons of the kingdom) and the unrighteous (i.e., the sons of the evil one)",
+          "Separating between Israel and the Church",
+          "Separating between Jews and Gentiles",
+          "That part of the parable has no meaning"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "(The Parable of the Wheat and Weeds)What does the time of sowing [sowing season] when the man sowed good seed in his field represent",
+        "options": [
+          "The creation of nations",
+          "The creation of the earth",
+          "The time to harvest plants",
+          "The first coming of Jesus Christ when he planted the church"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "(The Parable of the Wheat and Weeds)What does the early stage of growth when bad seeds were sown represent",
+        "options": [
+          "The growth of the church, quite early in her history, when the devil’s children joined the church",
+          "The time men began to increase on earth",
+          "The exile of Judah",
+          "Israel’s rebellion"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "(The Parable of the Wheat and Weeds)What does the time of the harvest represent",
+        "options": [
+          "The birth of Christ",
+          "The end of the age",
+          "The death of Christ",
+          "The time to harvest plants"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Who does Jacob represent in the parable",
+        "options": [
+          "God the Father",
+          "All Shepherds",
+          "The Church",
+          "Jesus"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Who does Esau represent in the parable",
+        "options": [
+          "The nation of Edom",
+          "God the Father",
+          "Jesus Christ",
+          "The Devil"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Who does Jacob’s family represent in the parable",
+        "options": [
+          "Israel",
+          "The Church",
+          "The Gentiles",
+          "All families on earth"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Who do Esau’s 400 men represent in the parable",
+        "options": [
+          "The devil’s angels",
+          "Worldly armies",
+          "God’s Angels",
+          "Nothing"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q20",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Who do Jacob’s two camps represent in the parable",
+        "options": [
+          "Israel and Judah",
+          "Israel and the Gentiles",
+          "Ephraim and Manasseh",
+          "The Righteous and the Unrighteous"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q21",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Where do Mahanaim and Peniel represent in the parable",
+        "options": [
+          "Heaven, God’s Camp where Jesus contends for His people with God",
+          "Any place of prayer",
+          "Jerusalem",
+          "Abuja"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q22",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Where does Seir where Esau lived represent in the parable",
+        "options": [
+          "Edom",
+          "Mount Sinai",
+          "Anywhere two or three are gathered in God’s name",
+          "Heaven, the dwelling place of the Father and His heavenly servants"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q23",
+        "prompt": "(The Parable of Jacos’s reunion with Esau)Where does Succoth where Jacob settled represent in the parable",
+        "options": [
+          "The land of Israel",
+          "The land of Judah",
+          "The earth as a whole",
+          "The New Jerusalem, Home of Christ, and His people"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q24",
+        "prompt": "(The Parable of Jacob’s Marriage to His Wives)Who does Jacob represent in the parable",
+        "options": [
+          "Jesus",
+          "The Church",
+          "All husbands",
+          "God the Father"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q25",
+        "prompt": "(The Parable of Jacob’s Marriage to His Wives)Who does Leah represent in the parable",
+        "options": [
+          "Israel",
+          "Nigerians",
+          "The Church",
+          "The Gentiles"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q26",
+        "prompt": "(The Parable of Jacob’s Marriage to His Wives)Who does Rachael represent in the parable",
+        "options": [
+          "Younger sisters",
+          "The Gentiles",
+          "The Church",
+          "Israel"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q27",
+        "prompt": "(The Parable of Jacob’s Marriage to His Wives)Who does Laban represent in the parable",
+        "options": [
+          "The Angels",
+          "Jesus Christ",
+          "God the Father",
+          "The Devil/deceiver"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q28",
+        "prompt": "(The Parable of Jacob’s Marriage to His Wives)Where does the land of Canaan represent in the parable",
+        "options": [
+          "Israel",
+          "Egypt",
+          "Heaven",
+          "Port Harcourt"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q29",
+        "prompt": "(The Parable of Jacob’s Marriage to His Wives)Where does the land of Paddan Aram represent in the parable",
+        "options": [
+          "Heaven",
+          "The Earth",
+          "The Church",
+          "The New Jerusalem"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q30",
+        "prompt": "(The Parable of Jacob’s Marriage to His Wives)What does each seven years represent in the parable",
+        "options": [
+          "An age",
+          "One week",
+          "Seven days",
+          "Seven hundred years"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q31",
+        "prompt": "(The Parable of Jacob and the well of Paddan Aram)Who does Jacob represent in the parable",
+        "options": [
+          "God the Father",
+          "All Shepherds",
+          "The Church",
+          "Jesus"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q32",
+        "prompt": "(The Parable of Jacob and the well of Paddan Aram)Who does Rachael represent in the parable",
+        "options": [
+          "Israel",
+          "All women",
+          "The Church",
+          "The New Jerusalem"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q33",
+        "prompt": "(The Parable of Jacob and the well of Paddan Aram)Who do Laban’s sheep represent in the parable",
+        "options": [
+          "Israel",
+          "Sheep",
+          "The Gentiles",
+          "Jesus’ People"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q34",
+        "prompt": "(The Parable of Jacob and the well of Paddan Aram)Who do the other shepherds represent in the parable",
+        "options": [
+          "The kings of the Nations",
+          "The spiritual rulers of this age",
+          "The Pastors of different churches",
+          "The leaders of other world religions"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q35",
+        "prompt": "(The Parable of Jacob and the well of Paddan Aram)Who do the sheep of the other Shepherds represent in the parable",
+        "options": [
+          "Israel",
+          "The Church",
+          "All sheep in General",
+          "Those who don’t belong to Christ"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q36",
+        "prompt": "(The Parable of Jacob and the well of Paddan Aram)What does the stone over the mouth of the well represent in the parable",
+        "options": [
+          "The Devil",
+          "Human struggles",
+          "The death/grave (Sheol/Hades)",
+          "Every stone over the mouth of wells"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q37",
+        "prompt": "(The Parable of Jacob and the well of Paddan Aram)What does the water in the well represent in the parable",
+        "options": [
+          "Resurrection/Life",
+          "Refreshment",
+          "Jesus Christ",
+          "Prosperity"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-24b928bb358397815829a17d",
+    "kind": "Quiz",
+    "title": "Prophecy · Adult",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Adult/ProphecyQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What really is prophecy?",
+        "options": [
+          "A divine revelation of the future",
+          "God’s decrees and judgments",
+          "The decree of a true man of God concerning a situation",
+          "None of the Above"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "Gen 41:25; Isa 48:3-7; Amos 3:7",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Prophets are?",
+        "options": [
+          "Men who can work miracles at will",
+          "Men who speak for God",
+          "Men who speak against injustice in the nation",
+          "Men of God who shape the future by their authoritative prophetic declarations"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "See the explanation to the answer to question 1",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "In the revelation of God and his will, as presented in the Bible, which is the most important?",
+        "options": [
+          "Prophets",
+          "Pastors and teachers",
+          "Apostles",
+          "Evangelists"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "1Cor 12:28",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Who was the first apostle?",
+        "options": [
+          "Paul",
+          "Peter",
+          "Moses",
+          "Adam"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "The testimony of God in the Bible is based on",
+        "options": [
+          "Inspired observation of nature",
+          "First-hand testimony of the first human beings",
+          "The revelation of God to Moses",
+          "The revelation of God to Abraham"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "A man with the Spirit of God cannot misinterpret the Bible.",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "Gal 3:2",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "The key to understanding the Bible and not going astray is?",
+        "options": [
+          "Learning the creeds of the church",
+          "Mastering the doctrines of the church fathers",
+          "Sincerity and paying attention to details",
+          "Loving God and being spiritually alert"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "Isa 42:18-20; 1Pet 1:10-11",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "The message of the Bible is?",
+        "options": [
+          "Faith to get anything we want from God our Father",
+          "How much God loves us",
+          "The Kingdom of God",
+          "Our rights and authority as believers in Christ"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "Jesus’ teachings in the Parables",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Prophecy is not a part of the Gospel.",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "See the 3rd point in the explanation to question 8",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "We cannot know the truth of God without the Bible",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "We can know God and His will from nature",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "We do not really need the Old Testament to be sound in our understanding of God",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "When interpreting the Bible, we should be careful to harmonize our interpretation with our church’s doctrines and practices",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "Any interpretation of the Bible that makes us uncomfortable or makes us afraid is not of the Spirit of God",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "Paul and other apostles wrote their letters by the Spirit of God and did not really understand everything that they wrote",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "By the Spirit of God, we can have a better understanding of God than the apostles",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "There are things prophets wrote that they did not really understand.",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "1Pet 1:10-12",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "The apostles were human beings and so we can disagree with their doctrines and still be Christians.",
+        "options": [
+          "True",
+          "False"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "Matt 10:40; Luke 10:16",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "When studying the Bible, our goal should be?",
+        "options": [
+          "To understand what it is saying and align our actions and beliefs to it",
+          "To find answers to the problems plaguing our world and to help humanity",
+          "To understand our denomination’s doctrines and defend its practices"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "Isa 42:18-20; Matt 28:18-20",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-a8d8057128e41644965e3fa5",
+    "kind": "Quiz",
+    "title": "Creation · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/CreationQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Yahweh created the earth in",
+        "options": [
+          "100 Days",
+          "3 Days",
+          "6 Days",
+          "60 Days"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "We serve the GOD who?",
+        "options": [
+          "The GOD who created everything",
+          "Made only Day and Night",
+          "Only made the Mountains",
+          "Formed only the Lands and Seas"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Hayah is our ____",
+        "options": [
+          "Uncle",
+          "Creator",
+          "Father",
+          "Giver"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "God created ____ on Day 6?",
+        "options": [
+          "Animals and Man",
+          "Fish and Birds",
+          "The Elements",
+          "Angels"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "God did what on Day 7?",
+        "options": [
+          "Threw a Party",
+          "Rested",
+          "Started Creating",
+          "Destroyed His Creation"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "What did God create first",
+        "options": [
+          "Man and Woman",
+          "Fish and Birds",
+          "Day and Night",
+          "Trees and Plants"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "In who's Image was Man Made",
+        "options": [
+          "Satan",
+          "Animals",
+          "Man",
+          "God"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "what did God create on Day 2",
+        "options": [
+          "Woman",
+          "Sky",
+          "Fish",
+          "Light"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Why did God create Man",
+        "options": [
+          "To work and keep the Garden",
+          "To eat all the fruits",
+          "To play in the Garden",
+          "To name the Animals"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "What did Hayah create on Day 3",
+        "options": [
+          "Nothing",
+          "everything",
+          "Land",
+          "Plants"
+        ],
+        "correct": [
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "God made all things through",
+        "options": [
+          "Man",
+          "Angels",
+          "Jesus",
+          "He did it Himself"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "The World was made by",
+        "options": [
+          "The Word of God",
+          "The wishes of the Angels",
+          "The great power of Heaven",
+          "The idea of Men"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "[Heb 11:3]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "The New Covenant states",
+        "options": [
+          "I will put my laws in their minds and write them on their hearts",
+          "I will be their GOD and they will be my People",
+          "They will all know me from the least to the greatest",
+          "I will forgive their wickedness and remember their sins no more"
+        ],
+        "correct": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "Is GOD still creating",
+        "options": [
+          "Yes",
+          "No",
+          "He will never stop creating"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "On the seventh day GOD rested from all the work of creating that he had done [Gen 2:2-3]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "Yahweh made all ______ for our good",
+        "options": [
+          "Men and Women",
+          "Animals and Plants",
+          "Sun, Moon, and Stars",
+          "All natural things"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "Are we all GOD’S creation",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-06fe73c43bf6a6bf066cd3c8",
+    "kind": "Quiz",
+    "title": "Daniel · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/DanielQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Daniel was thrown into the lion's den because",
+        "options": [
+          "He forgot to order some pizza",
+          "He didn't lock his doors at night",
+          "He forgot the king's birthday",
+          "He refused to pray to the king"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Which Angel appeared to Daniel in Daniel 12",
+        "options": [
+          "Gabriel",
+          "Michael",
+          "God Himself",
+          "The Angel had no name"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Daniel fasted for",
+        "options": [
+          "22 Days",
+          "40 Days",
+          "21 Days",
+          "7 Days"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Daniel was ______ of GOD",
+        "options": [
+          "A man after GOD's heart",
+          "Highly esteemed",
+          "Pleasing to",
+          "Worshipper"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "[Dan 10:11]",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-57d5d54c969c39e3e1c028e9",
+    "kind": "Quiz",
+    "title": "David · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/DavidQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Who was the Father of David",
+        "options": [
+          "Jesse",
+          "Saul",
+          "Samuel",
+          "Jonathan"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "David was the King of",
+        "options": [
+          "Nigeria",
+          "Bethel",
+          "Israel",
+          "Philistine"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Did David truly kill a Lion",
+        "options": [
+          "No",
+          "He only fought with it",
+          "Yes",
+          "Yes and a Bear"
+        ],
+        "correct": [
+          2,
+          3
+        ],
+        "hint": "This Question has two Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Which of David's Sons succeeded him as King",
+        "options": [
+          "Solomon",
+          "Absalom",
+          "Adonijah",
+          "Carmel"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "Was David the Firstborn",
+        "options": [
+          "No",
+          "Yes",
+          "He was the lastborn"
+        ],
+        "correct": [
+          0,
+          2
+        ],
+        "hint": "This Question has two Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "Who anointed David as King",
+        "options": [
+          "Jeremiah",
+          "Isaiah",
+          "Samuel",
+          "Saul"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "A Prophet",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Was David a wicked King",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "David was anointed by GOD to_______",
+        "options": [
+          "Heal the sick and raise the dead",
+          "Become very wealthy and great on the Earth",
+          "Complete the deliverance of Israel from the hand of the Philistines",
+          "Complete the deliverance of Israel from the hand of the Edomites"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Why was David not allowed to build the Temple",
+        "options": [
+          "He was a Man of war",
+          "His sins were too many",
+          "His brothers said he wasn’t qualified",
+          "He was too poor"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "David was from the tribe of",
+        "options": [
+          "Judah",
+          "Benjamin",
+          "Reuben",
+          "Dan"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "Who was David’s Great-grandmother",
+        "options": [
+          "Naomi",
+          "Oprah",
+          "Mara",
+          "Ruth"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "Where did David hide his Parents when he was running away from King Saul",
+        "options": [
+          "The land of Philistine",
+          "The land of Moab",
+          "The land of Edom",
+          "The land of Canaan"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "David was a Man who was said to_______",
+        "options": [
+          "Please God in his generation",
+          "Be a Man after GOD’S heart",
+          "A violent Man",
+          "A miracle worker"
+        ],
+        "correct": [
+          0,
+          1
+        ],
+        "hint": "This Question has two Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "How old was Saul when he became King of Israel",
+        "options": [
+          "30 Years",
+          "40 Years",
+          "28 Years",
+          "52 Years"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "Was Saul an obedient King",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "Why did God reject Saul",
+        "options": [
+          "Saul was a disobedient King",
+          "Saul was a loser in battle",
+          "He married too many wives",
+          "He killed GOD’S Prophets"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "[1 Sam 13:13]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "What tribe was king Saul from",
+        "options": [
+          "Judah",
+          "Benjamin",
+          "Reuben",
+          "Dan"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "How did David enter Saul’s service",
+        "options": [
+          "He played the harp when the evil spirit came on King Saul",
+          "After he defeated Goliath in battle",
+          "After he killed a bear and a lion",
+          "After he and Jonathan became friends"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "[1 sam 16:18-21]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "Who refused to show David kindness after he had protected his sheep",
+        "options": [
+          "Nabal",
+          "King Saul",
+          "Joab",
+          "Abner"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q20",
+        "prompt": "Who was the Mother of Solomon",
+        "options": [
+          "Abigail",
+          "Michal",
+          "Bathsheba",
+          "She was un-named"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q21",
+        "prompt": "Were Jonathan and David friends",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q22",
+        "prompt": "Who did GOD send to tell David he had sinned in the matter of Bathsheba",
+        "options": [
+          "Prophet Samuel",
+          "Prophet Gad",
+          "Prophet Jeremiah",
+          "Prophet Nathan"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q23",
+        "prompt": "Who was Uriah’s wife",
+        "options": [
+          "Abigail",
+          "Michal",
+          "Bathsheba",
+          "Dorcas"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q24",
+        "prompt": "Where did David flee to hide from Saul",
+        "options": [
+          "Gath, Philistine",
+          "Moab",
+          "Amalek",
+          "Egypt"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q25",
+        "prompt": "What was the name of Jonathan’s Son whom David shew kindness",
+        "options": [
+          "Mephibosheth",
+          "Methuselah",
+          "Moses",
+          "Manasseh"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q26",
+        "prompt": "The Women sang “Saul has slayed his thousands and David his_______”",
+        "options": [
+          "2 Million",
+          "20 Thousands",
+          "10 Thousands",
+          "5 Thousands"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q27",
+        "prompt": "Why was Saul jealous of David",
+        "options": [
+          "The people honored David more than him",
+          "God was with David in everything he did",
+          "David was finer than him",
+          "Jonathan had promised David the throne of Israel"
+        ],
+        "correct": [
+          0,
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q28",
+        "prompt": "How old was David when he became king of Israel and How long did he reign",
+        "options": [
+          "30 Years, 40 Years",
+          "23 Years, 38 Years",
+          "40 Years, 50 Years",
+          "20 Years, 70 Years"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q29",
+        "prompt": "Did David lose any battle",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q30",
+        "prompt": "How did David conduct himself when he met with Achish the King of Gath",
+        "options": [
+          "He pretended to be insane in his presence",
+          "He threw a party in honor of the King",
+          "He spoke to the King rudely",
+          "He tried to kill the King"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q31",
+        "prompt": "Who killed Goliath",
+        "options": [
+          "Samson",
+          "David’s mighty Men",
+          "Saul",
+          "David"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q32",
+        "prompt": "Did Saul order the killing of the GOD’S Prophets",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q33",
+        "prompt": "Did David always enquire of the LORD before he went into battle",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q34",
+        "prompt": "Was David a wise Man",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q35",
+        "prompt": "Was David happy when Saul died",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q36",
+        "prompt": "What did David use to kill Goliath",
+        "options": [
+          "A sword",
+          "A gun",
+          "A sling",
+          "A spear"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q37",
+        "prompt": "What was the price for Michal’s dowry and what did David bring",
+        "options": [
+          "50 foreskins, 100 foreskins",
+          "100 foreskins, 200 foreskins",
+          "500 foreskins, 500 foreskins",
+          "200 foreskins, 400 foreskins"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q38",
+        "prompt": "Who said “Yahweh forbid that I should lay a hand on Yahweh’s anointed”",
+        "options": [
+          "Saul",
+          "Joshua",
+          "Caleb",
+          "David"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-efc9b383321bb63605529b9a",
+    "kind": "Quiz",
+    "title": "Esther · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/EstherQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "What did queen Vashti do when the king called her",
+        "options": [
+          "She ran to the king to find out what he wanted",
+          "She refused to come to the king",
+          "She went on a trip"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Was Esther a bad queen",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "What tribe was Mordecai from",
+        "options": [
+          "Judah",
+          "Dan",
+          "Benjamin",
+          "Issachar"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "When the king's order and edict had been proclaimed, many girls were brought to the citadel of Susa and put under the care of_________",
+        "options": [
+          "Joshua",
+          "Hegai",
+          "Samuel",
+          "Noah"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "[Esther 2:8]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "Esther also was taken to the king's palace and entrusted to ______, who had charge of the harem.",
+        "options": [
+          "Jude",
+          "Mark",
+          "Margaret",
+          "Hegai"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "Was Esther humble, obedient and submissive to Mordecai and Hegai",
+        "options": [
+          "Yes, she was",
+          "No, she wasn't"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Whose advice was it to remove Queen Vashti as queen",
+        "options": [
+          "The king's attendants",
+          "The king's Butler",
+          "The king's Baker",
+          "The king's guards"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "Who spoke up against what Queen Vashti did",
+        "options": [
+          "Admatha",
+          "Meres",
+          "Memucan",
+          "Tarshish"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Did Esther listen to Hegai and Mordecai's advice",
+        "options": [
+          "Only the ones she liked",
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "Esther was also known as",
+        "options": [
+          "Hadassah",
+          "Claudia",
+          "Huldah",
+          "Deborah"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "When did Esther reveal her Nationality and Family background to the King",
+        "options": [
+          "The second night of the banquet she held for the King",
+          "The first night of the banquet she held for the King",
+          "The third night of the banquet she held for the King",
+          "The fifth night of the banquet he held for the King"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "The banquet lasted for two days",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "What did the King do when He could not sleep",
+        "options": [
+          "He forgave Queen Vashti",
+          "He had a council meeting",
+          "He asked that the book of record was read to him",
+          "He went to the gate"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "What was the name of Haman’s Wife",
+        "options": [
+          "Zeresh",
+          "Martha",
+          "Priscilla",
+          "Dorcas"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "Were Esther's beauty treatments delayed",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "A maiden was only to return to the king if he asked for her by name",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "How many days did the king display the splendor and riches of his kingdom",
+        "options": [
+          "2 Days",
+          "140 Days",
+          "169 Days",
+          "180 Days"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "______ and ______, two of the Kings officers who guarded the doorway, became angry and planned to ______ King Xerxes",
+        "options": [
+          "Bigthana and Teresh, Kill",
+          "Memucan and Marsena, celebrate",
+          "Tarshish and Meres, Report",
+          "Carshena and Shethar, Save"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "What was Mordecai honored by the king for",
+        "options": [
+          "He saved the King’s life",
+          "He was a good gateman",
+          "He raised Esther to be a good Girl",
+          "He was related to Queen Esther"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "Why was Mordecai elevated to the position of second in command",
+        "options": [
+          "He had a past record of saving the King’s life",
+          "He was a Jew",
+          "He was related to Queen Esther",
+          "He lived an honorable life"
+        ],
+        "correct": [
+          0,
+          2
+        ],
+        "hint": "This Question has two Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q20",
+        "prompt": "How many Sons did Haman have",
+        "options": [
+          "15 Sons",
+          "12 Sons",
+          "10 Sons",
+          "5 Sons"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q21",
+        "prompt": "What advise did Haman's advisers and wife give him concerning Mordecai",
+        "options": [
+          "Build a gallows, ask the King for permission to hang Mordecai on it",
+          "Have a barbecue for Mordecai and all the Jews",
+          "Make Mordecai his friend",
+          "Give a good report about Mordecai to the King"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q22",
+        "prompt": "How high was the gallows Haman built to hang Mordecai",
+        "options": [
+          "70 feet high",
+          "75 feet high",
+          "80 feet high",
+          "50 feet high"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q23",
+        "prompt": "Who was hung in place of Mordecai",
+        "options": [
+          "Haman",
+          "King Xerxes",
+          "Prophet Balaam",
+          "King Ahab"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q24",
+        "prompt": "What punishment was given to anyone who appeared before the King without been called by the King",
+        "options": [
+          "Hard labor",
+          "Destruction of the person’s land and property",
+          "Hanging on the gallows",
+          "Death"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q25",
+        "prompt": "Esther and her maids _______ for ____ before going to see the king",
+        "options": [
+          "Fasted, 3 days",
+          "Sang praises, 7 days",
+          "Made the sun stand still, 5 days",
+          "Called down fire from heaven, 2 days"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q26",
+        "prompt": "Was the presence of GOD with Esther, Mordecai and the Jews in Persia and Media",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-d65f36433f104bdc4e3b320b",
+    "kind": "Quiz",
+    "title": "General Knowledge · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/GenKnowQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Which of these is not an act of righteousness",
+        "options": [
+          "Fasting",
+          "Praying",
+          "Walking",
+          "Giving"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "God is known as the GOD of",
+        "options": [
+          "Timothy, Phillip, and Matthew",
+          "Ethan, John, and Asaph",
+          "Matthew, Paul, and Silas",
+          "Abraham, Isaac, and Jacob"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "We have _____ GOD and we are to _____ him alone",
+        "options": [
+          "72, Sacrifice",
+          "100, Give",
+          "1, Worship",
+          "20, Talk"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Wisdom is the _____ thing, in all your getting get _______",
+        "options": [
+          "Principle, Wisdom",
+          "Power, Life",
+          "Science, Engineering",
+          "Wisdom, Understanding"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "The wages of Sin is_____ the gift of GOD_____",
+        "options": [
+          "Bad, Good",
+          "Death, Eternal Life",
+          "Punishment, Sweets",
+          "Short Life, Long Life"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "Everyone who calls on the Name of the LORD shall be ____",
+        "options": [
+          "Destroyed",
+          "Killed",
+          "Persecuted",
+          "Saved"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Has any Man seen God?",
+        "options": [
+          "All Men have seen God",
+          "God is invisible and cannot be seen",
+          "No",
+          "Two Men have seen God"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "God is a",
+        "options": [
+          "Man",
+          "Spirit",
+          "Angel",
+          "Cherubim"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Who was the first Man Created?",
+        "options": [
+          "Moses",
+          "Jesus",
+          "Adam",
+          "Judah"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "Who is higher",
+        "options": [
+          "Woman",
+          "Man"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "God loves a ________",
+        "options": [
+          "Cheerful Giver",
+          "Dancer",
+          "Worker",
+          "Sinner"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "When Adam left the Garden, He left the Presence of God",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "Who is the Mother of all the Living",
+        "options": [
+          "Sarah",
+          "Racheal",
+          "Eve",
+          "Mary"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "Did Enoch die",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "Jacob's name was changed to",
+        "options": [
+          "Issachar",
+          "Israel",
+          "Isaac",
+          "His name was not changed"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "What tree was Adam commanded not to eat of",
+        "options": [
+          "Tree of Life",
+          "The apple tree in the Garden",
+          "The tree of the Knowledge of good and evil",
+          "The good and evil tree"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "Who are Jews",
+        "options": [
+          "Nigerian leaders",
+          "Hausa People",
+          "Children of Abraham",
+          "Yoruba people"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "Which of these people are Jews",
+        "options": [
+          "Esther",
+          "King Xerxes",
+          "King Saul",
+          "Balaam"
+        ],
+        "correct": [
+          0,
+          2
+        ],
+        "hint": "This Question has multiple Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "Angels have wings",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q20",
+        "prompt": "Where is Enoch",
+        "options": [
+          "The New Jerusalem",
+          "On Earth",
+          "In Hell",
+          "In Heaven"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q21",
+        "prompt": "Why did GOD destroy the inhabitants of the Earth with a flood",
+        "options": [
+          "He had the power to do it",
+          "GOD repented that He had made Man on the Earth and His heart was filled with pain",
+          "Man’s wickedness was great upon the Earth and every inclination of his heart was evil all the time",
+          "The Earth was corrupt in GOD’S sight and was full of violence"
+        ],
+        "correct": [
+          1,
+          2,
+          3
+        ],
+        "hint": "This Question has multiple Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q22",
+        "prompt": "Who is Melchizedek",
+        "options": [
+          "King of Salem",
+          "Priest of the Most-High GOD",
+          "The first of GOD’S creation",
+          "The first to not die"
+        ],
+        "correct": [
+          0,
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q23",
+        "prompt": "Who rained down fire on Sodom and Gomorrah",
+        "options": [
+          "Satan",
+          "The Angel of Yahweh",
+          "Abraham",
+          "Cherubim"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q24",
+        "prompt": "Who was the first Priest of the Most-High GOD",
+        "options": [
+          "Melchizedek",
+          "Jesus",
+          "Aaron",
+          "Adam"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "The first man to be created",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q25",
+        "prompt": "Is the Garden of Eden still on Earth",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q26",
+        "prompt": "Does the Bible encourage us to be hasty",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "[Prov 19:2, 21:5, 29:20]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q27",
+        "prompt": "When you give testimony in a lawsuit do not______",
+        "options": [
+          "Side with the crowd",
+          "Do not tell the truth",
+          "Do not avoid the questions",
+          "Dance with the crowd"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q28",
+        "prompt": "Do not follow the crowd in doing ________",
+        "options": [
+          "Playing the drums",
+          "Wrong",
+          "In eating",
+          "Lying"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "[Exo 23:2]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q29",
+        "prompt": "Does GOD tell lies",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q30",
+        "prompt": "Who is the Father of all Liars",
+        "options": [
+          "Judas",
+          "Satan",
+          "Ananias and Sapphira",
+          "Simon the Magician"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "The one who’s native language is lying",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q31",
+        "prompt": "Should Christians believe in magic",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q32",
+        "prompt": "Should Christians steal",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q33",
+        "prompt": "Should Christians fight",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q34",
+        "prompt": "Should Christians show kindness",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q35",
+        "prompt": "Should Christians place curses on people",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q36",
+        "prompt": "We pray to GOD the Father of our LORD Jesus Christ",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q37",
+        "prompt": "Should Christians worship idols",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q38",
+        "prompt": "Christians are to dress with decency and propriety",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q39",
+        "prompt": "Should Christians protest",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q40",
+        "prompt": "Should Christians disobey their Parents",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q41",
+        "prompt": "Should Wives submit to their Husbands",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q42",
+        "prompt": "Should Husbands beat their Wives",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q43",
+        "prompt": "Should Parents love their Children",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q44",
+        "prompt": "Should Women teach in Church",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q45",
+        "prompt": "Why should Women cover their heads when praying or prophesying",
+        "options": [
+          "Because of the Angels",
+          "As a sign of authority",
+          "To not show off their hair styles in Church",
+          "To help them pray very well"
+        ],
+        "correct": [
+          0,
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q46",
+        "prompt": "Who is the Head of the Church",
+        "options": [
+          "Apostle Peter",
+          "Apostle Paul",
+          "Mary the Mother of Jesus",
+          "Jesus Christ the Son of the Living GOD"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q47",
+        "prompt": "GOD _____ the _____ of His people",
+        "options": [
+          "Is angry at, Bowing down",
+          "Inhabits, Praise",
+          "Glorfies, Truth",
+          "Delights in, Singing"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q48",
+        "prompt": "Is worship prayer",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q49",
+        "prompt": "Man looks at the _______, GOD looks at the ________",
+        "options": [
+          "Heart, Outward",
+          "Character, Behaviour",
+          "Outward, Heart",
+          "Works, Faith"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q50",
+        "prompt": "Does GOD know our thoughts",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q51",
+        "prompt": "What fruit did GOD command Adam not to eat",
+        "options": [
+          "The apple tree that is in the midst of the garden",
+          "Watermelon",
+          "Pineapple",
+          "The fruit of the tree that is in the midst of the garden"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q52",
+        "prompt": "Why did GOD choose and commend Abraham",
+        "options": [
+          "Abraham begged GOD to choose him",
+          "Abraham made sacrifice to Yahweh",
+          "He knew Abraham would command his children to follow Yahweh",
+          "Abraham left his Father’s house"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q53",
+        "prompt": "What is Faith",
+        "options": [
+          "A system of thinking",
+          "Knowledge of GOD and his ways",
+          "Knowing the spiritual laws, principles operations and workings",
+          "Obedience to GOD"
+        ],
+        "correct": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-34515ea97c1a51d1484e0eb0",
+    "kind": "Quiz",
+    "title": "Jesus · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/JesusQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Is Jesus the Angel of Yahweh?",
+        "options": [
+          "No",
+          "Yes",
+          "Yes and now the Messiah",
+          "No it's Gabriel",
+          "Yes and also Michael"
+        ],
+        "correct": [
+          1,
+          2,
+          4
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Is Jesus the Son of God?",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Who is Jesus?",
+        "options": [
+          "A mere Man",
+          "A Son of Man",
+          "The Son of God",
+          "God's Superior"
+        ],
+        "correct": [
+          1,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Who was the Mother of Jesus",
+        "options": [
+          "Mary",
+          "Sarah",
+          "Dorcas",
+          "Marta"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "Did Jesus rise from the dead",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "What day did Jesus rise",
+        "options": [
+          "The 5th Day",
+          "The 3rd Day",
+          "The 1st Day",
+          "The 8th Day"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Where is Jesus now",
+        "options": [
+          "Paradise",
+          "Earth",
+          "Hell",
+          "Heaven"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "Who betrayed Jesus",
+        "options": [
+          "John",
+          "James",
+          "Judas Iscariot",
+          "Peter"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Who denied Jesus three times",
+        "options": [
+          "Peter",
+          "Judas Iscariot",
+          "Matthew",
+          "Thomas"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "Jesus was born in",
+        "options": [
+          "Egypt",
+          "Rome",
+          "Bethlehem",
+          "Heaven"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "Jesus was born a",
+        "options": [
+          "Spirit",
+          "Human Being (Flesh)",
+          "It's unknown",
+          "He was not born, he just came to the Earth"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "The Communion Bread represents",
+        "options": [
+          "The Blood of Jesus",
+          "Manna from Heaven",
+          "The Body of Jesus",
+          "Bread of Life"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "The Communion Wine represents",
+        "options": [
+          "The Blood of Jesus",
+          "Wine for weddings",
+          "The Blood of the Saints",
+          "Water of Life"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "Jesus fasted for",
+        "options": [
+          "40 Days",
+          "30 Days and Nights",
+          "40 Days and Nights",
+          "40 Nights"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "What was Jesus' first miracle",
+        "options": [
+          "Healing the man born blind",
+          "The Woman with the issue of blood",
+          "Casting out Demons",
+          "Turning water to wine"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "How did Jesus die",
+        "options": [
+          "He was nailed on a cross",
+          "He was stoned to death",
+          "He never died, He lives forever",
+          "He was pierced with a sword"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "Jesus rose from the dead a",
+        "options": [
+          "Still a Human (Mortal)",
+          "A Spirit (Immortal)",
+          "He is still dead",
+          "He never died"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "Jesus told the parable of the unjust judge to ________",
+        "options": [
+          "To expose the judges wickedness",
+          "To show the widows suffering and get her help",
+          "Teach men to pray and never give up",
+          "To show us how to treat each other"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-e87dc479eaeb5383c2504f3d",
+    "kind": "Quiz",
+    "title": "Joseph · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/JosephQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Who was the Father of Joseph?",
+        "options": [
+          "John",
+          "Abraham",
+          "Jacob",
+          "Adam"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Was Joseph the Firstborn of His Father?",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Was Joseph the Firstborn of His Mother?",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Did Joseph have the Holy Spirit",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "Joseph had the Gift of",
+        "options": [
+          "Healing",
+          "Interpretation of Dreams",
+          "Walking Miracles",
+          "Teaching"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "Which of this couples were Joseph’s Grandparents",
+        "options": [
+          "Moses and Zipporah",
+          "Mary and Joseph",
+          "David and Bathsheba",
+          "Isaac and Rebecca"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Joseph was sold into slavery by",
+        "options": [
+          "His Brothers",
+          "His Father",
+          "His Mother",
+          "Other People"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "In what year was Joseph released from prison",
+        "options": [
+          "4th Year",
+          "2nd Year",
+          "1st Year",
+          "3rd Year"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "What did Jacob say when his Sons showed him the ornamented robe",
+        "options": [
+          "Joseph ran away",
+          "They sold him to slavery",
+          "A wild Animal as devoured Him",
+          "He dead a peaceful death"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "They returned the robe stained with blood",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "What was the name of Joseph's Grandmother",
+        "options": [
+          "Racheal",
+          "Leah",
+          "Rebecca",
+          "Sarah"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "What was the name of Joseph's Great-grandmother",
+        "options": [
+          "Sarah",
+          "Racheal",
+          "Leah",
+          "Rebecca"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "Which of Joseph's Brothers left the field before he was sold",
+        "options": [
+          "Simeon",
+          "Dan",
+          "Reuben",
+          "Levi"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "He is one of the Oldest",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "Joseph became the second in command in what Land",
+        "options": [
+          "Egypt",
+          "Canaan",
+          "Israel",
+          "Edom"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "What was the name of Joseph's Sister",
+        "options": [
+          "He had no sister",
+          "Abigail",
+          "Deborah",
+          "Dinah"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "What was the name of Joseph's Younger Brother",
+        "options": [
+          "Issachar",
+          "Judah",
+          "Benjamin",
+          "Asher"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "How many Wives did Joseph’s Father have",
+        "options": [
+          "20",
+          "2",
+          "81",
+          "4"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "Jacob",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "Which of these women were wives of Jacob",
+        "options": [
+          "Elisabeth and Mary",
+          "Rachel and Bilhah",
+          "Ruth and Naomi",
+          "Leah and Zilpah"
+        ],
+        "correct": [
+          1,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "Which of Joseph’s brother said \"Don't shed any blood. Throw him into this cistern here in the desert, but don't lay a hand on him.\"",
+        "options": [
+          "Issachar",
+          "Judah",
+          "Reuben",
+          "Levi"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "The Son who had offended his Father (Jacob)",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "Which of Joseph’s brother said \"What will we gain if we kill our brother and cover up his blood? Come, let's sell him to the Ishmaelites and not lay our hands on him; after all, he is our brother, our own flesh and blood.\"",
+        "options": [
+          "Gad",
+          "Naphtali",
+          "Benjamin",
+          "Judah"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "Jacob’s fourth Son",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q20",
+        "prompt": "What was the name Pharoah gave to Joseph in Egypt",
+        "options": [
+          "Zachariah",
+          "Zerah",
+          "Zaphenath-paneah",
+          "Asaph"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q21",
+        "prompt": "Who was Joseph’s first master in Egypt",
+        "options": [
+          "Pharoah",
+          "Potiphar",
+          "Potiphera",
+          "Paul"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q22",
+        "prompt": "Why was Joseph put in prison",
+        "options": [
+          "He was falsely accused by Potiphar’s Wife",
+          "He used to sleep too much",
+          "He used to steal money from his master money anytime he was sent on an errand",
+          "He was always fighting with the other servants"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q23",
+        "prompt": "What were the names of Joseph’s Sons",
+        "options": [
+          "Ephraim and Manasseh",
+          "Esau and Jacob",
+          "Moses and Aaron",
+          "James and John"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q24",
+        "prompt": "Where were Joseph’s Sons born to him",
+        "options": [
+          "Babylon",
+          "Shechem",
+          "Canaan",
+          "Egypt"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q25",
+        "prompt": "What did Joseph request the Israelites to do with his bones when they leave Egypt",
+        "options": [
+          "Leave them in Egypt",
+          "Take them and bury them in the Promise Land",
+          "Throw them in the Red Sea",
+          "Bury them with his Fathers"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q26",
+        "prompt": "Why did Joseph’s brothers hate him",
+        "options": [
+          "He brought their Father a bad report about them",
+          "He was disrespectful to them",
+          "Their Father loved him more than any of them",
+          "Due of his dreams"
+        ],
+        "correct": [
+          0,
+          2,
+          3
+        ],
+        "hint": "[Gen 37:5]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q27",
+        "prompt": "Why did Israel love Joseph more than his other Sons",
+        "options": [
+          "He had been born to him in old age",
+          "He was the youngest",
+          "He was the finest",
+          "He was the Son of Rachel"
+        ],
+        "correct": [
+          0,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q28",
+        "prompt": "Where did Joseph find his brothers",
+        "options": [
+          "Dothan",
+          "Jericho",
+          "Bethlehem",
+          "Kidron Valley"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q29",
+        "prompt": "Was GOD with Joseph in Potiphar’s house",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q30",
+        "prompt": "Joseph interpreted the dreams of the Kings ______ and ______",
+        "options": [
+          "Chief Cup bearer and Chief Baker",
+          "Cup bearer and Baker",
+          "Cobbler and Housekeeper",
+          "Tent Maker and the Chief Guard"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q31",
+        "prompt": "How old was Joseph when he entered Pharoah’s service",
+        "options": [
+          "52 Years",
+          "78 Years",
+          "969 Years",
+          "30 Years"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q32",
+        "prompt": "How many Sons were born to Israel",
+        "options": [
+          "13",
+          "10",
+          "12",
+          "11"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "Jacob is also known as Israel",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q33",
+        "prompt": "Did Joseph recognize his brothers when they came to buy grain in Egypt",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q34",
+        "prompt": "What land did Pharoah give to Israel and his family when they moved to Egypt",
+        "options": [
+          "Goshen",
+          "Moab",
+          "Philistia",
+          "Eden"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q35",
+        "prompt": "What did Jacob see that revived his spirit",
+        "options": [
+          "Potiphar’s house",
+          "The carts Joseph sent bring to Egypt",
+          "Joseph’s silver cup inside the sack of grain",
+          "The wealth and splendor of Egypt"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q36",
+        "prompt": "Rachel was a________",
+        "options": [
+          "Farmer",
+          "Tailor",
+          "Warrior",
+          "Shepherdess"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "Gen 29:9: \"While he was still talking with them, Rachel came with her father's sheep”",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-186c5e7477377aa4bea2056a",
+    "kind": "Quiz",
+    "title": "Moses · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/MosesQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "How many Daughters did Zelophehad have",
+        "options": [
+          "Seven daughters",
+          "Twenty daughters",
+          "Five daughters",
+          "One hundred daughters"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "How old was Moses when He fled Egypt",
+        "options": [
+          "60 Years",
+          "30 Years",
+          "40 Years",
+          "80 Years"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Moses grew in the house of",
+        "options": [
+          "Pharaoh",
+          "His Parents",
+          "Jethro",
+          "He stayed alone"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Where is Moses now",
+        "options": [
+          "In Heaven",
+          "On Earth",
+          "In Hell",
+          "No one knows"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "What was the name of Moses’ Father-in-Law",
+        "options": [
+          "Jeremiah",
+          "James",
+          "Judah",
+          "Jethro"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "What was the name of Moses’ Wife",
+        "options": [
+          "Zilpah",
+          "Zerah",
+          "Zelophehad",
+          "Zipporah"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Who did Moses encounter at the Burning Bush",
+        "options": [
+          "God the Father",
+          "The Angel of Yahweh",
+          "Hayah",
+          "Aaron"
+        ],
+        "correct": [
+          1,
+          2
+        ],
+        "hint": "This question has two Answers",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "Moses returned to Egypt at what age",
+        "options": [
+          "50 Years",
+          "70 Years",
+          "80 Years",
+          "100 Years"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "Is Moses still alive",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "Moses was the first Apostle",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "A mark of an Apostle is someone who has seen the LORD Jesus",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "Moses was from the tribe of",
+        "options": [
+          "Simeon",
+          "Levi",
+          "Reuben",
+          "Half tribe of Manasseh"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "What did Pharaoh command the Hebrew midwives to do to the male children",
+        "options": [
+          "If it is a Boy, kill him; but if it is Girl, let her live",
+          "If it is Boy, send him to the palace",
+          "If it is a Boy, I will pay his school fees",
+          "If it is a Boy, he will join the King’s Guard"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "Did the Hebrew midwives fear God",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "How did GOD reward the Hebrew midwives when they showed they feared him by not killing the Sons of Jacob as Pharoah commanded",
+        "options": [
+          "He gave them families of their own",
+          "He handed them over to Pharoah",
+          "He gave them plenty money",
+          "He caused their midwifery business to be internationally recognized"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "The Sons of Jacob are the Israelites",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "Pharaoh ordered that _______",
+        "options": [
+          "Every Boy become a bricklayer and every Girl become a cook",
+          "Every Boy be given a house and every Girl a sowing machine",
+          "Every Boy that is born you must throw into the Nile, but let every Girl live"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "Why did Moses’ Mother keep Moses",
+        "options": [
+          "She hoped for payment for raising Moses",
+          "Miriam needed another brother",
+          "She was a Woman of Faith",
+          "She saw He was no ordinary child"
+        ],
+        "correct": [
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q17",
+        "prompt": "What was the Name of Moses’ Mother",
+        "options": [
+          "Ruth",
+          "Hannah",
+          "Elizabeth",
+          "Jochebed"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q18",
+        "prompt": "Who was Moses’ Father",
+        "options": [
+          "Abraham",
+          "Abel",
+          "Abimelech",
+          "Amram"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q19",
+        "prompt": "Was Moses the meekest man on the Earth",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q20",
+        "prompt": "Moses was said to be faithful in all God’s house",
+        "options": [
+          "False",
+          "True"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q21",
+        "prompt": "The names of the Sons of Moses were",
+        "options": [
+          "Gershon and Eliezer",
+          "Aaron and Miriam",
+          "Absalom and Amnon",
+          "Adonijah and Solomon"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q22",
+        "prompt": "How did Moses part the Red Sea",
+        "options": [
+          "He lifted his staff and stretched out his hand over the sea",
+          "He struck the sea with his staff",
+          "He jumped into the sea",
+          "He spoke to the red sea"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q23",
+        "prompt": "Who was in the pillar of fire and cloud",
+        "options": [
+          "Moses",
+          "Aaron",
+          "The Angel of Yahweh",
+          "Hur"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q24",
+        "prompt": "Who hardened the heart of Pharaoh",
+        "options": [
+          "God",
+          "Angel Gabriel",
+          "Satan",
+          "Moses"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q25",
+        "prompt": "How many plagues did Yahweh strike Egypt with",
+        "options": [
+          "15 Plagues",
+          "11 Plagues",
+          "10 Plagues",
+          "20 Plagues"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q26",
+        "prompt": "How many people were drowned in the red sea",
+        "options": [
+          "The entire Egyptian army",
+          "The entire Egyptian army, but Pharoah’s horse and his chariot",
+          "The first-born Sons of Egypt",
+          "All the magicians in Egypt"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q27",
+        "prompt": "Who said, “The Egyptians you see today you will never see again”",
+        "options": [
+          "Aaron",
+          "Joshua",
+          "Hur",
+          "Moses"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "The one through whom Yahweh parted the red sea",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q28",
+        "prompt": "Did Moses part the red sea with his power",
+        "options": [
+          "No",
+          "Yes",
+          "Maybe",
+          "certainly"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q29",
+        "prompt": "Did the Israelites walk on water",
+        "options": [
+          "Yes",
+          "No",
+          "The Israelites walked on dry land",
+          "They all swam across the sea"
+        ],
+        "correct": [
+          1,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q30",
+        "prompt": "What was Yahweh showing the world by his display in Egypt and treatment of the Egyptians",
+        "options": [
+          "The Egyptians will know that I am Yahweh",
+          "Power",
+          "His power over the elements",
+          "He wanted Pharoah to repent"
+        ],
+        "correct": [
+          0,
+          1,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q31",
+        "prompt": "Who was Moses’ aide from his youth",
+        "options": [
+          "Hur",
+          "Caleb",
+          "Bezalel",
+          "Joshua"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "He was the Son of Nun",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q32",
+        "prompt": "Did the Israelites in the wilderness have faith",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "[Heb 4:2]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q33",
+        "prompt": "What did Israel eat in the wilderness",
+        "options": [
+          "The bread of Angels",
+          "Honey and Locust",
+          "Manna from Heaven",
+          "Garlic and Onion"
+        ],
+        "correct": [
+          0,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q34",
+        "prompt": "For how many years did the Israelites eat Manna",
+        "options": [
+          "2 Years",
+          "40 Years",
+          "30 Years",
+          "50 Years"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q35",
+        "prompt": "Was the wilderness the Promise Land",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q36",
+        "prompt": "What was Yahweh’s command regarding the food they ate in the wilderness",
+        "options": [
+          "The Israelites were told not to keep any till morning",
+          "Each one is to gather as much as he needs",
+          "Each one was to gather for his family and neighbor’s family",
+          "The Israelites were told to store the manna for two days"
+        ],
+        "correct": [
+          0,
+          1
+        ],
+        "hint": "Please read the story [Exo 16:16-27]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q37",
+        "prompt": "Did it please God that the Israelites made the Golden Calf",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q38",
+        "prompt": "Who brought the Israelites out of Egypt and into the Promise Land",
+        "options": [
+          "Angel Gabriel",
+          "Archon Megas",
+          "The Angel of Yahweh",
+          "The Captain of the Host"
+        ],
+        "correct": [
+          1,
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q39",
+        "prompt": "Prophetess Miriam was _______ and ________ Sister",
+        "options": [
+          "Aaron and Moses",
+          "Hophni and Phinehas",
+          "Reuben and Simeon",
+          "Levi and Judah"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q40",
+        "prompt": "Who held up Moses’ hands during the battle with Amalekites",
+        "options": [
+          "Caleb and Joshua",
+          "Peter and John",
+          "Miriam and Aaron",
+          "Aaron and Hur"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-306948d5fbabc5bbefd53e49",
+    "kind": "Quiz",
+    "title": "Samuel · Children",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Children/SamuelQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "Which of these men were sons of Eli",
+        "options": [
+          "Hophni",
+          "Joshua",
+          "Phineas",
+          "Michael"
+        ],
+        "correct": [
+          0,
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "Prophet Samuel's parents were called",
+        "options": [
+          "Abigail and David",
+          "Hannah and Elikanah",
+          "Isaac and Rebecca",
+          "Abigail and David"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "Who did Samuel Anoint as King?",
+        "options": [
+          "Solomon",
+          "David",
+          "Goliath",
+          "Saul"
+        ],
+        "correct": [
+          1,
+          3
+        ],
+        "hint": "He Anointed two Kings",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "Hanna was the Mother of?",
+        "options": [
+          "Prophet Samuel",
+          "King David",
+          "Jesus",
+          "Eve"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "Did Hanna have other Sons?",
+        "options": [
+          "No only Samuel",
+          "Yes",
+          "Yes with even Deugthers",
+          "She refused to have other Children"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "Did Samuel collect bribe from any Israelite while he was judge",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Did Samuel walk any miracles",
+        "options": [
+          "No",
+          "Yes"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "[1 sam 12:18]",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  },
+  {
+    "id": "legacy-dd01b89ad8541731a52c8975",
+    "kind": "Quiz",
+    "title": "Trivia · Trivia",
+    "legacy": true,
+    "legacyUrl": "/QuizQuestions-Trivia/TriviaQuestions.html",
+    "state": "published",
+    "version": 1,
+    "questions": [
+      {
+        "id": "q1",
+        "prompt": "It was said of this man that he wrestled with God and he prevailed, who’s he?",
+        "options": [
+          "David",
+          "Gideon",
+          "Jacob",
+          "Someone wrestled with God?😳"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q2",
+        "prompt": "She was barren for a long time, she went to the temple and prayed to God to give her a child, she prayed so much that her lips moved but her words could not be heard, who’s she?",
+        "options": [
+          "Hannah",
+          "Sarah",
+          "Rebecca",
+          "Ruth"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q3",
+        "prompt": "This Man was born in agony, his mother named him______, however, he cried to God to change His story & God did. Who’s he?",
+        "options": [
+          "Jacob",
+          "Jabez",
+          "John the Baptist",
+          "Jonah"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q4",
+        "prompt": "According to the scriptures, the sons of ______ were people who understood the times and knew what Israel ought to do per time.",
+        "options": [
+          "Isaac",
+          "Issachar",
+          "Asher",
+          "Dan"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q5",
+        "prompt": "God made Adam out of _____",
+        "options": [
+          "Eve's rib",
+          "Dust of the Earth",
+          "An Angel's rib",
+          "Dust of Heaven"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q6",
+        "prompt": "What miracle did Jesus first perform?",
+        "options": [
+          "Walking on water",
+          "Feeding the 4000",
+          "Turning water to wine",
+          "Feeding the 5000"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q7",
+        "prompt": "Who made this statement: “The thief comes only to steal, to kill, and to destroy”?",
+        "options": [
+          "Simon Peter",
+          "Moses",
+          "Paul",
+          "Jesus"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q8",
+        "prompt": "Simon Peter is the brother of _____",
+        "options": [
+          "James",
+          "Andrew",
+          "John",
+          "Philip"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q9",
+        "prompt": "________ is the shortest book in the New Testament.",
+        "options": [
+          "Jude",
+          "Philemon",
+          "2 John",
+          "3 John"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q10",
+        "prompt": "What does purple represent in Scriptures",
+        "options": [
+          "Immortality",
+          "Blood",
+          "Royalty",
+          "Plants"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q11",
+        "prompt": "God made all things through",
+        "options": [
+          "Man",
+          "Angels",
+          "Jesus",
+          "He did it Himself"
+        ],
+        "correct": [
+          2
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q12",
+        "prompt": "The World was made by",
+        "options": [
+          "The Word of God",
+          "The wishes of the Angels",
+          "The great power of Heaven",
+          "The idea of Men"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "[Heb 11:3]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q13",
+        "prompt": "The New Covenant states",
+        "options": [
+          "I will put my laws in their minds and write them on their hearts",
+          "I will be their GOD and they will be my People",
+          "They will all know me from the least to the greatest",
+          "I will forgive their wickedness and remember their sins no more"
+        ],
+        "correct": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q14",
+        "prompt": "Is GOD still creating",
+        "options": [
+          "Yes",
+          "No",
+          "He will never stop creating"
+        ],
+        "correct": [
+          1
+        ],
+        "hint": "On the seventh day GOD rested from all the work of creating that he had done [Gen 2:2-3]",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q15",
+        "prompt": "Yahweh made all ______ for our good",
+        "options": [
+          "Men and Women",
+          "Animals and Plants",
+          "Sun, Moon, and Stars",
+          "All natural things"
+        ],
+        "correct": [
+          3
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      },
+      {
+        "id": "q16",
+        "prompt": "Are we all GOD’S creation",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "correct": [
+          0
+        ],
+        "hint": "",
+        "explanation": "",
+        "reference": ""
+      }
+    ]
+  }
+]

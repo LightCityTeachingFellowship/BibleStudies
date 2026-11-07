@@ -1,4 +1,9 @@
 import {createAudioArchive} from './audio-archive.mjs';
+import {createLearning} from './learning.mjs';
+import {createLearningAI} from './learning-ai.mjs';
+import {createLearningMedia} from './learning-media.mjs';
+import {createVideoPrivacy} from './video-privacy.mjs';
+import {notifyLearning} from './learning-notifications.mjs';
 import {createMemberInvitations} from './member-invitations.mjs';
 import {createPrayerCalendar} from './prayer-calendar.mjs';
 import {createServiceSchedule} from './service-schedule.mjs';
@@ -79,9 +84,21 @@ export const getMyNotificationInbox=onCall(options,personalHub.notifications);
 export const updateMyNotificationInbox=onCall(options,personalHub.updateNotifications);
 
 const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcityteachingfellowship@gmail.com' });
+const learning=createLearning({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),legacy:JSON.parse(readFileSync(new URL('./quiz-catalog.json',import.meta.url),'utf8'))});
+const learningKey=defineSecret('LEARNING_OPENAI_API_KEY');
+const learningAI=createLearningAI({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),apiKey:()=>learningKey.value(),recordings:()=>audio.catalog.registered(),transcode:createLearningMedia(audio.sign)});
+export const manageChurchLearningAI=onCall({...options,secrets:[learningKey]},learningAI.manage);
+export const prepareChurchLearning=onSchedule({schedule:'every 5 minutes',region:'us-central1',maxInstances:1,timeoutSeconds:1800,memory:'2GiB',secrets:[learningKey,r2Access,r2Secret,livePlaybackKey]},learningAI.process);
+export const getChurchLearning=onCall(options,learning.read);
+export const manageChurchLearning=onCall(options,learning.manage);
+export const manageMyChurchQuiz=onCall(options,learning.activity);
+export const getChurchQuizLeaderboard=onCall(options,learning.leaderboard);
+export const changeChurchVideoPrivacy=onCall(options,createVideoPrivacy({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
+export const releaseChurchLearning=onSchedule({schedule:'every 1 minutes',region:'us-central1',maxInstances:1,timeoutSeconds:120},learning.release);
+export const notifyChurchLearning=onDocumentWritten({document:'churchVideoActivity/learning/resources/{id}',region:'us-central1',retry:true,maxInstances:1,timeoutSeconds:120},event=>notifyLearning({id:event.params.id,db:getFirestore(),auth:getAuth(),messaging:getMessaging()}));
 export const connectChurchStudioDesktop=onCall({...options,timeoutSeconds:60},createDesktopLogin({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
 const streamStatusKey=defineSecret('YOUTUBE_STREAM_STATUS_KEY');
-const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live, youtubeKey:()=>streamStatusKey.value().trim(),
+const adminDashboard = createAdminDashboard({ auth:getAuth(), db:getFirestore(), fail:HttpsError, emails:()=>adminEmails.value(), audio:audio.catalog, live, learning, youtubeKey:()=>streamStatusKey.value().trim(),
  privateReadings:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications });
 export const getChurchAdminDashboard = onCall({ ...options, secrets:[livePlaybackKey,streamStatusKey] }, adminDashboard);
 export const getChurchAdminUsers=onCall(options,createAdminUsers({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));

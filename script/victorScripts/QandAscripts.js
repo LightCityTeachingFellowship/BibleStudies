@@ -8,10 +8,12 @@ var qandAsection = document.getElementById('QandA-section');
 var CorrectedAnswersSection = document.getElementById('CorrectedAnswers-section');
 
 function greyOutON(x) {
+    if ('disabled' in x) x.disabled = true;
     x.style.color = 'grey';
     x.style.pointerEvents = 'none';
 }
 function greyOutOFF(x) {
+    if ('disabled' in x) x.disabled = false;
     x.style.color = '';
     x.style.pointerEvents = '';
 }
@@ -75,7 +77,7 @@ for (i = 0; i < questions.length; i++) {
     questions[i].querySelectorAll('UL')[0].setAttribute('availablechances', chances); //Create availableChances atribute to count number of answers to a question. These will be the number of clicks possible
     questions[i].querySelectorAll('UL')[0].setAttribute('maxchances', chances); //Create availableChances atribute to count number of answers to a question. These will be the number of clicks possible
 
-    var allOptionsUnderQuestion = document.querySelectorAll('.QandA-Board>OL>LI>UL>LI');
+    var allOptionsUnderQuestion = questions[i].querySelectorAll(':scope > UL > LI');
     allOptionsUnderQuestion.forEach(element => {
         // Check if the element already has the 'option' class
         if (!element.classList.contains('option')) {
@@ -144,6 +146,7 @@ function showNewCatFunc() {
     }
 }
 function showNextOrPrevQuestion(n) {
+    notLastQuestion = n < totalQuestions ? 1 : 0;
     if ((n > totalQuestions) || (n < 1)) {
         slideIndex = 1;
     }
@@ -199,7 +202,7 @@ function isClickedElmOrParentAnOptionLI(c) {
         cli = c;
         return c;
     } else {
-        while (cli == null) {
+        while (cli == null && cp && cp !== document.body) {
             if ((cp.tagName == 'LI') && (cp.classList.contains('option'))) {
                 cli = cp;
                 return cp
@@ -232,6 +235,7 @@ function confirm() {
                 quizBgSound.pause();
             }
             var passedQuestionsArrayLength = passedQuestionsArray.length;
+            questionsIndex.replaceChildren();
             var failedQuestionsArrayLength = failedQuestionsArray.length;
             scoreCorrect.innerText = passedQuestionsArrayLength + '/' + questionsArray.length;
             scoreMissed.innerText = failedQuestionsArrayLength + '/' + questionsArray.length;
@@ -446,6 +450,7 @@ function isClickedLiAnAnswer(event) {
     //Check if UL has been clicked before or not, if not, add it to the clicked ULs so that it cannot be clicked again
     if ((!questionsArray.includes(liClicked.parentElement)) && (!currentQuestion.querySelector('UL').getAttribute('confirmed'))) { //Ensure it is not the question UL itself that is being clicked
         actualClickedOption = isClickedElmOrParentAnOptionLI(liClicked);
+        if (!actualClickedOption) return;
         var chancesLeft = actualClickedOption.parentElement.getAttribute('availablechances');
         var maxchances = actualClickedOption.parentElement.getAttribute('maxchances');
         var rightAnswer = null;
@@ -506,7 +511,7 @@ function closeHintFunc() {
 //CLICK ANYWHERE TO CLOSE HINT
 document.addEventListener('mouseup', function(e) {
     var container = showHint;
-    if (!container.contains(e.target)) {
+    if (container && !container.contains(e.target)) {
         if (container.classList.contains("showHintCSS")) {
             container.classList.remove("showHintCSS")
             clickSound.play();

@@ -25,7 +25,10 @@ export function mergeStudioVideos(source, studio = {}, { pending = false, source
   const index = before >= 0 ? before : after >= 0 ? after+1 : Number.isInteger(entry.placement?.index) ? Math.min(entry.placement.index, rows.length) : 0;
   rows.splice(index,0,entry.video);
  }
- return [...new Map(rows.map(v => [v.id,v])).values()];
+ return [...new Map(rows.map(v => [v.id,v])).values()].map(v=>{
+  const audience=studio.privacy?.[v.id]?.visibility;
+  return ['public','members'].includes(audience)?{...v,visibility:audience,replacementVisibility:Object.fromEntries((v.replaces||[]).map(id=>[id,audience]))}:v;
+ });
 }
 export function acknowledgeStudio(studio, sourceIds) {
  const ids = new Set(sourceIds);

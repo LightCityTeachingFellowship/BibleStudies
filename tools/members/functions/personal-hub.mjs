@@ -1,5 +1,6 @@
 import {createHash,randomUUID} from 'node:crypto';
 import {publishedReadingCatalog} from './reading-activity.mjs';
+import {accessFor} from './learning-core.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const validVideo=id=>typeof id==='string'&&/^[\w-]{11}$/.test(id);
 const validReading=id=>typeof id==='string'&&/^[a-f0-9]{64}$/.test(id);
@@ -38,6 +39,8 @@ export function createPersonalHub({auth,db,fail,privateCatalog=[],catalog=publis
    const item={type:'reading',id,title:r.title,kind:r.kind,url:u.pathname};map.set('reading:'+id,item);
    for(const path of new Set([r.url,u.pathname,decodeURI(u.pathname)]))announcements.set(hash(path),item);
   }
+  const learning=await db.collection('churchVideoActivity/learning/resources').where('state','==','published').limit(100).get();
+  for(const doc of learning.docs){const r=doc.data(),visibility=accessFor(r,videos);if(!visibility||visibility==='members'&&!person.member)continue;announcements.set(hash('learning:'+doc.id),{type:'learning',id:doc.id,title:r.title,kind:r.kind,url:'/StudyResource/?id='+encodeURIComponent(doc.id)});}
   return {map,announcements};
  }
  let sentPage,sentUntil=0,sentFlight;

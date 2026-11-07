@@ -30,7 +30,7 @@ async function loadViewerCounts(ids, key, send) {
  return counts;
 }
 
-export function createAdminDashboard({ auth, db, fail, emails, audio, live, privateReadings = [], youtubeKey = () => '', send = fetch }) {
+export function createAdminDashboard({ auth, db, fail, emails, audio, live, learning, privateReadings = [], youtubeKey = () => '', send = fetch }) {
  return async request => {
   const uid=request.auth?.uid;
   if(!uid)throw new fail('unauthenticated','Sign in with your admin account.');
@@ -71,6 +71,8 @@ export function createAdminDashboard({ auth, db, fail, emails, audio, live, priv
     readings.push({title:String(r.title||r.kind).slice(0,300),url:url.pathname+url.search+url.hash,kind:r.kind,date:typeof r.date==='string'?r.date.slice(0,10):null,visibility:r.visibility==='members'?'members':'public'});
    }catch{}
   }
-  return {account:user.email,videos,readings,checks,updatedAt:Date.now()};
+  const studyResources=learning?await learning.all():[];
+  const learningRows=studyResources.map(({id,kind,title,state,legacyUrl,videoId,legacy})=>({resourceId:id,kind,title,state,legacy:legacy===true,published:state==='published',url:legacyUrl||'/StudyResource/?id='+encodeURIComponent(id),visibility:videoId?(current.find(v=>v.id===videoId||v.replaces?.includes(videoId))?.visibility||'members'):'public'}));
+  return {account:user.email,videos,readings,learning:learningRows,checks,updatedAt:Date.now()};
  };
 }

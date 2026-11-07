@@ -2,7 +2,7 @@ import {archiveRequest} from './audio-archive-api.mjs';
 import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=stream-reply-1';
 import {setupStudioPublisher} from './studio-publish.mjs?v=replace-1';
-import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=archive-1';
+import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=learning-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers,loadArchive=archiveRequest}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -52,7 +52,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    const row=node('article',null,'studio-row');
    if(item.id){const image=node('img');image.src='https://i.ytimg.com/vi/'+item.id+'/mqdefault.jpg';image.alt='';image.loading='lazy';row.appendChild(image);}else{row.appendChild(node('span',item.kind,'muted'));}
    const info=node('div',null,'studio-row-info');info.appendChild(node('span',item.visibility==='members'?'Members':'Public','studio-badge'));
-   const label=!item.published?(item.replacement?'Replacement pending':'Waiting for publication'):item.live?'LIVE':item.replay?'Audio replay':item.archive?'Older message':item.audio?'Audio ready':item.kind==='Video'?(checks.audio===false?'Audio status unavailable':'Published'):item.kind;
+   const label=item.resourceId?({draft:'Needs approval',approved:'Approved · scheduled','awaiting-draft':'Awaiting draft',published:'Published'}[item.state]||item.state):!item.published?(item.replacement?'Replacement pending':'Waiting for publication'):item.live?'LIVE':item.replay?'Audio replay':item.archive?'Older message':item.audio?'Audio ready':item.kind==='Video'?(checks.audio===false?'Audio status unavailable':'Published'):item.kind;
    info.appendChild(node('span',label,'studio-badge'+(item.live?' live':!item.published?' pending':'')));info.appendChild(node('h3',item.title));
    if(item.live){
     const count=item.concurrentViewers;
@@ -64,7 +64,9 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(item.id||item.date)info.appendChild(node('small',item.id||item.date));
    if(item.pendingReplacementId)info.appendChild(node('small','Replacement audio pending: '+item.pendingReplacementId,'muted'));row.appendChild(info);
    const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
-   actions.appendChild(action('Copy link',()=>void copy(url,row)));
+    if(!item.resourceId||item.published)actions.appendChild(action('Copy link',()=>void copy(url,row)));
+   if(item.id&&item.published)actions.appendChild(action('Change access',()=>window.dispatchEvent(new window.CustomEvent('lightcity-video-privacy',{detail:{videoId:item.id,title:item.title,visibility:item.visibility}}))));
+   if(item.resourceId)actions.appendChild(action(item.kind==='Quiz'?'Quiz & scores':'Review summary',()=>window.dispatchEvent(new window.CustomEvent('lightcity-learning-review',{detail:{id:item.resourceId}}))));
    if(item.id&&item.published)actions.appendChild(action('Replace',()=>{
     if(owner!==api()?.user?.uid)return;
     window.dispatchEvent(new window.CustomEvent('lightcity-studio-replace',{detail:{videoId:item.id,title:item.title,visibility:item.visibility}}));
@@ -77,7 +79,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
     catch(error){if(uid===api()?.user?.uid)status(error?.message||'Removal failed. Please retry.');}
    }));
    if(item.id&&item.audio&&item.published&&tab!=='Audio')actions.appendChild(action('Copy audio link',()=>void copy(previewLink(item.id,true),row)));
-   if(typeof navigator.share==='function')actions.appendChild(action('Share',()=>{void navigator.share({title:item.title,text:item.title,url}).catch(error=>{if(error.name!=='AbortError')status('Use Copy link to share this item.');});}));
+    if((!item.resourceId||item.published)&&typeof navigator.share==='function')actions.appendChild(action('Share',()=>{void navigator.share({title:item.title,text:item.title,url}).catch(error=>{if(error.name!=='AbortError')status('Use Copy link to share this item.');});}));
    if(item.published){const open=node('a','Open');open.href=tab==='Audio'&&item.id?watchLink(item.id,true):item.url;open.target='_blank';open.rel='noopener';actions.appendChild(open);}row.appendChild(actions);list.appendChild(row);
   }
  }
@@ -107,7 +109,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(!silent)status(warnings.length?'Some status checks are unavailable: '+warnings.join(', ')+'. Refresh to retry.':'Ready to share. Last checked '+new Date(data.updatedAt).toLocaleTimeString());render();
   }catch(error){if(current!==generation)return;if(silent&&!['functions/permission-denied','functions/unauthenticated'].includes(error?.code)){status('Studio could not refresh. Your current view is kept; reconnecting shortly.');return;}clear();status(error?.code==='functions/permission-denied'?'This account does not have admin access. Sign out and use your admin account.':error?.code==='functions/not-found'?'The admin service needs to be deployed.':error?.code==='functions/unauthenticated'?'Sign in with your admin account.':'The dashboard could not load. Use Refresh to retry.');byId('admin-refresh').hidden=false;}
  }
- for(const [key,label]of [['All','All'],['Live','Live'],['Video','Videos'],['Audio','Audio'],['Article','Articles'],['Summary','Summaries'],['Pending','Pending'],['Page','Site pages']]){const b=action(label,()=>{tab=key;limit=36;render();});b.dataset.tab=key;byId('admin-tabs').appendChild(b);}
+ for(const [key,label]of [['All','All'],['Live','Live'],['Video','Videos'],['Audio','Audio'],['Article','Articles'],['Summary','Summaries'],['Quiz','Quizzes'],['Pending','Pending'],['Page','Site pages']]){const b=action(label,()=>{tab=key;limit=36;render();});b.dataset.tab=key;byId('admin-tabs').appendChild(b);}
  byId('admin-search').addEventListener('input',()=>{limit=36;render();});byId('admin-more').addEventListener('click',()=>{limit+=36;render();});byId('admin-refresh').addEventListener('click',()=>void load());
  byId('admin-signin').addEventListener('click',async()=>{byId('admin-signin').disabled=true;try{await api().signInForVideos();await load();}catch(error){const native=window.LightCityDesktop||/Electron\//.test(navigator.userAgent||'')||new URLSearchParams(window.location?.search||'').get('desktop')==='windows';status(native&&error?.message?error.message:'Sign-in did not finish. Please try again.');}finally{byId('admin-signin').disabled=false;}});
  byId('admin-signout').addEventListener('click',async()=>{++generation;clear();status('Signing out…');try{await api().signOut();await load();}catch{status('Sign-out could not finish. Please retry.');}});

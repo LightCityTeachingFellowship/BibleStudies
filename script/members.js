@@ -122,6 +122,12 @@ async function bootstrap() {
 }
 api.removeStudioVideo=async videoId=>{await api.ready;return call('removeChurchStudioVideo',{videoId,accountUid:api.user?.uid});};
 api.retryPublication=async videoId=>{await api.ready;return call('retryChurchStudioPublication',{videoId,accountUid:api.user?.uid});};
+api.learning=async data=>{await api.ready;return call('getChurchLearning',{...data,accountUid:api.user?.uid});};
+api.learningAI=async data=>{await api.ready;return call('manageChurchLearningAI',{...data,accountUid:api.user?.uid});};
+api.quizActivity=async data=>{await api.ready;return call('manageMyChurchQuiz',{...data,accountUid:api.user?.uid});};
+api.manageLearning=async data=>{await api.ready;return call('manageChurchLearning',{...data,accountUid:api.user?.uid});};
+api.quizLeaderboard=async id=>{await api.ready;return call('getChurchQuizLeaderboard',{id,accountUid:api.user?.uid});};
+api.changeVideoPrivacy=async data=>{await api.ready;return call('changeChurchVideoPrivacy',{...data,accountUid:api.user?.uid});};
 api.manageInvitations=async data=>{await api.ready;return call('manageChurchInvitations',{...data,accountUid:api.user?.uid});};
 api.getSharedVideo=async videoId=>{await api.ready;return call('getSharedChurchVideo',{videoId});};
 api.ready = bootstrap();

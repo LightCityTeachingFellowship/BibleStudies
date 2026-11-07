@@ -6,7 +6,7 @@ class Fail extends Error{constructor(code,message){super(message);this.code=code
 const data=new Map(),reads=[];let clock=1000,user={emailVerified:true,providerData:[{}]};
 const snapshot=path=>({id:path.split('/').at(-1),exists:data.has(path),data:()=>data.get(path)});
 const ref=path=>({path,get:async()=>{reads.push(path);return snapshot(path);},set:async value=>data.set(path,value)});
-function query(path,field=null,cap=Infinity){return {doc:id=>ref(path+'/'+id),orderBy:key=>query(path,key,cap),limit:n=>query(path,field,n),get:async()=>{reads.push(path);const rows=[...data].filter(([key,row])=>key.startsWith(path+'/')&&key.slice(path.length+1).indexOf('/')<0&&(!field||row[field]!==undefined)).sort((a,b)=>(b[1][field]||0)-(a[1][field]||0)).slice(0,cap).map(([key])=>snapshot(key));return {docs:rows,size:rows.length};}};}
+function query(path,field=null,cap=Infinity){return {where:()=>query(path,field,cap),doc:id=>ref(path+'/'+id),orderBy:key=>query(path,key,cap),limit:n=>query(path,field,n),get:async()=>{reads.push(path);const rows=[...data].filter(([key,row])=>key.startsWith(path+'/')&&key.slice(path.length+1).indexOf('/')<0&&(!field||row[field]!==undefined)).sort((a,b)=>(b[1][field]||0)-(a[1][field]||0)).slice(0,cap).map(([key])=>snapshot(key));return {docs:rows,size:rows.length};}};}
 const db={doc:ref,collection:query,runTransaction:async fn=>fn({get:async r=>snapshot(r.path),set:(r,v)=>data.set(r.path,v),delete:r=>data.delete(r.path)})};
 const auth={getUser:async()=>user,verifyIdToken:async token=>{if(token==='device-valid')return {uid:'device',firebase:{sign_in_provider:'anonymous'}};if(token==='not-anonymous')return {uid:'alice',firebase:{sign_in_provider:'google.com'}};throw Error();}};
 data.set('churchMembers/alice',{active:true});
