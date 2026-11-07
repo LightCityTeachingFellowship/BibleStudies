@@ -51,4 +51,9 @@ const c='ccccccccccc';data.set(base+'settings/ai',{enabled:true,monthlyAllowance
 await ai.manage(request('admin',{action:'saveSettings',enabled:true,monthlyAllowance:5e6}));assert.equal(data.get(base+'settings/ai').trialVideoIds.length,3,'saving the allowance never resets trial slots');
 data.set('churchVideoLibrary/current',{videos:[{id:c,title:'Fourth teaching',visibility:'public'}]});data.set(base+'jobs/'+c,{videoId:c,state:'queued'});recording.videoId=c;recording.sha256='c'.repeat(64);failRequest=false;
 const before=transcriptions;assert.equal((await ai.process()).reason,'trial-complete');assert.equal(transcriptions,before,'only three distinct teachings can incur paid requests');
+const metadataDraft={kind:'Summary',title:'Salvation',sections:[{heading:'Grace',points:['Saved by grace.']}],teachingDate:'2026-10-04',categories:['Year-2026','Salvation','Salvation']};
+assert.deepEqual(validateDraft(metadataDraft).categories,['Year-2026','Salvation']);
+assert.equal(validateDraft(metadataDraft).teachingDate,'2026-10-04');
+assert.throws(()=>validateDraft({...metadataDraft,teachingDate:'2026-02-31'}));
+assert.throws(()=>validateDraft({...metadataDraft,categories:['<script>']}));
 console.log('PASS: opt-in generation, cached transcription, allowance reservations, uncertain request hold, approval and 3h/1h timing, access inheritance, account isolation, scores and idempotent submissions.');

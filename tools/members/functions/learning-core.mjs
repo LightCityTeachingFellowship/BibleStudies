@@ -11,7 +11,10 @@ export function validateDraft(input){
  if(kind==='Summary'){
   if(!Array.isArray(input.sections)||!input.sections.length||input.sections.length>40)throw Error('Add the summary sections.');
   const sections=input.sections.map(section=>{const heading=text(section.heading,250),points=section.points?.map(p=>text(p,4000));if(!heading||!Array.isArray(points)||!points.length||points.length>30||points.some(p=>!p))throw Error('Each section needs a heading and points.');return {heading,points};});
-  return {kind,title,sections};
+  const metadata={};
+  if(input.teachingDate!==undefined){if(typeof input.teachingDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(input.teachingDate)||!Number.isFinite(Date.parse(input.teachingDate))||new Date(input.teachingDate).toISOString().slice(0,10)!==input.teachingDate)throw Error('Choose a valid teaching date.');metadata.teachingDate=input.teachingDate;}
+  if(input.categories!==undefined){if(!Array.isArray(input.categories)||input.categories.length>12||input.categories.some(c=>typeof c!=='string'||!c.trim()||c.length>80||/[<>\r\n]/.test(c)))throw Error('Check the summary categories.');metadata.categories=[...new Set(input.categories.map(c=>c.trim()))];}
+  return {kind,title,sections,...metadata};
  }
  if(!Array.isArray(input.questions)||!input.questions.length||input.questions.length>250)throw Error('A quiz needs 1–250 questions.');
  const questions=input.questions.map((q,i)=>{
@@ -26,4 +29,4 @@ export function answersFor(quiz,input,{complete=false}={}){
  return input.map((answer,i)=>{if(!Array.isArray(answer)||new Set(answer).size!==answer.length||answer.length>quiz.questions[i].options.length||answer.some(n=>!Number.isInteger(n)||n<0||n>=quiz.questions[i].options.length)||complete&&!answer.length)throw Error('Check the answers for question '+(i+1)+'.');return [...answer].sort((a,b)=>a-b);});
 }
 export function gradeQuiz(quiz,answers){const clean=answersFor(quiz,answers,{complete:true}),review=quiz.questions.map((q,i)=>({questionId:q.id,correct:JSON.stringify(clean[i])===JSON.stringify(q.correct),answers:clean[i],correctAnswers:q.correct,explanation:q.explanation,reference:q.reference}));const correct=review.filter(r=>r.correct).length;return {correct,total:review.length,percentage:Math.round(correct*10000/review.length)/100,review};}
-export function publicResource(r,visibility){return {id:r.id,kind:r.kind,title:r.title,videoId:r.videoId||null,visibility,state:r.state,version:r.version||1,publishedAt:r.publishedAt||null,url:r.legacyUrl||'/StudyResource/?id='+encodeURIComponent(r.id),...(r.sections?{sections:r.sections}:{}),...(r.questions?{questions:r.questions.map(({correct,explanation,reference,...q})=>({...q,multiple:correct.length>1}))}:{})};}
+export function publicResource(r,visibility){return {id:r.id,kind:r.kind,title:r.title,videoId:r.videoId||null,visibility,state:r.state,version:r.version||1,publishedAt:r.publishedAt||null,teachingDate:r.teachingDate||null,categories:r.categories||[],url:r.legacyUrl||'/StudyResource/?id='+encodeURIComponent(r.id),...(r.sections?{sections:r.sections}:{}),...(r.questions?{questions:r.questions.map(({correct,explanation,reference,...q})=>({...q,multiple:correct.length>1}))}:{})};}

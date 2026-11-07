@@ -1,0 +1,13 @@
+---
+layout: cat-homepageTEMPLATE-summary
+title: "Salvation"
+permalink: /Salvation/
+categories: ["HomePage-Salvation"]
+---
+<div class="homeBody-section leftRight-space-16 bottom-space-20">
+ <div class="homeResources-grid-containter bg-color"><h1 class="titles">Salvation</h1><p>Summaries about salvation.</p></div>
+ <div class="homeResources-grid-containter bg-color"><ol>
+ {% for post in site.categories.Salvation %}<li class="all-links"><a href="{{ post.url | relative_url }}">{{ post.title }}</a> <small>{{ post.date | date: "%a, %b %d, %y" }}</small></li>{% endfor %}
+ </ol><div data-learning-category="Salvation"></div></div>
+</div>
+<script type="module" src="{{ '/script/learning-category.mjs' | relative_url }}?v=1"></script>

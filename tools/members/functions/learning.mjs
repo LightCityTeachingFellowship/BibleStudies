@@ -25,7 +25,7 @@ export function createLearning(deps){
    const summaryId='summary-'+video.id,quizId='quiz-'+video.id;
    await db.runTransaction(async tx=>{const s=await tx.get(ref(summaryId)),q=await tx.get(ref(quizId));
     if(s.exists||q.exists)throw new fail('already-exists','This teaching already has a review workflow.');
-    for(const [id,kind]of [[summaryId,'Summary'],[quizId,'Quiz']])tx.set(ref(id),{id,kind,videoId:video.id,title:video.title,summaryId,teachingEndedAt:end,state:'awaiting-draft',version:1,createdAt:now(),createdBy:uid});
+    for(const [id,kind]of [[summaryId,'Summary'],[quizId,'Quiz']])tx.set(ref(id),{id,kind,videoId:video.id,title:video.title,summaryId,teachingEndedAt:end,state:'awaiting-draft',...(kind==='Summary'?{teachingDate:new Date(end+3600000).toISOString().slice(0,10),categories:['Year-'+new Date(end+3600000).getUTCFullYear()]}:{}),version:1,createdAt:now(),createdBy:uid});
     tx.set(db.doc('churchVideoActivity/learning/jobs/'+video.id),{videoId:video.id,state:'queued',createdAt:now(),createdBy:uid});
    });return {summaryId,quizId};
   }
