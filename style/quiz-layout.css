@@ -33,3 +33,5 @@ body :is(#quizResult-section,#CorrectedAnswers-section,#cat-bibleQuiz-inner) :is
 .QandA-Board>ol>li{list-style:none}.QandA-Board>ol>li::marker{content:""}@media(prefers-reduced-motion:reduce){.QandA-Board>ol>li,.QandA-Board>ol>li>ul>li{animation:none}}
 
 .lc-device-prompts{--device-surface:var(--bg-color);--device-text:var(--text-color-light);--device-border:var(--btn-nextprev-border);--device-accent:var(--gradient1)}
+
+#cat-headerbar #catSettings{position:static;inset:auto;align-self:center;place-self:auto}
