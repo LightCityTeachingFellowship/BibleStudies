@@ -12,6 +12,8 @@ user={...user,email:'lightcityteachingfellowship@gmail.com',emailVerified:false}
 user={...user,emailVerified:true,disabled:true};await assert.rejects(handler({auth:{uid:'owner'}}),e=>e.code==='permission-denied');assert.equal(reads,0);
 user={...user,disabled:false};await assert.rejects(handler({auth:{uid:'owner'},data:{accountUid:'another'}}),e=>e.code==='permission-denied');assert.equal(reads,0);
 const data=await handler({auth:{uid:'owner'},data:{accountUid:'owner'}});assert.equal(reads,3);assert.equal(data.videos[0].live,true);assert.equal(data.videos[0].concurrentViewers,12);assert.equal(data.videos[1].concurrentViewers,undefined);assert.equal(data.videos[0].audio,true);assert.equal(data.videos[1].published,false);assert.equal(data.videos[1].replacement,true);assert.equal(data.readings.length,2);assert.equal(data.readings[1].visibility,'members');
+assert.equal(data.videos[0].pendingReplacementId,b,'published originals identify their pending replacement for the retry control');
+assert.equal(data.videos[1].replaceVideoId,a,'pending replacement rows identify the original once without exposing historical aliases');
 assert.ok(!JSON.stringify(data).includes('secret'));assert.ok(!JSON.stringify(data).includes('signed-url'));assert.ok(!JSON.stringify(data).includes('12345678901'),'unneeded aliases are not returned');
 for(const link of [a,'https://youtu.be/'+a,'https://youtube.com/live/'+a+'?feature=share','https://www.youtube.com/watch?v='+a])assert.equal(streamId(link),a);
 for(const link of ['https://youtube.com.evil.example/watch?v='+a,'javascript:alert(1)','https://evil.example/'+a,'bad'])assert.equal(streamId(link),null);

@@ -157,3 +157,25 @@ assert.deepEqual(waits,[30000]);assert.equal(reports[0].phase,'waiting-for-sourc
 assert.deepEqual(await recoverSource(retrySource),[{id:a}],'worker can recover on the next cycle without restarting');
 await assert.rejects(recoverSource({...retrySource,load:async()=>{throw Error('offline');},once:true}),/Queue progress is preserved/);
 console.log('PASS: transient Studio source failures preserve progress, back off without downloads, expose safe diagnostics, and recover on the next cycle.');
+
+// A local source check takes as long as the polling interval in production.
+// Even when the first stream is due again each poll, every waiting ID gets a turn.
+let localClock=1000;
+let fairLocal={version:1,sourceMode:'local',seenIds:[],jobs:{},newUploadsOnly:true};
+const localChecks=[];
+const localTick=()=>tick({state:fairLocal,catalog:[],now:()=>localClock,library:async()=>[a,b,c].map(id=>({id})),persist:async()=>{},
+ download:async id=>{localChecks.push(id);return [{status:'waiting for replay',reason:'Add its matching final file.'}];}});
+await localTick(); localClock+=5000;
+fairLocal=JSON.parse(JSON.stringify(fairLocal)); // Fairness survives a worker restart.
+await localTick(); localClock+=5000;
+await localTick(); localClock+=5000;
+await localTick();
+assert.deepEqual(localChecks,[a,b,c,a],'a repeated waiting stream must not starve later replacements');
+assert.deepEqual(fairLocal.youtubeDownloadStarts,undefined,'local checks do not spend YouTube download quota');
+const localRetained={...r,videoId:c};
+fairLocal.jobs[c].record=localRetained;fairLocal.jobs[c].phase='downloaded';fairLocal.jobs[c].nextAttempt=0;
+let localUploaded;
+await tick({state:fairLocal,catalog:[],now:()=>localClock,library:async()=>[a,b,c].map(id=>({id})),persist:async()=>{},
+ download:async()=>{throw Error('a retained upload must take priority over source rotation');},remote:async record=>{localUploaded=record.videoId;},register:async()=>{},cleanup:async()=>{}});
+assert.equal(localUploaded,c,'source fairness preserves retained upload priority');
+console.log('PASS: local file checks rotate fairly across waiting streams and replacements, survive restarts, avoid YouTube quota and preserve retained uploads.');

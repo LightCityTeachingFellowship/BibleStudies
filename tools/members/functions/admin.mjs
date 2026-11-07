@@ -49,10 +49,15 @@ export function createAdminDashboard({ auth, db, fail, emails, audio, live, priv
   const broadcasts=new Map(checks.live?results[1].value.filter(r=>r.expiresAt>Date.now()).map(r=>[r.videoId,r]):[]);
   const current=published.data().videos,visible=new Set(current.map(v=>v.id));
   const pending=mergeStudioVideos(desired.data()?.videos||[],studio.data(),{pending:true}).filter(v=>!visible.has(v.id));
+  const pendingReplacements=new Map(pending.filter(v=>validId(v.replaces?.[0])).map(v=>[v.replaces[0],v.id]));
   const videos=[...current.map(v=>({...v,published:true})),...pending.map(v=>({...v,published:false}))].filter(v=>validId(v.id)).map(v=>{
    const feed=broadcasts.get(v.id);
+   const retryAt=studio.data()?.retryRequests?.[v.id];
    return {id:v.id,title:String(v.title||feed?.title||v.id).slice(0,300),visibility:v.visibility==='public'?'public':'members',published:v.published,
-    audio:recordings.has(v.id)||!!feed,live:feed?.active===true&&!feed.replay,replay:feed?.replay===true,replacement:!!v.replaces?.length};
+    audio:recordings.has(v.id)||!!feed,live:feed?.active===true&&!feed.replay,replay:feed?.replay===true,replacement:!!v.replaces?.length,
+    ...(!v.published&&validId(v.replaces?.[0])?{replaceVideoId:v.replaces[0]}:{}),
+    ...(pendingReplacements.has(v.id)?{pendingReplacementId:pendingReplacements.get(v.id)}:{}),
+    ...(!v.published&&Number.isFinite(retryAt)&&retryAt>0?{audioRetryRequestedAt:retryAt}:{})};
   });
   const liveVideos = videos.filter(video => video.live);
   if (liveVideos.length) {

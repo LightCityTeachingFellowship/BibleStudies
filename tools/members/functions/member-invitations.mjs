@@ -1,5 +1,6 @@
 import {randomBytes,createHash} from 'node:crypto';
 import {requireStudioAdmin} from './studio-publishing.mjs';
+import {mergeStudioVideos} from './direct-library.mjs';
 export function createMemberInvitations(deps){
  const {db,auth,fail,now=Date.now}=deps,hash=s=>createHash('sha256').update(s).digest('hex');
  return {
@@ -12,7 +13,25 @@ export function createMemberInvitations(deps){
    const invitation=db.doc('churchStudioPublications/member-invitations/links/'+hash(token)),member=db.doc('churchMembers/'+uid);
    await db.runTransaction(async tx=>{const [link,approval]=await Promise.all([tx.get(invitation),tx.get(member)]),row=link.data();if(approval.exists){if(approval.data().active!==true)throw new fail('permission-denied','Please contact the church to restore access.');return;}if(!row||row.revoked||row.expiresAt<=now()||(Array.isArray(row.usedBy)?row.usedBy.length:row.usedBy?1:0)>=(row.maxUses||1))throw new fail('permission-denied','This invitation has expired or has already been used. Please ask for a new link.');tx.set(member,{active:true,joinedAt:now(),invitedBy:row.createdBy});tx.set(invitation,{usedBy:[...(Array.isArray(row.usedBy)?row.usedBy:[]),uid],usedAt:now()},{merge:true});});return {ok:true};
   },
-  async retryPublication(request){await requireStudioAdmin(request,deps);const id=request.data?.videoId;if(!/^[\w-]{11}$/.test(id||''))throw new fail('invalid-argument','Choose a pending video.');const job=(await db.doc('churchStudioPublications/'+id).get()).data();if(job?.state!=='pending')throw new fail('failed-precondition','This video is not waiting for publication. Refresh Studio.');const ref=db.doc('churchVideoLibrary/studio');await db.runTransaction(async tx=>{const old=(await tx.get(ref)).data()||{},retryRequests={...old.retryRequests,[id]:now()};tx.set(ref,{retryRequests},{merge:true});});return {ok:true};},
+  async retryPublication(request){
+   await requireStudioAdmin(request,deps);
+   const id=request.data?.videoId;
+   if(!/^[\w-]{11}$/.test(id||''))throw new fail('invalid-argument','Choose a pending video.');
+   const refs=['current','desired','studio'].map(name=>db.doc('churchVideoLibrary/'+name));
+   const requestedAt=await db.runTransaction(async tx=>{
+    const [current,desired,snapshot,publication]=await Promise.all([...refs.map(ref=>tx.get(ref)),tx.get(db.doc('churchStudioPublications/'+id))]);
+    const published=current.data()?.videos,studio=snapshot.data()||{};
+    if(!Array.isArray(published))throw new fail('unavailable','The library could not be checked. Refresh Studio and try again.');
+    const source=mergeStudioVideos(desired.data()?.videos||published,studio,{pending:true});
+    const candidate=source.find(v=>v.id===id&&['public','members'].includes(v.visibility));
+    if(publication.data()?.state==='removed'||published.some(v=>v.id===id)||!candidate)
+     throw new fail('failed-precondition','This video is not waiting for publication. Refresh Studio.');
+    const at=now(),retryRequests={...studio.retryRequests,[id]:at};
+    tx.set(refs[2],{retryRequests},{merge:true});
+    return at;
+   });
+   return {ok:true,requestedAt};
+  },
   async sharedVideo(request){const id=request.data?.videoId;if(!/^[\w-]{11}$/.test(id||''))throw new fail('invalid-argument','Choose a video.');const videos=(await db.doc('churchVideoLibrary/current').get()).data()?.videos;if(!Array.isArray(videos))throw new fail('unavailable','Please try again shortly.');const row=videos.find(v=>v.id===id)||videos.find(v=>v.replaces?.includes(id));if(!row||!['public','members'].includes(row.visibility))throw new fail('not-found','This video is no longer available.');return {video:{id:row.id,title:row.title||'LightCity video'}};}
  };
 }

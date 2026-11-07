@@ -7,9 +7,10 @@ class Element{
  querySelectorAll(selector){return this.children.flatMap(n=>[...(selector[0]==='.'?n.className===selector.slice(1)?[n]:[]:n.tagName===selector?[n]:[]),...n.querySelectorAll(selector)]);}
  querySelector(s){return this.querySelectorAll(s)[0]||null;}focus(){this.focused=true;}select(){this.selected=true;}
 }
-const ids=['content','account','gate','signin','signout','refresh','status','totals','quick','quick-result','quick-link','quick-copy','quick-form','search','tabs','results','list','more'];
+const ids=['content','account','gate','signin','signout','refresh','status','totals','quick','quick-result','quick-link','quick-copy','quick-form','search','tabs','results','list','more','audio-pending'];
 const nodes=Object.fromEntries(ids.map(id=>['admin-'+id,new Element()]));
-const document={getElementById:id=>nodes[id],createElement:tag=>new Element(tag)};let replacement;
+const descendants=element=>element.children.flatMap(child=>[child,...descendants(child)]);
+const document={getElementById:id=>nodes[id]||Object.values(nodes).flatMap(descendants).find(element=>element.id===id),createElement:tag=>new Element(tag)};let replacement;
 const window={handlers:{},CustomEvent:class{constructor(type,options){this.type=type;this.detail=options.detail;}},dispatchEvent(event){replacement=event.detail;},addEventListener(event,fn){this.handlers[event]=fn;}};
 const videoId='abcdefghijk';const data={account:'owner@example.com',videos:[{id:videoId,title:'Live prayer',live:true,concurrentViewers:0,audio:true,published:true,visibility:'members'}],readings:[{title:'Public article',url:'/article/',kind:'Article',visibility:'public'}],checks:{audio:true,live:true,readings:true},updatedAt:Date.now()};
 let copied,shared,confirmed=false,removed=[];window.confirm=()=>confirmed;const navigator={clipboard:{writeText:async url=>{copied=url;}},share:async item=>{shared=item;}};
@@ -39,9 +40,52 @@ await ui.load({quiet:true});assert.equal(nodes['admin-search'].value,'article');
 assert.ok(nodes['admin-list'].children.some(row=>row.querySelector('h3').textContent==='Public article'));
 nodes['admin-search'].value='';
 data.videos=Array.from({length:70},(_,i)=>({id:String(i).padStart(11,'0'),title:'Recording '+i,published:true,visibility:'public'}));await ui.load();assert.equal(nodes['admin-list'].children.length,36);nodes['admin-more'].handlers.click();assert.equal(nodes['admin-list'].children.length,72,'large catalogues paginate without opening content pages');
+// Pending audio remains reachable even below the first page of published videos,
+// and while the main catalogue is filtered to audio or an unrelated search.
+const oldId=data.videos[0].id,newId='newaudio123';
+data.videos[0].audio=true;data.videos[0].pendingReplacementId=newId;
+data.videos.push({id:newId,title:'Replacement recording',published:false,replacement:true,replaceVideoId:oldId,visibility:'public'});
+await ui.load();
+nodes['admin-tabs'].children.find(button=>button.dataset.tab==='All').handlers.click();
+const pendingPanel=nodes['admin-audio-pending'];
+assert.equal(pendingPanel.hidden,false);
+assert.equal(nodes['admin-list'].children.length,36);
+assert.ok(!nodes['admin-list'].children.some(row=>row.querySelector('h3').textContent==='Replacement recording'),'pending ID really is beyond catalogue pagination');
+assert.ok(pendingPanel.querySelectorAll('strong').some(title=>title.textContent==='Replacement recording'));
+const retryButtons=container=>container.querySelectorAll('button').filter(button=>/Retry audio processing|Requesting retry/.test(button.textContent));
+let resolveRetry,retryIds=[];
+client.retryPublication=id=>{retryIds.push(id);return new Promise(resolve=>{resolveRetry=resolve;});};
+const originalRow=nodes['admin-list'].children[0];
+const originalRetry=retryButtons(originalRow)[0];assert.ok(originalRetry,'published original exposes its pending replacement retry');
+const retrying=originalRetry.handlers.click();
+assert.deepEqual(retryIds,[newId],'retry targets the NEW replacement ID, never the published original');
+assert.ok(retryButtons(pendingPanel).every(button=>button.disabled),'every copy of the retry button is disabled while requesting');
+assert.ok(retryButtons(nodes['admin-list']).every(button=>button.disabled));
+await originalRetry.handlers.click();assert.equal(retryIds.length,1,'a duplicate click cannot send another request');
+resolveRetry();await retrying;
+assert.equal(retryButtons(pendingPanel)[0].disabled,false);
+assert.match(document.getElementById('admin-audio-pending-status').textContent,new RegExp(newId));
+audioTab.handlers.click();assert.equal(pendingPanel.hidden,false,'pending audio remains visible in Audio tab');
+nodes['admin-search'].value='no matching recordings';nodes['admin-search'].handlers.input();
+assert.equal(nodes['admin-list'].children.length,0);assert.equal(pendingPanel.hidden,false,'catalogue search cannot hide pending audio controls');
+assert.equal(retryButtons(pendingPanel).length,1);
+client.retryPublication=async()=>{throw Error('Connection unavailable; retry again.');};
+await retryButtons(pendingPanel)[0].handlers.click();
+assert.equal(retryButtons(pendingPanel)[0].disabled,false,'a failed request re-enables retry');
+assert.match(document.getElementById('admin-audio-pending-status').textContent,/Connection unavailable/);
+// A completed request from the previous account must not repaint this account.
+client.retryPublication=()=>new Promise(resolve=>{resolveRetry=resolve;});
+const oldAccountRetry=retryButtons(pendingPanel)[0].handlers.click();
+client.user={uid:'other-owner',email:'other@example.com'};await ui.load();
+const newAccountStatus=nodes['admin-status'].textContent;
+assert.equal(retryButtons(pendingPanel)[0].disabled,false,'an account change cannot inherit another account’s retry lock');
+resolveRetry();await oldAccountRetry;
+assert.equal(nodes['admin-status'].textContent,newAccountStatus,'stale retry completion cannot change status for another account');
+assert.equal(document.getElementById('admin-audio-pending-status').textContent,'');
+nodes['admin-search'].value='';nodes['admin-tabs'].children.find(button=>button.dataset.tab==='All').handlers.click();
 await nodes['admin-signout'].handlers.click();assert.equal(nodes['admin-content'].hidden,true);assert.equal(nodes['admin-list'].children.length,0);assert.equal(nodes['admin-quick-link'].value,'');
 // An in-flight admin response cannot repaint private content after account change.
 client.user={uid:'owner',email:data.account};let resolveOld;client.getAdminDashboard=()=>new Promise(resolve=>{resolveOld=resolve;});const loading=ui.load();await settle();
 client.user=null;await ui.load();resolveOld(data);await loading;assert.equal(nodes['admin-content'].hidden,true);assert.equal(nodes['admin-list'].children.length,0);
 client.user={uid:'ordinary'};client.getAdminDashboard=async()=>{throw {code:'functions/permission-denied'};};await ui.load();assert.equal(nodes['admin-content'].hidden,true);assert.ok(nodes['admin-status'].textContent.includes('does not have admin access'));
-console.log('PASS: dashboard rendering, video/audio copying, native sharing, search, quick links, sign-out cleanup, denied accounts and stale-response protection.');
+console.log('PASS: dashboard rendering, video/audio copying, sharing, search, quick links, discoverable pending audio, replacement retry target, duplicate/error handling, sign-out cleanup, denied accounts and stale-response protection.');

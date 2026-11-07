@@ -110,10 +110,12 @@ export async function tick({ state, library, catalog, download, remote, register
   await persist(state);
   // Keep at most one unpublished downloaded recording: network failures cannot fill the disk.
   if (Object.values(state.jobs).some(j => j.record && j.phase === 'attention')) return null;
-  // Prioritize recent additions/replacements without bypassing pacing or retained uploads.
+  // Local sources can wait indefinitely for their matching file. Rotate those
+  // checks so a high-ranked waiting stream cannot starve a ready replacement.
+  // YouTube downloads keep their existing lane, rank and request pacing.
   const rank = new Map(current.map((video, index) => [video.id, index]));
   const jobs = Object.values(state.jobs).filter(j => !['published', 'removed', 'attention'].includes(j.phase) && (!state.newUploadsOnly || j.lane === 'urgent' || j.record))
-    .sort((a, b) => Number(b.lane === 'urgent') - Number(a.lane === 'urgent') || (rank.get(a.videoId) ?? Infinity) - (rank.get(b.videoId) ?? Infinity));
+    .sort((a, b) => Number(b.lane === 'urgent') - Number(a.lane === 'urgent') || (state.sourceMode === 'local' ? Number(a.lastSourceAttemptAt || 0) - Number(b.lastSourceAttemptAt || 0) : 0) || (rank.get(a.videoId) ?? Infinity) - (rank.get(b.videoId) ?? Infinity));
   const retained = jobs.find(j => j.record);
   const job = retained || jobs.find(j => j.nextAttempt <= now() && downloadBudget(state, now(), j.lane).nextAllowed <= now());
   if (!job || job.nextAttempt > now()) return null;
@@ -121,6 +123,7 @@ export async function tick({ state, library, catalog, download, remote, register
   let closesBatch = false;
   try {
     if (!job.record) {
+      if (state.sourceMode === 'local') job.lastSourceAttemptAt = now();
       // Persist the attempt before contacting YouTube, including failed or interrupted attempts.
       if(state.sourceMode!=='local')state.youtubeDownloadStarts = [...budget.starts, now()];
       if (state.sourceMode!=='local' && job.lane !== 'urgent') {

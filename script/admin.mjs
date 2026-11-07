@@ -6,16 +6,44 @@ import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-c
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers,loadArchive=archiveRequest}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
- let rows=[],tab='All',limit=36,generation=0,owner=null,checks={};
+ let rows=[],tab='All',limit=36,generation=0,owner=null,checks={},pendingFeedback='';
  const accounts=setupAdminUsers({document,api});
  const status=message=>{byId('admin-status').textContent=message;};
- function clear(){accounts?.clear();rows=[];owner=null;byId('admin-list').replaceChildren();byId('admin-totals').replaceChildren();byId('admin-content').hidden=true;byId('admin-gate').hidden=false;byId('admin-quick-result').hidden=true;byId('admin-quick-link').value='';byId('admin-quick').value='';}
+ function clear(){accounts?.clear();rows=[];owner=null;pendingFeedback='';retrying.clear();byId('admin-list').replaceChildren();byId('admin-totals').replaceChildren();byId('admin-audio-pending')?.replaceChildren();byId('admin-content').hidden=true;byId('admin-gate').hidden=false;byId('admin-quick-result').hidden=true;byId('admin-quick-link').value='';byId('admin-quick').value='';}
  async function copy(url,container){
   try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(url);if(owner===api()?.user?.uid)status('LightCity link copied.');}
   catch{if(owner!==api()?.user?.uid)return;let input=container.querySelector('.studio-copy-input');if(!input){input=node('input',null,'studio-copy-input');input.readOnly=true;input.setAttribute('aria-label','LightCity link to copy');container.appendChild(input);}input.value=url;input.focus();input.select();status('Copy the selected LightCity link.');}
  }
  function action(label,fn){const b=node('button',label);b.type='button';b.addEventListener('click',fn);return b;}
+ const retrying=new Map();
+ function retryButton(id,feedback){
+  const key=owner+':'+id;
+  const button=action(retrying.has(key)?'Requesting retry…':'Retry audio processing',async()=>{
+   const client=api(),uid=owner;if(!uid||uid!==client?.user?.uid||retrying.has(key))return;
+   const token=Symbol();retrying.set(key,token);render();
+   try{await client.retryPublication(id);if(owner!==uid||api()?.user?.uid!==uid)return;
+    const message='Audio retry requested for '+id+'. Keep the streaming computer on with its matching final video in Audio Queue.';
+    pendingFeedback=message;status(message);const target=byId('admin-audio-pending-status')||feedback;if(target)target.textContent=message;
+   }catch(error){if(owner===uid&&api()?.user?.uid===uid){const message=error.message||'Could not request a retry.';pendingFeedback=message;status(message);const target=byId('admin-audio-pending-status')||feedback;if(target)target.textContent=message;}}
+   finally{if(retrying.get(key)===token)retrying.delete(key);if(owner===uid&&api()?.user?.uid===uid)render();}
+  });button.disabled=retrying.has(key);return button;
+ }
+ function renderPendingAudio(){
+  const panel=byId('admin-audio-pending');if(!panel)return;
+  const pending=rows.filter(r=>r.kind==='Video'&&r.id&&!r.published);panel.hidden=!pending.length;panel.replaceChildren();if(!pending.length)return;
+  panel.appendChild(node('h3','Audio processing · '+pending.length+' pending'));
+  panel.appendChild(node('p','New videos and replacements appear here until their matching audio is ready.','muted'));
+  const feedback=node('p',null,'muted');feedback.id='admin-audio-pending-status';feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');
+  // Keep feedback across quiet dashboard refreshes.
+  feedback.textContent=pendingFeedback;panel.appendChild(feedback);
+  for(const item of pending.slice(0,10)){
+   const row=node('div',null,'studio-pending-audio-row');const info=node('div');info.appendChild(node('strong',item.title||item.id));
+   info.appendChild(node('small',item.id+(item.replaceVideoId?' · Replaces '+item.replaceVideoId:''),'muted'));row.appendChild(info);row.appendChild(retryButton(item.id,feedback));panel.appendChild(row);
+  }
+  if(pending.length>10)panel.appendChild(action('View all pending audio',()=>{tab='Pending';limit=36;byId('admin-search').value='';render();}));
+ }
  function render(){
+  const feedback=byId('admin-audio-pending-status');if(feedback)pendingFeedback=feedback.textContent;renderPendingAudio();
   const list=byId('admin-list');list.replaceChildren();const selected=filterRows(rows,tab,byId('admin-search').value);
   byId('admin-results').textContent=selected.length+' items'+(selected.length?' · Showing '+Math.min(limit,selected.length):'');
   byId('admin-more').hidden=selected.length<=limit;
@@ -33,14 +61,15 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
       : 'YouTube viewer count unavailable';
     info.appendChild(node('span',viewers,'studio-badge'));
    }
-   if(item.id||item.date)info.appendChild(node('small',item.id||item.date));row.appendChild(info);
+   if(item.id||item.date)info.appendChild(node('small',item.id||item.date));
+   if(item.pendingReplacementId)info.appendChild(node('small','Replacement audio pending: '+item.pendingReplacementId,'muted'));row.appendChild(info);
    const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
    actions.appendChild(action('Copy link',()=>void copy(url,row)));
    if(item.id&&item.published)actions.appendChild(action('Replace',()=>{
     if(owner!==api()?.user?.uid)return;
     window.dispatchEvent(new window.CustomEvent('lightcity-studio-replace',{detail:{videoId:item.id,title:item.title,visibility:item.visibility}}));
    }));
-   if(item.id&&!item.published)actions.appendChild(action('Retry audio processing',async()=>{try{await api().retryPublication(item.id);status('Audio retry requested. Keep the streaming computer on; Studio will update when it is ready.');}catch(error){status(error.message||'Could not request a retry.');}}));
+   const retryId=item.pendingReplacementId||(!item.published&&item.id);if(retryId)actions.appendChild(retryButton(retryId,info));
    if(item.id)actions.appendChild(action('Remove',async()=>{
     const uid=owner;if(uid!==api()?.user?.uid)return;
     if(!window.confirm('Remove “'+item.title+'” from LightCity and its ID lists? Your YouTube upload and stored audio file are kept.'))return;
