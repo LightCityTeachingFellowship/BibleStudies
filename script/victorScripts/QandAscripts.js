@@ -152,6 +152,8 @@ function showNextOrPrevQuestion(n) {
     }
     if (n == totalQuestions) {
         notLastQuestion = 0;
+    } else {
+        notLastQuestion = 1;
     }
     previousQuestion.style.display = "none"; //Previous Question
     currentQuestion = questions[slideIndex - 1];

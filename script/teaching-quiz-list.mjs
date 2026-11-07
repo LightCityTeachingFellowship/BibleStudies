@@ -1,0 +1,3 @@
+const api=()=>globalThis.LightCityMembers;let epoch=0;
+async function refresh(){const ticket=++epoch;await api()?.ready;try{const {resources}=await api().learning({});if(ticket!==epoch)return;document.querySelectorAll('[data-generated-quiz]').forEach(n=>n.remove());const grid=document.querySelector('.cat-grid');for(const q of resources.filter(q=>q.kind==='Quiz'&&!q.legacy&&!q.legacyUrl&&q.id.startsWith('quiz-'))){const a=document.createElement('a');a.dataset.generatedQuiz=q.id;a.textContent=q.title;a.href='/TeachingQuiz/?id='+encodeURIComponent(q.id);grid.append(a);}}catch{/* Existing quizzes remain available when the connection fails. */}}
+window.addEventListener('lightcity-members-changed',()=>void refresh());void refresh();

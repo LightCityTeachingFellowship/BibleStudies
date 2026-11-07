@@ -33,7 +33,21 @@ export function createLearning(deps){
   return db.runTransaction(async tx=>{
    const snapshot=await tx.get(ref(data.id)),r=snapshot.data();if(!r)throw new fail('not-found','Draft not found.');
    if(r.version!==data.version)throw new fail('aborted','This draft changed. Reload before reviewing.');
+   if(data.action==='notify'){
+    if(r.state!=='published')throw new fail('failed-precondition','Publish this resource before sending a notification.');
+    const library=(await tx.get(db.doc('churchVideoLibrary/current'))).data()?.videos||[];
+    if(!accessFor(r,library))throw new fail('failed-precondition','The source video is not available.');
+    if(['sent','pending'].includes(r.notificationState))return {requested:true,alreadyRequested:true};
+    tx.set(ref(data.id),{...r,notificationState:'pending',notificationRequestedAt:now(),notificationRequestedBy:uid});return {requested:true};
+   }
    if(r.state==='published')throw new fail('failed-precondition','Published quizzes and summaries are kept unchanged to preserve their history.');
+   if(data.action==='publishSilent'){
+    try{validateDraft(r);}catch(e){invalid(e.message);}
+    const library=(await tx.get(db.doc('churchVideoLibrary/current'))).data()?.videos||[];
+    if(!accessFor(r,library))throw new fail('failed-precondition','The source video is not available.');
+    if(r.kind==='Quiz'){const summary=(await tx.get(ref(r.summaryId))).data();if(summary?.state!=='published')throw new fail('failed-precondition','Publish the summary first.');}
+    tx.set(ref(data.id),{...r,state:'published',approvedAt:now(),approvedBy:uid,publishedAt:now(),notificationState:'held'});return {published:true,notificationsHeld:true};
+   }
    if(data.action==='save'){
     let draft;try{draft=validateDraft({...data.draft,kind:r.kind});}catch(e){invalid(e.message);}
     if(Buffer.byteLength(JSON.stringify(draft))>600000)invalid('This draft is too large.');
@@ -44,7 +58,7 @@ export function createLearning(deps){
     tx.set(ref(data.id),{...r,state:'approved',approvedAt:now(),approvedBy:uid,version:r.version+1});return {approved:true};
    }
    if(data.action==='withdraw'){tx.set(ref(data.id),{...r,state:'draft',approvedAt:null,version:r.version+1});return {withdrawn:true};}
-   invalid('Choose Save, Approve or Withdraw approval.');
+   invalid('Choose Save, Approve, Publish silently, Send notification or Withdraw approval.');
   });
  }
  async function release(){
@@ -52,18 +66,19 @@ export function createLearning(deps){
   for(const item of approved.docs){const r=item.data();const released=await db.runTransaction(async tx=>{
    const [fresh,library,summary]=await Promise.all([tx.get(item.ref),tx.get(db.doc('churchVideoLibrary/current')),r.kind==='Quiz'?tx.get(ref(r.summaryId)):Promise.resolve(null)]);
    const current=fresh.data();if(!current||!accessFor(current,library.data()?.videos||[])||!canRelease(current,summary?.data(),now()))return false;
-   tx.set(item.ref,{...current,state:'published',publishedAt:now(),notificationState:'pending'});return true;
+   tx.set(item.ref,{...current,state:'published',publishedAt:now(),notificationState:'held'});return true;
   });if(released)count++;}return {released:count};
  }
+ function renderResource(r,visibility,data){const out=publicResource(r,visibility);if(data.format==='classic'&&r.kind==='Quiz')out.questions=r.questions;return out;}
  async function read(request){const person=await identity(request),data=request.data||{};
   if(data.preview===true){
    await admin(request);
    const r=await get(data.id);if(!r||r.legacy||!['draft','approved','published'].includes(r.state))throw new fail('not-found','This draft is not ready to preview.');
    if(data.action==='practice'){if(r.kind!=='Quiz')invalid('Choose a quiz.');try{return {result:gradeQuiz(r,data.answers),preview:true};}catch(e){invalid(e.message);}}
-   return {resource:{...publicResource(r,accessFor(r,await videos())||'members'),preview:true}};
+   return {resource:{...renderResource(r,accessFor(r,await videos())||'members',data),preview:true}};
   }
   if(data.action==='practice'){const {r}=await allowed(data.id,person);if(r.kind!=='Quiz')invalid('Choose a quiz.');try{return {result:gradeQuiz(r,data.answers)};}catch(e){invalid(e.message);}}
-  if(data.id){const {r,visibility}=await allowed(data.id,person);return {resource:publicResource(r,visibility)};}
+  if(data.id){const {r,visibility}=await allowed(data.id,person);return {resource:renderResource(r,visibility,data)};}
   const library=await videos(),resources=await all();return {resources:resources.filter(r=>r.state==='published').flatMap(r=>{const visibility=accessFor(r,library);return visibility&&(visibility==='public'||person?.member)?[publicResource(r,visibility)]:[];}).map(({sections,questions,...r})=>({...r,questionCount:questions?.length||0}))};
  }
  async function activity(request){
