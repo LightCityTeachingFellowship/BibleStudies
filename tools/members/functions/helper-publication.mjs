@@ -2,7 +2,11 @@
 // Source-list publications still need the existing audio-ready website workflow.
 export async function publishAudioReadyVideo(id,{db,studio,recordings,kick,now=Date.now}) {
  const current=await db.doc('churchVideoLibrary/current').get();
- if(current.data()?.videos?.some(v=>v.id===id)||await studio.promote(id))return {requested:true,published:true,message:'Video and audio are available.'};
+ if(current.data()?.videos?.some(v=>v.id===id))return {requested:true,published:true,message:'Video and audio are available.'};
+ if(await studio.promote(id)){
+  const verified=await db.doc('churchVideoLibrary/current').get();
+  if(verified.data()?.videos?.some(v=>v.id===id))return {requested:true,published:true,message:'Video and audio are available.'};
+ }
  const [source,audio]=await Promise.all([studio.source(),recordings()]);
  if(!source.some(v=>v.id===id))return {requested:false,published:false,message:'This video is no longer in the selected source lists.'};
  if(!audio.some(r=>r.videoId===id&&r.bytes>0&&/^[a-f0-9]{64}$/.test(r.sha256||'')))return {requested:false,published:false,message:'Waiting for matching audio.'};

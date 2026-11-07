@@ -106,7 +106,20 @@ export async function tick({ state, library, catalog, download, remote, register
     state.backlogBatchCount = 0; state.youtubeBacklogNotBefore = 0;
   }
   updateQueue(state, current, catalog, now());
-  for(const entry of current){const job=state.jobs[entry.id],requested=Number(entry.audioRetryRequestedAt||0);if(job&&requested>(job.lastManualRetry||0)&&!['published','removed'].includes(job.phase)){job.phase=job.record?'downloaded':'pending';job.attempts=0;job.nextAttempt=0;job.message='Manual retry requested.';job.lastManualRetry=requested;}}
+  for(const entry of current){
+    const job=state.jobs[entry.id],requested=Number(entry.audioRetryRequestedAt||0);
+    if(!job||requested<=(job.lastManualRetry||0)||job.phase==='removed')continue;
+    if(job.phase==='published'){
+      if(job.record?.sourceMode!=='local')continue;
+      // Audio is already registered and its source may have been cleaned. Retry
+      // only the website publication check; never reopen or reupload that file.
+      job.publicationConfirmed=false;job.publicationCheckedAt=0;
+      job.message='Audio is ready; website publication retry requested.';
+    }else{
+      job.phase=job.record?'downloaded':'pending';job.attempts=0;job.nextAttempt=0;job.message='Manual retry requested.';
+    }
+    job.lastManualRetry=requested;
+  }
   await persist(state);
   // Keep at most one unpublished downloaded recording: network failures cannot fill the disk.
   if (Object.values(state.jobs).some(j => j.record && j.phase === 'attention')) return null;

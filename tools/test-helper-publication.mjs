@@ -11,9 +11,11 @@ assert.equal((await publishAudioReadyVideo(id,deps)).published,false);assert.equ
 await publishAudioReadyVideo(id,deps);assert.equal(builds,1,'repeated polls do not queue duplicate builds');
 clock+=600001;await publishAudioReadyVideo(id,deps);assert.equal(builds,2,'a failed or delayed build can be requested again later');
 rows.clear();rows.set('churchVideoLibrary/current',{videos:[{id}]});assert.equal((await publishAudioReadyVideo(id,deps)).published,true);assert.equal(builds,2,'already available needs no build');
-rows.set('churchVideoLibrary/current',{videos:[{id:old}]});assert.equal((await publishAudioReadyVideo(id,{...deps,studio:{...deps.studio,promote:async()=>true}})).published,true);assert.equal(builds,2,'Studio keeps immediate promotion');
-assert.equal((await publishAudioReadyVideo(id,{...deps,recordings:async()=>[]})).requested,false);assert.equal(builds,2,'no audio means no build');
+rows.set('churchVideoLibrary/current',{videos:[{id:old}]});assert.equal((await publishAudioReadyVideo(id,{...deps,studio:{...deps.studio,promote:async()=>{rows.set('churchVideoLibrary/current',{videos:[{id}]});return true;}}})).published,true);assert.equal(builds,2,'Studio keeps immediate promotion');
+rows.set('churchVideoLibrary/current',{videos:[{id:old}]});assert.equal((await publishAudioReadyVideo(id,{...deps,recordings:async()=>[]})).requested,false);assert.equal(builds,2,'no audio means no build');
 assert.equal((await publishAudioReadyVideo(id,{...deps,studio:{...deps.studio,source:async()=>[]}})).requested,false);assert.equal(builds,2,'removed/unlisted IDs cannot trigger a build');
 rows.clear();await assert.rejects(publishAudioReadyVideo(id,{...deps,kick:async()=>{throw Error('GitHub offline');}}),/offline/);
 await publishAudioReadyVideo(id,deps);assert.equal(builds,3,'failed dispatch releases its lease for retry');
 console.log('PASS: TXT audio-ready dispatch, bounded build deduplication, delayed retry, direct promotion, already-published, unlisted/audio-less rejection and dispatch failure recovery.');
+
+assert.equal((await publishAudioReadyVideo(id,{...deps,studio:{...deps.studio,promote:async()=>true}})).published,false,'a ready flag without the published row must never confirm publication');

@@ -4,6 +4,7 @@ import {createHash} from 'node:crypto';
 import {startHelperHeartbeat} from './helper-heartbeat.mjs';
 const valid=id=>/^[\w-]{11}$/.test(id||'');
 const digest=s=>createHash('sha256').update(s).digest('hex');
+const retiredAliases=videos=>{const active=new Set(videos.map(v=>v.id));return new Set(videos.flatMap(v=>Array.isArray(v.replaces)?v.replaces:[]).filter(id=>valid(id)&&!active.has(id)));};
 export function parseLocalIds(text){const ids=text.split(/\r?\n/).map(v=>v.trim()).filter(Boolean);if(ids.some(id=>!valid(id))||new Set(ids).size!==ids.length)throw Error('An ID list is invalid or contains duplicates; local sync left it unchanged.');return ids;}
 export async function syncLocalVideoLists(root,remote,{remove,replace,now=Date.now,removalDelayMs=60000,work=join(root,'tools/audio-library/work/studio-sync')}={}){
  if(!Array.isArray(remote.videos)||!remote.videos.length||remote.videos.some(v=>!valid(v.id)||!['public','members'].includes(v.visibility)))throw Error('The online ID list could not be verified.');
@@ -13,7 +14,12 @@ export async function syncLocalVideoLists(root,remote,{remove,replace,now=Date.n
   const statePath=join(work,'baseline.json');let baseline=null;try{baseline=JSON.parse(await readFile(statePath,'utf8'));}catch(error){if(error.code!=='ENOENT')throw Error('Local list-sync state needs review; no lists were changed.');}
   const audiences=['public','members'],files=Object.fromEntries(audiences.map(a=>[a,join(root,'_includes/video-ids-'+a+'.txt')]));
   const texts=Object.fromEntries(await Promise.all(audiences.map(async a=>[a,await readFile(files[a],'utf8')]))),local=Object.fromEntries(audiences.map(a=>[a,parseLocalIds(texts[a])]));
-  const omissions=audiences.flatMap(a=>(baseline?.lists?.[a]||[]).filter(id=>!local[a].includes(id)).map(id=>({id,audience:a})));
+  const knownRetired=retiredAliases(remote.videos);
+  const omissions=audiences.flatMap(a=>(baseline?.lists?.[a]||[]).filter(id=>!local[a].includes(id))
+   // An old checkout can restore an alias instead of its replacement. Mirror
+   // the canonical ID in this case rather than deleting the replacement online.
+   .filter(id=>!remote.videos.some(v=>v.id===id&&v.visibility===a&&(Array.isArray(v.replaces)?v.replaces:[]).some(alias=>knownRetired.has(alias)&&local[a].includes(alias))))
+   .map(id=>({id,audience:a})));
   if(omissions.length>25)throw Error('Many IDs were removed at once. Local sync paused; use Studio or restore the list before continuing.');
   let changedOnline=false;
   const pendingRemovals={};
@@ -23,7 +29,8 @@ export async function syncLocalVideoLists(root,remote,{remove,replace,now=Date.n
    const known=new Set(baseline?.lists?.[audience]||[]);
    const missing=omissions.filter(v=>v.audience===audience&&remote.videos.some(r=>r.id===v.id&&r.visibility===audience));
    const previousLocal=new Set(baseline?.localLists?.[audience]||baseline?.lists?.[audience]||[]);
-   const added=local[audience].filter(id=>!previousLocal.has(id)&&!remote.videos.some(v=>v.id===id)&&!(remote.removed||[]).includes(id));
+   const retired=retiredAliases(remote.videos);
+   const added=local[audience].filter(id=>!previousLocal.has(id)&&!remote.videos.some(v=>v.id===id)&&!(remote.removed||[]).includes(id)&&!retired.has(id));
    if(missing.length&&added.length){
     if(missing.length!==1||added.length!==1||!replace)throw Error('A replacement needs a single old and new ID. No videos were removed; list sync will retry.');
     const old=missing[0].id,version=remote.versions?.[old]||'legacy';
@@ -48,10 +55,15 @@ export async function syncLocalVideoLists(root,remote,{remove,replace,now=Date.n
    remote=await remove(id,version);changedOnline=true;delete pendingRemovals[id];
    if(!Array.isArray(remote.videos)||remote.videos.some(v=>!valid(v.id)))throw Error('Removal could not be confirmed; local sync will retry.');
   }
-  const removed=new Set(remote.removed||[]),next={};
+  // Completed replacements retire their old IDs without representing a new
+  // removal request. Do not reinsert those aliases as unpublished local additions.
+  const removed=new Set(remote.removed||[]),retired=retiredAliases(remote.videos),next={};
   for(const audience of audiences){
    const online=remote.videos.filter(v=>v.visibility===audience).map(v=>v.id),active=new Map(remote.videos.map(v=>[v.id,v.visibility]));
-   const kept=local[audience].filter(id=>!removed.has(id)&&(!active.has(id)||active.get(id)===audience));
+   const canonical=new Map(remote.videos.filter(v=>v.visibility===audience).flatMap(v=>(Array.isArray(v.replaces)?v.replaces:[]).filter(id=>retired.has(id)).map(id=>[id,v.id])));
+   // Preserve neighbour positions when a stale local alias stands in for the
+   // replacement; simply dropping it would move local-only IDs across that slot.
+   const kept=[...new Set(local[audience].map(id=>retired.has(id)?canonical.get(id):id).filter(id=>id&&!removed.has(id)&&(!active.has(id)||active.get(id)===audience)))];
    const known=new Set(baseline?.lists?.[audience]||[]);
    const oldOrder=(baseline?.lists?.[audience]||[]).filter(id=>kept.includes(id)),editedOrder=kept.filter(id=>known.has(id));
    const reordered=baseline&&oldOrder.join(',')!==editedOrder.join(',');

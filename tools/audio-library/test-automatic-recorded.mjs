@@ -179,3 +179,24 @@ await tick({state:fairLocal,catalog:[],now:()=>localClock,library:async()=>[a,b,
  download:async()=>{throw Error('a retained upload must take priority over source rotation');},remote:async record=>{localUploaded=record.videoId;},register:async()=>{},cleanup:async()=>{}});
 assert.equal(localUploaded,c,'source fairness preserves retained upload priority');
 console.log('PASS: local file checks rotate fairly across waiting streams and replacements, survive restarts, avoid YouTube quota and preserve retained uploads.');
+
+// A retry may arrive after audio registration/source cleanup but before the
+// website actually published. Reuse remote audio and retry publication only.
+const registeredLocal={...r,videoId:a,sourceMode:'local',registrationVerified:true};
+const readyRetry={version:1,sourceMode:'local',urgentLaneInitialized:true,seenIds:[a],jobs:{[a]:{
+ videoId:a,phase:'published',record:registeredLocal,attempts:0,nextAttempt:0,publicationConfirmed:true,publicationCheckedAt:100000
+}}};
+const rejectMediaWork=async()=>{throw Error('ready audio must never be downloaded, uploaded, registered or cleaned again');};
+const readyRetryOptions={state:readyRetry,catalog:[],library:async()=>[{id:a,audioRetryRequestedAt:200000}],now:()=>200000,persist:async()=>{},
+ download:rejectMediaWork,remote:rejectMediaWork,register:rejectMediaWork,cleanup:rejectMediaWork};
+assert.equal(await tick(readyRetryOptions),null);
+assert.equal(readyRetry.jobs[a].phase,'published','completed local audio stays complete');
+assert.equal(readyRetry.jobs[a].record,registeredLocal,'registered audio receipt is preserved');
+assert.equal(readyRetry.jobs[a].publicationConfirmed,false,'manual retry clears a stale website confirmation');
+assert.equal(readyRetry.jobs[a].publicationCheckedAt,0,'publication can retry immediately');
+assert.equal(readyRetry.jobs[a].lastManualRetry,200000);
+readyRetry.jobs[a].publicationConfirmed=true;readyRetry.jobs[a].publicationCheckedAt=200001;
+await tick(readyRetryOptions);
+assert.equal(readyRetry.jobs[a].publicationConfirmed,true,'the same manual request is consumed once');
+assert.equal(readyRetry.jobs[a].publicationCheckedAt,200001);
+console.log('PASS: manual retry after local cleanup retries website publication without redownloading, reuploading or deleting source files again.');

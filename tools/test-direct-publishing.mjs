@@ -112,3 +112,61 @@ assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[new
 assert.deepEqual(rows.get('churchVideoLibrary/current').videos[0].replaces,[originalA]);
 assert.equal((await service.status(replaceRequest())).state,'ready');
 console.log('PASS: Studio replacements reject already published targets and conflicting pending requests, while same-request retries preserve the audio gate and original slot.');
+
+// A source build can see a pending ID while the published snapshot still retains its original.
+resetReplacement();
+await service.publish(replaceRequest());
+rows.get('churchVideoLibrary/studio').entries[0].sourceSeen=true;
+rows.set('churchVideoLibrary/desired',{videos:[
+ {id:newId,title:'Replacement recording',visibility:'members'},
+ {id:originalB,title:'Second original',visibility:'members'}
+]});
+recordings=[{videoId:newId,bytes:100,sha256:'a'.repeat(64)}];
+assert.equal(await service.promote(newId),true);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newId,originalB]);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos[0].replaces,[originalA]);
+assert.equal(rows.get('churchVideoLibrary/studio').entries[0].sourceSeen,false);
+assert.equal(rows.get('churchStudioPublications/'+newId).state,'ready');
+const sentPath='webPushSent/'+(await import('node:crypto')).createHash('sha256').update('video:'+newId).digest('hex');
+rows.set(sentPath,{silent:true,sent:true,replacementOf:[originalA]});
+const previousSent=structuredClone(rows.get(sentPath));
+// A ready marker cannot confirm success after a stale publication loses the target.
+rows.set('churchVideoLibrary/current',{videos:[
+ {id:originalA,title:'First original',visibility:'members'},
+ {id:originalB,title:'Second original',visibility:'members'}
+]});
+rows.get('churchVideoLibrary/studio').entries[0].sourceSeen=true;
+recordings=[];
+assert.equal(await service.promote(newId),false,'a ready job still needs matching audio to restore a missing publication');
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[originalA,originalB]);
+recordings=[{videoId:newId,bytes:100,sha256:'a'.repeat(64)}];
+assert.equal(await service.promote(newId),true);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newId,originalB]);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos[0].replaces,[originalA]);
+assert.deepEqual(rows.get(sentPath),previousSent,'ready-state repair never changes an existing notification marker');
+assert.equal(rows.get('churchStudioPublications/'+newId).state,'ready','ready-state repair does not retrigger a pending-to-ready notification');
+// Seeing an ID in an older build does not authorize restoring a later source-file removal.
+rows.set('churchVideoLibrary/current',{videos:[{id:originalA,title:'First original',visibility:'members'}]});
+rows.get('churchVideoLibrary/studio').entries[0].sourceSeen=true;
+rows.set('churchVideoLibrary/desired',{videos:[{id:originalA,title:'First original',visibility:'members'}]});
+assert.equal(await service.promote(newId),false,'a source-retired recording remains retired');
+rows.set('churchVideoLibrary/desired',{videos:[{id:newId,title:'Wrong audience',visibility:'public'}]});
+assert.equal(await service.promote(newId),false,'the desired source must retain the same audience');
+rows.set('churchVideoLibrary/desired',{videos:[{id:newId,title:'Replacement',visibility:'members'}]});
+const removedOther='removed0001';
+rows.get('churchVideoLibrary/studio').entries.push({video:{id:removedOther,title:'Removed item',visibility:'members'},state:'ready',sourceSeen:false});
+rows.get('churchVideoLibrary/studio').removed=[{id:removedOther}];
+assert.equal(await service.promote(newId),true);
+assert.ok(!rows.get('churchVideoLibrary/current').videos.some(video=>video.id===removedOther),'repair preserves other removal protections');
+// Removed jobs and missing Studio entries never become publications through recovery.
+rows.set('churchVideoLibrary/current',{videos:[{id:originalA,title:'First original',visibility:'members'}]});
+rows.get('churchStudioPublications/'+newId).state='removed';
+assert.equal(await service.promote(newId),false);
+rows.get('churchStudioPublications/'+newId).state='ready';
+rows.get('churchVideoLibrary/studio').removed=[{id:newId}];
+assert.equal(await service.promote(newId),false);
+rows.get('churchVideoLibrary/studio').removed=[];
+rows.get('churchVideoLibrary/studio').entries=[];
+assert.equal(await service.promote(newId),false);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[originalA]);
+console.log('PASS: observed pending IDs actually activate, ready jobs recover missing publications only with matching audio, replacements preserve their slot/aliases, and removed or missing entries stay excluded.');

@@ -8,7 +8,10 @@ export function createDirectPublishing(deps) {
  async function promote(id,availability) {
   const request=await db.doc('churchStudioPublications/'+id).get(),job=request.data();
   if(!job?.direct||job.state==='removed')return false;
-  if(job.state==='ready')return true;
+  if(job.state==='ready'){
+   const current=await db.doc('churchVideoLibrary/current').get();
+   if(current.data()?.videos?.some(video=>video.id===id&&video.visibility===job.visibility))return true;
+  }
   const sources=availability||{audio:Promise.resolve().then(recordings),feeds:Promise.resolve().then(()=>live.catalog())};
   let recording,feed;
   try{const match=await Promise.any([
@@ -17,17 +20,21 @@ export function createDirectPublishing(deps) {
   ]);({recording,feed}=match);}catch{return false;}
   if(!recording&&!feed)return false;
   return db.runTransaction(async tx=>{
-   const currentRef=db.doc('churchVideoLibrary/current'),studioRef=db.doc('churchVideoLibrary/studio'),jobRef=db.doc('churchStudioPublications/'+id);
+   const currentRef=db.doc('churchVideoLibrary/current'),desiredRef=db.doc('churchVideoLibrary/desired'),studioRef=db.doc('churchVideoLibrary/studio'),jobRef=db.doc('churchStudioPublications/'+id);
    const sentRef=db.doc('webPushSent/'+createHash('sha256').update('video:'+id).digest('hex'));
-   const [current,studio,latest,sent]=await Promise.all([tx.get(currentRef),tx.get(studioRef),tx.get(jobRef),tx.get(sentRef)]);
+   const [current,desired,studio,latest,sent]=await Promise.all([tx.get(currentRef),tx.get(desiredRef),tx.get(studioRef),tx.get(jobRef),tx.get(sentRef)]);
    const state=studio.data()||{entries:[]},entry=state.entries?.find(e=>e.video.id===id);
    if(latest.data()?.state==='removed'||state.removed?.some(r=>r.id===id))return false;
    if(!entry)return false;
-   if(latest.data()?.state==='ready')return true;
+   if(latest.data()?.state==='ready'&&current.data()?.videos?.some(video=>video.id===id&&video.visibility===entry.video.visibility))return true;
    if(!Array.isArray(current.data()?.videos))throw Error('Published baseline unavailable');
+   if(entry.sourceSeen&&!desired.data()?.videos?.some(video=>video.id===id&&video.visibility===entry.video.visibility))return false;
    const video={...entry.video,title:entry.video.title||recording?.title||feed?.title};
-   const entries=state.entries.filter(e=>!(video.replaces||[]).includes(e.video.id)).map(e=>e.video.id===id?{...e,video,state:'ready'}:e);
-   const videos=mergeStudioVideos(current.data().videos,{entries});
+   // A source build may have observed this ID while its audio was still gated.
+   // Explicit promotion must activate the target even if that build retained the old video.
+   const entries=state.entries.filter(e=>!(video.replaces||[]).includes(e.video.id)).map(e=>e.video.id===id?{...e,video,state:'ready',sourceSeen:false}:e);
+   const videos=mergeStudioVideos(current.data().videos,{...state,entries});
+   if(!videos.some(row=>row.id===id&&row.visibility===video.visibility))return false;
    if(Buffer.byteLength(JSON.stringify(videos))>850000)throw Error('Library capacity reached');
    tx.set(currentRef,{...current.data(),videos,updatedAt:new Date(now())});
    tx.set(studioRef,{...state,entries});

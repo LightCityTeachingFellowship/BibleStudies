@@ -34,6 +34,32 @@ try{
  await writeFile(publicFile,next+'\n'+d+'\n');await syncLocalVideoLists(work,remote,{remove,replace,now:()=>clock});clock+=60001;
  await syncLocalVideoLists(work,remote,{remove,replace,now:()=>clock});assert.equal(calls.length,2,'stable standalone removal still works');
  await writeFile(publicFile,'invalid ID!\n');await assert.rejects(syncLocalVideoLists(work,remote,{remove}),/invalid/);assert.equal(calls.length,2);
+ // A replacement completed online may leave both IDs in an older local file.
+ // Its retired alias must disappear locally without being treated as a new edit.
+ await rm(join(work,'tools/audio-library/work/studio-sync/baseline.json'));
+ await writeFile(publicFile,b+'\n'+a+'\n'+d+'\n');await writeFile(membersFile,c+'\n');
+ remote={videos:[{id:b,visibility:'public'},{id:a,visibility:'public'},{id:c,visibility:'members'}],versions:{},removed:[]};
+ await syncLocalVideoLists(work,remote,{remove,replace});
+ remote={...remote,videos:remote.videos.map(v=>v.id===a?{...v,id:next,replaces:[a]}:v)};
+ await writeFile(publicFile,b+'\n'+next+'\n'+a+'\n'+d+'\n');
+ const beforeAliasRemovals=calls.length,beforeAliasReplacements=replacements;
+ await syncLocalVideoLists(work,remote,{remove,replace});
+ assert.equal(await readFile(publicFile,'utf8'),b+'\n'+next+'\n'+d+'\n','completed replacement removes retired alias and preserves its slot plus unrelated local additions');
+ await syncLocalVideoLists(work,remote,{remove,replace,removalDelayMs:0});
+ assert.equal(calls.length,beforeAliasRemovals,'alias cleanup never sends a deliberate online removal');
+ assert.equal(replacements,beforeAliasReplacements,'alias cleanup never creates another replacement');
+ // A remotely active ID wins over stale alias metadata, including other audiences.
+ remote={...remote,videos:[...remote.videos,{id:a,visibility:'members'}]};
+ await syncLocalVideoLists(work,remote,{remove,replace});
+ assert.equal(await readFile(membersFile,'utf8'),c+'\n'+a+'\n','a currently active ID is never discarded just because it appears in replaces');
+ // A retired alias restored by an old checkout is not a fresh replacement candidate.
+ remote={...remote,videos:remote.videos.filter(v=>v.id!==a)};
+ await writeFile(publicFile,b+'\n'+a+'\n'+d+'\n');
+ await syncLocalVideoLists(work,remote,{remove,replace,removalDelayMs:0});
+ assert.equal(await readFile(publicFile,'utf8'),b+'\n'+next+'\n'+d+'\n','old checkout alias is upgraded back to the canonical replacement');
+ await syncLocalVideoLists(work,remote,{remove,replace,removalDelayMs:0});
+ assert.equal(calls.length,beforeAliasRemovals,'old checkout cannot delete the canonical replacement online');
+ assert.equal(replacements,beforeAliasReplacements,'stale retired alias cannot be mistaken for a newly entered video');
 }finally{await rm(work,{recursive:true,force:true});}
 class Fail extends Error{constructor(code,message){super(message);this.code=code;}}
 const rows=new Map([['churchVideoLibrary/current',{videos:[{id:a,visibility:'members',replaces:[b]}]}],['churchVideoLibrary/desired',{videos:[{id:a,visibility:'members'}]}],['churchVideoLibrary/studio',{entries:[{video:{id:a,visibility:'members'},state:'ready',operationId:'live-generation'}]}]]);
