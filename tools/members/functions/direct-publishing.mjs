@@ -84,6 +84,10 @@ export function createDirectPublishing(deps) {
     let removed=studio.data()?.removed||[];
     const existing=current.data().videos.find(v=>v.id===id)||entries.find(e=>e.video.id===id)?.video;
     if(existing&&existing.visibility!==visibility)throw new fail('failed-precondition','This video is already assigned to the other audience.');
+    if(from&&existing){
+     const previousReplacement=job.data()?.replaceVideoId||existing.replaces?.[0];
+     if(previousReplacement!==from)throw new fail('failed-precondition','This video is already listed or being prepared for another publication. Choose a different replacement video.');
+    }
     if(existing&&current.data().videos.some(v=>v.id===id))return;
     let old=from?currentVideos.find(v=>v.id===from):null;
     if(expectedVersion!==undefined&&expectedVersion!==listVersion(studio.data()||{},from))throw new fail('aborted','The original changed online; recheck the lists.');
@@ -101,6 +105,8 @@ export function createDirectPublishing(deps) {
      tx.set(oldJobRef,{state:'recovered',backedUp:true},{merge:true});
     }
     if(from&&(!old||old.visibility!==visibility))throw new fail('failed-precondition','Choose an existing video with the same audience to replace.');
+    if(from&&entries.some(e=>e.state==='pending'&&e.video.id!==id&&(e.video.replaces||[]).includes(from)))
+     throw new fail('failed-precondition','A replacement is already waiting for this video. Finish or remove it before choosing another.');
     if(entries.length>=2000)throw new fail('resource-exhausted','The publishing queue needs attention.');
     if(job.data()?.direct&&entries.some(e=>e.video.id===id))return;
     const aliases=old?[old.id,...(old.replaces||[])]:[];

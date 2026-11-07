@@ -76,3 +76,39 @@ for(const readyKind of ['recorded','live']){
  assert(rows.get('churchVideoLibrary/current').videos.some(v=>v.id===id));
 }
 console.log('PASS: ready live or recorded audio publishes while the unrelated source is stalled.');
+
+// Explicit replacements must never silently target an unrelated existing publication.
+const originalA='original001',originalB='original002',newId='recorded001',otherId='recorded002';
+const resetReplacement=()=>{
+ rows.clear();
+ rows.set('churchVideoLibrary/current',{videos:[
+  {id:originalA,title:'First original',visibility:'members'},
+  {id:originalB,title:'Second original',visibility:'members'}
+ ]});
+ rows.set('churchVideoLibrary/studio',{entries:[]});
+ recordings=[];live=[];clock++;
+};
+const replaceRequest=(videoId=newId,replaceVideoId=originalA)=>({auth:{uid:'owner'},data:{videoId,replaceVideoId,visibility:'members',direct:true}});
+resetReplacement();
+rows.get('churchVideoLibrary/current').videos.push({id:newId,title:'Already published separately',visibility:'members'});
+await assert.rejects(service.publish(replaceRequest()),e=>e.code==='failed-precondition');
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[originalA,originalB,newId]);
+assert.equal(rows.get('churchVideoLibrary/studio').entries.length,0);
+resetReplacement();
+await service.publish(replaceRequest());
+const pendingOperation=rows.get('churchStudioPublications/'+newId).operationId;
+await service.publish(replaceRequest());
+assert.equal(rows.get('churchVideoLibrary/studio').entries.length,1);
+assert.equal(rows.get('churchStudioPublications/'+newId).operationId,pendingOperation);
+await assert.rejects(service.publish(replaceRequest(newId,originalB)),e=>e.code==='failed-precondition');
+await assert.rejects(service.publish(replaceRequest(otherId)),e=>e.code==='failed-precondition');
+assert.equal(rows.get('churchVideoLibrary/studio').entries.length,1);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[originalA,originalB]);
+recordings=[{videoId:newId,bytes:100,sha256:'a'.repeat(64)}];
+await service.promote(newId);
+await service.publish(replaceRequest());
+assert.equal(rows.get('churchStudioPublications/'+newId).operationId,pendingOperation);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[newId,originalB]);
+assert.deepEqual(rows.get('churchVideoLibrary/current').videos[0].replaces,[originalA]);
+assert.equal((await service.status(replaceRequest())).state,'ready');
+console.log('PASS: Studio replacements reject already published targets and conflicting pending requests, while same-request retries preserve the audio gate and original slot.');

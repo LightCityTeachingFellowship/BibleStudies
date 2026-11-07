@@ -1,7 +1,7 @@
 import {archiveRequest} from './audio-archive-api.mjs';
 import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=stream-reply-1';
-import {setupStudioPublisher} from './studio-publish.mjs?v=clear-ready-1';
+import {setupStudioPublisher} from './studio-publish.mjs?v=replace-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=archive-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers,loadArchive=archiveRequest}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
@@ -36,6 +36,10 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    if(item.id||item.date)info.appendChild(node('small',item.id||item.date));row.appendChild(info);
    const actions=node('div',null,'studio-row-actions');const url=tab==='Audio'&&item.id?previewLink(item.id,true):item.shareUrl||item.url;
    actions.appendChild(action('Copy link',()=>void copy(url,row)));
+   if(item.id&&item.published)actions.appendChild(action('Replace',()=>{
+    if(owner!==api()?.user?.uid)return;
+    window.dispatchEvent(new window.CustomEvent('lightcity-studio-replace',{detail:{videoId:item.id,title:item.title,visibility:item.visibility}}));
+   }));
    if(item.id&&!item.published)actions.appendChild(action('Retry audio processing',async()=>{try{await api().retryPublication(item.id);status('Audio retry requested. Keep the streaming computer on; Studio will update when it is ready.');}catch(error){status(error.message||'Could not request a retry.');}}));
    if(item.id)actions.appendChild(action('Remove',async()=>{
     const uid=owner;if(uid!==api()?.user?.uid)return;
@@ -86,6 +90,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
  }
  window.addEventListener('lightcity-members-changed',()=>void load());
  const refreshShared=()=>{if(window.LightCityDesktop||document.visibilityState==='visible')void load({quiet:true});};
+ window.addEventListener('lightcity-studio-published',refreshShared);
  const sharedTimer=setInterval(refreshShared,30000);sharedTimer.unref?.();window.addEventListener('focus',refreshShared);document.addEventListener?.('visibilitychange',()=>{if(document.visibilityState==='visible')refreshShared();});window.addEventListener('pagehide',e=>{if(!e.persisted)clearInterval(sharedTimer);});void load();
  return {load};
 }
