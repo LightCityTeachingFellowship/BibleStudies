@@ -35,3 +35,21 @@ body :is(#quizResult-section,#CorrectedAnswers-section,#cat-bibleQuiz-inner) :is
 .lc-device-prompts{--device-surface:var(--bg-color);--device-text:var(--text-color-light);--device-border:var(--btn-nextprev-border);--device-accent:var(--gradient1)}
 
 #cat-headerbar #catSettings{position:static;inset:auto;align-self:center;place-self:auto}
+/* Fit the active question without clipping unusually long or enlarged text. */
+#opacityBG{--quiz-fit:1;gap:8px;padding:8px clamp(10px,2vw,30px);height:100dvh;min-height:100svh}
+#opacityBG .QandAbody-section{flex:1 0 auto;align-items:center}
+#opacityBG #CountHint{min-height:30px;height:30px;flex:none}
+#opacityBG #questionhint,#opacityBG #questionhint img{height:30px;width:30px}
+#opacityBG .QandA-Board>ol>li{font-size:max(16px,calc(32px * var(--quiz-fit)))!important;gap:calc(22px * var(--quiz-fit));line-height:1.22!important}
+#opacityBG .insertedDiv,#opacityBG .insertedDivInner{min-height:0}
+#opacityBG .insertedDivInner{padding:calc(18px * var(--quiz-fit))}
+#opacityBG .QandA-Board>ol>li>ul>li.option{font-size:max(14px,calc(23px * var(--quiz-fit)))!important;line-height:1.22!important;margin:0 0 calc(10px * var(--quiz-fit))}
+#opacityBG .insertedSpan{min-height:0;padding:calc(12px * var(--quiz-fit));grid-template-columns:28px minmax(0,1fr)}
+#opacityBG .QandA-BoardLinks{min-height:44px;flex:none;gap:10px}
+#opacityBG #quizCatName{font-size:14px!important;line-height:1.25;max-width:65%}
+#opacityBG #subCat:empty{display:none}
+#settingsContent .lc-quiz-sync{display:flex;padding:16px 0;border-top:1px solid var(--btn-nextprev-border);font:14px/1.5 Arial,sans-serif}
+#settingsContent .lc-quiz-sync button{font:inherit;padding:10px 12px;border:1px solid var(--btn-nextprev-border);border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+#settingsContent .lc-quiz-notifications{font:16px/1.5 Arial,sans-serif;margin-top:12px;padding:12px 0;border-top:1px solid var(--btn-nextprev-border)}
+@media(max-width:700px) and (orientation:portrait){#opacityBG .QandA-Board>ol>li{grid-template-columns:minmax(0,1fr);grid-template-areas:'col-1' 'col-2';font-size:max(16px,calc(25px * var(--quiz-fit)))!important}#opacityBG .QandA-Board>ol>li>ul>li.option{font-size:max(14px,calc(19px * var(--quiz-fit)))!important}}
+@media(orientation:landscape) and (max-height:550px){#opacityBG .QandA-Board>ol>li{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:'col-1 col-2'}#opacityBG #CountHint{height:24px;min-height:24px}#opacityBG{gap:4px}}

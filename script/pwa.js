@@ -84,10 +84,19 @@
   settings.hidden = true;
   const summary = element('summary', '', 'Notification settings');
   const disable = button('Disable notifications');
+  const quizEnable = button('Enable notifications on this device');
+  quizEnable.onclick = async () => { settingsStatus.textContent = await enableNotifications(); };
+  quizEnable.hidden = true;
   const settingsStatus = element('p', 'lc-device-status');
   settingsStatus.setAttribute('role', 'status');
   settings.append(summary, disable, settingsStatus);
-  area.append(settings);
+  const quizSettings = document.querySelector('#settingsContent .settingsContentInner');
+  if (quizSettings) {
+    settings.classList.add('lc-quiz-notifications');
+    settings.append(quizEnable);
+    settings.append(element('p', 'lc-device-status', 'Applies to all LightCity notifications on this device, not just quizzes.'));
+    quizSettings.append(settings);
+  } else area.append(settings);
   let prompt, installed = Boolean(standalone), active = Boolean(canNotify && Notification.permission === 'granted' && read(localStorage, 'lc-push-enabled') === 'yes');
   let modulesPromise, user;
   const visits = (Number(read(sessionStorage, 'lc-install-page-views')) || 0) + 1;
@@ -119,8 +128,9 @@
     notificationPopup.hidden = notificationCard.node.hidden = !allowInvitations || !canNotify || Notification.permission === 'denied' || active || !notificationEngaged || notificationsSnoozed || busy;
     installPopup.hidden = installCard.node.hidden = !allowInvitations || !eligible || busy || installPaused || !notificationPopup.hidden;
     if (allowInvitations && (eligible || notificationEngaged) && busy && !document.hidden) retryPopup = setTimeout(render, 5000);
-    settings.hidden = !canNotify || !active;
-    area.hidden = settings.hidden;
+    settings.hidden = !canNotify || (!quizSettings && !active);
+    if (quizSettings) { disable.hidden = !active; quizEnable.hidden = active; quizEnable.disabled = permissionBusy; }
+    area.hidden = Boolean(quizSettings) || settings.hidden;
   }
   if (!engaged && !installed) setTimeout(() => { engaged = true; render(); }, 20000);
   if (canNotify && !active && Notification.permission !== 'denied') setTimeout(() => { notificationEngaged = true; render(); }, 10000);

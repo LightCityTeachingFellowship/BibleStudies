@@ -16,7 +16,7 @@ export function learningFile(resource,visibility,summary){
  const front=['---','visibility: '+visibility,'layout: '+(isSummary?'summaryTEMPLATE':'QandA-TEMPLATE'),'title: '+json(draft.title),'permalink: '+json(url),'categories: '+json(categories),'tags: '+json(isSummary?categories:['Adult']),'date: '+date,...(!isSummary?['subsection: [Adult]']:[]),'learning_resource_id: '+resource.id,'source_video_id: '+resource.videoId,'learning_version: '+(Number.isSafeInteger(resource.version)?resource.version:1),'notification_policy: manual','---',''];
  let body;
  if(visibility==='members'){
-  body=isSummary?'<div data-generated-summary="'+resource.id+'" role="status">Loading this member summary…</div>\n<script type="module" src="/script/generated-summary.mjs?v=1"></script>':'<!-- Questions are loaded only after church membership is verified. -->';
+  body=isSummary?'<div data-generated-summary="'+resource.id+'" role="status"></div>\n<script type="module" src="/script/generated-summary.mjs?v=1"></script>':'<!-- Questions are loaded only after church membership is verified. -->';
  }else if(isSummary){
   let first=true;body='<header><h1>'+html(draft.title)+'</h1></header>\n'+draft.sections.map(s=>'<h2>'+html(s.heading)+'</h2>\n<ol>\n'+s.points.map(p=>{const text='    <li>'+html(p)+'</li>';if(!first)return text;first=false;return '<!--excerpt.start-->\n'+text+'\n<!--excerpt.end-->';}).join('\n')+'\n</ol>').join('\n');
  }else{

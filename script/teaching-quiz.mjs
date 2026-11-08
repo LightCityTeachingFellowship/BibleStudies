@@ -28,6 +28,6 @@ try{
  if(!window.LightCityQuizEngineReady)throw Error('Quiz controls did not initialize. Refresh to retry.');
  content.hidden=false;status.textContent=preview?'Private preview · not published · no notifications. Scores here do not affect your history.':'';
  await script('/script/victorScripts/recentposts.js');
- await import('./legacy-quiz-session.mjs?v=quiz-repair-2');
+ await import('./legacy-quiz-session.mjs?v=quiz-viewport-1');
  window.addEventListener('lightcity-members-changed',()=>{content.hidden=true;location.reload();});
 }catch(e){content.hidden=true;status.textContent=e.message||'This quiz could not load.';const retry=el('button','Retry');retry.onclick=()=>location.reload();status.append(retry);}

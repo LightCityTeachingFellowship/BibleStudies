@@ -7,7 +7,7 @@ function references(){if(typeof globalThis.replaceAllStrongsAndRefs==='function'
 window.addEventListener('load',references,{once:true});
 document.getElementById('summary-copy-link').onclick=async()=>{try{const url=new URL(location.href);url.searchParams.delete('continue');await navigator.clipboard.writeText(url.href);status.textContent='Link copied.';}catch{status.textContent='Copy the address from your browser.';}};
 async function load(){
- const ticket=++epoch;root.replaceChildren();root.setAttribute('aria-busy','true');status.textContent='Loading this summary…';
+ const ticket=++epoch;root.replaceChildren();root.setAttribute('aria-busy','true');status.textContent='';
  dateNode.textContent='';document.getElementById('summary-navigation').hidden=true;
  try{
   await api()?.ready;
