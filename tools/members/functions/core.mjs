@@ -65,7 +65,7 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
         }
         catalog = registered.filter(item => access.has(item.videoId)).map(item => ({ ...item, visibility: access.get(item.videoId) }));
       } catch { throw new fail('unavailable', 'Live listening is temporarily unavailable.'); }
-      if (videoId === undefined) return { recordings: catalog.filter(item => item.visibility === 'public' || request.data?.includeMembers === true).map(({ videoId, title, session, offsetSeconds, expiresAt, replay }) => ({ kind: 'live', replay: replay === true, videoId, title, session, offsetSeconds, expiresAt })) };
+      if (videoId === undefined) return { recordings: catalog.filter(item => item.visibility === 'public' || request.data?.includeMembers === true).map(({ videoId, title, session, offsetSeconds, expiresAt, replay, durationSeconds }) => ({ durationSeconds: replay === true && Number.isFinite(durationSeconds) && durationSeconds > 0 && durationSeconds <= 57600 ? durationSeconds : undefined, kind: 'live', replay: replay === true, videoId, title, session, offsetSeconds, expiresAt })) };
       const item = catalog.find(item => item.videoId === videoId);
       if (!item) throw new fail('not-found', 'This broadcast is not available for live listening.');
       if (item.visibility !== 'public') await member(request);
