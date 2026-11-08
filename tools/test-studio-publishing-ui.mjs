@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import {setupStudioPublisher} from '../script/studio-publish.mjs';
 class Element{constructor(){this.handlers={};this.hidden=true;this.value='';this.disabled=false;this.textContent='';this.open=false;}addEventListener(k,fn){this.handlers[k]=fn;}focus(){this.focused=true;}select(){this.selected=true;}showModal(){this.open=true;}close(){this.open=false;this.handlers.close?.();}}
-const ids=['quick-form','audience','quick','publish','quick-result','quick-link','quick-copy','ready-dialog','ready-title','ready-url','ready-copy','ready-close','replace-dialog','replace-form','replace-input','replace-status','replace-submit','replace-title','replace-audience','replace-cancel'];
+const ids=['notify-viewers','quick-form','audience','quick','publish','quick-result','quick-link','quick-copy','ready-dialog','ready-title','ready-url','ready-copy','ready-close','replace-dialog','replace-form','replace-input','replace-status','replace-submit','replace-title','replace-audience','replace-cancel'];
 const nodes=Object.fromEntries(ids.map(id=>['admin-'+id,new Element()]));
+nodes['admin-notify-viewers'].checked=true;
 const doc={getElementById:id=>nodes[id],addEventListener(){}};const store=new Map(),events={};
 const window={CustomEvent:class{constructor(type,options){this.type=type;this.detail=options.detail;}},dispatchEvent(event){events[event.type]?.(event);},localStorage:{setItem:(k,v)=>store.set(k,v),getItem:k=>store.get(k),removeItem:k=>store.delete(k)},addEventListener:(k,fn)=>events[k]=fn};
 let calls=[],checks=0,message='',copied='',release;
@@ -58,3 +59,13 @@ api.user={uid:'different-owner'};events['lightcity-members-changed']();
 assert.equal(nodes['admin-replace-dialog'].open,false);assert.equal(nodes['admin-replace-input'].value,'');assert.equal(nodes['admin-publish'].disabled,false);
 accept();await inFlight;assert.equal(store.has('lc-studio-publish'),false);assert.equal(nodes['admin-ready-dialog'].open,false);
 console.log('PASS: selected replacement, fixed audience, invalid/same-ID rejection, cancel, ready link, draft retention, safe retries and account change.');
+
+api.publishStudioVideo=async data=>calls.push(data);
+nodes['admin-quick'].value='silent00001';nodes['admin-audience'].value='members';nodes['admin-notify-viewers'].checked=false;
+await nodes['admin-quick-form'].handlers.submit({preventDefault(){}});await settle();
+assert.deepEqual(calls.at(-1),{videoId:'silent00001',visibility:'members',direct:true,notifyViewers:false});
+assert.equal(JSON.parse(store.get('lc-studio-publish')).notifyViewers,false);
+release({state:'ready',title:'Teaching',url:'https://lightcityfellowship.com/Share/Video/silent00001/'});await settle();
+assert.match(message,/without notifying viewers/);assert.equal(nodes['admin-notify-viewers'].checked,true,'the next publication defaults back to notifying');
+assert.equal(nodes['admin-ready-dialog'].open,true,'admin still receives the link ready alert');
+console.log('PASS: opt-in silent addition, preserved ready alert and next-publication reset.');

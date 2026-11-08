@@ -38,7 +38,7 @@ export function createDirectPublishing(deps) {
    if(Buffer.byteLength(JSON.stringify(videos))>850000)throw Error('Library capacity reached');
    tx.set(currentRef,{...current.data(),videos,updatedAt:new Date(now())});
    tx.set(studioRef,{...state,entries});
-   if(!sent.exists)tx.set(sentRef,{direct:true,leaseUntil:0});
+   if(!sent.exists)tx.set(sentRef,{direct:true,leaseUntil:0,...(latest.data()?.notifyViewers===false?{silent:true,reason:'studio-silent-publication'}:{})});
    tx.set(jobRef,{state:'ready',readyAt:now(),title:video.title},{merge:true});
    return true;
   });
@@ -71,6 +71,7 @@ export function createDirectPublishing(deps) {
  };
  async function queuePublication(data,uid,expectedVersion){
    const {videoId:id,visibility,replaceVideoId:from}=data||{};
+   if(data?.notifyViewers!==undefined&&typeof data.notifyViewers!=='boolean')throw new fail('invalid-argument','Choose whether to notify viewers.');
    if(!valid(id)||!['public','members'].includes(visibility)||(from!==undefined&&(!valid(from)||from===id)))throw new fail('invalid-argument','Enter a valid YouTube link and audience.');
    const availability={audio:Promise.resolve().then(recordings),feeds:Promise.resolve().then(()=>live.catalog())};
    availability.audio.catch(()=>{});availability.feeds.catch(()=>{});
@@ -121,7 +122,7 @@ export function createDirectPublishing(deps) {
     const operationId=randomUUID(),index=old?currentVideos.findIndex(v=>v.id===from):-1;
     const placement=old?{index,afterId:currentVideos[index-1]?.id||null,beforeId:currentVideos[index+1]?.id||null}:null;
     tx.set(studioRef,{...studio.data(),removed:removed.filter(r=>r.id!==id),entries:[{video,state:'pending',operationId,createdAt:now(),sourceSeen:false,...(placement?{placement}:{})},...entries.filter(e=>e.video.id!==id)]});
-    tx.set(jobRef,{direct:true,videoId:id,visibility,title,operationId,requestedBy:uid,requestedAt:now(),state:'pending',...(from?{replaceVideoId:from,placement}:{})});
+    tx.set(jobRef,{direct:true,videoId:id,visibility,title,operationId,notifyViewers:!from&&data.notifyViewers!==false,requestedBy:uid,requestedAt:now(),state:'pending',...(from?{replaceVideoId:from,placement}:{})});
    });
    try{await promote(id,availability);}catch{/* The readiness poll/helper retries without losing the publication. */}
    return {state:'publishing',videoId:id,visibility};

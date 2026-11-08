@@ -1,7 +1,7 @@
 import {archiveRequest} from './audio-archive-api.mjs';
 import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=stream-reply-1';
-import {setupStudioPublisher} from './studio-publish.mjs?v=replace-1';
+import {setupStudioPublisher} from './studio-publish.mjs?v=silent-additions-1';
 import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=learning-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers,loadArchive=archiveRequest}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;

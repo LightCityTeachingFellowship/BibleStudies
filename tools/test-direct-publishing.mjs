@@ -170,3 +170,22 @@ rows.get('churchVideoLibrary/studio').entries=[];
 assert.equal(await service.promote(newId),false);
 assert.deepEqual(rows.get('churchVideoLibrary/current').videos.map(v=>v.id),[originalA]);
 console.log('PASS: observed pending IDs actually activate, ready jobs recover missing publications only with matching audio, replacements preserve their slot/aliases, and removed or missing entries stay excluded.');
+
+// Silent additions stay new videos, wait for audio, and reserve suppression atomically.
+const silentId='silent00001';
+recordings=[];live=[];
+await assert.rejects(service.publish({auth:{uid:'owner'},data:{videoId:silentId,visibility:'members',notifyViewers:'false'}}),e=>e.code==='invalid-argument');
+const silentRequest={auth:{uid:'owner'},data:{videoId:silentId,visibility:'members',notifyViewers:false}};
+await service.publish(silentRequest);
+assert.equal(rows.get('churchStudioPublications/'+silentId).notifyViewers,false);
+assert.ok(!rows.get('churchVideoLibrary/current').videos.some(v=>v.id===silentId));
+// A duplicate/default retry must not turn a pending silent publication into an alert.
+await service.publish({auth:{uid:'owner'},data:{videoId:silentId,visibility:'members'}});
+assert.equal(rows.get('churchStudioPublications/'+silentId).notifyViewers,false);
+recordings=[{videoId:silentId,bytes:100,sha256:'a'.repeat(64)}];
+await service.promote(silentId);
+const added=rows.get('churchVideoLibrary/current').videos.find(v=>v.id===silentId);
+assert.ok(added);assert.equal(added.replaces,undefined);
+const {createHash}=await import('node:crypto');
+assert.equal(rows.get('webPushSent/'+createHash('sha256').update('video:'+silentId).digest('hex')).silent,true,'the GitHub notifier also sees suppression before publication becomes visible');
+console.log('PASS: silent new additions, readiness gating, validation and durable retry-safe notification suppression.');

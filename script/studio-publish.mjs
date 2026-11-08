@@ -25,10 +25,10 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
    if(result.state==='removed'){status(result.message||'This video was removed from LightCity.');job=null;remember();busy=false;get('admin-publish').disabled=false;return;}
    if(result.state==='ready'){
     // Keep a newly typed next video, but clear the completed publication.
-    if(streamId(get('admin-quick').value)===job.videoId)get('admin-quick').value='';
+    if(streamId(get('admin-quick').value)===job.videoId){get('admin-quick').value='';if(get('admin-notify-viewers'))get('admin-notify-viewers').checked=true;}
     try{storage()?.setItem('lc-studio-published-'+job.uid,job.videoId);}catch{}
     window.dispatchEvent(new window.CustomEvent('lightcity-studio-published',{detail:{videoId:job.videoId}}));
-    get('admin-quick-link').value=result.url;get('admin-quick-result').hidden=false;status(job.visibility==='test'?'Private test ready. Alerts were sent only to your registered test devices.':'Ready to share: '+result.title);busy=false;get('admin-publish').disabled=false;
+    get('admin-quick-link').value=result.url;get('admin-quick-result').hidden=false;status(job.visibility==='test'?'Private test ready. Alerts were sent only to your registered test devices.':job.notifyViewers===false||job.replaceVideoId?'Published without notifying viewers. Ready to share: '+result.title:'Ready to share: '+result.title);busy=false;get('admin-publish').disabled=false;
     const completed=job;job=null;remember();await alertReady(result,completed,current);return;
    }
    status(result.message||'Publishing your video…');
@@ -43,7 +43,7 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
   if(job||!api()?.user?.uid)return;
   try{const saved=JSON.parse(storage()?.getItem('lc-studio-publish')||'null');if(saved?.uid===api().user.uid&&streamId(saved.videoId)&&['public','members','test'].includes(saved.visibility)){job=saved;busy=true;get('admin-publish').disabled=true;void check();}}catch{}
  }
- async function publish({videoId,visibility,replaceVideoId}){
+ async function publish({videoId,visibility,replaceVideoId,notifyViewers=true}){
   if(busy){status('A publication is already being prepared. Wait for its ready link.');return false;}const uid=api()?.user?.uid;
   if(!videoId||!uid){status('Sign in and enter a valid YouTube link or ID.');return;}
   // Obtain notification/audio permissions from the user's Publish click, before waiting.
@@ -51,15 +51,15 @@ export function setupStudioPublisher({document,window,navigator,api,status}){
   if(!window.LightCityDesktop&&window.Notification?.permission==='default')void window.Notification.requestPermission().catch(()=>{});
   const current=++sequence,attempt={uid};submitting=attempt;
   busy=true;get('admin-publish').disabled=true;get('admin-quick-result').hidden=true;status(replaceVideoId?'Preparing the replacement…':visibility==='test'?'Preparing a private test for your registered devices…':'Adding the video to your '+visibility+' list…');
-  try{await api().publishStudioVideo({videoId,visibility,direct:true,...(replaceVideoId?{replaceVideoId}:{})});if(current!==sequence||api()?.user?.uid!==uid)return false;
-   job={videoId,visibility,uid,...(replaceVideoId?{replaceVideoId}:{})};remember();status(replaceVideoId?'Replacement saved. Checking that video and audio are ready…':visibility==='test'?'Test alert sent. Preparing your private preview…':'Saved. Checking that video and audio are ready…');void check();return true;
+  try{await api().publishStudioVideo({videoId,visibility,direct:true,...(!notifyViewers?{notifyViewers:false}:{}),...(replaceVideoId?{replaceVideoId}:{})});if(current!==sequence||api()?.user?.uid!==uid)return false;
+   job={videoId,visibility,uid,notifyViewers,...(replaceVideoId?{replaceVideoId}:{})};remember();status(replaceVideoId?'Replacement saved. Checking that video and audio are ready…':visibility==='test'?'Test alert sent. Preparing your private preview…':'Saved. Checking that video and audio are ready…');void check();return true;
   }catch(error){
    if(current!==sequence||api()?.user?.uid!==uid)return false;
    const message=error?.message||'Publication could not start. Please retry.';status(message);if(replaceVideoId&&replaceDialog?.open)replaceStatus.textContent=message;busy=false;get('admin-publish').disabled=false;return false;
   }finally{if(submitting===attempt)submitting=null;}
  }
  form.addEventListener('submit',async event=>{
-  event.preventDefault();await publish({videoId:streamId(get('admin-quick').value),visibility:get('admin-audience').value});
+  event.preventDefault();await publish({videoId:streamId(get('admin-quick').value),visibility:get('admin-audience').value,notifyViewers:get('admin-audience').value==='test'||get('admin-notify-viewers')?.checked!==false});
  });
  if(replaceDialog&&replaceForm){
   window.addEventListener('lightcity-studio-replace',event=>{

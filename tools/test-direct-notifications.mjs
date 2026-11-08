@@ -17,3 +17,11 @@ await finishDirectPublication(deps);assert.equal(sent.length,1,'duplicate event 
 const key=createHash('sha256').update('video:'+id).digest('hex');store.delete('webPushSent/'+key);store.set('churchVideoLibrary/current',{videos:[{id,title:'Replacement',visibility:'members',replaces:['ABCDEFGHIJK']}]});
 await finishDirectPublication(deps);assert.equal(sent.length,1,'replacement is silent');assert.equal(store.get('webPushSent/'+key).silent,true);
 console.log('PASS: member notification isolation, durable deduplication, silent replacement, GitHub outage independence and background backup retry.');
+store.delete('webPushSent/'+key);
+store.set('churchVideoLibrary/current',{videos:[{id,title:'Separate teaching',visibility:'public'}]});
+store.set('churchStudioPublications/'+id,{direct:true,state:'ready',visibility:'public',notifyViewers:false});
+await finishDirectPublication(deps);await finishDirectPublication(deps);
+assert.equal(sent.length,1,'silent addition sends no member or public push on initial delivery or retry');
+assert.equal(store.get('webPushSent/'+key).silent,true);
+assert.equal(store.get('churchStudioPublications/'+id).backedUp,true,'silent additions still back up to the ID list');
+console.log('PASS: silent new publication and backup without any viewer notification.');

@@ -11,7 +11,7 @@ export async function finishDirectPublication({id,db,auth,messaging,github}){
  const lease=await db.runTransaction(async tx=>{const record=await tx.get(sent),data=record.data();if(record.exists&&!data.direct)return false;if(data?.sentAt||data?.silent)return false;if(data?.leaseUntil>Date.now())throw Error('Notification delivery is already running');tx.set(sent,{direct:true,leaseUntil:Date.now()+120000},{merge:true});return true;});
  if(lease){
   try{
-   if(video.replaces?.length)await sent.set({direct:true,silent:true,replacementOf:video.replaces,leaseUntil:0});
+   if(video.replaces?.length||job.notifyViewers===false)await sent.set({direct:true,silent:true,...(video.replaces?.length?{replacementOf:video.replaces}:{reason:'studio-silent-publication'}),leaseUntil:0});
    else{
     const subscribers=await db.collection('webPushSubscribers').get(),approved=video.visibility==='members'?await memberDeviceIds(db,auth,subscribers.docs):new Set();
     const targets=recipients(subscribers.docs,video.visibility,approved),url='https://lightcityfellowship.com/Watch/?v='+id;
