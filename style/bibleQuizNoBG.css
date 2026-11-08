@@ -973,7 +973,8 @@ to{ left:0px;}
     min-height:130px;
     max-height:300px;
     width:-webkit-fill-available;
-    place-content:center;}
+    /* place-content:center; */
+}
 .insertedDivInner{
     padding:15px 10px;
 }
