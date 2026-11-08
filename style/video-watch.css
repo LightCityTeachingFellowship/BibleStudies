@@ -64,7 +64,7 @@ a:focus-visible{outline:3px solid var(--vivid-orange);outline-offset:5px}
 }
 /* Desktop Watch: player and actions on the left, related resources on the right. */
 @media(min-width:901px){
-.lc-shell-watch .watch-main{display:grid;grid-template-columns:minmax(0,1fr) 480px;column-gap:24px;align-items:start;max-width:1680px!important;width:min(calc(100% - 48px),max(864px,calc((100dvh - 310px) * 16 / 9 + 344px)))!important;margin:20px auto!important}
+.lc-shell-watch .watch-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,32%);column-gap:24px;align-items:start;max-width:1680px!important;width:calc(100% - 48px)!important;margin:20px auto!important}
 .lc-shell-watch .watch-main>*{grid-column:1;min-width:0}
 .lc-shell-watch .watch-player{grid-row:1;width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;min-height:0}
 .lc-shell-watch .watch-player iframe{min-height:0}
@@ -89,4 +89,25 @@ a:focus-visible{outline:3px solid var(--vivid-orange);outline-offset:5px}
 @media(min-width:901px){
  .lc-shell-watch .watch-playback-actions{grid-row:3;margin-top:10px}
  .lc-shell-watch .watch-main>#watch-help{grid-row:4;margin:8px 0 0}
+}
+
+/* Related thumbnails and titles share a row; actions sit beneath the title. */
+.lc-shell-watch .lc-study-related-row{grid-template-columns:44% minmax(0,1fr);gap:0 12px;padding:12px 0;align-items:start}
+.lc-shell-watch .lc-study-related-row>.lc-study-related-link{display:contents}
+.lc-shell-watch .lc-study-related-image{grid-column:1;grid-row:1 / span 2;align-self:start}
+.lc-shell-watch .lc-study-related-copy{grid-column:2;grid-row:1}
+.lc-shell-watch .lc-study-related-row>.lc-library-menu{grid-column:2;grid-row:2;justify-self:end;margin:4px 0 0}
+.lc-shell-watch .lc-study-related-copy strong{font-size:15px;line-height:1.35}
+.lc-shell-watch .lc-study-related-row:has(.lc-library-menu[open]){z-index:30}
+@media(min-width:901px) and (max-width:1199px){
+ .lc-shell-watch .watch-main{display:flex;flex-direction:column;gap:12px;max-width:980px!important;width:min(calc(100% - 48px),calc((100dvh - 280px) * 16 / 9))!important}
+ .lc-shell-watch .watch-player{order:-2;margin:0}
+ .lc-shell-watch .watch-title-row{order:-1;margin-top:0}
+ .lc-shell-watch .watch-main>.lc-study-related{width:100%;margin-top:12px!important}
+ .lc-shell-watch .lc-study-related-row{grid-template-columns:200px minmax(0,1fr)}
+}
+@media(max-width:480px){
+ .lc-shell-watch .watch-main>.lc-study-related{padding:14px}
+ .lc-shell-watch .lc-study-related-copy strong{font-size:14px}
+ .lc-shell-watch .lc-study-related-link small{font-size:11px}
 }
