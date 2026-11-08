@@ -143,6 +143,7 @@ function decorate(holder,id,title,search=false) {
   if(isLive(id)||resumeSeconds(row)){if(!progress){progress=node('a','', 'lc-video-resume');actions.appendChild(progress);}progress.href=watchUrl(id,row);progress.textContent=isLive(id)?'LIVE':'Continue from '+timeLabel(row.seconds);progress.className='lc-video-resume'+(isLive(id)?' lc-live-label':'');}
   else progress?.remove();
   actions.hidden=!progress;
+  if(holder.className?.split(' ').includes('video-box') && holder.querySelector('.lc-video-actions') && holder.children[holder.children.length-1]!==actions)holder.appendChild(actions);
 }
 function renderPage(visible) {
   const list=document.getElementById?.('my-video-list'); if(!list)return;

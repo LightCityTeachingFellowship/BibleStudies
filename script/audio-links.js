@@ -114,7 +114,12 @@
         if (!holder) { holder = document.createElement('div'); holder.className = 'lc-video-actions'; card.appendChild(holder); }
         actions(holder, card.dataset.videoId);
         // Video titles arrive asynchronously; keep the choices below the title.
-        if (card.lastElementChild !== holder) card.appendChild(holder);
+        const progress = card.querySelector('.lc-personal-actions');
+        const tail = progress || holder;
+        if (card.lastElementChild !== tail || (progress && holder.nextElementSibling !== progress)) {
+          card.appendChild(holder);
+          if (progress) card.appendChild(progress);
+        }
       }
       if (hero) liveBadge(hero.querySelector('.home-video-art'), hero.hidden ? '' : hero.dataset.videoId);
       if (home && hero) actions(home, hero.hidden ? '' : hero.dataset.videoId);
