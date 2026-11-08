@@ -35,9 +35,9 @@ try {
   clock += 2 * 86400000;
   gets = 0;
   assert.equal((await live.catalog())[0].replay, true, 'replay survives original live expiry and the 90-second freshness window');
-  assert.equal(gets, 0, 'retained replay metadata avoids a per-playlist scan');
+  assert.equal(gets, 1, 'read the saved playlist to calculate the completed replay duration');
   const renewed = await handler.getChurchLiveAudio({ data: { videoId: id } });
-  assert.equal(renewed.replay, true); assert.equal((await send(renewed.url)).status, 200);
+  assert.equal(renewed.replay, true); assert.ok(renewed.durationSeconds>0, 'completed replay exposes its duration to cards'); assert.equal((await send(renewed.url)).status, 200);
   await assert.rejects(handler.getChurchLiveAudio({ data: { videoId: edited } }), e => e.code === 'not-found', 'edited upload cannot inherit another ID’s replay');
   policy = [{ id, visibility: 'members' }];
   assert.equal((await handler.getChurchLiveAudio({ data: {} })).recordings.length, 0);
