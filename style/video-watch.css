@@ -64,14 +64,29 @@ a:focus-visible{outline:3px solid var(--vivid-orange);outline-offset:5px}
 }
 /* Desktop Watch: player and actions on the left, related resources on the right. */
 @media(min-width:901px){
-.lc-shell-watch .watch-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;column-gap:24px;align-items:start;max-width:1680px!important;width:calc(100% - 48px)!important;margin:24px auto!important}
+.lc-shell-watch .watch-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;column-gap:24px;align-items:start;max-width:1680px!important;width:min(calc(100% - 48px),max(864px,calc((100dvh - 310px) * 16 / 9 + 344px)))!important;margin:20px auto!important}
 .lc-shell-watch .watch-main>*{grid-column:1;min-width:0}
-.lc-shell-watch .watch-player{grid-row:1;width:100%;max-height:calc(100dvh - 260px);aspect-ratio:16/9;border-radius:14px;overflow:hidden;min-height:0}
+.lc-shell-watch .watch-player{grid-row:1;width:100%;aspect-ratio:16/9;border-radius:14px;overflow:hidden;min-height:0}
 .lc-shell-watch .watch-player iframe{min-height:0}
 .lc-shell-watch .watch-title-row{grid-row:2;margin-top:12px}
-.lc-shell-watch .watch-main>.lc-study-related{grid-column:2;grid-row:1 / span 12;margin:0!important;padding:0}
+.lc-shell-watch .watch-main>.lc-study-related{grid-column:2;grid-row:1 / span 12;margin:0!important;padding:18px}
 .lc-shell-watch .lc-study-related h2{font-size:19px;margin-top:0}
 .lc-shell-watch #watch-title{font-size:22px;margin:0}
 .lc-shell-watch .watch-menu{margin-top:0}
 .lc-shell-watch #watch-help{font-size:13px;margin:8px 0}
+}
+
+/* Keep the mode buttons and playback position immediately below the title. */
+.watch-playback-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.watch-playback-actions #watch-audio-choice{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0}
+.watch-playback-actions .lc-personal-actions{margin:0}
+.watch-playback-actions .lc-mode-feedback{flex-basis:100%;margin:4px 0 0;font-size:12px}
+.lc-shell-watch .watch-main .lc-video-resume{color:inherit;font-size:13px!important}
+.lc-shell-watch .watch-main .lc-study-related-link{color:inherit}
+.lc-shell-watch .watch-main>.lc-study-related{box-sizing:border-box;padding:18px}
+.lc-shell-watch .lc-study-related h2{margin:0 0 8px}
+.lc-shell-watch #watch-help{opacity:.7;line-height:1.4}
+@media(min-width:901px){
+ .lc-shell-watch .watch-playback-actions{grid-row:3;margin-top:10px}
+ .lc-shell-watch .watch-main>#watch-help{grid-row:4;margin:8px 0 0}
 }
