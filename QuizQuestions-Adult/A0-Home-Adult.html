@@ -8,7 +8,7 @@ categories: ["Quiz Cat"]
 	<div class="cat-grid">
 		{% for page in site.pages %}
 		{% if page.categories contains "Quiz Cat" %}
-		{% if page.subsection contains "Adult" %}
+		{% if page.subsection contains "Adult" and page.visibility != "members" %}
 		<a href="{% if site.baseurl == "" %}{{page.url}}{% elsif site.baseurl != "" %}/{{site.baseurl}}{{page.url}}{% endif %}">
 			{{page.title}}
 		</a>
@@ -16,7 +16,7 @@ categories: ["Quiz Cat"]
 		{% endif %}
 		{% endfor %}
 	</div>
-<script type="module" src="/script/teaching-quiz-list.mjs?v=1"></script>
+<script type="module" src="/script/teaching-quiz-list.mjs?v=file-pages-1"></script>
 </body>
 
 </html>
