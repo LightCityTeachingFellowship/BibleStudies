@@ -54,12 +54,21 @@ function renderLibrary(){const list=$('[data-study-library-list]');if(!list)retu
 }
 function videoCard(row){const item=node('article','', 'lc-personal-card');item.appendChild(node('span',row.mode==='audio'?'Audio':'Video','lc-study-kind'));const url=new URL(base+'Watch/',origin);url.searchParams.set('v',row.videoId);url.searchParams.set('t',Math.floor(row.seconds));if(row.mode==='audio')url.searchParams.set('mode','audio');const link=node('a');link.href=url.href;const known=visibleVideos().get(row.videoId),title=known&&known!==row.videoId?known:mediaTitles.get(row.videoId)||(row.title&&row.title!==row.videoId?row.title:'LightCity recording');link.appendChild(node('h2',title));item.appendChild(link);if(!isLive(row.videoId)){const progress=node('progress');progress.setAttribute('aria-label',row.mode==='audio'?'Audio progress':'Video progress');if(Number.isFinite(row.duration)&&row.duration>0){progress.max=row.duration;progress.value=Math.min(row.seconds,row.duration);}else progress.setAttribute('aria-label','Playback progress — total duration unavailable');item.appendChild(progress);}item.appendChild(node('p',isLive(row.videoId)?'LIVE':'Continue from '+timeLabel(row.seconds),isLive(row.videoId)?'lc-live-label':''));return item;}
 function renderContinue(){const section=$('[data-study-continue]');if(!section)return;if(globalThis.LightCityMembers?.loading){section.hidden=true;return;}const reading=study.rows('history').filter(r=>!r.completed&&(r.section>0||r.fraction>0)&&catalog.has(r.resourceId)).map(r=>({row:r,type:'reading'}));const video=personal.rows('history').filter(r=>!r.completed&&r.seconds>5&&visibleVideos().has(r.videoId)).map(r=>({row:r,type:'video'}));const items=[...reading,...video].sort((a,b)=>b.row.updatedAt-a.row.updatedAt).slice(0,5);section.hidden=!items.length;const list=$('[data-study-continue-list]');list.replaceChildren(...items.map(i=>i.type==='reading'?card(catalog.get(i.row.resourceId),i.row,true):videoCard(i.row)));}
-function relatedLink({title,kind,url,image,reason}) {
+function relatedLink({title,kind,url,image,reason,entry,id}) {
  const link=node('a','','lc-study-related-link');link.href=url;
  const thumbnail=node('img','','lc-study-related-image');thumbnail.src=image;thumbnail.alt='';thumbnail.loading='lazy';thumbnail.decoding='async';link.appendChild(thumbnail);
  const copy=node('span','','lc-study-related-copy');copy.appendChild(node('span',kind,'lc-study-related-kind'));copy.appendChild(node('strong',title));
  if(reason!=='explicit')copy.appendChild(node('small',reason==='date'?'Suggested by date':'Suggested by title'));
- link.appendChild(copy);return link;
+ link.appendChild(copy);
+ const row=node('div','','lc-study-related-row');row.appendChild(link);
+ const save=node('button','','lc-save-video');save.type='button';save.innerHTML=bookmark;
+ if(entry)decorateSave(save,entry);
+ else {
+  const saved=personal.saved(id);save.setAttribute('aria-pressed',String(saved));save.setAttribute('aria-label',saved?'Remove saved video':'Save video for later');
+  save.onclick=e=>{e.preventDefault();e.stopPropagation();personal.save(id,title,!personal.saved(id));};
+ }
+ libraryMenu({document,holder:row,line:row,save,id:entry?.id||id,title:()=>title,kind:kind.toLowerCase(),url:new URL(url,origin).href,playlistDetail:entry?{type:'reading',id:entry.id}:undefined});
+ return row;
 }
 function renderRelated(){
  const section=$('[data-study-related]');if(!section)return;
@@ -68,11 +77,11 @@ function renderRelated(){
  const source=current||(visible.has(id)?{id,title:visible.get(id),videoIds:[id]}:null);
  if(!source){section.hidden=true;return;}
  const related=relatedResources(source,[...catalog.values()],visible),list=$('[data-study-related-list]');list.replaceChildren();
- for(const {entry,reason} of related.reading)list.appendChild(relatedLink({title:entry.title,kind:entry.kind,url:entry.url,image:base+'images/share/'+(entry.kind==='Summary'?'summary':'article')+'.png',reason}));
+ for(const {entry,reason} of related.reading)list.appendChild(relatedLink({title:entry.title,kind:entry.kind,url:entry.url,image:base+'images/share/'+(entry.kind==='Summary'?'summary':'article')+'.png',reason,entry}));
  for(const video of related.media){
   if(!current&&video.id===id)continue;
   const url=new URL(base+'Watch/',origin);url.searchParams.set('v',video.id);
-  list.appendChild(relatedLink({title:video.title,kind:'Video',url:url.href,image:`https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`,reason:video.reason}));
+  list.appendChild(relatedLink({title:video.title,kind:'Video',url:url.href,image:`https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`,reason:video.reason,id:video.id}));
  }
  section.hidden=!list.children.length;
 }
