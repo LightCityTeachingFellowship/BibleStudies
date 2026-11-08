@@ -19,7 +19,7 @@ export async function notifyLearning({id,db,auth,messaging,now=Date.now}){
    if(!targets.length)continue;
    const receipts=await db.getAll(...targets.map(d=>db.doc('churchVideoActivity/learning/push/'+key+'/tokens/'+hash(d.data().token))));
    const docs=targets.filter((_,n)=>!receipts[n].exists);if(!docs.length)continue;
-   const url='https://lightcityfellowship.com'+(resource.kind==='Quiz'?'/TeachingQuiz/':'/StudyResource/')+'?id='+encodeURIComponent(id),data={id:key,title:resource.kind,body:resource.title,url};
+   const url='https://lightcityfellowship.com'+((resource.filePublished&&resource.fileUrl)||((resource.kind==='Quiz'?'/TeachingQuiz/':'/StudyResource/')+'?id='+encodeURIComponent(id))),data={id:key,title:resource.kind,body:resource.title,url};
    const result=await messaging.sendEachForMulticast({tokens:docs.map(d=>d.data().token),notification:{title:data.title,body:data.body},data,webpush:{headers:{TTL:'86400',Urgency:'high'},notification:{icon:'https://lightcityfellowship.com/images/pwa-192.png',tag:key},fcmOptions:{link:url}}});
    const write=db.batch();let retry=false;
    result.responses.forEach((r,n)=>{if(!r.error)write.set(db.doc('churchVideoActivity/learning/push/'+key+'/tokens/'+hash(docs[n].data().token)),{sentAt:new Date(now())});else if(!['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error.code))retry=true;});

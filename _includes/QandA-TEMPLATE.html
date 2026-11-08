@@ -5,12 +5,19 @@
     <div class="loader-bg-bibleQuiz">
         <div class="loader-bibleQuiz"></div>
     </div>
+    {% if page.learning_resource_id and page.visibility == 'members' %}<p id="classic-quiz-status" data-file-quiz-id="{{ page.learning_resource_id | escape }}" role="status">Loading this member quiz…</p>{% endif %}
     {% include QandA-Section.html %}
     {% include QandA-Quiz-Result.html %}
     {% include QandA-Corrected-Answers.html %}
+    {% if page.learning_resource_id %}<script id="lc-file-quiz" type="application/json">{"id":{{ page.learning_resource_id | jsonify }},"title":{{ page.title | jsonify | replace: '<', '\u003c' }},"version":{{ page.learning_version | default: 1 | jsonify }}}</script>{% endif %}
+    {% if page.learning_resource_id and page.visibility == 'members' %}
+    <script type="module" src="/script/teaching-quiz.mjs?v=file-pages-1"></script>
+    {% else %}
+    {% if page.learning_resource_id %}<script>window.LightCityClassicQuiz=JSON.parse(document.getElementById('lc-file-quiz').textContent);</script>{% endif %}
     <script type="text/javascript" src="../script/victorScripts/QandAscriptsFontsandThemes.js?v=quiz-repair-2"></script>
     <script type="text/javascript" src="../script/victorScripts/QandAscripts.js?v=quiz-repair-2"></script>
     <link rel="stylesheet" href="../style/learning.css?v=1"><script type="module" src="../script/legacy-quiz-session.mjs?v=quiz-repair-2"></script>
+    {% endif %}
     <script type="text/javascript" src="../script/victorScripts/recentposts.js"></script>
     <script src="../script/interact.min.js"></script>
     <script src="../script/TSK.js"></script>

@@ -82,6 +82,11 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           AUDIO_READY_LIBRARY: tools/audio-library/work/publication.json
+      - name: Confirm generated summary and quiz page links
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        run: node tools/push/confirm-learning-files.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
       - name: Notify after publishing; replacements remain silent
         if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate' && vars.WEB_PUSH_ENABLED == 'true'
         run: node tools/push/send.mjs

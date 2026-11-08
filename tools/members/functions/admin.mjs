@@ -72,7 +72,7 @@ export function createAdminDashboard({ auth, db, fail, emails, audio, live, lear
    }catch{}
   }
   const studyResources=learning?await learning.all():[];
-  const learningRows=studyResources.map(({id,kind,title,state,legacyUrl,videoId,legacy})=>({resourceId:id,kind,title,state,legacy:legacy===true,published:state==='published',url:legacyUrl||'/StudyResource/?id='+encodeURIComponent(id),visibility:videoId?(current.find(v=>v.id===videoId||v.replaces?.includes(videoId))?.visibility||'members'):'public'}));
+  const learningRows=studyResources.map(({id,kind,title,state,legacyUrl,videoId,legacy,filePublished,fileUrl})=>({resourceId:id,kind,title,state,legacy:legacy===true,published:state==='published',url:(filePublished&&fileUrl)||legacyUrl||'/StudyResource/?id='+encodeURIComponent(id),visibility:videoId?(current.find(v=>v.id===videoId||v.replaces?.includes(videoId))?.visibility||'members'):'public'}));
   return {account:user.email,videos,readings,learning:learningRows,checks,updatedAt:Date.now()};
  };
 }

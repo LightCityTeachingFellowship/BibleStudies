@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {learningFile,commitLearningFiles,syncLearningFiles} from './members/functions/learning-files.mjs';
+const summary={id:'summary-abcdefghijk',videoId:'abcdefghijk',kind:'Summary',title:'Salvation',state:'published',version:4,teachingDate:'2026-10-04',categories:['Year-2026','Salvation'],sections:[{heading:'Repentance',points:['PRIVATE SUMMARY <script>{{ secret }}</script>']}]};
+const quiz={id:'quiz-abcdefghijk',videoId:'abcdefghijk',kind:'Quiz',title:'Salvation Quiz',state:'published',version:4,summaryId:summary.id,questions:[{prompt:'PRIVATE QUESTION',options:['PRIVATE CORRECT','PRIVATE INCORRECT'],correct:[0],explanation:'PRIVATE EXPLANATION'}]};
+for(const r of [summary,quiz]){const f=learningFile(r,'members',summary);assert.ok(f.path.endsWith('.html'));assert.match(f.content,/visibility: members/);assert.match(f.content,/learning_version: 4/);assert.match(f.content,/notification_policy: manual/);assert.ok(!f.content.includes('PRIVATE'));assert.deepEqual(f,learningFile(r,'members',summary));assert.throws(()=>learningFile({...r,state:'draft'},'members',summary));}
+assert.match(learningFile(summary,'public').content,/&lt;script&gt;&#123;&#123;/);assert.match(learningFile(quiz,'public',summary).content,/<strong>PRIVATE CORRECT<\/strong>/);
+let refs=0,patches=0;const calls=[];const send=async(url,options)=>{const p=new URL(url).pathname,c=options.body&&JSON.parse(options.body);calls.push([p,c]);let data;if(p.endsWith('/git/ref/heads/master'))data={object:{sha:'head'+(++refs)}};else if(p.includes('/git/commits/head'))data={tree:{sha:'base'}};else if(p.includes('/contents/'))return new Response('{}',{status:404});else if(p.endsWith('/git/trees'))data={sha:'next'};else if(p.endsWith('/git/commits'))data={sha:'commit'+refs};else if(p.endsWith('/git/refs/heads/master')){assert.equal(c.force,false);if(++patches===1)return new Response('{}',{status:422});data={};}else throw Error(p);return Response.json(data);};
+assert.equal(await commitLearningFiles([learningFile(summary,'members')],{token:()=> 'fake',send}),'commit2');assert.equal(refs,2);assert.equal(patches,2);
+await assert.rejects(commitLearningFiles([learningFile(summary,'members')],{token:()=> 'fake',send:async(url)=>url.includes('/contents/')?Response.json({content:Buffer.from('---\ntitle: Existing publication\n---').toString('base64')}):url.includes('/git/ref/')?Response.json({object:{sha:'head'}}):Response.json({tree:{sha:'base'}})}),/different publication/);
+console.log('PASS: protected HTML bodies, established layouts, dates/categories/version, escaped public content, silent publication and conflict-safe GitHub commits.');
+import {generatedMemberReadings} from './members/functions/reading-activity.mjs';
+const memberFile=learningFile(summary,'members');const generated={...summary,filePublished:true,fileUrl:memberFile.url};
+const fake={collection:()=>({where:()=>({get:async()=>({docs:[{id:summary.id,data:()=>generated}]})})}),doc:()=>({get:async()=>({data:()=>({videos:[{id:summary.videoId,visibility:'members'}]})})})};
+assert.equal((await generatedMemberReadings(fake))[0].url,memberFile.url);
+generated.filePublished=false;assert.deepEqual(await generatedMemberReadings(fake),[]);generated.filePublished=true;
+fake.doc=()=>({get:async()=>({data:()=>({videos:[]})})});assert.deepEqual(await generatedMemberReadings(fake),[]);
+console.log('PASS: generated member reading metadata follows current access and verified publication.');

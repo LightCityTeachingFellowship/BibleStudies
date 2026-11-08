@@ -1,5 +1,5 @@
 import {createHash,randomUUID} from 'node:crypto';
-import {publishedReadingCatalog} from './reading-activity.mjs';
+import {publishedReadingCatalog,generatedMemberReadings} from './reading-activity.mjs';
 import {accessFor} from './learning-core.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const validVideo=id=>typeof id==='string'&&/^[\w-]{11}$/.test(id);
@@ -32,7 +32,7 @@ export function createPersonalHub({auth,db,fail,privateCatalog=[],catalog=publis
    }
   }
   const readings=new Map(await catalog());
-  if(person.member)for(const r of privateCatalog){try{const u=new URL(r.url,'https://lightcityfellowship.com');if(u.origin!=='https://lightcityfellowship.com'||/%2f|%5c/i.test(u.pathname))continue;readings.set(hash(decodeURI(u.pathname).normalize('NFC')),r);}catch{}}
+  if(person.member)for(const r of [...privateCatalog,...await generatedMemberReadings(db)]){try{const u=new URL(r.url,'https://lightcityfellowship.com');if(u.origin!=='https://lightcityfellowship.com'||/%2f|%5c/i.test(u.pathname))continue;readings.set(hash(decodeURI(u.pathname).normalize('NFC')),r);}catch{}}
   for(const [id,r]of readings){
    if(!validReading(id)||!['Article','Summary'].includes(r.kind))continue;
    const u=new URL(r.url,'https://lightcityfellowship.com');if(u.origin!=='https://lightcityfellowship.com'||/%2f|%5c/i.test(u.pathname))continue;

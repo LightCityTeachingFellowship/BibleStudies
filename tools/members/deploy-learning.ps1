@@ -4,7 +4,7 @@ $previousDiscoveryTimeout = $env:FUNCTIONS_DISCOVERY_TIMEOUT
 Push-Location $PSScriptRoot
 try {
     $env:FUNCTIONS_DISCOVERY_TIMEOUT = '60'
-    $targets = @('getChurchLearning','manageChurchLearning','manageMyChurchQuiz','getChurchQuizLeaderboard','changeChurchVideoPrivacy','releaseChurchLearning','notifyChurchLearning','getChurchAdminDashboard','getMyNotificationInbox','updateMyNotificationInbox')
+    $targets = @('getChurchLearning','manageChurchLearning','manageMyChurchQuiz','getChurchQuizLeaderboard','changeChurchVideoPrivacy','releaseChurchLearning','notifyChurchLearning','getChurchAdminDashboard','getMyNotificationInbox','updateMyNotificationInbox','getMyReadingActivity','updateMyReadingActivity','getMyStudyCollections','updateMyStudyCollections')
     if ($IncludeAI) { $targets += @('manageChurchLearningAI','prepareChurchLearning') }
     $selection = ($targets | ForEach-Object { 'functions:lightcity-members:' + $_ }) -join ','
     & firebase deploy --only $selection --project perceptive-zoo-424115-j6 --force

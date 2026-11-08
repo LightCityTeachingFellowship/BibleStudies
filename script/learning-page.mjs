@@ -12,6 +12,7 @@ async function load(){
  try{
   await api()?.ready;
   const {resource:r}=await api().learning({id,...(preview?{preview:true}:{})});if(ticket!==epoch)return;
+  if(!preview&&r.url&&!new URL(r.url,location.origin).search&&new URL(r.url,location.origin).pathname!==location.pathname){location.replace(r.url);return;}
   if(r.kind==='Quiz'){location.replace('/TeachingQuiz/?id='+encodeURIComponent(id)+(preview?'&preview=1':''));return;}
   if(r.kind!=='Summary')throw Error('This summary is not available.');
   status.textContent=preview?'Private preview · not published · no notifications.':'';

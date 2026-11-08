@@ -26,6 +26,7 @@ for path in sorted(ROOT.glob('QuizQuestions-*/*.html')):
     source=path.read_text(encoding='utf-8-sig')
     front=re.match(r'---\s*\n(.*?)\n---\s*\n',source,re.S)
     if not front or not re.search(r'layout:\s*QandA-TEMPLATE2?\s*$',front[1],re.M): continue
+    if re.search(r'^learning_resource_id:',front[1],re.M): continue
     parser=Parser(); parser.feed(source[front.end():]); ol=parser.root.find('ol')
     if not ol: raise ValueError('Missing questions: '+str(path))
     questions=[]

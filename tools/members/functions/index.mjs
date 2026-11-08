@@ -1,5 +1,6 @@
 import {createAudioArchive} from './audio-archive.mjs';
 import {createLearning} from './learning.mjs';
+import {syncLearningFiles} from './learning-files.mjs';
 import {createLearningAI} from './learning-ai.mjs';
 import {createLearningMedia} from './learning-media.mjs';
 import {createVideoPrivacy} from './video-privacy.mjs';
@@ -84,6 +85,7 @@ export const getMyNotificationInbox=onCall(options,personalHub.notifications);
 export const updateMyNotificationInbox=onCall(options,personalHub.updateNotifications);
 
 const adminEmails = defineString('CHURCH_ADMIN_EMAILS', { default: 'lightcityteachingfellowship@gmail.com' });
+const studioGitHubToken=defineSecret('STUDIO_GITHUB_TOKEN');
 const learning=createLearning({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),legacy:JSON.parse(readFileSync(new URL('./quiz-catalog.json',import.meta.url),'utf8'))});
 const learningKey=defineSecret('LEARNING_OPENAI_API_KEY');
 const learningAI=createLearningAI({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),apiKey:()=>learningKey.value(),recordings:()=>audio.catalog.registered(),transcode:createLearningMedia(audio.sign)});
@@ -94,7 +96,7 @@ export const manageChurchLearning=onCall(options,learning.manage);
 export const manageMyChurchQuiz=onCall(options,learning.activity);
 export const getChurchQuizLeaderboard=onCall(options,learning.leaderboard);
 export const changeChurchVideoPrivacy=onCall(options,createVideoPrivacy({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
-export const releaseChurchLearning=onSchedule({schedule:'every 1 minutes',region:'us-central1',maxInstances:1,timeoutSeconds:120},learning.release);
+export const releaseChurchLearning=onSchedule({schedule:'every 1 minutes',region:'us-central1',maxInstances:1,timeoutSeconds:180,secrets:[studioGitHubToken]},async()=>{const result=await learning.release();await syncLearningFiles({db:getFirestore(),token:()=>studioGitHubToken.value()});return result;});
 export const notifyChurchLearning=onDocumentWritten({document:'churchVideoActivity/learning/resources/{id}',region:'us-central1',retry:true,maxInstances:1,timeoutSeconds:120},event=>notifyLearning({id:event.params.id,db:getFirestore(),auth:getAuth(),messaging:getMessaging()}));
 export const connectChurchStudioDesktop=onCall({...options,timeoutSeconds:60},createDesktopLogin({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()}));
 const streamStatusKey=defineSecret('YOUTUBE_STREAM_STATUS_KEY');
@@ -105,7 +107,7 @@ export const getChurchAdminUsers=onCall(options,createAdminUsers({auth:getAuth()
 const serviceSchedule=createServiceSchedule({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()});
 export const getChurchServiceSchedule=onRequest({...options,cors:true},async(req,res)=>{res.set('Cache-Control','no-store');if(req.method!=='GET'){res.status(405).json({error:'Use GET'});return;}try{res.json(await serviceSchedule.publicSchedule());}catch{res.status(503).json({error:'Service schedule unavailable'});}});
 export const manageChurchServiceSchedule=onCall(options,request=>serviceSchedule.manage(request));
-const studioGitHubToken=defineSecret('STUDIO_GITHUB_TOKEN');
+
 const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
 const legacyStudioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});
 const studioPublishing=createDirectPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),live,recordings:()=>audio.catalog.registered()});

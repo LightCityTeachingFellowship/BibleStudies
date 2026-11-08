@@ -1,11 +1,13 @@
 // Generated questions use the same board, feedback, results, fonts and themes as existing quizzes.
-const api=()=>globalThis.LightCityMembers,params=new URL(location.href).searchParams,id=params.get('id'),preview=params.get('preview')==='1';
-const status=document.getElementById('classic-quiz-status'),content=document.getElementById('classic-quiz-content');
+const api=()=>globalThis.LightCityMembers,params=new URL(location.href).searchParams,id=params.get('id')||document.querySelector('[data-file-quiz-id]')?.dataset.fileQuizId,preview=params.get('preview')==='1';
+const status=document.getElementById('classic-quiz-status'),content=document.getElementById('classic-quiz-content')||document.getElementById('QandA-section');
+content.hidden=true;document.querySelector('.loader-bg-bibleQuiz')?.remove();
 const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
 const script=src=>new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=()=>reject(Error('Quiz controls could not load. Refresh to retry.'));document.body.append(s);});
 try{
  await api()?.ready;if(!api()?.learning)throw Error('The app could not connect. Refresh to retry.');
  const {resource:r}=await api().learning({id,format:'classic',...(preview?{preview:true}:{})});
+ if(!preview&&r.url&&!new URL(r.url,location.origin).search&&new URL(r.url,location.origin).pathname!==location.pathname){location.replace(r.url);throw Error('Opening the quiz…');}
  if(r.kind!=='Quiz'||!r.questions?.length)throw Error('This quiz is not available.');
  window.LightCityClassicQuiz={...r,preview};document.title=r.title+' | LightCity';
  const ol=el('ol');
