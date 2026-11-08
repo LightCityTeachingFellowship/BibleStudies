@@ -20,17 +20,7 @@ export function selectLocalFile({videoId,title,files,mapping={},eligibleIds=[]})
  let matches=files.filter(f=>{const stem=basename(f.name,extname(f.name));return stem===videoId||stem.endsWith('['+videoId+']')||stem.endsWith('('+videoId+')');});
  if(matches.length===1)return {file:matches[0],method:'video ID'};if(matches.length>1)return {reason:'Several queue files match this ID. Keep only the final uploaded version.'};
  if(title&&title!==videoId){matches=files.filter(f=>normalize(basename(f.name,extname(f.name)))===normalize(title));if(matches.length===1)return {file:matches[0],method:'exact normalized title'};if(matches.length>1)return {reason:'Several queue files match this title. Keep only the final uploaded version.'};}
- if(files.length===1&&eligibleIds.length===1&&eligibleIds[0]===videoId){
-  // A missing replacement can leave an unrelated live broadcast as the only
-  // pending ID. Do not consume yesterday's recording for today's broadcast.
-  const fileDate=files[0].name.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T_]|$)/);
-  const titleDate=String(title||'').match(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[ ,]+(\d{1,2})[ ,]+(20\d{2})\b/i);
-  if(fileDate&&titleDate){
-   const month=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(titleDate[1].toLowerCase())+1;
-   if(fileDate[1]!==titleDate[3]||Number(fileDate[2])!==month||Number(fileDate[3])!==Number(titleDate[2]))return {reason:'The recording date does not match this video. Include its correct video ID in the filename before processing.'};
-  }
-  return {file:files[0],method:'single final file for single pending video'};
- }
+
  return {reason:files.length?'Cannot match the final file unambiguously. Include the video ID in its filename.':'Add the final uploaded video to Audio Queue.'};
 }
 export async function prepareLocal(videoId,{library,state,config,send=fetch,now=Date.now,work=LOCAL_WORK}={}){

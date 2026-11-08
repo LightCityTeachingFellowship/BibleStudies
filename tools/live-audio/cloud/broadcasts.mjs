@@ -1,4 +1,5 @@
 import { validSession, sameSecret, parsePlaylist } from './auth.mjs';
+function playlistDuration(text){parsePlaylist(text);return [...text.matchAll(/#EXTINF:([\d.]+),/g)].reduce((sum,m)=>sum+Number(m[1]),0);}
 export const REPLAY_MS = 7 * 86400000;
 export function broadcast(value, now = Date.now(), stored = false) {
   if (!value || !/^[\w-]{11}$/.test(value.videoId || '') || !validSession(value.session) || typeof value.title !== 'string' || !value.title.trim() || value.title.length > 300 || !['public', 'members'].includes(value.visibility) || !Number.isFinite(value.offsetSeconds) || Math.abs(value.offsetSeconds) > 57600 || typeof value.active !== 'boolean' || !Number.isSafeInteger(value.expiresAt) || value.expiresAt <= 0 || (!stored && (value.expiresAt <= now || value.expiresAt > now + 16 * 3600000))) throw Error('Invalid broadcast');
@@ -45,7 +46,9 @@ export async function broadcastRoute(request, env, now = Date.now()) {
       if (replayUntil > now && object.customMetadata?.recording) {
         const item = broadcast(JSON.parse(object.customMetadata.recording), now, true);
         if (item.active || replayUntil > now + REPLAY_MS) continue;
-        recordings.push({ ...item, replay: true, expiresAt: replayUntil });
+        const manifest=await env.AUDIO.get(`live-test/${item.session}/audio.m3u8`);
+        const durationSeconds=manifest?playlistDuration(await manifest.text()):undefined;
+        recordings.push({ ...item, replay: true, expiresAt: replayUntil, durationSeconds });
         continue;
       }
       const entry = await env.AUDIO.get(object.key);
@@ -54,9 +57,10 @@ export async function broadcastRoute(request, env, now = Date.now()) {
       const playlist = await env.AUDIO.get(`live-test/${item.session}/audio.m3u8`);
       const uploaded = new Date(playlist?.uploaded).getTime();
       if (!playlist || !Number.isFinite(uploaded)) continue;
-      if (parsePlaylist(await playlist.text()).ended) {
+      const manifestText=await playlist.text();
+      if (parsePlaylist(manifestText).ended) {
         // Bridge the few seconds between the final playlist upload and close registration.
-        if (uploaded + REPLAY_MS > now) recordings.push({ ...item, active: false, replay: true, expiresAt: uploaded + REPLAY_MS });
+        if (uploaded + REPLAY_MS > now) recordings.push({ ...item, active: false, replay: true, durationSeconds:playlistDuration(manifestText), expiresAt: uploaded + REPLAY_MS });
       } else if (now - uploaded <= 90000) recordings.push(item);
     } catch { /* Expired, stale, and malformed sessions are unavailable. */ }
   }

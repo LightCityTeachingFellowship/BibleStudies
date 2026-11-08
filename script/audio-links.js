@@ -98,7 +98,7 @@
       }
       const playing=viewport.classList?.contains('lc-audio-mode')||!!viewport.querySelector('iframe')||viewport.querySelector('lite-youtube')?.classList?.contains('lyt-activated');
       if (badge) badge.hidden = !live || !!playing;
-      globalThis.LightCityDurations?.set(viewport,recordedAvailable.get(id)?.durationSeconds,{live});
+      globalThis.LightCityDurations?.set(viewport,recordedAvailable.get(id)?.durationSeconds ?? liveAvailable.get(id)?.durationSeconds,{live});
     }
     function render() {
       for (const [viewport, controller] of mounted) {

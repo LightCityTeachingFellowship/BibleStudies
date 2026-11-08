@@ -7,11 +7,11 @@ const id='abcdefghijk',other='ABCDEFGHIJK';
 const files=[{path:'/queue/Prayer.mp4',name:'Prayer.mp4'},{path:'/queue/Other.mp4',name:'Other.mp4'}];
 assert.equal(selectLocalFile({videoId:id,title:'Prayer',files}).file,files[0]);
 assert.ok(selectLocalFile({videoId:id,files,eligibleIds:[id]}).reason);
-assert.equal(selectLocalFile({videoId:id,files:files.slice(0,1),eligibleIds:[id]}).file,files[0]);
+assert.ok(selectLocalFile({videoId:id,files:files.slice(0,1),eligibleIds:[id]}).reason,'an unrelated sole file must never be consumed');
 assert.ok(selectLocalFile({videoId:id,files:files.slice(0,1),eligibleIds:[id,other]}).reason);
 const dated=[{name:'2026-10-31 16-43-33(1).mp4',path:'/queue/2026-10-31 16-43-33(1).mp4'}];
-assert.match(selectLocalFile({videoId:id,title:'Day 35 || Sun, Nov 01, 2026.',files:dated,eligibleIds:[id]}).reason,/date does not match/);
-assert.equal(selectLocalFile({videoId:id,title:'Day 34 || Sat, Oct 31, 2026.',files:dated,eligibleIds:[id]}).file,dated[0]);
+assert.ok(selectLocalFile({videoId:id,title:'Day 35 || Sun, Nov 01, 2026.',files:dated,eligibleIds:[id]}).reason);
+assert.ok(selectLocalFile({videoId:id,title:'Day 34 || Sat, Oct 31, 2026.',files:dated,eligibleIds:[id]}).reason,'matching dates alone cannot identify a split teaching recording');
 assert.equal(selectLocalFile({videoId:id,title:'Day 35 || Sun, Nov 01, 2026.',files:dated,mapping:{[id]:dated[0].name},eligibleIds:[id]}).file,dated[0],'an explicit confirmed mapping remains authoritative');
 const root=await mkdtemp(join(ROOT,'tools/audio-library/work/lc-local-source-test-')),input=join(root,'Audio Queue'),work=join(root,'work'),path=join(input,'Prayer.mp4');
 try{

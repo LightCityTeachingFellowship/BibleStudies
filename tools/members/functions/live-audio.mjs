@@ -36,7 +36,7 @@ export function createLiveAudio(config, { send = fetch, now = Date.now, cacheMs 
       const { origin, secret } = settings();
       const expires = Math.floor(Math.min(now() + 3600000, item.expiresAt) / 1000);
       const signature = createHmac('sha256', secret).update(`lightcity-live-test:v1:${item.session}:${expires}`).digest('hex');
-      return { kind: 'live', replay: item.replay === true, videoId: item.videoId, title: item.title, session: item.session, offsetSeconds: item.offsetSeconds, url: `${origin}/live/${item.session}/audio.m3u8?token=${expires}.${signature}`, expiresAt: expires * 1000 };
+      return { durationSeconds:item.replay===true&&Number.isFinite(item.durationSeconds)&&item.durationSeconds>0&&item.durationSeconds<=57600?item.durationSeconds:undefined, kind: 'live', replay: item.replay === true, videoId: item.videoId, title: item.title, session: item.session, offsetSeconds: item.offsetSeconds, url: `${origin}/live/${item.session}/audio.m3u8?token=${expires}.${signature}`, expiresAt: expires * 1000 };
     }
   };
 }
