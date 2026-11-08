@@ -1,12 +1,44 @@
 ---
 layout: null
 permalink: /StudyResource/
-title: Study resource
+title: Summary
 ---
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Study | LightCity</title>
-{% include pwa-head.html %}
-<link rel="stylesheet" href="{{ '/style/root.css' | relative_url }}"><link rel="stylesheet" href="{{ '/style/headerANDfooter.css' | relative_url }}"><link rel="stylesheet" href="{{ '/style/lightcity-02.css' | relative_url }}"><link rel="stylesheet" href="{{ '/style/darkMODE.css' | relative_url }}"><link id="theme-stylesheet" rel="stylesheet" href="{{ '/style/lightMODE.css' | relative_url }}">
-{% include browse-head.html %}
-<script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script><script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}"></script>
-<link rel="stylesheet" href="{{ '/style/learning.css' | relative_url }}?v=1"><script type="module" src="{{ '/script/learning-page.mjs' | relative_url }}?v=classic-quiz-1"></script></head>
-<body class="fonts app-home site-browse"><main class="lc-learning-page"><p role="status" id="learning-status">Loading this resource…</p><div id="learning-resource"></div><noscript>Enable JavaScript to open this resource.</noscript></main>{% include homeHeader-pages.html %}{% include site-short-footer.html %}</body></html>
+{% include summaryHead.html %}
+<script type="module" src="{{ '/script/learning-page.mjs' | relative_url }}?v=summary-reader-1"></script>
+{% include summaryHeader.html %}
+{% include theme-toggle.html %}
+<p id="learning-status" class="reading-column" role="status">Loading this summary…</p>
+<details class="lc-study-toolbar" open>
+  <summary class="lc-study-toolbar-heading"><span>Reading tools</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>
+  <div class="lc-study-toolbar-body"><div class="lc-study-toolbar-actions">
+    <a href="{{ '/MyLibrary/' | relative_url }}">My study library</a>
+    <button type="button" id="summary-copy-link">Copy link</button>
+  </div></div>
+</details>
+{% include reading-settings.html %}
+<article data-study-body class="reading-column homeResources-grid-containter bg-color leftRight-space-16 bottomBorderRadius-0">
+  <small id="archive-date" class="archive-date"></small>
+  <main id="learning-resource" aria-busy="true"></main>
+</article>
+<div id="summary-navigation" class="reading-column homeResources-grid-containter bg-color leftRight-space-16 bottom-space-20 topBorderRadius-0" hidden>
+  <div class="categoryNavigation leftRight-space-16"><span>Category:</span><span class="all-links" id="summary-categories"></span></div>
+  <nav class="PageNavigation leftRight-space-16 top-space-20" aria-label="Summary navigation"><a href="{{ '/teaching-summary/' | relative_url }}">All summaries →</a></nav>
+</div>
+<noscript>Enable JavaScript to open this summary.</noscript>
+{% include contact-section-summary.html %}
+<script id="summary-category-links" type="application/json">[{% assign sc_comma = '' %}{% for sc_post in site.posts %}{% for sc_category in sc_post.categories %}{% if sc_category contains 'HomePage-' %}{{ sc_comma }}{"name":{{ sc_category | remove_first: 'HomePage-' | jsonify }},"url":{{ sc_post.url | relative_url | jsonify }}}{% assign sc_comma = ',' %}{% endif %}{% endfor %}{% endfor %}]</script>
+<script defer src="{{ '/script/victorScripts/lightANDdarkmode.js' | relative_url }}"></script>
+<script defer src="{{ '/script/victorScripts/dropDownMenu.js' | relative_url }}?v=themed-nav-2"></script>
+<script defer src="{{ '/script/victorScripts/preload.js' | relative_url }}"></script>
+<script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=archive-search-1"></script>
+<script defer src="{{ '/script/victorScripts/recentposts.js' | relative_url }}"></script>
+<script defer src="{{ '/data/LSJ Full.js' | relative_url }}"></script>
+<script defer src="{{ '/data/strongsObjectRoots.js' | relative_url }}"></script>
+<script defer src="{{ '/data/strongsObjectWithFamilies2.js' | relative_url }}"></script>
+<script defer src="{{ '/data/morphParse_GreeknHebrew.js' | relative_url }}"></script>
+<script defer src="{{ '/data/bibleApp_reKeyedCrossReference.js' | relative_url }}"></script>
+<script defer src="{{ '/script/reftaggerLightCity.js' | relative_url }}"></script>
+<script defer src="{{ '/script/bibleApp_transliteration.js' | relative_url }}"></script>
+<script defer src="{{ '/script/TSK.js' | relative_url }}"></script>
+<script defer src="{{ '/script/interact.min.js' | relative_url }}"></script>
+</body></html>

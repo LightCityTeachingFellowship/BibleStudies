@@ -1,21 +1,29 @@
-import {createQuizSession} from './quiz-session.mjs';
-const api=()=>globalThis.LightCityMembers,root=document.getElementById('learning-resource'),status=document.getElementById('learning-status'),id=new URL(location.href).searchParams.get('id');
-const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;},button=(text,fn)=>{const n=el('button',text);n.type='button';n.onclick=fn;return n;};
-const preview=new URL(location.href).searchParams.get('preview')==='1';
-let session,epoch=0;
-async function load(){const ticket=++epoch;session?.dispose();root.replaceChildren();status.textContent='Loading this resource…';await api()?.ready;
- try{const {resource:r}=await api().learning({id,...(preview?{preview:true}:{})});if(ticket!==epoch)return;if(r.kind==='Quiz'){location.replace('/TeachingQuiz/?id='+encodeURIComponent(id)+(preview?'&preview=1':''));return;}status.textContent=preview?'Private preview · not published · no notifications. Quiz attempts here do not affect scores.':'';root.append(el('p',r.kind),el('h1',r.title));document.title=r.title+' | LightCity';if(r.teachingDate)root.append(el('p','Teaching date: '+r.teachingDate));if(r.categories?.length)root.append(el('p',r.categories.join(' · ')));
- const tools=el('div');tools.className='lc-learning-tools';const library=el('a','My study library');library.href='/MyLibrary/';tools.append(library,button('Copy link',async()=>{try{await navigator.clipboard.writeText(location.href);status.textContent='Link copied.';}catch{status.textContent='Copy the address from your browser.';}}));root.append(tools);
- if(r.kind==='Summary'){const article=el('article');for(const s of r.sections){const section=el('section'),ul=el('ul');section.append(el('h2',s.heading));for(const p of s.points)ul.append(el('li',p));section.append(ul);article.append(section);}root.append(article);return;}
- const owner=!preview&&api().user&&!api().user.isAnonymous?api().user.uid:null;
- const sessionApi=preview?()=>({user:api().user,learning:data=>api().learning({...data,id,preview:true})}):api;
- session=createQuizSession({id:preview?'preview-'+id:id,version:r.version,count:r.questions.length,api:sessionApi,storage:localStorage,owner,changed:(_,error)=>{if(error)status.textContent='Progress is saved on this device. Account sync failed: '+error.message;}});await session.load();if(ticket!==epoch)return;
- const save=button(session.state.saved?'Remove saved quiz':'Save quiz for later',async()=>{try{await session.save(!session.state.saved);save.textContent=session.state.saved?'Remove saved quiz':'Save quiz for later';}catch(e){status.textContent=e.message;}});if(!preview)tools.append(save);tools.append(button('Start a new attempt',async()=>{if(!confirm('Start this quiz again? Your completed scores will remain in your history.'))return;await session.restart();draw();}));
- const area=el('section');root.append(area);function draw(){area.replaceChildren();const s=session.state;
-  if(s.completed){area.append(el('h2','Your score: '+s.result.correct+'/'+s.result.total+' · '+s.result.percentage+'%'));for(const [i,row]of s.result.review.entries()){const n=el('section');n.className='lc-learning-review';n.append(el('h3',(i+1)+'. '+r.questions[i].prompt),el('p',row.correct?'Correct':'Review this answer'),el('p','Correct answer: '+row.correctAnswers.map(j=>r.questions[i].options[j]).join('; ')));if(row.explanation)n.append(el('p',row.explanation));if(row.reference)n.append(el('p',row.reference));area.append(n);}return;}
-  const q=r.questions[s.question],form=el('form'),progress=el('progress');progress.max=r.questions.length;progress.value=s.answers.filter(a=>a.length).length;area.append(progress,el('p','Question '+(s.question+1)+' of '+r.questions.length),el('h2',q.prompt));
-  const options=el('div');options.className='lc-quiz-options';q.options.forEach((text,index)=>{const label=el('label'),input=el('input');input.type=q.multiple?'checkbox':'radio';input.name='answer';input.value=index;input.checked=s.answers[s.question].includes(index);input.onchange=()=>{const answers=structuredClone(session.state.answers);answers[s.question]=[...options.querySelectorAll('input:checked')].map(n=>Number(n.value));session.update(answers,s.question);};label.append(input,document.createTextNode(text));options.append(label);});form.append(options);if(q.multiple)form.append(el('p','Select all answers that apply.'));if(q.hint){const hint=el('details');hint.append(el('summary','Hint'),el('p',q.hint));form.append(hint);}const nav=el('div');nav.className='lc-learning-tools';if(s.question>0)nav.append(button('Previous',()=>{session.update(session.state.answers,s.question-1);draw();}));if(s.question<r.questions.length-1)nav.append(button('Next',()=>{session.update(session.state.answers,s.question+1);draw();}));else{const submit=button('Finish quiz',async()=>{submit.disabled=true;try{await session.submit();draw();}catch(e){status.textContent=e.message;submit.disabled=false;}});nav.append(submit);}form.append(nav);form.onsubmit=e=>e.preventDefault();area.append(form);
- }draw();
- }catch(e){if(ticket===epoch){status.textContent=e.message||'This resource could not load.';status.append(button('Retry',()=>void load()));}}
+const api=()=>globalThis.LightCityMembers;
+const root=document.getElementById('learning-resource'),status=document.getElementById('learning-status');
+const params=new URL(location.href).searchParams,id=params.get('id'),preview=params.get('preview')==='1';
+const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
+let epoch=0;const dateNode=document.getElementById('archive-date');
+function references(){if(typeof globalThis.replaceAllStrongsAndRefs==='function')globalThis.replaceAllStrongsAndRefs(root);}
+window.addEventListener('load',references,{once:true});
+document.getElementById('summary-copy-link').onclick=async()=>{try{const url=new URL(location.href);url.searchParams.delete('continue');await navigator.clipboard.writeText(url.href);status.textContent='Link copied.';}catch{status.textContent='Copy the address from your browser.';}};
+async function load(){
+ const ticket=++epoch;root.replaceChildren();root.setAttribute('aria-busy','true');status.textContent='Loading this summary…';
+ dateNode.textContent='';document.getElementById('summary-navigation').hidden=true;
+ try{
+  await api()?.ready;
+  const {resource:r}=await api().learning({id,...(preview?{preview:true}:{})});if(ticket!==epoch)return;
+  if(r.kind==='Quiz'){location.replace('/TeachingQuiz/?id='+encodeURIComponent(id)+(preview?'&preview=1':''));return;}
+  if(r.kind!=='Summary')throw Error('This summary is not available.');
+  status.textContent=preview?'Private preview · not published · no notifications.':'';
+  document.title=r.title+' | LightCity';
+  const header=el('header'),border=el('div');border.className='leftBorderForArticleTitle';header.append(border,dateNode,el('h1',r.title));root.append(header);
+  for(const s of r.sections||[]){root.append(el('h2',s.heading));const list=el('ul');for(const p of s.points)list.append(el('li',p));root.append(list);}
+  if(r.teachingDate){const date=new Date(r.teachingDate+'T12:00:00Z');if(Number.isFinite(date.getTime()))dateNode.textContent=new Intl.DateTimeFormat('en-GB',{weekday:'short',month:'short',day:'2-digit',year:'2-digit',timeZone:'Africa/Lagos'}).format(date)+'.';}
+  let links=[];try{links=JSON.parse(document.getElementById('summary-category-links').textContent);}catch{}
+  const cats=document.getElementById('summary-categories');cats.replaceChildren();
+  for(const category of r.categories||[]){const match=links.find(link=>link.name===category);const n=el(match?'a':'span',category);n.className='cat-link ArtSumCatName';if(match)n.href=match.url;cats.append(n);}
+  document.getElementById('summary-navigation').hidden=false;references();
+ }catch(e){if(ticket!==epoch)return;status.textContent=e.message||'This summary could not load.';const retry=el('button','Retry');retry.type='button';retry.onclick=()=>void load();status.append(retry);}
+ finally{if(ticket===epoch)root.setAttribute('aria-busy','false');}
 }
-window.addEventListener('lightcity-members-changed',()=>void load());window.addEventListener('pagehide',()=>void session?.flush().catch(()=>{}));document.addEventListener('visibilitychange',()=>{if(document.hidden)void session?.flush().catch(()=>{});});void load();
+window.addEventListener('lightcity-members-changed',()=>void load());void load();

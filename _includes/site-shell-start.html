@@ -11,7 +11,7 @@ html.lc-shell-loading body:not(.lc-shell-ready)>.lc-shell-rail {visibility:hidde
 <script>
 (() => {
   const root=document.documentElement;
-  root.dataset.shellLayout={% if page.layout contains 'articleTEMPLATE' or page.layout contains 'summaryTEMPLATE' or page.url == '/Watch/' %}'drawer'{% else %}'rail'{% endif %};
+  root.dataset.shellLayout={% if page.layout contains 'articleTEMPLATE' or page.layout contains 'summaryTEMPLATE' or page.url == '/Watch/' or page.url == '/StudyResource/' %}'drawer'{% else %}'rail'{% endif %};
   {% if page.url == '/Watch/' %}root.setAttribute('data-shell-watch','');{% endif %}
   root.classList.add('lc-shell-loading');
   const finish=()=>{root.classList.remove('lc-shell-loading');root.removeAttribute('data-shell-layout');root.removeAttribute('data-shell-watch');};

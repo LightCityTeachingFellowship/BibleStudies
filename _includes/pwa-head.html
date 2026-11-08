@@ -73,7 +73,7 @@ setTimeout(() => {
 <link rel="stylesheet" href="{{ '/style/site-shell.css' | relative_url }}?v=loading-1">
 <script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=settings-notifications-1" data-lightcity-shell></script>
 {% endunless %}
-{% if page.layout contains 'articleTEMPLATE' or page.layout contains 'summaryTEMPLATE' %}
+{% if page.layout contains 'articleTEMPLATE' or page.layout contains 'summaryTEMPLATE' or page.url == '/StudyResource/' %}
 <link rel="stylesheet" href="{{ '/style/reading-settings.css' | relative_url }}?v=3">
 <script type="module" src="{{ '/script/reading-settings.mjs' | relative_url }}?v=2"></script>
 {% endif %}
