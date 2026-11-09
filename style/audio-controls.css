@@ -8,9 +8,10 @@
 .lc-audio-controls-actions,.lc-audio-controls-utility{display:flex;align-items:center;justify-content:center;gap:24px}
 .lc-audio-controls-actions{justify-content:space-between;max-width:600px;margin:8px auto}
 .lc-inline-audio .lc-audio-controls button{font:inherit;font-size:12px;color:inherit;background:transparent;border:0;border-radius:50%;padding:8px;min-width:40px;min-height:40px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
-.lc-audio-controls button svg{width:26px;height:26px;fill:currentColor}
-.lc-audio-controls button.lc-audio-play{width:58px;height:58px;background:#ffffff20}
-.lc-audio-controls button.lc-audio-play svg{width:36px;height:36px}
+.lc-audio-controls button svg{width:40px;height:40px;fill:currentColor}
+.lc-audio-controls .lc-audio-controls-utility button svg{width:26px;height:26px}
+.lc-audio-controls button.lc-audio-play{width:50px;height:50px;background:#ffffff20}
+.lc-audio-controls button.lc-audio-play svg{width:50px;height:50px;margin-right:4px;}
 .lc-audio-controls button:hover{background:#ffffff26}
 .lc-audio-controls-time{display:flex;justify-content:space-between;gap:12px;font:13px/1.5 system-ui,sans-serif;font-variant-numeric:tabular-nums;text-align:left;margin:2px 0 4px}
 .lc-inline-audio .lc-audio-controls input[type=range]{display:block;width:100%;min-width:0;max-width:100%;height:30px;accent-color:#ffbf00;margin:0;cursor:pointer;background:transparent}
@@ -59,9 +60,9 @@
 .lc-audio-artwork .lc-inline-kind{grid-column:2;align-self:end;font-size:10px!important;letter-spacing:2.6px}
 .lc-audio-artwork .lc-inline-title{grid-column:2;align-self:start;text-align:left;font-size:clamp(16px,2vw,27px)!important;line-height:1.3!important;letter-spacing:-.02em;-webkit-line-clamp:3}
 .lc-inline-audio .lc-audio-controls{grid-column:1/-1;background:linear-gradient(180deg,#ffffff09,#ffffff04);border:1px solid #ffffff14;border-radius:18px;padding:12px 20px;margin-top:8px;box-shadow:0 8px 24px #0002}
-.lc-audio-controls-actions{max-width:320px;gap:30px;margin:6px auto}
+.lc-audio-controls-actions{max-width:250px;gap:30px;margin:6px auto}
 .lc-audio-controls button.lc-audio-play{background:#ffca35;color:#1a2021;box-shadow:0 0 0 5px #ffca3514,0 5px 18px #0004;transition:transform .18s ease,background .18s ease}
-.lc-audio-controls button.lc-audio-play:hover{background:#ffdc72;transform:scale(1.05)}
+.lc-audio-controls button.lc-audio-play:hover{background:#ffdc72;/* transform: scale(1.05) */}
 .lc-audio-controls-time{color:#e5e8e6;font-size:12px;letter-spacing:.03em}
 .lc-audio-controls-utility{color:#c9d0ce}
 .lc-audio-artwork .lc-inline-status{grid-column:1/-1;text-align:center;color:#c1cbc7;font-size:10px!important}
@@ -71,7 +72,7 @@
  .lc-audio-artwork .lc-audio-cover{display:none}
  .lc-audio-artwork .lc-inline-title{grid-column:1/-1;text-align:center;font-size:12px!important;margin:0!important;-webkit-line-clamp:2}
  .lc-inline-audio .lc-audio-controls{padding:4px 10px;margin:0;border-radius:12px}
- .lc-audio-controls-actions{max-width:200px;margin:2px auto;gap:16px}
+ .lc-audio-controls-actions{max-width:130px;margin:2px auto;gap:16px}
  .lc-audio-controls button.lc-audio-play{width:34px;height:34px}
  .lc-audio-controls-time{font-size:10px}
  .lc-audio-artwork select{position:absolute;right:10px;top:8px;font-size:10px}

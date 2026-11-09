@@ -22,7 +22,7 @@
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const config = globalThis.LIGHTCITY_PUSH;
-  const allowInvitations = !document.getElementById('member-page');
+  const allowInvitations = !document.getElementById('member-page') && !document.querySelector('#chooseCat,#QandA-section,#cat-bibleQuiz-inner');
   const canNotify = config?.enabled && 'Notification' in window && 'PushManager' in window && !(ios && !standalone);
   const read = (storage, key) => { try { return storage.getItem(key); } catch { return null; } };
   const write = (storage, key, value) => { try { value == null ? storage.removeItem(key) : storage.setItem(key, value); } catch {} };
@@ -90,8 +90,11 @@
   const settingsStatus = element('p', 'lc-device-status');
   settingsStatus.setAttribute('role', 'status');
   settings.append(summary, disable, settingsStatus);
+  const isQuiz = Boolean(document.querySelector('#chooseCat,#QandA-section,#cat-bibleQuiz-inner,#CorrectedAnswers-section'));
   const quizSettings = document.querySelector('#settingsContent .settingsContentInner');
-  if (quizSettings) {
+  if (isQuiz) {
+    // Quiz screens keep device notification preferences in the main app only.
+  } else if (quizSettings) {
     settings.classList.add('lc-quiz-notifications');
     settings.append(quizEnable);
     settings.append(element('p', 'lc-device-status', 'Applies to all LightCity notifications on this device, not just quizzes.'));
