@@ -672,6 +672,7 @@ button{
     font-size:14px;}
 #playButton, #pauseButton, #playButtonCat, #pauseButtonCat, #playButtonFromResult, #pauseButtonFromResult{ 
     font-size:1.25em!important;
+    background-color:transparent!important;
     padding:0;
     place-self:center;
     cursor:pointer;}
@@ -1013,7 +1014,7 @@ to{ left:0px;}
 .insertedSpan{ 
     grid-template-columns:13% 87%;}
 .insertedSpan::before{
-    margin-left:6px;}
+    /* margin-left:6px;} */
 .QandA-Board>ol>li>ul>li>span>ul{ 
     margin-top:5px;}
 #quizCatName, #confirmButton{ 
