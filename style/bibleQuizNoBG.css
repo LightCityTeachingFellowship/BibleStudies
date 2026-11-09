@@ -1014,7 +1014,7 @@ to{ left:0px;}
 .insertedSpan{ 
     grid-template-columns:13% 87%;}
 .insertedSpan::before{
-    /* margin-left:6px;} */
+    /* margin-left:6px;*/} 
 .QandA-Board>ol>li>ul>li>span>ul{ 
     margin-top:5px;}
 #quizCatName, #confirmButton{ 
