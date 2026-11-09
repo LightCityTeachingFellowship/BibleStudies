@@ -1,5 +1,5 @@
 import {watchPlayback,recordPlaybackEvent} from './playback-health.mjs?v=1';
-import {mountAudioControls} from './audio-controls.mjs?v=studio-art-2';
+import {mountAudioControls} from './audio-controls.mjs?v=studio-controls-3';
 import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition, replayBoundaryTarget } from './media-live-core.mjs?v=replay-feedback-1';
 const node = (tag, className, text) => { const value = document.createElement(tag); if (className) value.className = className; if (text) value.textContent = text; return value; };
 let hlsReady;

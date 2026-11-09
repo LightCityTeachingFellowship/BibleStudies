@@ -79,3 +79,14 @@
  .lc-audio-artwork .lc-audio-controls-utility{gap:8px}
 }
 @media(prefers-reduced-motion:reduce){.lc-audio-controls button.lc-audio-play{transition:none}}
+/* Center transport independently of the utility buttons. */
+.lc-inline-audio .lc-audio-controls-actions{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;justify-items:center;width:min(100%,300px);max-width:300px;margin:8px auto;gap:26px}
+.lc-audio-controls-actions>button{margin:0!important;justify-self:center;display:grid;place-items:center;flex:none}
+.lc-audio-controls-utility{position:relative;display:flex;justify-content:center;align-items:center;gap:14px}
+.lc-inline-audio .lc-audio-controls-utility>button{display:grid;place-items:center;width:38px;height:38px;min-width:38px;padding:7px;border:1px solid #ffffff30;border-radius:50%;background:#ffffff08}
+.lc-audio-volume-panel{position:absolute;z-index:8;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;width:min(250px,90%);padding:12px;border:1px solid #ffffff35;border-radius:14px;background:#252b2e;box-shadow:0 8px 24px #0006}
+.lc-audio-volume-panel[hidden]{display:none!important}
+.lc-inline-audio .lc-audio-controls .lc-audio-volume-panel input[type=range]{width:100%;min-width:0;flex:1}
+.lc-audio-volume-panel>button{flex:none;display:grid;place-items:center;width:32px;min-width:32px;padding:4px}
+.lc-audio-controls .lc-audio-download svg{fill:none}
+@container(max-width:480px){.lc-inline-audio .lc-audio-controls-actions{width:150px;gap:18px;margin:2px auto}.lc-inline-audio .lc-audio-controls-utility>button{width:28px;height:28px;min-width:28px;min-height:28px;padding:4px}.lc-audio-volume-panel{padding:6px;gap:6px;bottom:100%;width:180px}}
