@@ -124,6 +124,14 @@ function decorate(holder,id,title,search=false) {
   const button=saveButton(holder,id,title);
   if(search) {libraryMenu({document,holder,line:holder,save:button,id,title:()=>holder.querySelector('strong')?.textContent||titleFor(id,title)});return;}
   const heading=holder.querySelector?.('.video-title') || holder.querySelector?.('.home-video-title') || (holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-title'):null);
+  // Only library titles navigate; mode buttons and thumbnail players stay inline.
+  if(heading && holder.classList?.contains('video-box')) {
+    heading.setAttribute('role','link');heading.tabIndex=0;
+    heading.classList.add('lc-library-title-link');
+    const openTitle=event=>{event.preventDefault();event.stopPropagation();const url=watchUrl(id,personal.history(id));if(event.ctrlKey||event.metaKey)window.open(url,'_blank','noopener');else location.assign(url);};
+    heading.onclick=openTitle;
+    heading.onkeydown=event=>{if(event.key==='Enter')openTitle(event);};
+  }
   const saveSlot=holder===document.getElementById?.('watch-personal-actions')?document.getElementById('watch-save-slot'):null;
   if(saveSlot) {
     let label=button.querySelector('.lc-save-label');

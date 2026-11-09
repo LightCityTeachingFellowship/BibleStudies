@@ -1,5 +1,5 @@
 import {watchPlayback,playbackDiagnostics,recordPlaybackEvent} from './playback-health.mjs?v=1';
-import {mountAudioControls} from './audio-controls.mjs?v=archive-1';
+import {mountAudioControls} from './audio-controls.mjs?v=studio-art-2';
 import { personal } from './video-personal.js?v=search-1';
 import { createModeSwitch } from './media-mode-core.mjs';
 import { mountLive } from './live-media.js?v=health-1';
