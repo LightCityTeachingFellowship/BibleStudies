@@ -1,3 +1,4 @@
+import {isAndroidApp,loadNativeAudio} from './native-app.mjs';
 import {watchPlayback,recordPlaybackEvent} from './playback-health.mjs?v=1';
 import {mountAudioControls} from './audio-controls.mjs?v=studio-controls-3';
 import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition, replayBoundaryTarget } from './media-live-core.mjs?v=replay-feedback-1';
@@ -119,6 +120,7 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
       const url = checkedLiveLink(result, videoId, recording.session);
       markReplay(result.replay);
       if (result.offsetSeconds !== recording.offsetSeconds) throw Error('Broadcast timing changed. Refresh the page to continue.');
+      if(isAndroidApp()){await loadNativeAudio(audio,result,{videoId,title,live:true});expiresAt=result.expiresAt;audioFailure=null;return;}
       const Hls = await hlsAPI().catch(error => { if (audio.canPlayType('application/vnd.apple.mpegurl')) return null; throw error; });
       if (disposed || signal?.aborted || generation !== revision) throw new DOMException('Cancelled', 'AbortError');
       hls?.destroy(); hls = null; details = null; audioFailure = null; expiresAt = result.expiresAt;

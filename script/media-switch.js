@@ -1,3 +1,4 @@
+import {loadNativeAudio} from './native-app.mjs';
 import {watchPlayback,playbackDiagnostics,recordPlaybackEvent} from './playback-health.mjs?v=1';
 import {mountAudioControls} from './audio-controls.mjs?v=studio-controls-3';
 import { personal } from './video-personal.js?v=search-1';
@@ -188,7 +189,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
         if (signal.aborted || disposed) return;
         const url = new URL(result.url);
         if (url.protocol !== 'https:' || !/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/.test(url.hostname) || result.videoId !== videoId || !(result.expiresAt > Date.now())) throw Error('Invalid audio link');
-        if(result.title){heading.textContent=result.title;item.title=result.title;}expiresAt = result.expiresAt; audio.src = url.href; audio.load();
+        if(result.title){heading.textContent=result.title;item.title=result.title;}expiresAt = result.expiresAt; if(!await loadNativeAudio(audio,result,{videoId,title:item.title})){audio.src = url.href; audio.load();}
       }
       await waitForMetadata(audio, signal);
     },

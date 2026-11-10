@@ -1,3 +1,4 @@
+import {isAndroidApp,nativeGoogleCredential,nativeSignOut} from './native-app.mjs';
 // Member identity is separate from anonymous device identity used by web push.
 const settings = document.querySelector('script[data-lightcity-members]');
 const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, publicLibrary: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
@@ -176,6 +177,7 @@ api.signInForVideos = async () => {
   if (new URLSearchParams(location.search).get('desktop') === 'windows' || /Electron\//.test(navigator.userAgent || '')) {
     throw Error('The Windows connection did not load. Quit Studio from its tray menu and install the updated Windows app, then try again.');
   }
+  if(isAndroidApp()){const credential=await nativeGoogleCredential();await sdk.auth.signInWithCredential(memberAuth,sdk.auth.GoogleAuthProvider.credential(credential.idToken,credential.accessToken));await checkAccess();return;}
   const provider = new sdk.auth.GoogleAuthProvider(); provider.setCustomParameters({ prompt: 'select_account' });
   await sdk.auth.signInWithPopup(memberAuth, provider); await checkAccess();
 };
@@ -219,7 +221,7 @@ if (page) {
   field('member-google').onclick = () => void action(async () => {
     const provider = new sdk.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    await sdk.auth.signInWithPopup(memberAuth, provider);
+    if(isAndroidApp()){const credential=await nativeGoogleCredential();await sdk.auth.signInWithCredential(memberAuth,sdk.auth.GoogleAuthProvider.credential(credential.idToken,credential.accessToken));}else await sdk.auth.signInWithPopup(memberAuth, provider);
     await checkAccess();
   });
   field('member-google-form').addEventListener('submit', event => {
@@ -260,7 +262,7 @@ if (page) {
     ++version; publish(null);
     if (deviceAuth.currentUser) await call('unlinkChurchDevice', { deviceToken: await deviceAuth.currentUser.getIdToken() });
     try{localStorage.removeItem('lc-returning-member');}catch{}
-    await sdk.auth.signOut(memberAuth);
+    await nativeSignOut(); await sdk.auth.signOut(memberAuth);
     notice = 'You are signed out. Public content is still available.';
   });
   renderPage();
@@ -278,7 +280,7 @@ api.signOut=async()=>{
  ++version;api.user=null;publish(null);
  try{if(deviceAuth.currentUser)await call('unlinkChurchDevice',{deviceToken:await deviceAuth.currentUser.getIdToken()});}catch{}
  try{localStorage.removeItem('lc-returning-member');}catch{}
-    await sdk.auth.signOut(memberAuth);
+    await nativeSignOut(); await sdk.auth.signOut(memberAuth);
 };
 api.publishStudioVideo=async data=>{await api.ready;return call('publishChurchStudioVideo',{...data,accountUid:api.user?.uid});};
 api.getStudioPublication=async data=>{await api.ready;return call('getChurchStudioPublication',{...data,accountUid:api.user?.uid});};

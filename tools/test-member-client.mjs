@@ -1,7 +1,7 @@
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-const source = readFileSync('script/members.js', 'utf8').replace('import(root + file)', 'mockImport(file)').replace("import(new URL('../pwa-config.js', import.meta.url).href)", 'mockLoadConfig()');
+const source = readFileSync('script/members.js', 'utf8').replace(/^import .*native-app\.mjs';\r?\n/, 'const isAndroidApp=()=>false; const nativeSignOut=async()=>{};').replace('import(root + file)', 'mockImport(file)').replace("import(new URL('../pwa-config.js', import.meta.url).href)", 'mockLoadConfig()');
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 async function settle() { for (let i = 0; i < 6; i++) await tick(); }
 class Element {
