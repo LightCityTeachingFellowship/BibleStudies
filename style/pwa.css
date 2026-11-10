@@ -269,3 +269,16 @@ body.app-home .home-bottom-nav {grid-template-columns:repeat(5,minmax(0,1fr));}
 .lc-study-related-row>.lc-study-related-link{border-bottom:0}
 .lc-study-related-row>.lc-library-menu{margin-top:12px}
 .lc-study-related-row>.lc-library-share-feedback{grid-column:1/-1}
+/* Compact Continue cards; keep the full library layout unchanged. */
+[data-study-continue] .lc-personal-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:stretch}
+[data-study-continue] .lc-personal-card{min-width:0;padding:12px;border-radius:14px;display:flex;flex-direction:column;gap:6px}
+[data-study-continue] .lc-study-kind{font-size:10px;line-height:1.3;letter-spacing:.06em}
+[data-study-continue] .lc-video-title-row{margin:0;gap:4px}
+[data-study-continue] .lc-personal-card h2{font-size:14px!important;line-height:1.35!important;margin:0!important;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+[data-study-continue] .lc-personal-card p{font-size:11px!important;line-height:1.35!important;margin:0!important}
+[data-study-continue] .lc-personal-card progress{height:4px;margin-top:auto}
+[data-study-continue] .lc-save-video{width:28px;height:28px;flex-basis:28px;padding:5px!important}
+[data-study-continue] .lc-save-video svg{width:18px;height:18px}
+[data-study-continue] .lc-personal-row{gap:5px;justify-content:flex-start;margin:2px 0 0}
+[data-study-continue] .lc-personal-remove{font-size:10px!important;padding:6px 8px!important;min-width:0;line-height:1.3}
+@media(max-width:600px){[data-study-continue] .lc-personal-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}[data-study-continue] .lc-personal-card{padding:10px;gap:7px}[data-study-continue] .lc-personal-card h2{font-size:12px!important}[data-study-continue] .lc-personal-card p{font-size:10px!important}[data-study-continue] .lc-study-kind{font-size:9px}}
