@@ -444,7 +444,7 @@ h3{
 .app-home .home-featured-copy p {font-size:15px; color:var(--home-featured-muted); margin:8px 0 14px;}
 .app-home .home-watch-button {display:inline-flex; align-items:center; gap:10px; background:var(--home-accent); color:var(--black); border-radius:30px; padding:11px 24px; font-size:16px; font-weight:500;}
 .app-home .home-watch-button span {font-size:23px; line-height:1;}
-.app-home #home-explore-title,.app-home #home-fresh-title {font:700 clamp(22px,5.3vw,29px)/1.2 'Outfit','Segoe UI',sans-serif; letter-spacing:-.025em; color:var(--home-ink)!important; background:none!important; box-shadow:none!important; margin:0 0 14px; padding:0; border:0;}
+.app-home #home-explore-title,.app-home #home-fresh-title,#study-continue-title {font:700 clamp(22px,5.3vw,34px)/1.2 'Outfit','Segoe UI',sans-serif; letter-spacing:-.025em; color:var(--home-ink)!important; background:none!important; box-shadow:none!important; margin:0 0 16px; padding:0; border:0;}
 .app-home .home-explore,.app-home .home-fresh {margin-top:26px;}
 .app-home .home-shortcuts {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px;}
 .app-home .home-shortcuts a {display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; min-height:94px; border-radius:14px; background:var(--home-soft); font-size:16px; font-weight:500; padding:16px 4px;}
