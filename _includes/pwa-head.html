@@ -25,6 +25,7 @@
 {% else %}
 {% include social-preview.html %}
 {% include site-shell-start.html %}
+<script defer src="{{ '/script/navigation-prefetch.js' | relative_url }}?v=1"></script>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://us-central1-perceptive-zoo-424115-j6.cloudfunctions.net" crossorigin>
 {% unless page.studio_app == true %}
