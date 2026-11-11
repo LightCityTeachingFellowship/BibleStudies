@@ -111,3 +111,16 @@ a:focus-visible{outline:3px solid var(--vivid-orange);outline-offset:5px}
  .lc-shell-watch .lc-study-related-copy strong{font-size:14px}
  .lc-shell-watch .lc-study-related-link small{font-size:11px}
 }
+
+/* Keep playback in view while the rest of Watch scrolls. */
+.lc-shell-watch #watch-player {
+  position: sticky;
+  top: var(--lc-shell-header-height, 66px);
+  z-index: 20;
+  max-height: 62dvh;
+}
+.lc-shell-watch #watch-player iframe { max-height: 62dvh; }
+@media (max-width: 900px) {
+  .lc-shell-watch #watch-player { top: 0; max-height: 48dvh; }
+  .lc-shell-watch #watch-player iframe { max-height: 48dvh; }
+}
