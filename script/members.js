@@ -75,7 +75,7 @@ async function checkAccess({ preserveOnTransient = false } = {}) {
     const seen = new Set();
     publish(data.videos.filter(video => !seen.has(video.id) && seen.add(video.id)));
     try{localStorage.setItem('lc-returning-member','1');}catch{}
-    try { await linkDevice(); } catch { notice = 'Video access is ready. Refresh access to finish setting up member notifications.'; }
+    void linkDevice().catch(() => {});
   } catch (error) {
     if (current !== version) return;
     api.error = error;
@@ -101,7 +101,7 @@ async function bootstrap() {
     const memberApp = app.getApps().find(item => item.name === 'lightcity-members') || app.initializeApp(config, 'lightcity-members');
     try{memberAuth=typeof auth.initializeAuth==='function'?auth.initializeAuth(memberApp,{persistence:[auth.indexedDBLocalPersistence,auth.browserLocalPersistence],popupRedirectResolver:auth.browserPopupRedirectResolver}):auth.getAuth(memberApp);}catch(error){if(error.code!=='auth/already-initialized')throw error;memberAuth=auth.getAuth(memberApp);}deviceAuth=auth.getAuth(deviceApp);
     functions = fn.getFunctions(memberApp, 'us-central1');
-    await Promise.all([memberAuth.authStateReady(), deviceAuth.authStateReady()]);
+    await memberAuth.authStateReady();
     await new Promise(resolve => {
       let initial = true;
       auth.onAuthStateChanged(memberAuth, async () => {

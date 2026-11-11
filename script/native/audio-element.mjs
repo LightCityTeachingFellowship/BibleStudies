@@ -16,6 +16,6 @@ export async function connectNativeAudio(audio, plugin) {
  });
  audio.preload='none'; audio.load=()=>{};
  audio.play=async()=>{await plugin.play();state.playing=true;emit('play');};
- audio.pause=()=>{void command('pause');state.playing=false;emit('pause');};
+ audio.pause=()=>{if(!boundId)return;void command('pause');state.playing=false;emit('pause');};
  return {async load(item){boundId=item.videoId||'';metadata=false;state.readyState=0;await plugin.load(item);update(await plugin.state());if(state.readyState>=1)emit('loadedmetadata');},async restore(){const snapshot=await plugin.state();update(snapshot);return snapshot;},stop:()=>plugin.stop(),dispose:()=>listener.remove()};
 }

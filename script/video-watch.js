@@ -39,7 +39,22 @@
  if(query.has('t')) { const seconds=Number(query.get('t')); if(Number.isFinite(seconds)&&seconds>=0&&seconds<=172800)params.set('start',String(Math.floor(seconds))); }
  player.dataset.videoId=videoId;
  player.src=`https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
+ if (startWithAudio) player.style.visibility = 'hidden';
  container.appendChild(player);
+ if (startWithAudio) {
+  const revealVideo = () => { player.style.visibility = ''; };
+  const observer = new MutationObserver(() => {
+   if (container.classList.contains('lc-audio-mode')) {
+    revealVideo();
+    observer.disconnect();
+   }
+  });
+  observer.observe(container, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('click', event => {
+   if (event.target.closest?.('[data-media-mode=video]')) revealVideo();
+  });
+  setTimeout(() => { observer.disconnect(); revealVideo(); }, 15000);
+ }
  function connectPlayer() { if(globalThis.LightCityMedia)void globalThis.LightCityMedia.trackYouTube(player,{autoplay:!startWithAudio}).catch(()=>{});else window.addEventListener('lightcity-media-ready',connectPlayer,{once:true}); }
  connectPlayer();
  // Fullscreen and screen orientation are separate browser capabilities.
