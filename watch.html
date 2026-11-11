@@ -79,18 +79,21 @@ if (window === window.top && globalThis.androidBridge && globalThis.Capacitor?.n
   const panel = document.getElementById('watch-browse-panel');
   const restore = document.getElementById('watch-browse-return');
   const marker = '#mini-player';
+  const destinations = new Set(['home', 'videos', 'listen', 'articles', 'summaries', 'mylibrary', 'calendar']);
+  const library = new URL({{ '/Videos/' | relative_url | jsonify }}, location.origin);
+  const base = library.pathname.replace(/Videos\/$/i, '');
   let frame;
   const update = () => {
     const video = player.querySelector('iframe');
-    browse.hidden = player.hidden || !video || !video.getClientRects().length;
+    browse.hidden = player.hidden || player.classList.contains('lc-audio-mode') || !video || video.hidden || getComputedStyle(video).visibility === 'hidden';
   };
   new MutationObserver(update).observe(player, { attributes:true, childList:true, subtree:true });
   update();
-  browse.onclick = () => {
+  const open = destination => {
     if (browse.hidden || !panel.hidden) return;
     frame = document.createElement('iframe');
     frame.title = 'Browse LightCity';
-    frame.src = {{ '/Videos/' | relative_url | jsonify }};
+    frame.src = destination.href;
     frame.sandbox = 'allow-same-origin allow-scripts allow-forms allow-popups';
     panel.append(frame);
     history.pushState(null, '', marker);
@@ -98,6 +101,20 @@ if (window === window.top && globalThis.androidBridge && globalThis.Capacitor?.n
     document.body.classList.add('lc-watch-minimized');
     restore.focus();
   };
+  browse.onclick = () => open(library);
+  document.addEventListener('click', event => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey ||
+        event.shiftKey || event.altKey || !panel.hidden) return;
+    const link = event.target.closest?.('a[href]');
+    if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+    const destination = new URL(link.href);
+    if (destination.origin !== location.origin || !destination.pathname.startsWith(base)) return;
+    const section = destination.pathname.slice(base.length).replace(/\/$/, '').toLowerCase();
+    update();
+    if (browse.hidden || !destinations.has(section)) return;
+    event.preventDefault();
+    open(destination);
+  });
   const close = () => {
     if (panel.hidden) return;
     panel.hidden = true;
