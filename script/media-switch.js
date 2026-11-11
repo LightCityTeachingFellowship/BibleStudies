@@ -3,7 +3,7 @@ import {watchPlayback,playbackDiagnostics,recordPlaybackEvent} from './playback-
 import {mountAudioControls} from './audio-controls.mjs?v=studio-controls-3';
 import { personal } from './video-personal.js?v=search-1';
 import { createModeSwitch } from './media-mode-core.mjs';
-import { mountLive } from './live-media.js?v=health-1';
+import { mountLive } from './live-media.js?v=live-handoff-2';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs?v=health-1';
 import {showPlayingStreamMessages} from './stream-messages.mjs?v=reply-1';
 

@@ -188,7 +188,13 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     },
     readAudio: () => ({ time: audio.currentTime, playing: !audio.paused && !audio.ended, rate: audio.playbackRate }),
     pauseBoth: () => { audio.pause(); player?.pauseVideo(); }, show, status,
-    audioTarget: (time, ranges) => replay ? replayBoundaryTarget(time, ranges) : time,
+    audioTarget: (time, ranges) => {
+      if (replay) return replayBoundaryTarget(time, ranges);
+      const latest = ranges.at(-1);
+      if (!latest || time < latest[1] - 1 || time > latest[1] + 12) return time;
+      // The newest HLS segment can be advertised before it is safe to start playback there.
+      return Math.max(latest[0], latest[1] - 4);
+    },
     ranges: mode => mode === 'video' ? null : availableAudioRanges(audio, details).map(([start, end]) => [start, Math.max(start, end - 0.1)]),
     ready: async (mode, signal) => { if (mode === 'audio') await loadAudio(signal); else await video(true); },
     seek: async (mode, time, rate, signal) => {
@@ -212,11 +218,16 @@ export function mountLive({ viewport, videoId, title, recording, onState, trackY
     },
     verify: async (mode, target, playing, rate, signal) => {
       const started = performance.now();
+      const tolerance = mode === 'audio' ? 0.75 : 1.5;
       await waitUntil(() => {
-        const elapsed = (performance.now() - started) / 1000, current = mode === 'audio' ? audio.currentTime : player.getCurrentTime();
-        if (Math.abs(current - target - (playing ? elapsed * rate : 0)) > (mode === 'audio' ? 0.75 : 1.5)) throw Error('Playback did not stay at the matching moment. Please retry the switch.');
-        return elapsed >= 1.2;
-      }, signal, 4000);
+        const elapsed = (performance.now() - started) / 1000;
+        const current = mode === 'audio' ? audio.currentTime : player.getCurrentTime();
+        const advance = current - target;
+        // Startup buffering can delay the clock without moving it away from the seek target.
+        const maximum = playing ? elapsed * rate + tolerance : tolerance;
+        if (advance < -tolerance || advance > maximum) throw Error('Playback did not stay at the matching moment. Please retry the switch.');
+        return elapsed >= 1.2 && (!playing || advance >= 0.25 * rate);
+      }, signal, 6000);
     }
   }, { session: recording.session, videoId });
   if (recording.offsetSeconds) core.setOffset(recording.offsetSeconds);
