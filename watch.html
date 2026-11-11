@@ -64,20 +64,22 @@ title: Watch a video
 #watch-browse[hidden],#watch-browse-panel[hidden]{display:none}
 #watch-browse-panel{position:fixed;inset:0;z-index:1000;background:#121212}
 #watch-browse-panel iframe{display:block;width:100%;height:100%;border:0}
-#watch-browse-return{position:absolute;top:8px;right:12px;z-index:1;padding:.6rem 1rem;border-radius:24px;background:#202020;color:white;border:1px solid #666}
+#watch-mini-controls{position:fixed;right:16px;bottom:calc(230px + env(safe-area-inset-bottom));z-index:1002;display:flex;gap:8px}#watch-mini-controls[hidden]{display:none}#watch-mini-controls button{width:38px;height:38px;border-radius:50%;background:#202020e8;color:#fff;border:1px solid #888;font-size:22px;cursor:pointer}
 .lc-shell-watch.lc-watch-minimized #watch-player{position:fixed;inset:auto 12px calc(84px + env(safe-area-inset-bottom)) auto;width:min(300px,calc(100vw - 24px));height:auto;aspect-ratio:16/9;min-height:0;max-height:none;z-index:1001;margin:0;border-radius:12px}
 .lc-watch-minimized #watch-player iframe{height:100%;max-height:none}
 </style>
 <button id="watch-browse" type="button" hidden>Browse while watching</button>
 <section id="watch-browse-panel" aria-label="Browse LightCity while watching" hidden>
-  <button id="watch-browse-return" type="button">Return to video</button>
 </section>
+<div id="watch-mini-controls" hidden><button id="watch-browse-return" type="button" aria-label="Return to video" title="Return to video">↗</button><button id="watch-browse-close" type="button" aria-label="Close video" title="Close video">×</button></div>
 <script type="module">
 if (window === window.top) {
   const player = document.getElementById('watch-player');
   const browse = document.getElementById('watch-browse');
   const panel = document.getElementById('watch-browse-panel');
   const restore = document.getElementById('watch-browse-return');
+  const miniControls = document.getElementById('watch-mini-controls');
+  const dismiss = document.getElementById('watch-browse-close');
   const marker = '#mini-player';
   const library = new URL({{ '/Videos/' | relative_url | jsonify }}, location.origin);
   const base = library.pathname.replace(/Videos\/$/i, '');
@@ -115,6 +117,7 @@ if (window === window.top) {
     });
     history.pushState(null, '', marker);
     panel.hidden = false;
+    miniControls.hidden = false;
     document.body.classList.add('lc-watch-minimized');
     restore.focus();
   };
@@ -138,11 +141,18 @@ if (window === window.top) {
   const close = () => {
     if (panel.hidden) return;
     panel.hidden = true;
+    miniControls.hidden = true;
     frame.remove();
     document.body.classList.remove('lc-watch-minimized');
     browse.focus();
   };
   restore.onclick = () => { close(); if (location.hash === marker) history.replaceState(null, '', location.pathname + location.search); };
+  dismiss.onclick = () => {
+    const destination = frame?.contentWindow?.location?.href;
+    try { player.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({event:'command',func:'pauseVideo',args:[]}), '*'); } catch (_) {}
+    close();
+    if (destination && new URL(destination).origin === location.origin) location.assign(destination);
+  };
   window.addEventListener('popstate', close);
 }
 </script>
