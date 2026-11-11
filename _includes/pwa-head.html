@@ -93,3 +93,43 @@ setTimeout(() => {
 
 {% endif %}
 
+<style>
+.lc-native-mini:not([hidden]){display:flex;align-items:center;gap:.65rem;position:fixed;z-index:90;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));padding:.65rem .8rem;border:1px solid #555;border-radius:14px;background:#202020;color:#fff;box-shadow:0 4px 16px #0005}
+.lc-native-mini a{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:inherit}
+.lc-native-mini button{flex:none;min-height:40px;padding:0 .7rem;border:1px solid #666;border-radius:8px;background:transparent;color:inherit;font:inherit}
+</style>
+<script type="module">
+if (globalThis.androidBridge && globalThis.Capacitor?.nativePromise && !/\/Watch\/?$/i.test(location.pathname)) {
+  const { registerPlugin } = await import({{ '/script/native/capacitor-core.mjs' | relative_url | jsonify }});
+  const audio = registerPlugin('LightCityAudio');
+  const bar = document.createElement('aside');
+  bar.className = 'lc-native-mini';
+  bar.setAttribute('aria-label', 'Current audio');
+  bar.hidden = true;
+  const title = document.createElement('a');
+  const toggle = document.createElement('button');
+  const stop = document.createElement('button');
+  toggle.type = stop.type = 'button';
+  stop.textContent = 'Stop';
+  bar.append(title, toggle, stop);
+  document.body.append(bar);
+  let playing = false;
+  const render = state => {
+    bar.hidden = !/^[\w-]{11}$/.test(state.videoId || '') || Boolean(state.ended);
+    if (bar.hidden) return;
+    playing = Boolean(state.playing);
+    const url = new URL({{ '/Watch/' | relative_url | jsonify }}, location.origin);
+    url.search = new URLSearchParams({ v: state.videoId, mode: 'audio' });
+    title.href = url.href;
+    title.textContent = state.title || 'LightCity audio';
+    toggle.textContent = playing ? 'Pause' : 'Play';
+  };
+  const refresh = () => audio.state().then(render).catch(() => { bar.hidden = true; });
+  toggle.onclick = () => (playing ? audio.pause() : audio.play()).finally(refresh).catch(console.warn);
+  stop.onclick = () => audio.stop().finally(refresh).catch(console.warn);
+  audio.addListener('state', render).catch(console.warn);
+  window.addEventListener('pageshow', refresh);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+  refresh();
+}
+</script>
