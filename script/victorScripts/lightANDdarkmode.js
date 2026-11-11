@@ -1,42 +1,22 @@
-const themeToggle = document.getElementById('theme-toggle');
-const themeStylesheet = document.getElementById('theme-stylesheet');
-// Function to toggle between light and dark mode
-function toggleTheme() {
-  if (themeStylesheet.getAttribute('href') === '../style/lightMODE.css') {
-    themeStylesheet.setAttribute('href', '../style/darkMODE.css');
-    saveThemePreference('darkMODE');
-    document.body.classList.add("darkmode");
-  } else {
-    themeStylesheet.setAttribute('href', '../style/lightMODE.css');
-    saveThemePreference('lightMODE');
-    document.body.classList.remove("darkmode");
+(() => {
+  const toggle = document.getElementById('theme-toggle');
+  const sheet = document.getElementById('theme-stylesheet');
+  if (!sheet) return;
+  let saved;
+  try { saved = localStorage.getItem('theme'); } catch {}
+  const dark = saved === 'darkMODE' || (saved !== 'lightMODE' && matchMedia('(prefers-color-scheme: dark)').matches);
+  function apply(useDark) {
+    const name = useDark ? 'darkMODE' : 'lightMODE';
+    const url = new URL(name + '.css', sheet.href).href;
+    if (sheet.href !== url) sheet.href = url;
+    document.documentElement.toggleAttribute('data-lc-initial-dark', useDark);
+    document.body.classList.toggle('darkmode', useDark);
+    if (toggle) toggle.checked = useDark;
+    return name;
   }
-}
-// Save the user's theme preference
-function saveThemePreference(theme) {
-  localStorage.setItem('theme', theme);
-}
-// Retrieve and apply the user's theme preference or system preference
-function applyThemePreference() {
-  const userPreference = localStorage.getItem('theme');
-  if (userPreference) {
-    themeStylesheet.setAttribute('href', `../style/${userPreference}.css`);
-    if (userPreference === 'darkMODE') {
-      themeToggle.checked = true;
-      document.body.classList.add("darkmode");
-    }
-  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    themeStylesheet.setAttribute('href', '../style/darkMODE.css');
-    themeToggle.checked = true;
-    document.body.classList.add("darkmode");
-  } else {
-    themeStylesheet.setAttribute('href', '../style/lightMODE.css');
-    saveThemePreference('lightMODE');
-    document.body.classList.remove("darkmode");
-  }
-}
-themeToggle.addEventListener('click', toggleTheme);
-// Apply the user's or system preference on page load
-
-applyThemePreference();
-
+  apply(dark);
+  toggle?.addEventListener('click', () => {
+    const name = apply(!document.body.classList.contains('darkmode'));
+    try { localStorage.setItem('theme', name); } catch {}
+  });
+})();

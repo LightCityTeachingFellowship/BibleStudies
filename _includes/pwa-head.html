@@ -66,12 +66,17 @@ setTimeout(() => {
 
 {% unless page.studio_app == true %}
 <link rel="stylesheet" href="{{ '/style/study-hub.css' | relative_url }}?v=auth-restore-2">
-<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=settings-notifications-1"></script>
+<script type="module" src="{{ '/script/account-hub.mjs' | relative_url }}?v=android-startup-1"></script>
 <link rel="stylesheet" href="{{ '/style/calendar.css' | relative_url }}?v=1"><script type="module" src="{{ '/script/prayer-member.mjs' | relative_url }}?v=1"></script>
 <script type="module" src="{{ '/script/returning-member.mjs' | relative_url }}?v=2"></script>
 {% include site-shell-config.html %}
 <link rel="stylesheet" href="{{ '/style/site-shell.css' | relative_url }}?v=loading-1">
-<script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=settings-notifications-1" data-lightcity-shell></script>
+{% unless page.url == '/Home/' or page.url == '/members/' %}
+<link rel="modulepreload" href="{{ '/script/account-hub.mjs' | relative_url }}?v=android-startup-1">
+<link rel="modulepreload" href="{{ '/script/hub-core.mjs' | relative_url }}">
+<link rel="modulepreload" href="{{ '/script/site-shell-core.mjs' | relative_url }}">
+{% endunless %}
+<script type="module" src="{{ '/script/site-shell.mjs' | relative_url }}?v=android-startup-1" data-lightcity-shell></script>
 {% endunless %}
 {% if page.layout contains 'articleTEMPLATE' or page.layout contains 'summaryTEMPLATE' or page.url == '/StudyResource/' %}
 <link rel="stylesheet" href="{{ '/style/reading-settings.css' | relative_url }}?v=3">
