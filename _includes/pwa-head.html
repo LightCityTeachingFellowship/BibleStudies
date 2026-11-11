@@ -1,3 +1,11 @@
+<style>html[data-lc-initial-dark],html[data-lc-initial-dark] body:not(.lightmode){background-color:#121212;color:#eee;color-scheme:dark}</style>
+<script>
+try {
+  const theme = localStorage.getItem('theme');
+  document.documentElement.toggleAttribute('data-lc-initial-dark', theme === 'darkMODE' ||
+    (theme !== 'lightMODE' && matchMedia('(prefers-color-scheme: dark)').matches));
+} catch {}
+</script>
 {% if page.layout contains 'QandA' or page.url == '/TeachingQuiz/' %}
 {% include quiz-app-head.html %}
 {% else %}

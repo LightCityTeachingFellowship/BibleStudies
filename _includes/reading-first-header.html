@@ -1,0 +1,10 @@
+<style>
+.lc-reading-first-header{display:none}
+html.lc-shell-loading .lc-reading-first-header{position:fixed;inset:0 0 auto;z-index:40;height:66px;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid #ddd;box-sizing:border-box}
+html[data-lc-initial-dark] .lc-reading-first-header,body.darkmode .lc-reading-first-header{background:#181818;border-color:#303030}
+.lc-reading-first-header img{display:block;width:142px;height:auto}
+@media(max-width:900px){html.lc-shell-loading .lc-reading-first-header{height:60px;padding-inline:16px}}
+</style>
+<header class="lc-reading-first-header">
+  <a href="{{ '/Home/' | relative_url }}"><img src="{{ '/images/LightCityLOGO.jpg' | relative_url }}" alt="LightCity Teaching Fellowship" width="142" height="40"></a>
+</header>
