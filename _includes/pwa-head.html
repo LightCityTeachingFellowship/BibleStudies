@@ -47,7 +47,7 @@ setTimeout(() => {
 {% if page.studio_app == true %}
 <script defer src="{{ '/script/studio-install.js' | relative_url }}?v=1" data-base="{{ '/' | relative_url }}"></script>
 {% else %}
-<script defer src="{{ '/script/pwa.js' | relative_url }}?v=android-push-1" data-base="{{ '/' | relative_url }}"></script>
+<script defer src="{{ '/script/pwa.js' | relative_url }}?v=android-push-2" data-base="{{ '/' | relative_url }}"></script>
 {% endif %}
 <script type="module" src="{{ '/script/members.js' | relative_url }}?v=learning-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
 <link rel="stylesheet" href="{{ '/style/stream-feedback.css' | relative_url }}?v=messages-2">

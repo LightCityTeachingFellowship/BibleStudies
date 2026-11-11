@@ -194,7 +194,13 @@
     modulesPromise = (async () => {
       const root = 'https://www.gstatic.com/firebasejs/10.14.1/';
       const [app, auth, db, msg] = await withDeadline(
-        Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js', 'firebase-messaging.js'].map(file => import(root + file))),
+        Promise.all([
+          import(root + 'firebase-app.js'),
+          import(root + 'firebase-auth.js'),
+          // Android only needs one-shot writes. Avoid Firestore's streaming connection in the WebView.
+          import(root + (nativePush ? 'firebase-firestore-lite.js' : 'firebase-firestore.js')),
+          nativePush ? null : import(root + 'firebase-messaging.js')
+        ]),
         'Notification services could not load. Check your connection and try again.'
       );
       if (!nativePush && !(await withDeadline(msg.isSupported(), 'The notification support check timed out. Please try again.'))) throw Error('Push notifications are not supported in this browser.');
