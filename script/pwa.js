@@ -23,7 +23,10 @@
   const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const config = globalThis.LIGHTCITY_PUSH;
   const allowInvitations = !document.getElementById('member-page') && !document.querySelector('#chooseCat,#QandA-section,#cat-bibleQuiz-inner');
-  const canNotify = config?.enabled && 'Notification' in window && 'PushManager' in window && !(ios && !standalone);
+  const nativePush = window.Capacitor?.isPluginAvailable?.('LightCityPush') ? window.Capacitor.Plugins.LightCityPush : null;
+  const preferenceKey = nativePush ? 'lc-android-push-enabled' : 'lc-push-enabled';
+  const notificationPermission = () => nativePush ? 'default' : window.Notification?.permission || 'unsupported';
+  const canNotify = config?.enabled && (nativePush || ('Notification' in window && 'PushManager' in window && !(ios && !standalone)));
   const read = (storage, key) => { try { return storage.getItem(key); } catch { return null; } };
   const write = (storage, key, value) => { try { value == null ? storage.removeItem(key) : storage.setItem(key, value); } catch {} };
   const area = document.createElement('aside');
@@ -100,7 +103,7 @@
     settings.append(element('p', 'lc-device-status', 'Applies to all LightCity notifications on this device, not just quizzes.'));
     quizSettings.append(settings);
   } else area.append(settings);
-  let prompt, installed = Boolean(standalone), active = Boolean(canNotify && Notification.permission === 'granted' && read(localStorage, 'lc-push-enabled') === 'yes');
+  let prompt, installed = Boolean(standalone), active = Boolean(canNotify && (nativePush || notificationPermission() === 'granted') && read(localStorage, preferenceKey) === 'yes');
   let modulesPromise, user;
   const visits = (Number(read(sessionStorage, 'lc-install-page-views')) || 0) + 1;
   write(sessionStorage, 'lc-install-page-views', String(visits));
@@ -128,7 +131,7 @@
     const eligible = !installed && !dismissed && engaged && Boolean(prompt || ios);
     const busy = permissionBusy || document.hidden || Boolean(document.querySelector('dialog[open]'));
     const notificationsSnoozed = Number(read(localStorage, 'lc-notification-snooze-until')) > Date.now() || Number(read(sessionStorage, 'lc-notification-snooze-until')) > Date.now();
-    notificationPopup.hidden = notificationCard.node.hidden = !allowInvitations || !canNotify || Notification.permission === 'denied' || active || !notificationEngaged || notificationsSnoozed || busy;
+    notificationPopup.hidden = notificationCard.node.hidden = !allowInvitations || !canNotify || notificationPermission() === 'denied' || active || !notificationEngaged || notificationsSnoozed || busy;
     installPopup.hidden = installCard.node.hidden = !allowInvitations || !eligible || busy || installPaused || !notificationPopup.hidden;
     if (allowInvitations && (eligible || notificationEngaged) && busy && !document.hidden) retryPopup = setTimeout(render, 5000);
     settings.hidden = !canNotify || (!quizSettings && !active);
@@ -136,7 +139,7 @@
     area.hidden = Boolean(quizSettings) || settings.hidden;
   }
   if (!engaged && !installed) setTimeout(() => { engaged = true; render(); }, 20000);
-  if (canNotify && !active && Notification.permission !== 'denied') setTimeout(() => { notificationEngaged = true; render(); }, 10000);
+  if (canNotify && !active && notificationPermission() !== 'denied') setTimeout(() => { notificationEngaged = true; render(); }, 10000);
   document.addEventListener('visibilitychange', render);
   window.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || document.querySelector('dialog[open]')) return;
@@ -194,17 +197,17 @@
         Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-firestore.js', 'firebase-messaging.js'].map(file => import(root + file))),
         'Notification services could not load. Check your connection and try again.'
       );
-      if (!(await withDeadline(msg.isSupported(), 'The notification support check timed out. Please try again.'))) throw Error('Push notifications are not supported in this browser.');
+      if (!nativePush && !(await withDeadline(msg.isSupported(), 'The notification support check timed out. Please try again.'))) throw Error('Push notifications are not supported in this browser.');
       const instance = app.initializeApp(config.firebase);
       const authentication = auth.getAuth(instance);
       await withDeadline(authentication.authStateReady(), 'LightCity could not finish checking your sign-in. Please try again.');
       user = authentication.currentUser || (await withDeadline(
         auth.signInAnonymously(authentication), 'LightCity could not register this device. Check your connection and try again.'
       )).user;
-      const messaging = msg.getMessaging(instance);
-      msg.onMessage(messaging, payload => {
+      const messaging = nativePush ? null : msg.getMessaging(instance);
+      if (!nativePush) msg.onMessage(messaging, payload => {
         window.dispatchEvent(new Event('lightcity-notification-arrived'));
-        if (!active || Notification.permission !== 'granted') return;
+        if (!active || notificationPermission() !== 'granted') return;
         // One service worker coordinates displays across all open LightCity tabs.
         void registerWorker().then(async registration => {
           const worker = registration.active || (await navigator.serviceWorker.ready).active;
@@ -217,28 +220,28 @@
   }
   async function subscribe() {
     const m = await initialize();
-    const registered = await registerWorker();
-    const registration = registered.active ? registered : await withDeadline(
-      navigator.serviceWorker.ready, 'LightCity’s notification service is still starting. Please try again.'
-    );
-    const token = await withDeadline(
-      m.msg.getToken(m.messaging, { vapidKey: config.vapidKey, serviceWorkerRegistration: registration }),
-      'This device did not finish connecting to push notifications. Please try again.'
-    );
+    const token = await withDeadline(nativePush ? nativePush.getToken().then(result => result.token) : browserToken(m),
+      'This device did not finish connecting to push notifications. Please try again.');
     if (!token) throw Error('Could not enable notifications. Please try again.');
     await withDeadline(
       m.db.setDoc(m.db.doc(m.store, 'webPushSubscribers', user.uid), { token, updatedAt: m.db.serverTimestamp() }),
       'LightCity could not confirm that notifications were saved. Check your connection and try again.'
     );
     window.dispatchEvent(new Event('lightcity-push-ready'));
-    return m;
+  }
+  async function browserToken(m) {
+    const registered = await registerWorker();
+    const registration = registered.active ? registered : await withDeadline(
+      navigator.serviceWorker.ready, 'LightCity’s notification service is still starting. Please try again.'
+    );
+    return m.msg.getToken(m.messaging, { vapidKey: config.vapidKey, serviceWorkerRegistration: registration });
   }
   const blockedHelp = 'Notifications are blocked. Allow notifications for LightCity in your phone or browser settings, then try again here.';
 
   // The snooze controls automatic invitations only. Settings can call this at any time.
   async function enableNotifications() {
     if (!canNotify) return 'Push notifications are unavailable on this device.';
-    if (Notification.permission === 'denied') return blockedHelp;
+    if (notificationPermission() === 'denied') return blockedHelp;
     if (permissionBusy) return 'A notification request is already in progress.';
     notify.disabled = true;
     permissionBusy = true;
@@ -246,14 +249,14 @@
     notificationStatus.textContent = '';
     try {
       // Keep the native permission request directly attached to the user's click.
-      const permission = Notification.permission === 'granted' ? 'granted' : await withDeadline(
+      const permission = nativePush ? (await withDeadline(nativePush.requestAccess(), 'Android did not finish requesting permission.', 45000)).granted ? 'granted' : 'denied' : notificationPermission() === 'granted' ? 'granted' : await withDeadline(
         Notification.requestPermission(), 'The device permission request did not finish. Try again or check your notification permissions.', 45000
       );
       if (permission !== 'granted') {
         return permission === 'denied' ? blockedHelp : 'Notifications were not enabled. You can try again anytime.';
       }
       await subscribe();
-      write(localStorage, 'lc-push-enabled', 'yes');
+      write(localStorage, preferenceKey, 'yes');
       active = true;
       pauseInstall();
       return '';
@@ -276,8 +279,8 @@
         m.db.deleteDoc(m.db.doc(m.store, 'webPushSubscribers', user.uid)),
         'LightCity could not confirm that notifications were turned off. Check your connection and try again.'
       );
-      await withDeadline(m.msg.deleteToken(m.messaging), 'The device did not finish turning off notifications. Please try again.');
-      write(localStorage, 'lc-push-enabled', null);
+      await withDeadline(nativePush ? nativePush.deleteToken() : m.msg.deleteToken(m.messaging), 'The device did not finish turning off notifications. Please try again.');
+      write(localStorage, preferenceKey, null);
       active = false;
       settings.open = false;
       render();
@@ -286,7 +289,7 @@
   };
   render();
   globalThis.LightCityNotificationSettings={
-    getState:()=>({supported:Boolean(canNotify),enabled:active,permission:typeof Notification==='undefined'?'unsupported':Notification.permission}),
+    getState:()=>({supported:Boolean(canNotify),enabled:active,permission:nativePush && active ? 'granted' : notificationPermission()}),
     enable:enableNotifications,disable:()=>disable.onclick()
   };
   window.dispatchEvent(new Event('lightcity-notification-settings-ready'));
