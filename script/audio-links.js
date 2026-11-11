@@ -68,7 +68,7 @@
           if(holder===watch && recording?.kind!=='live' && button.dataset.mediaMode==='audio' && globalThis.androidBridge && globalThis.Capacitor?.nativePromise){
             try { const candidate=document.createElement('audio'); const {restoreNativeAudio}=await import('./native-app.mjs'); if(await restoreNativeAudio(candidate,id))existingAudio=candidate; } catch {}
           }
-          if(!viewport.isConnected)return;
+          if(viewport.isConnected === false)return;
           controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, audio:existingAudio, title: (document.getElementById('watch-title')?.textContent!=='LightCity video'?document.getElementById('watch-title')?.textContent:null) || holder.closest('.video-box')?.getAttribute('video-title') || recording.title || 'LightCity recording', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
             feedback(holder, message);liveBadge(viewport,id);

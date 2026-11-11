@@ -65,7 +65,7 @@ title: Watch a video
 #watch-browse-panel{position:fixed;inset:0;z-index:1000;background:#121212}
 #watch-browse-panel iframe{display:block;width:100%;height:100%;border:0}
 #watch-browse-return{position:absolute;top:8px;right:12px;z-index:1;padding:.6rem 1rem;border-radius:24px;background:#202020;color:white;border:1px solid #666}
-.lc-shell-watch.lc-watch-minimized #watch-player{position:fixed;inset:auto 12px calc(84px + env(safe-area-inset-bottom)) auto;width:min(300px,calc(100vw - 24px));height:200px;min-height:200px;max-height:none;z-index:1001;margin:0;border-radius:12px}
+.lc-shell-watch.lc-watch-minimized #watch-player{position:fixed;inset:auto 12px calc(84px + env(safe-area-inset-bottom)) auto;width:min(300px,calc(100vw - 24px));height:auto;aspect-ratio:16/9;min-height:0;max-height:none;z-index:1001;margin:0;border-radius:12px}
 .lc-watch-minimized #watch-player iframe{height:100%;max-height:none}
 </style>
 <button id="watch-browse" type="button" hidden>Browse while watching</button>
@@ -73,13 +73,12 @@ title: Watch a video
   <button id="watch-browse-return" type="button">Return to video</button>
 </section>
 <script type="module">
-if (window === window.top && globalThis.androidBridge && globalThis.Capacitor?.nativePromise) {
+if (window === window.top) {
   const player = document.getElementById('watch-player');
   const browse = document.getElementById('watch-browse');
   const panel = document.getElementById('watch-browse-panel');
   const restore = document.getElementById('watch-browse-return');
   const marker = '#mini-player';
-  const destinations = new Set(['home', 'videos', 'listen', 'articles', 'summaries', 'mylibrary', 'calendar']);
   const library = new URL({{ '/Videos/' | relative_url | jsonify }}, location.origin);
   const base = library.pathname.replace(/Videos\/$/i, '');
   let frame;
@@ -94,8 +93,26 @@ if (window === window.top && globalThis.androidBridge && globalThis.Capacitor?.n
     frame = document.createElement('iframe');
     frame.title = 'Browse LightCity';
     frame.src = destination.href;
-    frame.sandbox = 'allow-same-origin allow-scripts allow-forms allow-popups';
+    // Same-origin content retains normal app sign-in and navigation behaviour.
+    frame.allow = 'autoplay; fullscreen';
     panel.append(frame);
+    frame.addEventListener('load', () => {
+      try {
+        const doc = frame.contentDocument;
+        doc.addEventListener('click', event => {
+          if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          const link = event.target.closest?.('a[href]');
+          if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+          const target = new URL(link.href, frame.contentWindow.location.href);
+          if (target.origin !== location.origin) return;
+          const path = target.pathname.slice(base.length).replace(/^\/+|\/+$/g, '').toLowerCase();
+          if (!/^(watch|admin|members|share)(?:\/|$)/.test(path)) return;
+          event.preventDefault();
+          // Leave the browsing frame when choosing another player or a sensitive page.
+          location.assign(target.href);
+        }, true);
+      } catch (_) { /* Cross-origin documents manage their own navigation. */ }
+    });
     history.pushState(null, '', marker);
     panel.hidden = false;
     document.body.classList.add('lc-watch-minimized');
@@ -109,9 +126,12 @@ if (window === window.top && globalThis.androidBridge && globalThis.Capacitor?.n
     if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
     const destination = new URL(link.href);
     if (destination.origin !== location.origin || !destination.pathname.startsWith(base)) return;
-    const section = destination.pathname.slice(base.length).replace(/\/$/, '').toLowerCase();
+    const section = destination.pathname.slice(base.length).replace(/^\/+|\/+$/g, '').toLowerCase();
+    // Authentication, administration and a different video need their normal top-level navigation.
+    if (/^(watch|admin|members|share)(?:\/|$)/.test(section)) return;
+    if (destination.pathname === location.pathname && destination.search === location.search) return;
     update();
-    if (browse.hidden || !destinations.has(section)) return;
+    if (browse.hidden) return;
     event.preventDefault();
     open(destination);
   });

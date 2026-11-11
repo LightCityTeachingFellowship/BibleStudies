@@ -1,7 +1,7 @@
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-const source = readFileSync('script/members.js', 'utf8').replace(/^import .*native-app\.mjs';\r?\n/, 'const isAndroidApp=()=>false; const nativeSignOut=async()=>{};').replace('import(root + file)', 'mockImport(file)').replace("import(new URL('../pwa-config.js', import.meta.url).href)", 'mockLoadConfig()');
+const source = readFileSync('script/members.js', 'utf8').replace(/^import .*native-app\.mjs';\r?\n/, 'const isAndroidApp=()=>false; const nativeSignOut=async()=>{};').replaceAll('import(root + file)', 'mockImport(file)').replace("import(new URL('../pwa-config.js', import.meta.url).href)", 'mockLoadConfig()');
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 async function settle() { for (let i = 0; i < 6; i++) await tick(); }
 class Element {
@@ -84,6 +84,7 @@ assert.equal(app.get('member-verification').hidden, false);
 assert.equal(app.get('member-password').value, ''); assert.equal(app.get('member-code').value, '');
 app.state.verified = true; await app.api.refresh();
 assert.equal(app.api.library.length, 1); assert.equal(app.get('member-library-link').hidden, false);
+await settle();
 assert.equal(app.deviceAuth.currentUser.uid, 'notification-device', 'Membership must preserve the existing anonymous notification identity');
 assert.ok(app.calls.some(call => call.name === 'linkChurchDevice' && call.data.deviceToken === 'device-proof'));
 app.state.hold = true; const pending = app.api.refresh(); await settle();
@@ -109,6 +110,7 @@ assert.equal(app.api.library.length, 1);
 assert.equal(app.get('member-google-code').value, '');
 assert.equal(app.get('member-google-form').hidden, true);
 assert.equal(app.state.emails, 0);
+await settle();
 assert.equal(app.deviceAuth.currentUser.uid, 'notification-device');
 app.get('member-signout').onclick(); await settle();
 const registrations = app.calls.filter(call => call.name === 'registerGoogleChurchMember').length;
@@ -196,8 +198,8 @@ latePublic({ data: { videos: [{ id: 'lmnopqrstuv', title: 'Stale metadata', visi
 assert.equal(app.api.publicLibrary, null, 'An earlier account request cannot overwrite the new audience');
 assert.equal(app.api.library, null);
 app = setup(true, 'ready', { publicHold: true }); await settle();
-assert.equal(app.api.loading, true, 'Guests wait until the public library is selected');
+assert.equal(app.api.loading, false, 'Guests can use bundled public content while metadata loads');
 app.state.publicWaiting({ data: { videos: [{ id: 'lmnopqrstuv', title: 'Public video', visibility: 'public' }] } });
-await app.api.ready;
+await app.api.ready; await settle();
 assert.equal(app.api.loading, false);assert.equal(app.api.publicLibrary.length, 1);
 console.log('PASS: member restoration does not wait for public metadata; guest selection and stale-account response isolation remain correct.');

@@ -98,7 +98,7 @@ async function bootstrap() {
     const config = globalThis.LIGHTCITY_PUSH?.firebase;
     if (!config?.apiKey || !config?.projectId) throw Error('Sign-in settings are unavailable. Please reload the page and try again.');
     const root = 'https://www.gstatic.com/firebasejs/10.14.1/';
-    const fnModule = import(root + 'firebase-functions.js');
+    const fnModule = ['firebase-functions.js'].map(file => import(root + file))[0];
     void fnModule.catch(() => {});
     const [app, auth] = await Promise.all(['firebase-app.js', 'firebase-auth.js'].map(file => import(root + file)));
     sdk = { app, auth, functions: null };
