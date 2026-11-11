@@ -1,10 +1,24 @@
 <style>html[data-lc-initial-dark],html[data-lc-initial-dark] body:not(.lightmode){background-color:#121212;color:#eee;color-scheme:dark}</style>
 <script>
-try {
-  const theme = localStorage.getItem('theme');
-  document.documentElement.toggleAttribute('data-lc-initial-dark', theme === 'darkMODE' ||
-    (theme !== 'lightMODE' && matchMedia('(prefers-color-scheme: dark)').matches));
-} catch {}
+(() => {
+  let theme;
+  try { theme = localStorage.getItem('theme'); } catch {}
+  let systemDark = false;
+  try { systemDark = matchMedia('(prefers-color-scheme: dark)').matches; } catch {}
+  const dark = theme === 'darkMODE' || (theme !== 'lightMODE' && systemDark);
+  const root = document.documentElement;
+  root.toggleAttribute('data-lc-initial-dark', dark);
+  if (!dark) return;
+  // Apply the theme as soon as the parser creates the body, before page content paints.
+  const markBody = () => {
+    if (!document.body) return;
+    document.body.classList.add('darkmode');
+    observer.disconnect();
+  };
+  const observer = new MutationObserver(markBody);
+  observer.observe(root, { childList: true });
+  markBody();
+})();
 </script>
 {% if page.layout contains 'QandA' or page.url == '/TeachingQuiz/' %}
 {% include quiz-app-head.html %}
@@ -62,7 +76,7 @@ setTimeout(() => {
 {% else %}
 <script defer src="{{ '/script/pwa.js' | relative_url }}?v=android-push-2" data-base="{{ '/' | relative_url }}"></script>
 {% endif %}
-<script type="module" src="{{ '/script/members.js' | relative_url }}?v=learning-1" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
+<script type="module" src="{{ '/script/members.js' | relative_url }}?v=member-startup-2" data-lightcity-members data-enabled="{% if site.members_enabled == true %}true{% else %}false{% endif %}"></script>
 <link rel="stylesheet" href="{{ '/style/stream-feedback.css' | relative_url }}?v=messages-2">
 <link rel="stylesheet" href="{{ '/style/audio-controls.css' | relative_url }}?v=studio-controls-3">
 <script type="module" src="{{ '/script/media-switch.js' | relative_url }}?v=stream-reply-1"></script>

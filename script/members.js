@@ -2,7 +2,7 @@ import {isAndroidApp,nativeGoogleCredential,nativeSignOut} from './native-app.mj
 // Member identity is separate from anonymous device identity used by web push.
 const settings = document.querySelector('script[data-lightcity-members]');
 const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, publicLibrary: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
-let sdk, memberAuth, deviceAuth, functions, version = 0, mediaPrefetch = null;
+let sdk, memberAuth, deviceAuth, functions, functionsReady, version = 0, mediaPrefetch = null;
 const page = document.getElementById('member-page');
 let invitation='';
 if(page){try{const token=new URLSearchParams(location.hash.slice(1)).get('invite');if(/^[a-f0-9]{64}$/.test(token||'')){sessionStorage.setItem('lc-member-invitation',token);history.replaceState(null,'',location.pathname+location.search);}invitation=sessionStorage.getItem('lc-member-invitation')||'';}catch{}}
@@ -44,7 +44,7 @@ function renderPage() {
   field('member-tab-signin').disabled = field('member-tab-signup').disabled = busy;
   field('member-status').textContent = !api.enabled ? 'Member access is being prepared. Please check back soon.' : notice || api.error?.message || (verifiedAccess ? 'You have access to the full LightCity library.' : 'Sign in, or create an account using the code shared with the church.');
 }
-async function call(name, data = {}) { return (await sdk.functions.httpsCallable(functions, name)(data)).data; }
+async function call(name, data = {}) { await functionsReady; return (await sdk.functions.httpsCallable(functions, name)(data)).data; }
 async function linkDevice() {
   if (!Array.isArray(api.library) || !deviceAuth.currentUser) return;
   await call('linkChurchDevice', { deviceToken: await deviceAuth.currentUser.getIdToken() });
@@ -98,13 +98,14 @@ async function bootstrap() {
     const config = globalThis.LIGHTCITY_PUSH?.firebase;
     if (!config?.apiKey || !config?.projectId) throw Error('Sign-in settings are unavailable. Please reload the page and try again.');
     const root = 'https://www.gstatic.com/firebasejs/10.14.1/';
-    const [app, auth, fn] = await Promise.all(['firebase-app.js', 'firebase-auth.js', 'firebase-functions.js'].map(file => import(root + file)));
-    sdk = { app, auth, functions: fn };
+    const fnModule = import(root + 'firebase-functions.js');
+    void fnModule.catch(() => {});
+    const [app, auth] = await Promise.all(['firebase-app.js', 'firebase-auth.js'].map(file => import(root + file)));
+    sdk = { app, auth, functions: null };
     const deviceApp = app.getApps().find(item => item.name === '[DEFAULT]') || app.initializeApp(config);
     const memberApp = app.getApps().find(item => item.name === 'lightcity-members') || app.initializeApp(config, 'lightcity-members');
     try{memberAuth=typeof auth.initializeAuth==='function'?auth.initializeAuth(memberApp,{persistence:[auth.indexedDBLocalPersistence,auth.browserLocalPersistence],popupRedirectResolver:auth.browserPopupRedirectResolver}):auth.getAuth(memberApp);}catch(error){if(error.code!=='auth/already-initialized')throw error;memberAuth=auth.getAuth(memberApp);}deviceAuth=auth.getAuth(deviceApp);
-    functions = fn.getFunctions(memberApp, 'us-central1');
-    await memberAuth.authStateReady();
+    functionsReady = fnModule.then(fn => { sdk.functions = fn; functions = fn.getFunctions(memberApp, 'us-central1'); });
     await new Promise(resolve => {
       let initial = true;
       auth.onAuthStateChanged(memberAuth, async () => {

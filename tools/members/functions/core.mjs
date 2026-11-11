@@ -120,8 +120,10 @@ export function createMemberHandlers({ auth, db, secret, fail, stamp = () => Dat
       catch { throw new fail('unavailable', 'Audio access could not be prepared. Please try again shortly.'); }
     },
     async getChurchLibrary(request) {
-      await member(request);
-      const library = await db.doc('churchVideoLibrary/current').get();
+      uid(request);
+      // Read the catalogue while the member account and approval are verified.
+      // The response is never returned unless membership verification succeeds.
+      const [, library] = await Promise.all([member(request), db.doc('churchVideoLibrary/current').get()]);
       if (!library.exists || !Array.isArray(library.data().videos)) throw new fail('unavailable', 'The video library is being prepared. Please try again shortly.');
       return { videos: library.data().videos };
     },
