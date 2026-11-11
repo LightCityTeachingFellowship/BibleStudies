@@ -9,6 +9,7 @@ export async function nativeGoogleCredential(){const p=await plugins();if(!p)ret
 export async function nativeSignOut(){const p=await plugins();if(p){await p.audio.stop();await p.auth.signOut();}}
 const engines=new WeakMap();
 export async function nativeAudio(audio){if(!isAndroidApp())return null;if(!engines.has(audio))engines.set(audio,(async()=>{const [p,{connectNativeAudio}]=await Promise.all([plugins(),import('./native/audio-element.mjs')]);return connectNativeAudio(audio,p.audio);})());return engines.get(audio);}
+export async function restoreNativeAudio(audio,videoId){const engine=await nativeAudio(audio);if(!engine)return null;const state=await engine.restore();return state.videoId===videoId&&!state.ended?state:null;}
 export async function loadNativeAudio(audio,result,{videoId,title,live=false}={}){
  const engine=await nativeAudio(audio);if(!engine)return false;
  await engine.load({url:result.url,title:result.title||title,videoId,live,callable:live?'getChurchLiveAudio':'getChurchAudio',expiresAt:result.expiresAt,accountUid:globalThis.LightCityMembers?.user?.uid||'',artwork:'https://i.ytimg.com/vi/'+videoId+'/hqdefault.jpg'});

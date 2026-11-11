@@ -11,6 +11,11 @@ try {
 {% else %}
 {% include social-preview.html %}
 {% include site-shell-start.html %}
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://us-central1-perceptive-zoo-424115-j6.cloudfunctions.net" crossorigin>
+{% unless page.studio_app == true %}
+<link rel="modulepreload" href="{{ '/script/site-shell.mjs' | relative_url }}?v=android-startup-1">
+{% endunless %}
 {% if site.members_enabled == true %}
 <script>
 // Set before the first paint; authentication is still verified by Firebase.

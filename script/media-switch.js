@@ -175,7 +175,7 @@ export function mount({ viewport, videoId, title, onState = () => {}, audio: exi
         if(time || row?.completed) return { time, playing:true, rate:row?.rate || 1 };
       }
       return current ? { time: current.getCurrentTime(), playing: ![0,2].includes(current.getPlayerState()), rate:current.getPlaybackRate() } : null; },
-    pauseAudio: () => { if (audio.readyState >= 1) remember(videoId, audio); audio.pause(); },
+    pauseAudio: () => { if (audio.readyState >= 1) remember(videoId, audio); if(!item.preserveNativePlayback)audio.pause(); },
     pauseVideo: () => { try { player?.pauseVideo(); } catch {} },
     show: mode => {
       viewport.classList.toggle('lc-audio-mode', mode === 'audio'); panel.hidden = mode !== 'audio';

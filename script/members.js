@@ -61,9 +61,12 @@ async function checkAccess({ preserveOnTransient = false } = {}) {
     api.publicLibrary = publicData.videos;
     const metadata=document.getElementById('lc-public-video-data');
     if(metadata)metadata.textContent=JSON.stringify(Object.fromEntries(publicData.videos.map(v=>[v.id,v.title])));
+    // A guest can render the bundled public library immediately. Refresh it when
+    // the network response arrives without exposing any member-only content.
+    if (!api.loading && (!api.user || api.user.isAnonymous) && current === version)
+      window.dispatchEvent(new CustomEvent('lightcity-members-changed', { detail: { videos: api.library } }));
   } catch { /* Bundled public cards remain available during connection failures. */ } })();
   if (!api.user || api.user.isAnonymous) {
-    await publicRefresh;
     if (current !== version) return;
     publish(null); renderPage(); return;
   }

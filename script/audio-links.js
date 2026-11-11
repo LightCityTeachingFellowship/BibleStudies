@@ -49,7 +49,7 @@
     }
     function delegate(root) {
       if (!root) return;
-      root.addEventListener('click', event => {
+      root.addEventListener('click', async event => {
         const button = event.target.closest?.('button[data-media-mode]');
         if (!button || !root.contains(button)) return;
         event.preventDefault(); event.stopPropagation();
@@ -64,7 +64,12 @@
         if (!globalThis.LightCityMedia) { feedback(holder, 'Playback controls are still loading. Please try again.'); return; }
         let controller = mounted.get(viewport);
         if (!controller) {
-          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, title: (document.getElementById('watch-title')?.textContent!=='LightCity video'?document.getElementById('watch-title')?.textContent:null) || holder.closest('.video-box')?.getAttribute('video-title') || recording.title || 'LightCity recording', onState: (mode, message) => {
+          let existingAudio=null;
+          if(holder===watch && recording?.kind!=='live' && button.dataset.mediaMode==='audio' && globalThis.androidBridge && globalThis.Capacitor?.nativePromise){
+            try { const candidate=document.createElement('audio'); const {restoreNativeAudio}=await import('./native-app.mjs'); if(await restoreNativeAudio(candidate,id))existingAudio=candidate; } catch {}
+          }
+          if(!viewport.isConnected)return;
+          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, audio:existingAudio, title: (document.getElementById('watch-title')?.textContent!=='LightCity video'?document.getElementById('watch-title')?.textContent:null) || holder.closest('.video-box')?.getAttribute('video-title') || recording.title || 'LightCity recording', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
             feedback(holder, message);liveBadge(viewport,id);
             // if (holder === watch) {
@@ -73,6 +78,7 @@
             // }
           } });
           mounted.set(viewport, controller);
+          if(existingAudio){resume=null;holder.querySelectorAll('button[data-media-mode]').forEach(control=>control.setAttribute('aria-pressed',String(control.dataset.mediaMode==='audio')));return;}
         }
         const checkpoint = button.dataset.mediaMode === 'audio' && resume?.videoId === id ? resume : null;
         resume = null;
@@ -180,7 +186,7 @@
     }
     window.addEventListener('lightcity-durations-ready',schedule);
     window.addEventListener('lightcity-members-changed', () => void refresh());
-    window.addEventListener('pagehide', event => { if (event.persisted) return; for (const controller of mounted.values()) controller.dispose(); mounted.clear(); });
+    window.addEventListener('pagehide', event => { if (event.persisted) return; for (const controller of mounted.values()) { if(globalThis.androidBridge && globalThis.Capacitor?.nativePromise && controller.mode==='audio') controller.preserveNativePlayback=true; controller.dispose(); } mounted.clear(); });
     render();
     await refresh();
     const liveRefresh = setInterval(() => { if (document.visibilityState !== 'hidden') void refresh(); }, 45000);
