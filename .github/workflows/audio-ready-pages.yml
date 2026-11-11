@@ -19,7 +19,7 @@ permissions:
   id-token: write
 concurrency:
   group: lightcity-web-push
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   publish:
     # Enable only after Pages source has been switched to GitHub Actions.
