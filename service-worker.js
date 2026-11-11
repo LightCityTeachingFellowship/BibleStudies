@@ -19,10 +19,23 @@ self.addEventListener('fetch', event => {
   }).catch(async()=> (await caches.match(request)) || Response.error()));
   return;
  }
- if (request.mode === 'navigate') event.respondWith(fetch(request).then(async response => {
-  if (response.ok) { const c = await caches.open(CACHE); await c.put(request, response.clone()); const keys = await c.keys(); const pages = keys.filter(k => k.url !== offline); if (pages.length > 40) await c.delete(pages[0]); }
-  return response;
- }).catch(async () => (await caches.match(request)) || caches.match(offline)));
+ if (request.mode === 'navigate') {
+  // Account and administration pages must always use a fresh response.
+  const privateRoute = /^\/(?:Admin|members|api|__)(?:\/|$)/i.test(url.pathname.slice(BASE.pathname.length - 1));
+  const network = fetch(request).then(async response => {
+   if (response.ok && !privateRoute) { const c = await caches.open(CACHE); await c.put(request, response.clone()); const keys = await c.keys(); const pages = keys.filter(k => k.url !== offline); if (pages.length > 40) await c.delete(pages[0]); }
+   return response;
+  });
+  event.waitUntil(network.then(() => undefined, () => undefined));
+  event.respondWith((async () => {
+   const cached = privateRoute ? null : await caches.match(request);
+   if (!cached) { try { return await network; } catch { return (await caches.match(offline)) || Response.error(); } }
+   let timer;
+   try { return await Promise.race([network, new Promise(resolve => { timer = setTimeout(() => resolve(cached), 1000); })]); }
+   catch { return cached; }
+   finally { clearTimeout(timer); }
+  })());
+ }
 });
 self.addEventListener('notificationclick', event => {
  // Let Firebase handle notifications it displays automatically.
