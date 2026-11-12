@@ -178,7 +178,7 @@
 .lc-study-card .lc-video-title-row h2 {margin:0!important;}
 .lc-continue-study {margin:24px 0;}
 .lc-continue-study .lc-personal-grid {margin:16px 0;}
-.lc-study-related {margin:24px auto;padding:18px;border:1px solid #cbd2da;border-radius:14px;}
+.lc-study-related {margin:24px auto;padding:18px;border:1px solid #cbd2da;border-radius:10px;}
 .lc-study-related h2 {background:transparent!important;font-size:22px!important;line-height:1.4;}
 .lc-study-related-link {display:grid;grid-template-columns:220px minmax(0,1fr);align-items:start;gap:12px;padding:14px 0;color:inherit;border-bottom:1px solid #cbd2da;text-decoration:none;}
 .lc-study-related-link:last-child{border-bottom:0;padding-bottom:0}
