@@ -187,7 +187,7 @@
 .lc-study-related-copy strong{display:block;font-size:18px;line-height:1.4;font-weight:600;overflow-wrap:anywhere}
 .lc-study-related-kind{display:none;font-size:8px;line-height:1.4;opacity:.7;margin-bottom:4px}
 .lc-study-related-link small {display:block;font-size:12px;opacity:.8;}
-@media(max-width:500px) {.lc-study-related-link {grid-template-columns:120px minmax(0, 1fr);gap:8px;}.lc-study-related-copy strong {font-size:10px;}}
+@media(max-width:500px) {.lc-study-related-link {grid-template-columns:120px minmax(0, 1fr);gap:8px;}.lc-study-related-copy strong {font-size:10px;}.lc-study-related-link small{font-size:8px;}}
 [data-study-body] :is(h1,h2,h3,h4,h5,h6,p,li,blockquote) {scroll-margin-top:120px;}
 [data-study-continue][hidden],[data-study-related][hidden],[data-study-library][hidden],#my-video-list[hidden] {display:none!important;}
 .app-home #home-search-results li.lc-search-reading-result {display:grid;grid-template-columns:minmax(0,1fr) 40px;gap:8px;border-top:1px solid var(--home-border);padding:16px 4px;}
