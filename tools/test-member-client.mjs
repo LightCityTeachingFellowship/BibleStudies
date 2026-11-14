@@ -65,7 +65,7 @@ function setup(enabled = true, configMode = 'ready', startup = {}) {
       context.LIGHTCITY_PUSH = { firebase: { apiKey: 'test-public-key', projectId: 'test-project' } };
     },
     mockImport: async file => modules[file],
-    CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } }, console, setInterval: () => ({ unref() {} })
+    CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } }, console, setTimeout, clearTimeout, setInterval: () => ({ unref() {} })
   });
   vm.runInContext(source, context);
   return { get, api: context.LightCityMembers, state, calls, deviceAuth, announcements, rootClasses, events, fireDomReady: () => domReady?.() };

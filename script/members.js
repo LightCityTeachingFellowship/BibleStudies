@@ -8,6 +8,34 @@ let invitation='';
 if(page){try{const token=new URLSearchParams(location.hash.slice(1)).get('invite');if(/^[a-f0-9]{64}$/.test(token||'')){sessionStorage.setItem('lc-member-invitation',token);history.replaceState(null,'',location.pathname+location.search);}invitation=sessionStorage.getItem('lc-member-invitation')||'';}catch{}}
 let busy = false, signup = false, notice = '';
 const field = id => document.getElementById(id);
+// The Watch mini-player keeps the verified Watch page alive while browsing in
+// a same-origin frame. Reuse only its already-authorized in-memory library;
+// never use a cached member list or pass authentication tokens through the URL.
+let embeddedParent = null;
+try {
+  if (window.parent !== window && window.parent.location.origin === location.origin &&
+      window.frameElement?.parentElement?.id === 'watch-browse-panel') {
+    embeddedParent = window.parent;
+  }
+} catch { /* A cross-origin frame never receives member data. */ }
+function inheritVerifiedLibrary() {
+  const parent = embeddedParent?.LightCityMembers;
+  if (!parent || parent.loading || !parent.user || parent.user.isAnonymous || !Array.isArray(parent.library)) return false;
+  api.user = parent.user;
+  api.publicLibrary = parent.publicLibrary;
+  publish(parent.library.slice());
+  return true;
+}
+if (embeddedParent) {
+  inheritVerifiedLibrary();
+  embeddedParent.addEventListener('lightcity-members-changed', () => {
+    if (!inheritVerifiedLibrary() && !embeddedParent.LightCityMembers?.loading) {
+      api.user = null;
+      publish(null);
+    }
+  });
+}
+
 function publish(videos) {
   api.loading = false;
   api.library = videos;
@@ -52,6 +80,7 @@ async function linkDevice() {
 async function checkAccess({ preserveOnTransient = false } = {}) {
   const current = ++version;
   api.user = memberAuth.currentUser;
+  if (embeddedParent && api.user && api.user.uid !== embeddedParent.LightCityMembers?.user?.uid) publish(null);
   api.error = null;
   // Public metadata and member access load together, so a public lookup cannot delay member restoration.
   const publicRefresh = (async () => { try {
@@ -68,11 +97,13 @@ async function checkAccess({ preserveOnTransient = false } = {}) {
   } catch { /* Bundled public cards remain available during connection failures. */ } })();
   if (!api.user || api.user.isAnonymous) {
     if (current !== version) return;
+    if (inheritVerifiedLibrary()) return;
     publish(null); renderPage(); return;
   }
   try {
     if(invitation){try{await call('redeemChurchInvitation',{invitation});sessionStorage.removeItem('lc-member-invitation');invitation='';notice='Welcome! Your church membership is ready.';}catch(error){notice=error.message||'The invitation could not be accepted.';}}
-    const data = await call('getChurchLibrary');
+    let timeout;
+    const data = await Promise.race([call('getChurchLibrary'), new Promise((_, reject) => { timeout = setTimeout(() => { const error = Error('Member library took too long to load.'); error.code = 'functions/deadline-exceeded'; reject(error); }, 15000); })]).finally(() => clearTimeout(timeout));
     if (current !== version) return;
     if (!Array.isArray(data.videos) || data.videos.some(video => !/^[\w-]{11}$/.test(video.id))) throw Error('The video library could not be loaded. Please try again.');
     const seen = new Set();
@@ -108,6 +139,12 @@ async function bootstrap() {
     functionsReady = fnModule.then(fn => { sdk.functions = fn; functions = fn.getFunctions(memberApp, 'us-central1'); });
     await new Promise(resolve => {
       let initial = true;
+      const startupTimer = setTimeout(() => {
+        if (!initial) return;
+        initial = false;
+        if (!inheritVerifiedLibrary()) publish(null);
+        resolve();
+      }, 20000);
       auth.onAuthStateChanged(memberAuth, async () => {
         const selector = '#videotab-container, #watch-player, .home-featured[data-video-id]';
         const surface = document.querySelector(selector);
@@ -119,7 +156,7 @@ async function bootstrap() {
             void pending.catch(() => {}); mediaPrefetch[name] = pending;
           }
         }
-        await checkAccess(); if (initial) { initial = false; resolve(); }
+        await checkAccess({ preserveOnTransient: !!embeddedParent }); if (initial) { initial = false; clearTimeout(startupTimer); resolve(); }
       });
     });
     auth.onAuthStateChanged(deviceAuth, () => { void linkDevice().catch(() => {}); });

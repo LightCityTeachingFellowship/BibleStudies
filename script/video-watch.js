@@ -39,7 +39,7 @@
  if(query.has('t')) { const seconds=Number(query.get('t')); if(Number.isFinite(seconds)&&seconds>=0&&seconds<=172800)params.set('start',String(Math.floor(seconds))); }
  player.dataset.videoId=videoId;
  player.src=`https://www.youtube-nocookie.com/embed/${videoId}?${params}`;
- if (startWithAudio) player.style.visibility = 'hidden';
+ if (startWithAudio) { player.style.visibility = 'hidden'; player.dataset.audioRestoring = 'true'; }
  container.appendChild(player);
  if (startWithAudio) {
   const revealVideo = () => { player.style.visibility = ''; };
@@ -51,7 +51,7 @@
   });
   observer.observe(container, { attributes: true, attributeFilter: ['class'] });
   document.addEventListener('click', event => {
-   if (event.target.closest?.('[data-media-mode=video]')) revealVideo();
+   if (event.target.closest?.('[data-media-mode=video]')) { delete player.dataset.audioRestoring; revealVideo(); }
   });
   setTimeout(() => { observer.disconnect(); revealVideo(); }, 15000);
  }

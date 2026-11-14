@@ -9,7 +9,7 @@
     if (!grid && !hero && !watch) return;
     let recordedAvailable = new Map(), liveAvailable = new Map();
     let available = new Map(), version = 0, scheduled = false, audience = null, liveCheckedAt = 0;
-    const mounted = new Map();
+    const mounted = new Map(), mounting = new Set();
     let openAudio = new URLSearchParams(location.search).get('mode') === 'audio';
     let resume = globalThis.LightCityMedia?.savedListening?.();
     function feedback(holder, message) {
@@ -64,12 +64,15 @@
         if (!globalThis.LightCityMedia) { feedback(holder, 'Playback controls are still loading. Please try again.'); return; }
         let controller = mounted.get(viewport);
         if (!controller) {
+          // Catalogue refreshes can request restoration more than once while native state loads.
+          if (mounting.has(viewport)) return;
+          mounting.add(viewport);
           let existingAudio=null;
           if(holder===watch && recording?.kind!=='live' && button.dataset.mediaMode==='audio' && globalThis.androidBridge && globalThis.Capacitor?.nativePromise){
             try { const candidate=document.createElement('audio'); const {restoreNativeAudio}=await import('./native-app.mjs'); if(await restoreNativeAudio(candidate,id))existingAudio=candidate; } catch {}
           }
-          if(viewport.isConnected === false)return;
-          controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, audio:existingAudio, title: (document.getElementById('watch-title')?.textContent!=='LightCity video'?document.getElementById('watch-title')?.textContent:null) || holder.closest('.video-box')?.getAttribute('video-title') || recording.title || 'LightCity recording', onState: (mode, message) => {
+          if(viewport.isConnected === false){mounting.delete(viewport);return;}
+          try { controller = globalThis.LightCityMedia.mount({ viewport, videoId: id, recording, audio:existingAudio, title: (document.getElementById('watch-title')?.textContent!=='LightCity video'?document.getElementById('watch-title')?.textContent:null) || holder.closest('.video-box')?.getAttribute('video-title') || recording.title || 'LightCity recording', onState: (mode, message) => {
             holder.querySelectorAll('button[data-media-mode]').forEach(control => control.setAttribute('aria-pressed', String(control.dataset.mediaMode === mode)));
             feedback(holder, message);liveBadge(viewport,id);
             // if (holder === watch) {
@@ -78,6 +81,7 @@
             // }
           } });
           mounted.set(viewport, controller);
+          } finally { mounting.delete(viewport); }
           if(existingAudio){resume=null;holder.querySelectorAll('button[data-media-mode]').forEach(control=>control.setAttribute('aria-pressed',String(control.dataset.mediaMode==='audio')));return;}
         }
         const checkpoint = button.dataset.mediaMode === 'audio' && resume?.videoId === id ? resume : null;

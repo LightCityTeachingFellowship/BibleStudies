@@ -46,13 +46,14 @@ export function trackYouTube(frame, { autoplay = false } = {}) {
         try { id = new URL(frame.src || frame.getAttribute?.('src'), location.href || location.origin).pathname.split('/').pop(); } catch {}
         if (/^[\w-]{11}$/.test(id || '')) {
           let explicit = false; try { explicit = new URL(frame.src || frame.getAttribute('src')).searchParams.has('start'); } catch {}
-          const held = !explicit && !frameOwners.has(frame) && player.getCurrentTime() < 2;
+          const restoringAudio = frame.dataset?.audioRestoring === 'true';
+          const held = !restoringAudio && !explicit && !frameOwners.has(frame) && player.getCurrentTime() < 2;
           const wasPlaying = [1,3].includes(player.getPlayerState());
           if (held) player.pauseVideo();
           await Promise.race([personal.ready, new Promise(done=>{const t=setTimeout(done,1500);t.unref?.();})]);
           const owner = personal.scope;
           const save = () => { try { if (frameOwners.get(frame)?.mode === 'audio') return; if(player.getPlayerState()===1)frame.lcHistoryStarted=true;if(!frame.lcHistoryStarted)return; personal.record({ videoId:id, title:player.getVideoData?.()?.title || frame.title, seconds:player.getCurrentTime(), duration:player.getDuration(), rate:player.getPlaybackRate(), mode:'video', completed:player.getPlayerState()===0 },owner); } catch {} };
-          if (!explicit && !frameOwners.has(frame)) {
+          if (!restoringAudio && !explicit && !frameOwners.has(frame)) {
             const row = await Promise.race([personal.forVideo(id), new Promise(done=>{ const t=setTimeout(done,1500); t.unref?.(); })]);
             if (frame.isConnected !== false && personal.scope === owner && row && !row.completed && row.seconds > 5 && player.getCurrentTime() < 2) player.seekTo(row.seconds,true);
           }
@@ -64,13 +65,13 @@ export function trackYouTube(frame, { autoplay = false } = {}) {
           window.addEventListener?.('pagehide',save); document.addEventListener?.('visibilitychange',visibility);
         }
         resolve(player);
-        if (frameOwners.get(frame)?.mode === 'audio') player.pauseVideo();
+        if (frame.dataset?.audioRestoring === 'true' || frameOwners.get(frame)?.mode === 'audio') player.pauseVideo();
         else if (autoplay && ![0, 2].includes(player.getPlayerState())) player.playVideo();
       },
       onStateChange: event => {
         if ([0,1,2].includes(event.data)) { frame.lcSaveHistory?.(); if(event.data!==1)void personal.flush(); }
         if (event.data !== 1) return;
-        if (frameOwners.get(frame)?.mode === 'audio') { event.target.pauseVideo(); return; }
+        if (frame.dataset?.audioRestoring === 'true' || frameOwners.get(frame)?.mode === 'audio') { event.target.pauseVideo(); return; }
         pauseOthers(null, event.target);
         try { const id=new URL(frame.src,location.href).pathname.split('/').pop();if(/^[\w-]{11}$/.test(id))void showPlayingStreamMessages(id).catch(()=>{}); } catch {}
       },
