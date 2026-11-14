@@ -20,6 +20,14 @@ function setup() {
   return { controller, calls, state };
 }
 let app = setup();
+let prepare;
+app.state.holdAudio = new Promise(resolve => { prepare = resolve; });
+const preparing = app.controller.switchTo('audio'); await tick();
+assert.equal(app.state.videoPlaying, true, 'Video continues while audio is loading');
+app.state.videoTime = 140;
+prepare(); await preparing;
+assert.equal(app.state.audioTime, 140, 'Switch uses the position reached during preparation');
+app = setup();
 await app.controller.switchTo('audio');
 assert.equal(app.state.audioTime, 125.75); assert.equal(app.state.audioPlaying, true); assert.equal(app.state.videoPlaying, false);
 assert.ok(app.calls.indexOf('pauseVideo') < app.calls.indexOf('playAudio'));

@@ -12,6 +12,7 @@
     const mounted = new Map(), mounting = new Set();
     let openAudio = new URLSearchParams(location.search).get('mode') === 'audio';
     let resume = globalThis.LightCityMedia?.savedListening?.();
+    let backgroundSwitch = null;
     function feedback(holder, message) {
       let node = holder.querySelector('.lc-mode-feedback');
       if (!node && message) { node = document.createElement('p'); node.className = 'lc-mode-feedback'; node.setAttribute('role', 'status'); holder.appendChild(node); }
@@ -52,6 +53,8 @@
       root.addEventListener('click', async event => {
         const button = event.target.closest?.('button[data-media-mode]');
         if (!button || !root.contains(button)) return;
+        const startPlayback = button.dataset.startPlayback === 'true';
+        if (event.isTrusted) backgroundSwitch = null;
         event.preventDefault(); event.stopPropagation();
         const holder = button.closest('.lc-video-actions'), id = holder?.dataset.videoId;
         const recording = available.get(id), viewport = holder && viewportFor(holder);
@@ -86,11 +89,15 @@
         }
         const checkpoint = button.dataset.mediaMode === 'audio' && resume?.videoId === id ? resume : null;
         resume = null;
-        const startPlayback = button.dataset.startPlayback === 'true';
+        if (startPlayback && backgroundSwitch && !backgroundSwitch.controller) backgroundSwitch.controller = controller;
         const switching = checkpoint && controller.restoreListening ? controller.restoreListening(checkpoint) : controller.switchTo(button.dataset.mediaMode);
         void switching.then(async () => {
           if (startPlayback && !checkpoint && controller.mode === 'audio' && mounted.get(viewport) === controller) {
             try { await controller.audio.play(); } catch { feedback(holder, 'Tap Play on the audio player to begin listening.'); }
+          }
+          if (backgroundSwitch?.controller === controller && document.visibilityState !== 'hidden' && controller.mode === 'audio') {
+            backgroundSwitch = null;
+            await controller.switchTo('video');
           }
         }).catch(() => feedback(holder, 'Playback could not start. Please try again.'));
       });
@@ -99,7 +106,12 @@
     // The preference applies when the app is backgrounded, not when navigating
     // between pages with the video mini-player visible.
     document.addEventListener?.('visibilitychange', () => {
-      if (document.visibilityState !== 'hidden' || !watch || window !== window.top) return;
+      if (!watch || window !== window.top) return;
+      if (document.visibilityState !== 'hidden') {
+        const pending = backgroundSwitch;
+        if (pending?.controller?.mode === 'audio') { backgroundSwitch = null; void pending.controller.switchTo('video'); }
+        return;
+      }
       try { if (localStorage.getItem('lc-minimize-audio') !== '1') return; } catch { return; }
       const viewport = document.getElementById('watch-player');
       if (!viewport || viewport.classList.contains('lc-audio-mode')) return;
@@ -107,6 +119,7 @@
       const listen = watch.querySelector('button[data-media-mode="audio"]');
       // Do not start a paused video merely because the app was backgrounded.
       if (!frame || !frame.lcLastPlayingAt || Date.now() - frame.lcLastPlayingAt > 30000 || !listen || listen.disabled || listen.hidden) return;
+      backgroundSwitch = { controller: mounted.get(viewport) || null };
       listen.dataset.startPlayback = 'true';
       listen.click();
       delete listen.dataset.startPlayback;

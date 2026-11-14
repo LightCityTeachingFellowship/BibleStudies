@@ -17,20 +17,25 @@ export function createModeSwitch(adapter) {
         if (validTime(snapshot?.time)) position = snapshot.time;
         if (typeof snapshot?.playing === 'boolean') playing = snapshot.playing;
         const rate = Number(snapshot?.rate) || adapter.getRate?.() || 1;
+        loading = true;
+        adapter.onState?.(mode, 'Preparing ' + next + '…');
+        if (next === 'audio') await adapter.loadAudio(signal);
+        else await adapter.loadVideo(signal);
+        if (stale()) return;
+        // Playback continues during preparation, so capture its latest position.
+        loading = false;
+        const current = mode === 'audio' ? adapter.readAudio() : await adapter.readVideo(signal);
+        if (stale()) return;
+        if (validTime(current?.time)) position = current.time;
+        if (typeof current?.playing === 'boolean') playing = current.playing;
+        const currentRate = Number(current?.rate) || rate;
         adapter.pauseAudio(); adapter.pauseVideo();
-        mode = next; loading = true;
-        adapter.show(mode); adapter.onState?.(mode, 'Preparing ' + mode + '…');
+        mode = next; adapter.show(mode); loading = false;
         if (mode === 'audio') {
-          await adapter.loadAudio(signal);
-          if (stale()) return;
-          adapter.seekAudio(position, rate);
-          loading = false;
+          adapter.seekAudio(position, currentRate);
           if (playing) await adapter.playAudio();
         } else {
-          await adapter.loadVideo(signal);
-          if (stale()) return;
-          adapter.seekVideo(position, rate);
-          loading = false;
+          adapter.seekVideo(position, currentRate);
           if (playing) await adapter.playVideo();
           else adapter.pauseVideo();
         }
