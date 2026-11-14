@@ -99,7 +99,7 @@
     // The preference applies when the app is backgrounded, not when navigating
     // between pages with the video mini-player visible.
     document.addEventListener?.('visibilitychange', () => {
-      if (document.visibilityState !== 'hidden' || !watch) return;
+      if (document.visibilityState !== 'hidden' || !watch || window !== window.top) return;
       try { if (localStorage.getItem('lc-minimize-audio') !== '1') return; } catch { return; }
       const viewport = document.getElementById('watch-player');
       if (!viewport || viewport.classList.contains('lc-audio-mode')) return;

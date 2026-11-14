@@ -86,7 +86,8 @@ if (window === window.top) {
   let frame;
   const update = () => {
     const video = player.querySelector('iframe');
-    browse.hidden = player.hidden || player.classList.contains('lc-audio-mode') || !video || video.hidden || getComputedStyle(video).visibility === 'hidden';
+    const audio = player.classList.contains('lc-audio-mode') && player.querySelector('audio');
+    browse.hidden = player.hidden || (!audio && (!video || video.hidden || getComputedStyle(video).visibility === 'hidden'));
   };
   new MutationObserver(update).observe(player, { attributes:true, childList:true, subtree:true });
   update();
@@ -113,6 +114,11 @@ if (window === window.top) {
           const path = target.pathname.slice(base.length).replace(/^\/+|\/+$/g, '').toLowerCase();
           if (!/^(watch|admin|members|share)(?:\/|$)/.test(path)) return;
           event.preventDefault();
+          if (path === 'watch' && target.searchParams.get('v') === new URL(location.href).searchParams.get('v')) {
+            close();
+            if (location.hash === marker) history.replaceState(null, '', location.pathname + location.search);
+            return;
+          }
           // Leave the browsing frame when choosing another player or a sensitive page.
           location.assign(target.href);
         }, true);
