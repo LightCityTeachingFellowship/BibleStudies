@@ -96,6 +96,21 @@
       });
     }
     delegate(grid); delegate(watch);
+    // The preference applies when the app is backgrounded, not when navigating
+    // between pages with the video mini-player visible.
+    document.addEventListener?.('visibilitychange', () => {
+      if (document.visibilityState !== 'hidden' || !watch) return;
+      try { if (localStorage.getItem('lc-minimize-audio') !== '1') return; } catch { return; }
+      const viewport = document.getElementById('watch-player');
+      if (!viewport || viewport.classList.contains('lc-audio-mode')) return;
+      const frame = viewport.querySelector('iframe');
+      const listen = watch.querySelector('button[data-media-mode="audio"]');
+      // Do not start a paused video merely because the app was backgrounded.
+      if (!frame || !frame.lcLastPlayingAt || Date.now() - frame.lcLastPlayingAt > 30000 || !listen || listen.disabled || listen.hidden) return;
+      listen.dataset.startPlayback = 'true';
+      listen.click();
+      delete listen.dataset.startPlayback;
+    });
     function liveBadge(viewport, id) {
       if (!viewport) return;
       const recording = available.get(id);

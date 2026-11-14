@@ -59,7 +59,7 @@ export function trackYouTube(frame, { autoplay = false } = {}) {
           }
           const visibility=()=>{if(document.visibilityState==='hidden')save();};
           const releaseHistory=()=>{clearInterval(historyTimer);window.removeEventListener?.('pagehide',save);document.removeEventListener?.('visibilitychange',visibility);delete frame.lcSaveHistory;};
-          const historyTimer = setInterval(()=>{ try{if(frame.isConnected===false){releaseHistory();return;}if(player.getPlayerState()===1)save();}catch{releaseHistory();} },5000); historyTimer.unref?.();
+          const historyTimer = setInterval(()=>{ try{if(frame.isConnected===false){releaseHistory();return;}if(player.getPlayerState()===1){frame.lcLastPlayingAt=Date.now();save();}}catch{releaseHistory();} },5000); historyTimer.unref?.();
           frame.lcSaveHistory = save;
           if (held && (wasPlaying || autoplay) && frameOwners.get(frame)?.mode !== 'audio' && frame.isConnected !== false) player.playVideo();
           window.addEventListener?.('pagehide',save); document.addEventListener?.('visibilitychange',visibility);
@@ -69,6 +69,8 @@ export function trackYouTube(frame, { autoplay = false } = {}) {
         else if (autoplay && ![0, 2].includes(player.getPlayerState())) player.playVideo();
       },
       onStateChange: event => {
+        if (event.data === 1) frame.lcLastPlayingAt = Date.now();
+        if (event.data === 2 && document.visibilityState !== 'hidden') frame.lcLastPlayingAt = 0;
         if ([0,1,2].includes(event.data)) { frame.lcSaveHistory?.(); if(event.data!==1)void personal.flush(); }
         if (event.data !== 1) return;
         if (frame.dataset?.audioRestoring === 'true' || frameOwners.get(frame)?.mode === 'audio') { event.target.pauseVideo(); return; }
