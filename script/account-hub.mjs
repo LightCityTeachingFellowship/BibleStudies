@@ -42,7 +42,7 @@ function settings(){const d=modal('Settings'),appearance=el('section','','lc-hub
   const membership = el('a', 'Church member sign-in', 'lc-hub-button');
   membership.href = sitePath('/members/');
   d.append(membership);
-}appearance.append(el('h3','Appearance'),themeButton);d.append(appearance,installSetting(d));paintTheme();const observer=new MutationObserver(paintTheme);observer.observe(document.body,{attributes:true,attributeFilter:['class']});d.addEventListener('close',()=>observer.disconnect(),{once:true});const box=el('section','','lc-hub-setting'),title=el('h3','Notifications'),status=el('p','','lc-hub-muted');
+}appearance.append(el('h3','Appearance'),themeButton);d.append(appearance,installSetting(d));const playback=el('section','','lc-hub-setting'),playbackLabel=el('label'),autoAudio=el('input');autoAudio.type='checkbox';try{autoAudio.checked=localStorage.getItem('lc-minimize-audio')==='1';}catch{}autoAudio.addEventListener('change',()=>{try{localStorage.setItem('lc-minimize-audio',autoAudio.checked?'1':'0');}catch{}});playbackLabel.append(autoAudio,document.createTextNode(' Switch video to audio when minimized'));playback.append(el('h3','Playback'),playbackLabel,el('p','When audio is available, continue listening while you browse.','lc-hub-muted'));d.append(playback);paintTheme();const observer=new MutationObserver(paintTheme);observer.observe(document.body,{attributes:true,attributeFilter:['class']});d.addEventListener('close',()=>observer.disconnect(),{once:true});const box=el('section','','lc-hub-setting'),title=el('h3','Notifications'),status=el('p','','lc-hub-muted');
 status.setAttribute('role','status');
 let busy=false,message='';
 const toggle=action('Loading…',async()=>{

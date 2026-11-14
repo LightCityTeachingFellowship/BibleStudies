@@ -119,6 +119,13 @@ if (window === window.top) {
     panel.hidden = false;
     miniControls.hidden = false;
     document.body.classList.add('lc-watch-minimized');
+    // Keep the current player alive and use its normal synchronized switch.
+    let switchToAudio = false;
+    try { switchToAudio = localStorage.getItem('lc-minimize-audio') === '1'; } catch (_) {}
+    if (switchToAudio) {
+      const listen = document.querySelector('#watch-audio-choice button[data-media-mode="audio"]');
+      if (listen && !listen.disabled && !listen.hidden) listen.click();
+    }
     restore.focus();
   };
   browse.onclick = () => open(library);
@@ -150,6 +157,7 @@ if (window === window.top) {
   dismiss.onclick = () => {
     const destination = frame?.contentWindow?.location?.href;
     try { player.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({event:'command',func:'pauseVideo',args:[]}), '*'); } catch (_) {}
+    try { player.querySelector('audio')?.pause(); } catch (_) {}
     close();
     if (destination && new URL(destination).origin === location.origin) location.assign(destination);
   };
