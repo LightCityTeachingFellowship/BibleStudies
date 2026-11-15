@@ -55,7 +55,7 @@ a:focus-visible{outline:3px solid var(--vivid-orange);outline-offset:5px}
  .lc-shell-watch .watch-title-row{order:-1;margin:0 16px;gap:8px}
  .lc-shell-watch #watch-title{font:700 clamp(16px,4.5vw,18px)/1.35 'Outfit','Segoe UI',sans-serif;margin:4px 0!important;padding:0!important}
  .lc-shell-watch .watch-menu{margin:0;flex-basis:40px}.lc-shell-watch .watch-menu summary{width:40px;height:40px}
- /* .lc-shell-watch .watch-main>:not(#watch-player):not(.watch-title-row){margin:0 16px} */
+ .lc-shell-watch .watch-main>:not(#watch-player):not(.watch-title-row){margin:0 16px}
  .lc-shell-watch #watch-help{font-size:13px}
  .lc-shell-watch #watch-status{font-size:14px}
  .lc-shell-watch .watch-main>#watch-audio-choice{display:flex;flex-wrap:wrap;gap:8px;margin:0 16px}
