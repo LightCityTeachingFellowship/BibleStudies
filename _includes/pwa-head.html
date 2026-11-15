@@ -118,10 +118,13 @@ setTimeout(() => {
 <style>
 .lc-native-mini:not([hidden]){display:flex;align-items:center;gap:.65rem;position:fixed;z-index:90;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));padding:.65rem .8rem;border:1px solid #555;border-radius:14px;background:#202020;color:#fff;box-shadow:0 4px 16px #0005}
 .lc-native-mini a{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:inherit}
+body.lc-native-mini-active #watch-player,body.lc-native-mini-active #watch-mini-controls{visibility:hidden!important}
+body.lc-native-mini-active .lc-native-mini:not([hidden]){z-index:1003}
 .lc-native-mini button{flex:none;min-height:40px;padding:0 .7rem;border:1px solid #666;border-radius:8px;background:transparent;color:inherit;font:inherit}
 </style>
 <script type="module">
-if (globalThis.androidBridge && globalThis.Capacitor?.nativePromise && !/\/Watch\/?$/i.test(location.pathname)) {
+if (globalThis.androidBridge && globalThis.Capacitor?.nativePromise) {
+  const watchPage = /\/Watch\/?$/i.test(location.pathname);
   const { registerPlugin } = await import({{ '/script/native/capacitor-core.mjs' | relative_url | jsonify }});
   const audio = registerPlugin('LightCityAudio');
   const bar = document.createElement('aside');
@@ -135,9 +138,12 @@ if (globalThis.androidBridge && globalThis.Capacitor?.nativePromise && !/\/Watch
   stop.textContent = 'Stop';
   bar.append(title, toggle, stop);
   document.body.append(bar);
-  let playing = false;
+  let playing = false, latestState = {};
   const render = state => {
-    bar.hidden = !/^[\w-]{11}$/.test(state.videoId || '') || Boolean(state.ended);
+    latestState = state;
+    const showOnWatch = document.body.classList.contains('lc-watch-minimized') && document.body.classList.contains('lc-watch-mini-audio');
+    bar.hidden = !/^[\w-]{11}$/.test(state.videoId || '') || Boolean(state.ended) || (watchPage && !showOnWatch);
+    document.body.classList.toggle('lc-native-mini-active', watchPage && !bar.hidden);
     if (bar.hidden) return;
     playing = Boolean(state.playing);
     const url = new URL({{ '/Watch/' | relative_url | jsonify }}, location.origin);
@@ -147,8 +153,16 @@ if (globalThis.androidBridge && globalThis.Capacitor?.nativePromise && !/\/Watch
     toggle.textContent = playing ? 'Pause' : 'Play';
   };
   const refresh = () => audio.state().then(render).catch(() => { bar.hidden = true; });
+  title.onclick = event => {
+    if (!watchPage) return;
+    event.preventDefault();
+    document.getElementById('watch-browse-return')?.click();
+  };
   toggle.onclick = () => (playing ? audio.pause() : audio.play()).finally(refresh).catch(console.warn);
-  stop.onclick = () => audio.stop().finally(refresh).catch(console.warn);
+  stop.onclick = () => audio.stop().then(() => {
+    if (watchPage) document.getElementById('watch-browse-close')?.click();
+  }).finally(refresh).catch(console.warn);
+  if (watchPage) new MutationObserver(() => render(latestState)).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   audio.addListener('state', render).catch(console.warn);
   window.addEventListener('pageshow', refresh);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
