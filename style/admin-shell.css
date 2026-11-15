@@ -18,3 +18,30 @@
 @media(prefers-reduced-motion:reduce){.studio-view,.studio-sidebar nav>a.has-reports .studio-nav-badge{animation:none}.studio-workspace,.studio-sidebar,.studio-launch-card{transition:none}.studio-launch-card:hover{transform:none}}
 
 @media(min-width:1051px) and (max-width:1250px){.studio-profile>div{display:none}}
+
+/* Studio has its own appearance preference, separate from the main site. */
+html[data-studio-theme="dark"] { color-scheme: dark; background:#141b18; }
+html[data-studio-theme="dark"] .studio-shell { --studio-ink:#edf3ee; --studio-muted:#b0bdb3; --studio-line:#435149; --studio-canvas:#141b18; background:var(--studio-canvas); color:var(--studio-ink); }
+html[data-studio-theme="dark"] .studio-shell .studio-top { background:#1e2923f5; }
+html[data-studio-theme="dark"] .studio-shell .studio-panel,
+html[data-studio-theme="dark"] .studio-shell .studio-total,
+html[data-studio-theme="dark"] .studio-shell .studio-launch-card,
+html[data-studio-theme="dark"] .studio-shell .studio-top-search,
+html[data-studio-theme="dark"] .studio-shell dialog { background:#26342c; color:#edf3ee; border-color:var(--studio-line); }
+html[data-studio-theme="dark"] .studio-shell button:not(.primary),
+html[data-studio-theme="dark"] .studio-shell input:not([type=checkbox]):not([type=radio]),
+html[data-studio-theme="dark"] .studio-shell select,
+html[data-studio-theme="dark"] .studio-shell textarea { background:#1c2821; color:#f4f7f3; border-color:#53655a; }
+html[data-studio-theme="dark"] .studio-shell button:not(.primary):hover { background:#34493b; }
+html[data-studio-theme="dark"] .studio-shell button.primary { color:#17251c; }
+html[data-studio-theme="dark"] .studio-shell .muted,
+html[data-studio-theme="dark"] .studio-shell #admin-status,
+html[data-studio-theme="dark"] .studio-shell .studio-row small,
+html[data-studio-theme="dark"] .studio-shell .studio-total span,
+html[data-studio-theme="dark"] .studio-shell .quick-link p { color:#bdc9bf; }
+html[data-studio-theme="dark"] .studio-shell .studio-badge { background:#3c4d43; color:#f4f7f3; }
+html[data-studio-theme="dark"] .studio-shell .studio-badge.live { background:#b82939; }
+html[data-studio-theme="dark"] .studio-shell .studio-badge.pending { background:#634d19; }
+html[data-studio-theme="dark"] .studio-shell .studio-tabs button[aria-pressed=true] { background:#526345; color:#fff; }
+html[data-studio-theme="dark"] .studio-shell .studio-report-overview { background:#293f30; color:#e4f2e6; }
+html[data-studio-theme="dark"] .studio-shell .studio-report-overview.has-reports { background:#642b31; color:#fff; }

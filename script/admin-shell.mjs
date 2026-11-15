@@ -1,5 +1,8 @@
 export function setupStudioShell({document,window,api=()=>globalThis.LightCityMembers}={}){
  const get=id=>document.getElementById(id),content=get('admin-content'),sidebar=get('studio-sidebar');if(!content||!sidebar)return;
+ const themeButton=get('studio-theme');
+ function updateThemeButton(){const dark=document.documentElement.dataset.studioTheme==='dark';themeButton.textContent=dark?'Light mode':'Dark mode';themeButton.setAttribute('aria-label',dark?'Switch Studio to light mode':'Switch Studio to dark mode');}
+ themeButton.addEventListener('click',()=>{const dark=document.documentElement.dataset.studioTheme!=='dark';if(dark)document.documentElement.dataset.studioTheme='dark';else delete document.documentElement.dataset.studioTheme;try{window.localStorage.setItem('lightcity-studio-theme',dark?'dark':'light');}catch{}updateThemeButton();});updateThemeButton();
  const views=[...content.querySelectorAll('[data-studio-view]')],routes=new Set(views.map(v=>v.dataset.studioView)),labels={overview:'Overview',publishing:'Publish',reports:'Stream reports',countdown:'Service countdown',library:'Content library',prayer:'Prayer groups',people:'People',devices:'My devices',preview:'Private test preview'};
  const media=window.matchMedia('(max-width: 1050px)'),workspace=get('studio-workspace'),menu=get('studio-menu');let active=new URLSearchParams(window.location.search).get('reports')==='1'?'reports':'overview',drawer=false,lastFocus=null,previewOpened=false,lastAllowed=null;
  const allowed=()=>!content.hidden,fromHash=()=>window.location.hash.slice(1),previewReady=()=>!get('admin-test-preview').hidden;
