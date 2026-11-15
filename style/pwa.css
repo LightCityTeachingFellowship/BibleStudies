@@ -125,6 +125,7 @@
 /* Personal video library: compact controls, private saved/history lists. */
 .lc-personal-library-link {display:inline-block; font-size:15px!important; margin:8px 0 16px; text-decoration:underline;}
 .lc-personal-actions {display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:10px 0;}
+.video-box .lc-personal-actions {display:none!important;}
 .lc-personal-remove, .lc-personal-tools button {font:inherit; font-size:14px!important; padding:8px 14px; border:1px solid currentColor; border-radius:24px; background:transparent; color:inherit; cursor:pointer;}
 
 .lc-personal-actions .lc-video-resume {font-size:13px!important; text-decoration:underline;}
