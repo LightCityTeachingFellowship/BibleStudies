@@ -1,4 +1,4 @@
-import {isAndroidApp,loadNativeAudio} from './native-app.mjs';
+import {isAndroidApp,loadNativeAudio} from './native-app.mjs?v=navigation-shell-1';
 import {watchPlayback,recordPlaybackEvent} from './playback-health.mjs?v=1';
 import {mountAudioControls} from './audio-controls.mjs?v=studio-controls-3';
 import { createLiveSwitch, chooseTransport, availableAudioRanges, resumeYouTube, refreshYouTubeTimeline, seekYouTubePosition, settledPosition, replayBoundaryTarget } from './media-live-core.mjs?v=replay-feedback-1';

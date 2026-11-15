@@ -1,7 +1,14 @@
 // Browser pages keep their existing playback and sign-in paths.
-export const isAndroidApp=()=>!!(globalThis.androidBridge && globalThis.Capacitor?.nativePromise);
+function shellBridge(){
+ try {
+  if(globalThis.parent===globalThis || globalThis.parent.location.origin!==location.origin || globalThis.frameElement?.parentElement?.id!=='lightcity-pages')return null;
+  return globalThis.parent.LightCityNavigationShell||null;
+ }catch{return null;}
+}
+export const isAndroidApp=()=>!!(shellBridge()?.isAndroid || (globalThis.androidBridge && globalThis.Capacitor?.nativePromise));
 let runtime;
 async function plugins(){
+ const shell=shellBridge();if(shell?.isAndroid)return shell.plugins();
  if(!isAndroidApp())return null;
  return runtime??=import('./native/capacitor-core.mjs').then(({registerPlugin})=>({audio:registerPlugin('LightCityAudio'),auth:registerPlugin('FirebaseAuthentication')}));
 }

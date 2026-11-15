@@ -15,7 +15,7 @@
   status.textContent='This video link is incomplete or invalid. Choose a video from All videos.';
   return;
  }
- if(!globalThis.LightCityMembers)await import('./members.js?v=studio-removal-1');
+ if(!globalThis.LightCityMembers)await import('./members.js?v=navigation-shell-1');
  await globalThis.LightCityMembers?.ready;
  const {resolveWatchReplacement}=await import('./video-replacements.mjs?v=shared-link-1');
  const replacement=await resolveWatchReplacement(videoId);

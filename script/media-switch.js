@@ -1,9 +1,9 @@
-import {loadNativeAudio} from './native-app.mjs';
+import {loadNativeAudio} from './native-app.mjs?v=navigation-shell-1';
 import {watchPlayback,playbackDiagnostics,recordPlaybackEvent} from './playback-health.mjs?v=1';
 import {mountAudioControls} from './audio-controls.mjs?v=studio-controls-3';
 import { personal } from './video-personal.js?v=search-1';
 import { createModeSwitch } from './media-mode-core.mjs?v=handoff-2';
-import { mountLive } from './live-media.js?v=live-handoff-2';
+import { mountLive } from './live-media.js?v=navigation-shell-1';
 import { keepListening, savedListening, listeningLifecycle } from './listening-session.mjs?v=health-1';
 import {showPlayingStreamMessages} from './stream-messages.mjs?v=reply-1';
 

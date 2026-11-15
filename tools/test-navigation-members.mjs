@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+const handlers={}, frames=[];
+const classList={toggle(){}};
+const container={append(f){frames.push(f)}};
+const makeFrame=()=>{
+ const events={};
+ const win={location:{href:'file:///Home/'},LightCityMembers:{loading:false,user:{uid:'member-a',isAnonymous:false},library:[]},addEventListener(name,fn){events[name]=fn}};
+ const doc={body:{classList},documentElement:{toggleAttribute(){}},getElementById(){return null},addEventListener(){}};
+ return {hidden:false,classList,contentWindow:win,contentDocument:doc,events,addEventListener(name,fn){this[name]=fn},remove(){this.removed=true}};
+};
+globalThis.document={getElementById(id){return id==='lightcity-pages'?container:null},createElement(){return makeFrame()}};
+globalThis.window={addEventListener(type,fn){handlers[type]=fn},dispatchEvent(){},location:new URL('file:///preview')};
+globalThis.location=window.location;
+globalThis.history={state:null,replaceState(state){this.state=state},pushState(state){this.state=state}};
+await import('../script/navigation-preview.mjs?member-test');
+assert.equal(globalThis.LightCityMembers.user.uid, 'member-a', 'verified access is shared before the page load event');
+frames[0].load();
+handlers.popstate({state:{lightcityPage:new URL('../Videos/',import.meta.url).href}});
+frames[1].load();
+assert.equal(globalThis.LightCityMembers.user.uid, 'member-a', 'verified identity shared in memory');
+frames[0].contentWindow.LightCityMembers.library=null;
+frames[0].events['lightcity-members-changed']();
+assert.equal(frames[1].removed,undefined,'temporary library failure must not evict retained pages');
+frames[0].contentWindow.LightCityMembers.user=null;
+frames[0].events['lightcity-members-changed']();
+assert.equal(frames[1].removed,true,'sign-out removes other retained pages');
+assert.equal(globalThis.LightCityMembers, null, 'sign-out removes shared verified identity');
+console.log('PASS: temporary library failure preserves pages, sign-out clears retained member pages');

@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+const props=new Map(),handlers={};
+const resize={listeners:{},addEventListener(n,f){this.listeners[n]=f},removeEventListener(n){delete this.listeners[n]},setPointerCapture(){}};
+globalThis.innerWidth=400;globalThis.innerHeight=800;
+globalThis.document={documentElement:{style:{setProperty(n,v){props.set(n,v)}}},getElementById(id){if(id==='lightcity-pages')return {append(){}};if(id==='lightcity-mini-resize')return resize;return null},createElement(){return {classList:{toggle(){}},addEventListener(){},remove(){}}}};
+globalThis.window={addEventListener(n,f){handlers[n]=f},location:new URL('file:///preview')};globalThis.location=window.location;
+globalThis.history={state:null,replaceState(s){this.state=s},pushState(s){this.state=s}};
+await import('../script/navigation-preview.mjs?resize-test');
+assert.equal(props.get('--lc-mini-width'),'300px');
+resize.listeners.pointerdown({button:0,clientX:100,pointerId:1,preventDefault(){}});
+resize.listeners.pointermove({clientX:40});assert.equal(props.get('--lc-mini-width'),'360px');assert.equal(props.get('--lc-mini-height'),'202.5px');
+resize.listeners.pointermove({clientX:-1000});assert.equal(props.get('--lc-mini-width'),'376px','width stays within viewport');
+resize.listeners.pointerup();assert.equal(resize.listeners.pointermove,undefined);
+resize.listeners.keydown({key:'ArrowRight',preventDefault(){}});assert.equal(props.get('--lc-mini-width'),'356px');
+console.log('PASS: video resize supports dragging, keyboard input and viewport limits');

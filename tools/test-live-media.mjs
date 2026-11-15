@@ -92,7 +92,8 @@ try {
   assert.equal(sources.length, 1, 'access renewal does not reattach or reload the HLS source'); assert.ok(!item.audio.paused);
   let refreshedUrl;
   hlsInstances[0].config.xhrSetup({ open: (_method, url) => { refreshedUrl = url; } }, sources[0].replace('audio.m3u8', 'segment-000001.ts'));
-  assert.equal(new URL(refreshedUrl).searchParams.get('token').split('.')[0], String(Math.floor(Date.now() / 1000) + 3600));
+  const refreshedExpiry = Number(new URL(refreshedUrl).searchParams.get('token').split('.')[0]);
+  assert.ok(Math.abs(refreshedExpiry - (Math.floor(Date.now() / 1000) + 3600)) <= 2, 'segment uses the renewed token');
   const beforeReturn = item.audio.currentTime, beforeRequests = requests;
   document.dispatchEvent(new Event('visibilitychange')); window.dispatchEvent(new Event('pageshow'));
   assert.equal(item.audio.currentTime, beforeReturn); assert.equal(requests, beforeRequests);

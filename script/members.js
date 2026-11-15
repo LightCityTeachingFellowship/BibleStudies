@@ -1,4 +1,4 @@
-import {isAndroidApp,nativeGoogleCredential,nativeSignOut} from './native-app.mjs';
+import {isAndroidApp,nativeGoogleCredential,nativeSignOut} from './native-app.mjs?v=navigation-shell-1';
 // Member identity is separate from anonymous device identity used by web push.
 const settings = document.querySelector('script[data-lightcity-members]');
 const api = globalThis.LightCityMembers = { enabled: settings?.dataset.enabled === 'true', library: null, publicLibrary: null, user: null, error: null, loading: settings?.dataset.enabled === 'true' };
@@ -14,7 +14,8 @@ const field = id => document.getElementById(id);
 let embeddedParent = null;
 try {
   if (window.parent !== window && window.parent.location.origin === location.origin &&
-      window.frameElement?.parentElement?.id === 'watch-browse-panel') {
+      (window.frameElement?.parentElement?.id === 'watch-browse-panel' ||
+       (window.frameElement?.parentElement?.id === 'lightcity-pages' && window.parent.LightCityNavigationShell))) {
     embeddedParent = window.parent;
   }
 } catch { /* A cross-origin frame never receives member data. */ }
