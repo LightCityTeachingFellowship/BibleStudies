@@ -10,13 +10,22 @@ self.addEventListener('fetch', event => {
  const request = event.request, url = new URL(request.url);
  if (request.method !== 'GET' || url.origin !== BASE.origin || !url.pathname.startsWith(BASE.pathname)) return;
  if (['style','script','image','font'].includes(request.destination) && !url.pathname.endsWith('pwa-config.js')) {
-  event.respondWith(fetch(request).then(async response => {
+  const network = fetch(request).then(async response => {
    if (response.ok && !response.headers.get('content-type')?.includes('text/html')) {
     const c=await caches.open(CACHE+'-assets'); await c.put(request,response.clone());
     const keys=await c.keys(); if(keys.length>150) await c.delete(keys[0]);
    }
    return response;
-  }).catch(async()=> (await caches.match(request)) || Response.error()));
+  });
+  // Versioned code and styles are safe to display from the previous successful
+  // fetch while an update is checked. Never use this for pages or unversioned code.
+  const fastAsset = ['script','style'].includes(request.destination) && url.searchParams.has('v');
+  if (fastAsset) {
+   event.waitUntil(network.then(() => undefined, () => undefined));
+   event.respondWith((async () => (await caches.match(request)) || await network.catch(() => Response.error()))());
+  } else {
+   event.respondWith(network.catch(async()=> (await caches.match(request)) || Response.error()));
+  }
   return;
  }
  if (request.mode === 'navigate') {

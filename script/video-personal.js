@@ -217,7 +217,7 @@ function boot() {
   const grid=document.getElementById('videotab-container');
   if(grid&&typeof MutationObserver!=='undefined')new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1&&(n.matches?.('.video-box, .video-title')||n.querySelector?.('.video-box')))))schedule();}).observe(grid,{childList:true,subtree:true});
   if(initialized){refreshPromise=refresh();personal.ready=refreshPromise;}render();
-  const liveTimer=setInterval(()=>{if(document.visibilityState!=='hidden')void refreshLiveStatus();},45000);liveTimer.unref?.();
+  const liveTimer=setInterval(()=>{if(document.visibilityState!=='hidden'&&!window.frameElement?.hidden)void refreshLiveStatus();},45000);liveTimer.unref?.();
   const timer=setInterval(()=>void flush(),30000);timer.unref?.();
 }
 if(browser){globalThis.LightCityVideos=personal;if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();}

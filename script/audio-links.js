@@ -222,7 +222,7 @@
     window.addEventListener('pagehide', event => { if (event.persisted) return; for (const controller of mounted.values()) { if(globalThis.androidBridge && globalThis.Capacitor?.nativePromise && controller.mode==='audio') controller.preserveNativePlayback=true; controller.dispose(); } mounted.clear(); });
     render();
     await refresh();
-    const liveRefresh = setInterval(() => { if (document.visibilityState !== 'hidden') void refresh(); }, 45000);
+    const liveRefresh = setInterval(() => { if (document.visibilityState !== 'hidden' && !window.frameElement?.hidden) void refresh(); }, 45000);
     liveRefresh.unref?.();
     window.addEventListener('pagehide', event => { if (!event.persisted) clearInterval(liveRefresh); });
   }

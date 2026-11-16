@@ -44,5 +44,5 @@ if(page){
  search.form?.addEventListener('submit',event=>event.preventDefault());
  search.addEventListener('input',()=>{limit=24;render();});more.onclick=()=>{limit+=24;render();};retry.onclick=()=>void refresh();
  window.addEventListener('lightcity-durations-ready',render);window.addEventListener('lightcity-members-changed',()=>void refresh());window.addEventListener('online',()=>void refresh());window.addEventListener('pagehide',e=>{if(!e.persisted)stopAll();});
- const timer=setInterval(()=>{if(document.visibilityState!=='hidden')void refresh();},45000);timer.unref?.();void refresh();
+ const timer=setInterval(()=>{if(document.visibilityState!=='hidden'&&!window.frameElement?.hidden)void refresh();},45000);timer.unref?.();void refresh();
 }

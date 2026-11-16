@@ -27,7 +27,7 @@
   // The main sections are likely next destinations; warm them after the current
   // page has finished loading rather than waiting for the user's first tap.
   const warmNavigation = () => {
-    if (document.hidden || connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
+    if (document.hidden || window.frameElement?.hidden || connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
     document.querySelectorAll('.home-bottom-nav a[href]').forEach(prepareAnchor);
   };
   const schedule = () => {

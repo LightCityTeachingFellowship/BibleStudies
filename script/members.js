@@ -176,7 +176,7 @@ api.getSharedVideo=async videoId=>{await api.ready;return call('getSharedChurchV
 api.ready = bootstrap();
 let libraryPolling=false,lastLibraryPoll=Date.now();
 async function refreshVideoCatalogue(){
- if(libraryPolling||document.visibilityState==='hidden'||Date.now()-lastLibraryPoll<30000)return;
+ if(libraryPolling||document.visibilityState==='hidden'||window.frameElement?.hidden||Date.now()-lastLibraryPoll<30000)return;
  // Never rebuild the cards around an active video/audio player.
  if(document.querySelector('.lc-audio-mode, lite-youtube.lyt-activated, #videotab-container iframe'))return;
  libraryPolling=true;lastLibraryPoll=Date.now();
