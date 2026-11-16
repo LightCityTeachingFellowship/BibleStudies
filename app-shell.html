@@ -3,34 +3,21 @@ layout: null
 permalink: /app/
 ---
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LightCity</title>
-<script>(()=>{try{const t=localStorage.getItem('theme');if(t==='darkMODE'||(t!=='lightMODE'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.setAttribute('data-lc-dark','');}catch{}})();</script>
-<style>
-html,body{height:100%;margin:0;background:#f6f6f6}html[data-lc-dark],html[data-lc-dark] body{background:#121212}
-#lightcity-pages{position:fixed;inset:0;overflow:hidden}
-#lightcity-pages iframe{display:block;position:absolute;inset:0;border:0;width:100%;height:100%;background:transparent}
-#lightcity-pages iframe[hidden]{display:none}
-#lightcity-pages iframe.lc-preview-mini{z-index:10;inset:auto 12px calc(84px + env(safe-area-inset-bottom)) auto;width:var(--lc-mini-width,min(300px,calc(100vw - 24px)));height:auto;aspect-ratio:16/9;border-radius:12px;box-shadow:0 5px 25px #0008}
-#lightcity-pages iframe.lc-preview-mini-audio{height:72px;aspect-ratio:auto}
-#lightcity-mini-actions{position:fixed;z-index:11;right:12px;bottom:calc(92px + var(--lc-mini-height,169px) + env(safe-area-inset-bottom));display:flex;gap:8px}
-#lightcity-mini-actions[hidden]{display:none}
-#lightcity-mini-actions.audio{bottom:calc(164px + env(safe-area-inset-bottom))}
-#lightcity-mini-resize{position:fixed;right:calc(12px + var(--lc-mini-width,300px) - 20px);bottom:calc(92px + var(--lc-mini-height,169px) + env(safe-area-inset-bottom));touch-action:none;cursor:nwse-resize}
-#lightcity-mini-resize[hidden]{display:none}
-#lightcity-audio-bar:not([hidden]){display:flex;align-items:center;gap:.65rem;position:fixed;z-index:12;inset-inline:12px;bottom:calc(76px + env(safe-area-inset-bottom));padding:.65rem .8rem;border:1px solid #555;border-radius:14px;background:#202020;color:#fff;box-shadow:0 4px 16px #0005;font:16px system-ui,sans-serif}
-#lightcity-audio-title{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:inherit;text-decoration:none}
-#lightcity-audio-bar button{flex:none;min-height:40px;padding:0 .7rem;border:1px solid #666;border-radius:8px;background:transparent;color:inherit;font:inherit}
-#lightcity-mini-actions button{width:40px;height:40px;border-radius:50%;background:#202020;color:white;border:1px solid #888;font:22px system-ui;cursor:pointer}
-</style>
-</head>
-<body>
-<main id="lightcity-pages" aria-label="LightCity pages"></main>
-<aside id="lightcity-audio-bar" aria-label="Current audio" hidden><a id="lightcity-audio-title" href="#">LightCity audio</a><button id="lightcity-audio-toggle" type="button">Play</button><button id="lightcity-audio-stop" type="button">Stop</button></aside>
-<div id="lightcity-mini-actions" hidden><button id="lightcity-mini-resize" type="button" aria-label="Resize video; drag or use arrow keys" title="Drag to resize">⤢</button><button id="lightcity-mini-return" type="button" aria-label="Return to playback">↗</button><button id="lightcity-mini-close" type="button" aria-label="Close playback">×</button></div>
-<script type="module" src="{{ '/script/navigation-preview.mjs' | relative_url }}"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Opening LightCity</title>
+<script>
+(() => {
+  const base = new URL({{ '/' | relative_url | jsonify }}, location.origin);
+  const fallback = new URL('Home/', base);
+  let destination = fallback;
+  try {
+    const requested = new URL(location.href).searchParams.get('page');
+    if (requested) {
+      const candidate = new URL(requested, base);
+      const relative = candidate.pathname.slice(base.pathname.length).replace(/^\/+/, '');
+      if (candidate.origin === base.origin && candidate.pathname.startsWith(base.pathname) &&
+          !candidate.username && !candidate.password && !/^app(?:\/|$)/i.test(relative)) destination = candidate;
+    }
+  } catch {}
+  location.replace(destination.href);
+})();
+</script></head><body><p>Opening LightCity…</p><a href="{{ '/Home/' | relative_url }}">Go to LightCity home</a></body></html>

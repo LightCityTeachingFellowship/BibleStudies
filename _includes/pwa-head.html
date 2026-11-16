@@ -22,9 +22,6 @@
 })();
 </script>
 {% endunless %}
-{% unless page.studio_app == true or page.url == '/Watch/' %}
-<script defer src="{{ '/script/navigation-launcher.js' | relative_url }}?v=1" data-base="{{ '/' | relative_url }}"></script>
-{% endunless %}
 {% if page.layout contains 'QandA' or page.url == '/TeachingQuiz/' %}
 {% include quiz-app-head.html %}
 {% else %}

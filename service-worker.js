@@ -2,7 +2,7 @@
 layout: null
 ---
 const BASE = new URL('./', self.location.href);
-const CACHE = 'lightcity-pwa-v1-' + BASE.pathname;
+const CACHE = 'lightcity-pwa-v2-' + BASE.pathname;
 const offline = new URL('offline.html', BASE).href;
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(c => c.addAll([offline])).then(() => self.skipWaiting())));
 self.addEventListener('activate', event => event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('lightcity-pwa-') && (k.endsWith(BASE.pathname) || k.endsWith(BASE.pathname+'-assets')) && k !== CACHE && k !== CACHE+'-assets').map(k => caches.delete(k)))).then(() => self.clients.claim())));
