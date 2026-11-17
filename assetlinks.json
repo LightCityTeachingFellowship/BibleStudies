@@ -1,0 +1,5 @@
+---
+layout: null
+permalink: /.well-known/assetlinks.json
+---
+[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"com.lightcityfellowship.mobilepilot","sha256_cert_fingerprints":["72:85:B3:15:7F:8F:44:4E:ED:29:02:73:23:03:9E:9C:5B:BC:E1:19:BC:28:A8:23:C7:2C:0D:4F:B3:64:67:9B"]}}]

@@ -6,6 +6,7 @@ permalink: /members/
 <!doctype html>
 <html lang="en">
 <head>
+  <script>window.lightcityInviteFromLink=new URLSearchParams(location.hash.slice(1)).get("invite")||"";</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
@@ -44,6 +45,10 @@ permalink: /members/
       <a id="member-library-link" class="lc-member-primary" href="{{ '/Home/' | relative_url }}" hidden>Homepage →</a>
     </section>
     <!-- <a class="lc-member-home" href="{{ '/Home/' | relative_url }}">← Back to LightCity</a> -->
+    <div id="member-open-app" hidden><p>Have the Android app installed?</p><a id="member-open-app-link" class="lc-member-primary">Open in the app</a></div>
+    <script>
+    (()=>{const token=window.lightcityInviteFromLink;if(!/^[a-f0-9]{64}$/.test(token)||!/Android/i.test(navigator.userAgent)||window.Capacitor?.isNativePlatform?.())return;const section=document.getElementById('member-open-app'),link=document.getElementById('member-open-app-link');link.href='intent://lightcityfellowship.com/members/?invite='+token+'#Intent;scheme=https;package=com.lightcityfellowship.mobilepilot;S.browser_fallback_url='+encodeURIComponent(location.origin+'/members/#invite='+token)+';end';section.hidden=false})();
+    </script>
     <noscript>Please enable JavaScript to sign in.</noscript>
   </main>
 </body>
