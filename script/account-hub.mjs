@@ -19,14 +19,18 @@ function installSetting(dialog) {
   const section = el('section', '', 'lc-hub-setting');
   const status = el('p', '', 'lc-hub-muted');
   status.setAttribute('role', 'status');
-  const install = action('Install as an app', async () => {
-    install.disabled = true;
-    try {
-      status.textContent = await globalThis.LightCityInstall?.request()
-        || 'Open your browser menu and look for Install app or Add to Home Screen.';
-    } finally {
-      install.disabled = Boolean(globalThis.LightCityInstall?.isInstalled());
+  const install = action('Install as an app', () => {
+    if (globalThis.LightCityInstall?.isInstalled()) {
+      showInstalled();
+      return;
     }
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios) {
+      status.textContent = 'Open Share, then choose Add to Home Screen.';
+      return;
+    }
+    window.location.assign(sitePath('/downloads/'));
   });
   function showInstalled() {
     install.disabled = true;
