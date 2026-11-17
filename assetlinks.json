@@ -2,4 +2,4 @@
 layout: null
 permalink: /.well-known/assetlinks.json
 ---
-[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"com.lightcityfellowship.mobilepilot","sha256_cert_fingerprints":["72:85:B3:15:7F:8F:44:4E:ED:29:02:73:23:03:9E:9C:5B:BC:E1:19:BC:28:A8:23:C7:2C:0D:4F:B3:64:67:9B","88:5C:B9:0B:7F:FE:2E:15:9D:E1:51:91:24:8A:29:7C:6E:D4:B2:DE:C6:98:AC:B3:14:EA:F7:EA:E2:CF:BA:BC"]}}]
+[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"com.lightcityfellowship.mobilepilot","sha256_cert_fingerprints":["72:85:B3:15:7F:8F:44:4E:ED:29:02:73:23:03:9E:9C:5B:BC:E1:19:BC:28:A8:23:C7:2C:0D:4F:B3:64:67:9B","88:5C:B9:0B:7F:FE:2E:15:9D:E1:51:91:24:8A:29:7C:6E:D4:B2:DE:C6:98:AC:B3:14:EA:F7:EA:E2:CF:BA:BC","F9:BA:01:B4:05:AF:13:6A:85:CA:63:8B:BA:A8:59:A2:1F:75:2A:E4:2B:0E:C3:03:62:3A:64:85:96:07:5A:2D"]}}]
