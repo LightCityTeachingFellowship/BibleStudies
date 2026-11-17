@@ -85,7 +85,9 @@ export function createPrayerCalendar(deps){
    // New deployments do not activate reminders until Studio settings have been saved.
    if(!(await settingsRef().get()).exists)return;
    const config=await settings(),today=dateKey(now()),due=at=>at<=now()&&now()-at<10*60000;
-   for(const date of [addDays(today,-1),today,addDays(today,1)]){const event=prayerForDate(date,config);if(event&&!event.paused&&due(event.startAt-30*60000))await queue(dailyNotice(event));
+   for(const date of [addDays(today,-1),today,addDays(today,1)]){const event=prayerForDate(date,config);
+    if(event&&!event.paused&&event.endAt>now()&&due(instant(date,'09:00')))await queue({key:'morning:'+event.id,kind:'prayer',date:event.date,group:event.group,startAt:event.startAt,title:event.group+' group prayer today',body:'Your group is scheduled to pray today. Open the calendar for your local time.',url:'https://lightcityfellowship.com/Calendar/?date='+event.date+'&at='+event.startAt,expiresAt:event.endAt});
+    if(event&&!event.paused&&due(event.startAt-30*60000))await queue(dailyNotice(event));
     if(weekday(date)===6){const next=addDays(date,1),group=weekOwner(next,config);if(!prayerPaused(next,config)&&!prayerPaused(date,config)&&due(instant(date,config.weeklyReminderTime)))await queue({key:'week:'+next,kind:'week',date,group,title:group+' owns the coming prayer week',body:'Your group owns next week and prays on Sunday and Tuesday. Open the calendar to see your local times.',url:'https://lightcityfellowship.com/Calendar/?date='+next+'&at='+instant(next,config.times[group]),expiresAt:instant(next,'23:59')});}
    }
    if(config.serviceReminders)for(const event of await services(today,addDays(today,1)))if(due(event.startAt-30*60000))await queue({key:event.id,kind:'service',date:event.date,title:'Service begins in 30 minutes',body:event.title+'. Open the calendar for your local time.',startAt:event.startAt,url:'https://lightcityfellowship.com/Calendar/?date='+event.date+'&at='+event.startAt,expiresAt:event.startAt+30*60000});

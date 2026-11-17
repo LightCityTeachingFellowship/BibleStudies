@@ -19,26 +19,22 @@ function installSetting(dialog) {
   const section = el('section', '', 'lc-hub-setting');
   const status = el('p', '', 'lc-hub-muted');
   status.setAttribute('role', 'status');
-  const install = action('Install as an app', () => {
-    if (globalThis.LightCityInstall?.isInstalled()) {
-      showInstalled();
-      return;
-    }
-    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const nativeApp = Boolean(globalThis.Capacitor?.isNativePlatform?.()
+    || (globalThis.androidBridge && globalThis.Capacitor?.nativePromise));
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const install = action(ios ? 'Add to Home Screen' : 'Install Android App', () => {
+    if (nativeApp) return;
     if (ios) {
       status.textContent = 'Open Share, then choose Add to Home Screen.';
       return;
     }
     window.location.assign(sitePath('/downloads/'));
   });
-  function showInstalled() {
+  if (nativeApp) {
     install.disabled = true;
     status.textContent = 'LightCity is already installed.';
   }
-  if (globalThis.LightCityInstall?.isInstalled()) showInstalled();
-  window.addEventListener('appinstalled', showInstalled);
-  dialog.addEventListener('close', () => window.removeEventListener('appinstalled', showInstalled), {once:true});
   section.append(el('h3', 'App'), install, status);
   return section;
 }
