@@ -123,4 +123,10 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/lightcity-browser-test/node_modules
           CHROME_BIN: /usr/bin/google-chrome
+      - name: Package website preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: lightcity-website-preview
+          path: _site/
+          retention-days: 3
 
