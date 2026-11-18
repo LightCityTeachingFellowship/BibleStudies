@@ -47,6 +47,14 @@ jobs:
           from urllib.parse import unquote,urlsplit
           missing = [item['url'] for item in catalog['publications'] if unquote(urlsplit(item['url']).path).lower() not in details]
           assert not missing, f'Publication details missing for {len(missing)} items: {missing[:5]}'
+          for item in catalog['publications']:
+              old_path = unquote(urlsplit(item['url']).path)
+              document = root / old_path.lstrip('/')
+              if old_path.endswith('/') or not document.suffix:
+                  document /= 'index.html'
+              assert document.is_file(), f'Missing publication page: {old_path}'
+              markup = document.read_text(encoding='utf8')
+              assert 'v2-legacy-redirect.js' in markup, f'Missing app redirect on publication: {old_path}'
           print(f'Validated {len(paths)} app routes and {len(catalog["publications"])} publication entries.')
           import re
           sources = [Path('Posts-Articles'), Path('Posts-Summaries'), Path('BibleNodesGraph')]
