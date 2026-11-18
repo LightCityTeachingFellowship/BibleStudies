@@ -7,8 +7,10 @@ on:
       - 'script/v2-legacy-redirect.js'
       - '_includes/**'
       - 'tools/test-v2-legacy-redirect.cjs'
+      - 'tools/test-v2-legacy-router.mjs'
       - 'category-data.json'
       - 'publication-details.json'
+      - 'legacy-app-pages.json'
       - 'style/app-reader-chrome.css'
       - 'home.html'
       - 'landing.html'
@@ -28,6 +30,7 @@ jobs:
           ruby-version: '3.3'
       - run: bundle lock --add-platform x86_64-linux && bundle install
       - run: node tools/test-v2-legacy-redirect.cjs
+      - run: node tools/test-v2-legacy-router.mjs
       - run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
@@ -37,7 +40,7 @@ jobs:
           import json
           from pathlib import Path
           root = Path('_site')
-          paths = ['','videos','audio','articles','summaries','watch','read','library','quiz','quizzes','info','calendar','categories']
+          paths = ['','legacy','videos','audio','articles','summaries','watch','read','library','quiz','quizzes','info','calendar','categories']
           for path in paths:
               page = root / 'v2' / path / 'index.html'
               assert page.is_file(), f'Missing app page: {page}'
@@ -56,6 +59,16 @@ jobs:
               markup = document.read_text(encoding='utf8')
               assert 'v2-legacy-redirect.js' in markup, f'Missing app redirect on publication: {old_path}'
           print(f'Validated {len(paths)} app routes and {len(catalog["publications"])} publication entries.')
+          legacy = json.loads((root / 'legacy-app-pages.json').read_text(encoding='utf8'))
+          assert len(legacy['pages']) >= 21, 'Bible graph and storyline index is incomplete'
+          for item in legacy['pages']:
+              old_path = unquote(urlsplit(item['url']).path)
+              document = root / old_path.lstrip('/')
+              if old_path.endswith('/') or not document.suffix:
+                  document /= 'index.html'
+              assert document.is_file(), f'Missing original Bible study: {old_path}'
+              assert 'v2-legacy-redirect.js' in document.read_text(encoding='utf8'), f'Missing app redirect: {old_path}'
+          print(f'Validated {len(legacy["pages"])} original Bible graph and storyline pages.')
           import re
           sources = [Path('Posts-Articles'), Path('Posts-Summaries'), Path('BibleNodesGraph')]
           sources += list(Path('.').glob('*.html'))

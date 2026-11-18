@@ -1,7 +1,10 @@
 // Route supported incoming website links through the shared application.
 // Unsupported features keep their existing website behavior.
 export function createLinkRouter({window,router,player,api,resources,session,onError=()=>{}}){
- let incomingRevision=0;
+ let incomingRevision=0,legacyIndex;
+ async function legacyMatch(target){legacyIndex??=fetch('/legacy-app-pages.json').then(r=>{if(!r.ok)throw Error('Bible study index unavailable');return r.json()}).catch(error=>{legacyIndex=null;throw error});const data=await legacyIndex;return Array.isArray(data.pages)&&data.pages.some(item=>{try{return new URL(item.url,window.location.origin).pathname.toLowerCase()===target.pathname.toLowerCase()}catch{return false}})}
+ function openLegacy(target,original){void legacyMatch(target).then(found=>{if(window.location.href!==original)return;if(found)return router.navigate('/v2/legacy/?url='+encodeURIComponent(target.pathname)+target.hash);window.location.assign(target.href)}).catch(()=>{if(window.location.href===original)window.location.assign(target.href)})}
+
  const sections=new Map([['/home/','/v2/'],['/videos/','/v2/videos/'],['/listen/','/v2/audio/'],['/teaching-articles/','/v2/articles/'],['/teaching-summary/','/v2/summaries/'],['/mylibrary/','/v2/library/'],['/myvideos/','/v2/library/'],['/study-resources/','/v2/categories/?kind=Article'],['/categories/','/v2/categories/?kind=Summary'],['/bible-quiz/','/v2/quizzes/'],['/bible%20quiz/','/v2/quizzes/'],['/about-us/','/v2/info/?page=about'],['/about/','/v2/info/?page=about'],['/join-us/','/v2/info/?page=meeting'],['/doctrines/','/v2/info/?page=doctrines']]);
  async function waitForSession(){await api.ready;if(!session)return;const ready=state=>{const user=api.user&&!api.user.isAnonymous?api.user:null;if(user)return ['member','authenticated'].includes(state.status)&&state.user?.uid===user.uid;return state.status==='public'};if(ready(session.state))return;await new Promise((resolve,reject)=>{let unsubscribe=()=>{},finished=false;const timeout=setTimeout(()=>{if(finished)return;finished=true;unsubscribe();reject(Error('Account restoration timed out'))},30000);const finish=()=>{if(finished)return;finished=true;clearTimeout(timeout);unsubscribe();resolve()};unsubscribe=session.subscribe(state=>{if(ready(state))finish()});if(finished)unsubscribe()})}
  function open(input){let target;try{target=new URL(input,window.location.href)}catch{return false}
@@ -27,9 +30,10 @@ export function createLinkRouter({window,router,player,api,resources,session,onE
    const viewReady=router.currentURL===watchURL?Promise.resolve(true):router.navigate(watchURL);
    void Promise.all([viewReady,waitForSession()]).then(([ready])=>{if(!ready||ticket!==incomingRevision||window.location.href!==watchURL)return false;const row=[...(api.library||[]),...(api.publicLibrary||[])].find(item=>item.id===id);return player.open({id,title:row?.title||'LightCity video',mode:target.searchParams.get('mode')==='audio'?'audio':'video',startSeconds})}).catch(onError);return true;
   }
+  if(/^\/biblenodesgraph\/[^/]+\.html$/i.test(target.pathname)){openLegacy(target,window.location.href);return true}
   if(/^\/(?:admin|members|share|api|__|logout|signout)(?:\/|$)/i.test(target.pathname)||/\.[a-z0-9]{1,8}$/i.test(target.pathname))return false;
   const original=window.location.href;
-  void resources.get('publications').then(async catalogue=>{if(window.location.href!==original)return;const has=()=>(catalogue.publications||[]).some(row=>{try{const candidate=new URL(row.url,window.location.origin);return candidate.pathname===target.pathname&&candidate.search===target.search}catch{return false}});let found=has();if(!found&&catalogue.memberReady){await catalogue.memberReady;if(window.location.href!==original)return;found=has()}if(found)return router.navigate('/v2/read/?url='+encodeURIComponent(target.pathname+target.search));window.location.assign(target.href)}).catch(()=>{if(window.location.href===original)window.location.assign(target.href)});
+  void resources.get('publications').then(async catalogue=>{if(window.location.href!==original)return;const has=()=>(catalogue.publications||[]).some(row=>{try{const candidate=new URL(row.url,window.location.origin);return candidate.pathname===target.pathname&&candidate.search===target.search}catch{return false}});let found=has();if(!found&&catalogue.memberReady){await catalogue.memberReady;if(window.location.href!==original)return;found=has()}if(found)return router.navigate('/v2/read/?url='+encodeURIComponent(target.pathname+target.search));openLegacy(target,original)}).catch(()=>{if(window.location.href===original)window.location.assign(target.href)});
   return true;
  }
  return {open};

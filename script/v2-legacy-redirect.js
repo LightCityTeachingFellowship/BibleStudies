@@ -12,6 +12,10 @@
     destination.searchParams.set('url', current.pathname);
     if (current.searchParams.get('continue') === 'reading') destination.searchParams.set('continue', 'reading');
     destination.hash = current.hash;
+  } else if (['bibleStoryLineTEMPLATE','bibleStoryLineCREATOR','bibleNodeGraph-1'].includes(layout)) {
+    destination = new URL('/v2/legacy/', current.origin);
+    destination.searchParams.set('url', current.pathname);
+    destination.hash = current.hash;
   } else if (layout === 'cat-homepageTEMPLATE' || layout === 'cat-homepageTEMPLATE-summary') {
     destination = new URL('/v2/categories/', current.origin);
     destination.searchParams.set('kind', layout === 'cat-homepageTEMPLATE' ? 'Article' : 'Summary');
