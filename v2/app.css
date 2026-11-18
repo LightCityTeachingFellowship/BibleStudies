@@ -420,7 +420,7 @@ body.lc-v2-quiz-active #view .lc-quiz{box-sizing:border-box;display:flex;flex-di
 }
 
 /* Keep account actions together on wider screens. */
-@media(min-width:701px){dialog.lc-hub-dialog[aria-label="Your account"]{box-sizing:border-box;width:min(560px,calc(100vw - 48px));max-width:none}dialog.lc-hub-dialog[aria-label="Your account"]>a.lc-hub-button,dialog.lc-hub-dialog[aria-label="Your account"]>button.lc-hub-button{white-space:nowrap}}
+@media(min-width:701px){dialog.lc-hub-dialog[aria-label="Your account"]{box-sizing:border-box;width:min(700px,calc(100vw - 48px));max-width:none}dialog.lc-hub-dialog[aria-label="Your account"]>a.lc-hub-button,dialog.lc-hub-dialog[aria-label="Your account"]>button.lc-hub-button{white-space:nowrap}}
 
 /* Confetti animation from the original bibleQuizAnimation.css. */
 @-webkit-keyframes confetti-slow{ 
