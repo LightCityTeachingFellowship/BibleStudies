@@ -6,4 +6,4 @@ layout: null
 {% assign graphs = site.pages | where: 'layout', 'bibleNodeGraph-1' %}
 {% assign entries = storylines | concat: creators | concat: graphs %}
 {% assign comma = '' %}
-{"pages":[{%- for item in entries -%}{%- unless item.visibility == 'members' -%}{{ comma }}{"url":{{ item.url | relative_url | jsonify }},"title":{{ item.title | default: 'Bible study' | jsonify }}}{%- assign comma = ',' -%}{%- endunless -%}{%- endfor -%}]}
+{"pages":[{%- for item in entries -%}{%- unless item.visibility == 'members' -%}{{ comma }}{"url":{{ item.permalink | default: item.url | relative_url | jsonify }},"title":{{ item.title | default: 'Bible study' | jsonify }}}{%- assign comma = ',' -%}{%- endunless -%}{%- endfor -%}]}

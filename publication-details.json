@@ -10,7 +10,7 @@ layout: null
 {% assign empty_list = '' | split: ',' %}
 {
 {%- for item in items -%}{%- unless item.visibility == 'members' -%}
-{{ comma }}{{ item.url | relative_url | url_decode | downcase | jsonify }}:{"excerpt":{{ item.description | default: item.excerpt | default: item.content | strip_html | normalize_whitespace | truncate: 320 | jsonify }},"categories":{{ item.categories | default: empty_list | jsonify }}}
+{{ comma }}{{ item.permalink | default: item.url | relative_url | url_decode | downcase | jsonify }}:{"excerpt":{{ item.description | default: item.excerpt | default: item.content | strip_html | normalize_whitespace | truncate: 320 | jsonify }},"categories":{{ item.categories | default: empty_list | jsonify }}}
 {%- assign comma = ',' -%}{%- endunless -%}{%- endfor -%}
 
 }

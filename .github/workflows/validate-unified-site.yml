@@ -6,6 +6,7 @@ on:
       - 'script/*-v2.*'
       - 'script/v2-legacy-redirect.js'
       - '_includes/**'
+      - 'study-catalog.json'
       - 'tools/test-v2-legacy-redirect.cjs'
       - 'tools/test-v2-legacy-router.mjs'
       - 'category-data.json'
