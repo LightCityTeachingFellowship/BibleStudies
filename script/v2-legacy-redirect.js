@@ -26,7 +26,7 @@
   if (!destination) {
     let path;
     try { path = decodeURIComponent(current.pathname).toLowerCase().replace(/\/+$/, '') + '/'; } catch { return; }
-    const routes = new Set(['/videos/','/listen/','/watch/','/teaching-articles/','/teaching-summary/','/mylibrary/','/myvideos/','/bible quiz/','/bible-quiz/','/calendar/','/about-us/','/about/','/join-us/','/doctrines/','/study-resources/']);
+    const routes = new Set(['/videos/','/listen/','/watch/','/teaching-articles/','/teaching-summary/','/mylibrary/','/myvideos/','/bible quiz/','/bible-quiz/','/calendar/','/about-us/','/about/','/join-us/','/doctrines/','/study-resources/','/studyresource/']);
     if (routes.has(path)) {
       destination = new URL('/v2/', current.origin);
       destination.searchParams.set('open', current.href);

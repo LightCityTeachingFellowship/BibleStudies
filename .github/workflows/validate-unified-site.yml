@@ -10,6 +10,7 @@ on:
       - 'tools/pages/create-unicode-aliases.py'
       - 'tools/test-v2-legacy-redirect.cjs'
       - 'tools/test-v2-legacy-router.mjs'
+      - 'tools/test-v2-member-link.mjs'
       - 'category-data.json'
       - 'publication-details.json'
       - 'legacy-app-pages.json'
@@ -33,6 +34,7 @@ jobs:
       - run: bundle lock --add-platform x86_64-linux && bundle install
       - run: node tools/test-v2-legacy-redirect.cjs
       - run: node tools/test-v2-legacy-router.mjs
+      - run: node tools/test-v2-member-link.mjs
       - run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
