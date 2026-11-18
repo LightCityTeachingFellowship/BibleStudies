@@ -4,6 +4,9 @@ on:
     paths:
       - 'v2/**'
       - 'script/*-v2.*'
+      - 'script/v2-legacy-redirect.js'
+      - '_includes/**'
+      - 'tools/test-v2-legacy-redirect.cjs'
       - 'category-data.json'
       - 'publication-details.json'
       - 'style/app-reader-chrome.css'
@@ -24,6 +27,7 @@ jobs:
         with:
           ruby-version: '3.3'
       - run: bundle lock --add-platform x86_64-linux && bundle install
+      - run: node tools/test-v2-legacy-redirect.cjs
       - run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
