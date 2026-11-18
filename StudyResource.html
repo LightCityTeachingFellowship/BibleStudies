@@ -32,13 +32,5 @@ title: Summary
 <script defer src="{{ '/script/victorScripts/preload.js' | relative_url }}"></script>
 <script defer src="{{ '/script/victorScripts/generalscript.js' | relative_url }}?v=archive-search-1"></script>
 <script defer src="{{ '/script/victorScripts/recentposts.js' | relative_url }}"></script>
-<script defer src="{{ '/data/LSJ Full.js' | relative_url }}"></script>
-<script defer src="{{ '/data/strongsObjectRoots.js' | relative_url }}"></script>
-<script defer src="{{ '/data/strongsObjectWithFamilies2.js' | relative_url }}"></script>
-<script defer src="{{ '/data/morphParse_GreeknHebrew.js' | relative_url }}"></script>
-<script defer src="{{ '/data/bibleApp_reKeyedCrossReference.js' | relative_url }}"></script>
-<script defer src="{{ '/script/reftaggerLightCity.js' | relative_url }}"></script>
-<script defer src="{{ '/script/bibleApp_transliteration.js' | relative_url }}"></script>
-<script defer src="{{ '/script/TSK.js' | relative_url }}"></script>
-<script defer src="{{ '/script/interact.min.js' | relative_url }}"></script>
+{% include v2-bible-scripts.html legacy_defer=true %}
 </body></html>

@@ -12,6 +12,8 @@ on:
       - 'tools/test-v2-legacy-router.mjs'
       - 'tools/test-v2-member-link.mjs'
       - 'tools/test-unified-site-browser.cjs'
+      - 'tools/test-bible-script-scheduling.cjs'
+      - 'StudyResource.html'
       - 'category-data.json'
       - 'publication-details.json'
       - 'legacy-app-pages.json'
@@ -36,6 +38,7 @@ jobs:
       - run: node tools/test-v2-legacy-redirect.cjs
       - run: node tools/test-v2-legacy-router.mjs
       - run: node tools/test-v2-member-link.mjs
+      - run: node tools/test-bible-script-scheduling.cjs
       - run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
