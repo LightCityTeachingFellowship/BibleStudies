@@ -46,9 +46,10 @@ jobs:
           print(f'Validated {len(paths)} app routes and {len(catalog["publications"])} publication entries.')
           import re
           sources = [Path('Posts-Articles'), Path('Posts-Summaries'), Path('BibleNodesGraph')]
+          sources += list(Path('.').glob('*.html'))
           checked = 0
           for directory in sources:
-              for source in directory.rglob('*.html'):
+              for source in (directory.rglob('*.html') if directory.is_dir() else [directory]):
                   text = source.read_text(encoding='utf8', errors='replace')
                   if not text.startswith('---'):
                       continue
@@ -65,5 +66,11 @@ jobs:
                       output /= 'index.html'
                   assert output.is_file(), f'Missing original page: {permalink} ({source})'
                   checked += 1
-          print(f'Validated {checked} original article, summary, category and storyline links.')
+          print(f'Validated {checked} original site page links.')
+          quiz_count = 0
+          for directory in Path('.').glob('QuizQuestions-*'):
+              for source in directory.rglob('*.html'):
+                  assert (root / source).is_file(), f'Missing quiz page: {source}'
+                  quiz_count += 1
+          print(f'Validated {quiz_count} original quiz page links.')
           PY
