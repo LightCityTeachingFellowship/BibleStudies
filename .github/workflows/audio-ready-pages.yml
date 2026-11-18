@@ -68,6 +68,9 @@ jobs:
         run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
+      - name: Preserve Unicode-equivalent publication links
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        run: python tools/pages/create-unicode-aliases.py
       - uses: actions/upload-pages-artifact@v3
         if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
         with:

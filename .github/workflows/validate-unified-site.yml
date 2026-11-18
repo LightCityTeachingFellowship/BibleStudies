@@ -7,6 +7,7 @@ on:
       - 'script/v2-legacy-redirect.js'
       - '_includes/**'
       - 'study-catalog.json'
+      - 'tools/pages/create-unicode-aliases.py'
       - 'tools/test-v2-legacy-redirect.cjs'
       - 'tools/test-v2-legacy-router.mjs'
       - 'category-data.json'
@@ -35,6 +36,8 @@ jobs:
       - run: bundle exec jekyll build
         env:
           JEKYLL_ENV: production
+      - name: Preserve Unicode-equivalent publication links
+        run: python tools/pages/create-unicode-aliases.py
       - name: Check generated app routes and publication metadata
         run: |
           python - <<'PY'
