@@ -331,6 +331,8 @@ body.lc-v2-inline-active #player .lc-inline-audio.lc-audio-artwork{display:flex;
 #view .lc-publication-page .lc-publication-categories button:hover,#view .lc-publication-page .lc-publication-card-categories button:hover{text-decoration:underline}
 
 /* Category indexes and category detail pages. */
+#view .lc-category-page .lc-category-group li small,#view .lc-publication-page .lc-publication-side-entry small{display:inline-block;margin-left:5px;font-size:13px!important;font-weight:400!important;line-height:1.4;color:var(--muted)}
+#view .lc-publication-page .lc-publication-date{font-size:13px!important;font-weight:400!important}
 .lc-category-heading h1{margin-bottom:26px}.lc-category-group h2{font-size:clamp(26px,2.5vw,36px);margin-bottom:30px}.lc-category-group ol{columns:3;column-gap:54px;margin:0;padding-left:32px}.lc-category-group li{break-inside:avoid;padding:0 0 20px 5px;font-size:clamp(18px,1.7vw,25px);font-weight:700;line-height:1.5}.lc-category-group li a{color:var(--text);text-decoration:none}.lc-category-group li a:hover{text-decoration:underline}.lc-category-group li small{font-size:14px;font-weight:500;white-space:nowrap}.lc-category-page>[role=status]:empty{display:none}@media(max-width:1100px){.lc-category-group ol{columns:2}}@media(max-width:650px){.lc-category-group ol{columns:1}.lc-category-group li{font-size:18px}}
 
 /* Shared three-dot content menus. */
