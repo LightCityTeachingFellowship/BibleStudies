@@ -19,5 +19,14 @@
       if (/^#[a-z0-9-]+$/i.test(current.hash)) destination.searchParams.set('name', current.hash.slice(1));
     } else if (tag.dataset.name) destination.searchParams.set('name', tag.dataset.name);
   }
+  if (!destination) {
+    let path;
+    try { path = decodeURIComponent(current.pathname).toLowerCase().replace(/\/+$/, '') + '/'; } catch { return; }
+    const routes = new Set(['/videos/','/listen/','/watch/','/teaching-articles/','/teaching-summary/','/mylibrary/','/myvideos/','/bible quiz/','/bible-quiz/','/calendar/','/about-us/','/about/','/join-us/','/doctrines/','/study-resources/']);
+    if (routes.has(path)) {
+      destination = new URL('/v2/', current.origin);
+      destination.searchParams.set('open', current.href);
+    }
+  }
   if (destination) window.location.replace(destination.href);
 })();
