@@ -44,4 +44,26 @@ jobs:
           missing = [item['url'] for item in catalog['publications'] if unquote(urlsplit(item['url']).path).lower() not in details]
           assert not missing, f'Publication details missing for {len(missing)} items: {missing[:5]}'
           print(f'Validated {len(paths)} app routes and {len(catalog["publications"])} publication entries.')
+          import re
+          sources = [Path('Posts-Articles'), Path('Posts-Summaries'), Path('BibleNodesGraph')]
+          checked = 0
+          for directory in sources:
+              for source in directory.rglob('*.html'):
+                  text = source.read_text(encoding='utf8', errors='replace')
+                  if not text.startswith('---'):
+                      continue
+                  front = text.split('---', 2)[1]
+                  match = re.search(r'(?m)^permalink:\s*(.+?)\s*$', front)
+                  if not match:
+                      continue
+                  permalink = match.group(1).strip().strip('"\'')
+                  if not permalink.startswith('/'):
+                      permalink = '/' + permalink
+                  relative = unquote(permalink).lstrip('/')
+                  output = root / relative
+                  if permalink.endswith('/') or not output.suffix:
+                      output /= 'index.html'
+                  assert output.is_file(), f'Missing original page: {permalink} ({source})'
+                  checked += 1
+          print(f'Validated {checked} original article, summary, category and storyline links.')
           PY
