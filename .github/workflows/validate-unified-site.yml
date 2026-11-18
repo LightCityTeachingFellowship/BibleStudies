@@ -11,6 +11,7 @@ on:
       - 'tools/test-v2-legacy-redirect.cjs'
       - 'tools/test-v2-legacy-router.mjs'
       - 'tools/test-v2-member-link.mjs'
+      - 'tools/test-unified-site-browser.cjs'
       - 'category-data.json'
       - 'publication-details.json'
       - 'legacy-app-pages.json'
@@ -109,3 +110,12 @@ jobs:
                   quiz_count += 1
           print(f'Validated {quiz_count} original quiz page links.')
           PY
+      - name: Install browser test dependency
+        run: npm install --prefix "$RUNNER_TEMP/lightcity-browser-test" --no-save --no-package-lock playwright@1.56.1
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      - name: Test built website navigation and reader
+        run: node tools/test-unified-site-browser.cjs
+        env:
+          NODE_PATH: ${{ runner.temp }}/lightcity-browser-test/node_modules
+          CHROME_BIN: /usr/bin/google-chrome
