@@ -55,7 +55,11 @@ jobs:
               document = root / old_path.lstrip('/')
               if old_path.endswith('/') or not document.suffix:
                   document /= 'index.html'
-              assert document.is_file(), f'Missing publication page: {old_path}'
+              if not document.is_file():
+                  import unicodedata
+                  first = old_path.strip('/').split('/')[0]
+                  candidates = [repr(x.name) for x in root.iterdir() if unicodedata.normalize('NFC', x.name) == unicodedata.normalize('NFC', first)]
+                  raise AssertionError(f'Missing publication page: {old_path!r}; unicode-equivalent outputs: {candidates}')
               markup = document.read_text(encoding='utf8')
               assert 'v2-legacy-redirect.js' in markup, f'Missing app redirect on publication: {old_path}'
           print(f'Validated {len(paths)} app routes and {len(catalog["publications"])} publication entries.')
