@@ -3,7 +3,7 @@ import {createApplication} from './src/application.mjs?v=app-v2-1';
 import {createLightCitySessionAdapter} from './src/lightcity-session-adapter.mjs?v=app-v2-1';
 import {createHomeView} from './src/home-view.mjs?v=prayer-alert-1';
 import {createLazyView} from './src/lazy-view.mjs?v=app-v2-1';
-import {createLinkRouter} from './src/link-router.mjs?v=app-v2-1';
+import {createLinkRouter} from './src/link-router.mjs?v=website-links-1';
 import {installStartupGate} from './src/startup-gate.mjs';
 // Capture the browser install prompt even if device features load later.
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();window.LightCityDeferredInstallPrompt=event});

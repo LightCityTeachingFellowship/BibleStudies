@@ -2,7 +2,7 @@
 // Unsupported features keep their existing website behavior.
 export function createLinkRouter({window,router,player,api,resources,session,onError=()=>{}}){
  let incomingRevision=0;
- const sections=new Map([['/home/','/v2/'],['/videos/','/v2/videos/'],['/listen/','/v2/audio/'],['/teaching-articles/','/v2/articles/'],['/teaching-summary/','/v2/summaries/'],['/mylibrary/','/v2/library/'],['/bible-quiz/','/v2/quizzes/'],['/bible%20quiz/','/v2/quizzes/'],['/about-us/','/v2/info/?page=about'],['/about/','/v2/info/?page=about'],['/join-us/','/v2/info/?page=meeting'],['/doctrines/','/v2/info/?page=doctrines']]);
+ const sections=new Map([['/home/','/v2/'],['/videos/','/v2/videos/'],['/listen/','/v2/audio/'],['/teaching-articles/','/v2/articles/'],['/teaching-summary/','/v2/summaries/'],['/mylibrary/','/v2/library/'],['/myvideos/','/v2/library/'],['/study-resources/','/v2/categories/?kind=Article'],['/categories/','/v2/categories/?kind=Summary'],['/bible-quiz/','/v2/quizzes/'],['/bible%20quiz/','/v2/quizzes/'],['/about-us/','/v2/info/?page=about'],['/about/','/v2/info/?page=about'],['/join-us/','/v2/info/?page=meeting'],['/doctrines/','/v2/info/?page=doctrines']]);
  async function waitForSession(){await api.ready;if(!session)return;const ready=state=>{const user=api.user&&!api.user.isAnonymous?api.user:null;if(user)return ['member','authenticated'].includes(state.status)&&state.user?.uid===user.uid;return state.status==='public'};if(ready(session.state))return;await new Promise((resolve,reject)=>{let unsubscribe=()=>{},finished=false;const timeout=setTimeout(()=>{if(finished)return;finished=true;unsubscribe();reject(Error('Account restoration timed out'))},30000);const finish=()=>{if(finished)return;finished=true;clearTimeout(timeout);unsubscribe();resolve()};unsubscribe=session.subscribe(state=>{if(ready(state))finish()});if(finished)unsubscribe()})}
  function open(input){let target;try{target=new URL(input,window.location.href)}catch{return false}
   if(target.origin!==window.location.origin||!['http:','https:'].includes(target.protocol)||target.username||target.password)return false;
@@ -13,6 +13,7 @@ export function createLinkRouter({window,router,player,api,resources,session,onE
    void resources.get('archive').then(rows=>{if(window.location.href!==original)return false;const row=rows.find(item=>item.id===id);if(!row)throw Error('Recording unavailable');return player.open({id,title:row.title,kind:'archive',mode:'audio'})}).then(opened=>{if(opened&&window.location.href===original)return router.navigate('/v2/watch/')}).catch(onError);return true;
   }
   if(path==='/calendar/'){void router.navigate('/v2/calendar/'+target.search+target.hash);return true}
+  if(path==='/categories/'&&/^#[a-z0-9-]+$/i.test(target.hash)){void router.navigate('/v2/categories/?kind=Summary&name='+encodeURIComponent(target.hash.slice(1)));return true}
   if(sections.has(path)){void router.navigate(sections.get(path));return true}
   if(/^\/quizquestions-(adult|children|trivia)\//i.test(target.pathname)){
    if(/\/a0-home-|\/triviaquestions\.html$/i.test(target.pathname)){void router.navigate('/v2/quizzes/');return true}
