@@ -1,0 +1,21 @@
+import {createBrowseCards} from './browse-cards.mjs';
+// The view shares the verified library and one player owned by the app.
+export function createVideoView({document,api,services}){
+ const root=document.createElement('section'),heading=document.createElement('h1'),search=document.createElement('input'),category=document.createElement('select'),status=document.createElement('p'),grid=document.createElement('div'),more=document.createElement('button');
+ root.className='lc-v2-videos site-browse';heading.textContent='LightCity Videos';search.type='search';search.placeholder='Search videos';search.setAttribute('aria-label','Search videos');category.setAttribute('aria-label','Video category');
+ for(const [value,label] of [['all','All videos'],['Sunday','Sunday Fellowship'],['Meeting','Prayer Meeting'],['Study','Bible Study'],['Program','Programs'],['Excerpts','Excerpts'],['Ceremonies','Ceremonies']]){const option=document.createElement('option');option.value=value;option.textContent=label;category.append(option)}
+ status.setAttribute('role','status');grid.className='lc-v2-video-grid videotab-content videotab-content--active';more.type='button';more.textContent='Show more';const tabs=document.createElement('div');tabs.className='lc-v2-category-tabs';tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Video categories');const header=document.createElement('div'),library=document.createElement('a');header.className='lc-browse-header';library.href='/v2/library/';library.textContent='Saved & history →';header.append(heading,library,tabs);search.hidden=true;root.append(header,search,category,status,grid,more);category.hidden=true;for(const option of category.options){const tab=document.createElement('button');tab.type='button';tab.className='videos-header-btns';tab.textContent=option.value==='all'?'All':option.textContent;tab.dataset.value=option.value;tab.onclick=()=>{category.value=option.value;category.dispatchEvent(new Event('change'))};tabs.append(tab)}function syncTabs(){for(const tab of tabs.children)tab.setAttribute('aria-pressed',String(tab.dataset.value===category.value))}
+ const cards=createBrowseCards({document,services,root,status,defaultMode:'video'});
+ const remembered=services.viewState.get('videos')||{};let limit=remembered.limit||24,rows=[],disposed=false,restoredScroll=0,owner=null;search.value=remembered.query||'';category.value=remembered.category||'all';syncTabs();const subscriptions=[];
+ function remember(){services.viewState.set('videos',{limit,query:search.value,category:category.value})}
+ function render(){if(disposed)return;syncTabs();grid.replaceChildren();const query=search.value.trim().toLocaleLowerCase(),selected=category.value||'all';const filtered=rows.filter(item=>(item.title||'').toLocaleLowerCase().includes(query)&&(selected==='all'||item.category===selected));
+  for(const item of filtered.slice(0,limit)){
+   if(!/^[A-Za-z0-9_-]{11}$/.test(item.id||''))continue;
+   grid.append(cards.card({id:item.id,title:item.title||'LightCity video',duration:item.durationSeconds||item.duration}));
+  }
+  cards.sync();more.hidden=filtered.length<=limit;status.textContent=filtered.length?'':rows.length?'No matching videos.':'No videos are available yet.';
+ }
+ more.onclick=()=>{limit+=24;remember();render()};search.oninput=category.onchange=()=>{limit=24;remember();render()};
+ function update(){if(api.loading){rows=[];grid.replaceChildren();status.textContent='Loading videos…';return}const state=services.session.state,scope=state.user&&!state.user.isAnonymous?'user:'+state.user.uid:'public';if(owner!==null&&owner!==scope){search.value='';category.value='all';limit=24}owner=scope;rows=state.status==='member'&&Array.isArray(state.library)?state.library:Array.isArray(api.publicLibrary)?api.publicLibrary:[];render();if(restoredScroll>0){const outlet=root.closest('main');if(outlet)outlet.scrollTop=restoredScroll;restoredScroll=0}}
+ return {element:root,activate(options={}){restoredScroll=options.scrollTop||0;subscriptions.push(services.session.subscribe(update));},dispose(){disposed=true;cards.dispose();search.oninput=category.onchange=more.onclick=null;for(const unsubscribe of subscriptions)unsubscribe();}};
+}

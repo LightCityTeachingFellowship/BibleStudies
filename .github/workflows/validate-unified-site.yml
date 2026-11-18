@@ -1,0 +1,47 @@
+name: Validate unified website
+on:
+  pull_request:
+    paths:
+      - 'v2/**'
+      - 'script/*-v2.*'
+      - 'category-data.json'
+      - 'publication-details.json'
+      - 'style/app-reader-chrome.css'
+      - 'home.html'
+      - 'landing.html'
+      - 'manifest.webmanifest'
+      - '.github/workflows/validate-unified-site.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/tools/pages/Gemfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - run: bundle lock --add-platform x86_64-linux && bundle install
+      - run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+      - name: Check generated app routes and publication metadata
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('_site')
+          paths = ['','videos','audio','articles','summaries','watch','read','library','quiz','quizzes','info','calendar','categories']
+          for path in paths:
+              page = root / 'v2' / path / 'index.html'
+              assert page.is_file(), f'Missing app page: {page}'
+              assert '/v2/bootstrap.mjs' in page.read_text(encoding='utf8'), f'Invalid app page: {page}'
+          details = json.loads((root / 'publication-details.json').read_text(encoding='utf8'))
+          catalog = json.loads((root / 'study-catalog.json').read_text(encoding='utf8'))
+          from urllib.parse import unquote,urlsplit
+          missing = [item['url'] for item in catalog['publications'] if unquote(urlsplit(item['url']).path).lower() not in details]
+          assert not missing, f'Publication details missing for {len(missing)} items: {missing[:5]}'
+          print(f'Validated {len(paths)} app routes and {len(catalog["publications"])} publication entries.')
+          PY

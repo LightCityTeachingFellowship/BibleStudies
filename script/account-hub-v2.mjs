@@ -1,0 +1,110 @@
+import {element as el,icon,safeUrl,sitePath,isMemberAccount} from './hub-core.mjs';
+const api=()=>globalThis.LightCityMembers;
+let playlists=[],playlistUntil=0,playlistFlight=null,inboxFlight=null,inboxData={items:[],unread:0},revision=0,dialog=null,lastFocus=null;
+const signal=()=>window.dispatchEvent(new Event('lightcity-playlists-changed'));
+const signed=()=>api()?.user&&!api().user.isAnonymous;
+const key=()=>signed()?api().user.uid:'device';
+const friendly=e=>e?.code?.includes('unauthenticated')?'Please refresh the page and try again.':e?.code?.includes('permission-denied')?'Your access changed. Please refresh the page.':e?.code?.includes('not-found')?'This resource is no longer available.':e?.code?.includes('resource-exhausted')?e.message:'Could not connect. Please try again.';
+function action(text,fn,cls=''){const b=el('button',text,'lc-hub-button '+cls);b.type='button';b.onclick=fn;return b;}
+function dismiss(){if(dialog?.open)dialog.close();}
+function modal(title){dismiss();const d=el('dialog','','lc-hub-dialog'),head=el('div','','lc-hub-dialog-head'),h=el('h2',title),close=action('',()=>d.close(),'lc-hub-icon');close.innerHTML=icon('close');close.setAttribute('aria-label','Close '+title);head.append(h,close);d.append(head);document.body.append(d);lastFocus=document.activeElement;d.setAttribute('aria-label',title);d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});d.addEventListener('close',()=>{d.remove();if(dialog===d)dialog=null;lastFocus?.isConnected&&lastFocus.focus();});dialog=d;d.showModal();return d;}
+async function signIn(){try{await api()?.signInForVideos();dismiss();}catch(e){if(e?.code!=='auth/popup-closed-by-user'&&e?.code!=='auth/cancelled-popup-request')alert('Sign-in could not finish. Please try again.');}}
+function account(){if(!isMemberAccount())return;const d=modal('Your account'),user=signed()?api().user:null;if(user){const card=el('div','','lc-hub-account-summary');card.append(avatar(user),el('h3',user.displayName||'Your account'),el('p',user.email||''),el('span',Array.isArray(api().library)?'Church member':'Signed in','lc-hub-label'));d.append(card,action('Switch account',signIn),action('Sign out',async()=>{try{await api().signOut();dismiss();}catch{d.append(el('p','Could not sign out. Please try again.'));}}));}const link=el('a','My study library','lc-hub-button');link.href=sitePath('/MyLibrary/');d.append(link,action('Settings',settings));}
+export function avatar(user){
+ const node=el('span',(user?.displayName||user?.email||'L').trim().slice(0,1).toUpperCase(),'lc-hub-avatar');
+ try{const url=new URL(user?.photoURL);if(url.protocol==='https:'&&/(^|\.)googleusercontent\.com$|(^|\.)ggpht\.com$/.test(url.hostname)){const img=el('img');img.src=url.href;img.alt='';img.referrerPolicy='no-referrer';img.decoding='async';img.onerror=()=>img.remove();node.append(img);}}catch{}
+ return node;
+}
+function installSetting(dialog) {
+  const section = el('section', '', 'lc-hub-setting');
+  const status = el('p', '', 'lc-hub-muted');
+  status.setAttribute('role', 'status');
+  const nativeApp = Boolean(globalThis.Capacitor?.isNativePlatform?.()
+    || (globalThis.androidBridge && globalThis.Capacitor?.nativePromise));
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const install = action(ios ? 'Add to Home Screen' : 'Install Android App', () => {
+    if (nativeApp) return;
+    if (ios) {
+      status.textContent = 'Open Share, then choose Add to Home Screen.';
+      return;
+    }
+    window.location.assign(sitePath('/downloads/'));
+  });
+  if (nativeApp) {
+    install.disabled = true;
+    status.textContent = 'LightCity is already installed.';
+  }
+  section.append(el('h3', 'App'), install, status);
+  return section;
+}
+function settings(){const d=modal('Settings');d.classList.add('lc-hub-settings');const appearance=el('section','','lc-hub-setting'),themeButton=action('',()=>{const control=document.getElementById('theme-toggle')||document.getElementById('theme');if(control)control.click();else{const dark=!document.body.classList.contains('darkmode'),sheet=document.getElementById('theme-stylesheet');document.body.classList.toggle('darkmode',dark);if(sheet)sheet.href=new URL('style/'+(dark?'darkMODE':'lightMODE')+'.css',new URL(sitePath('/'),location.origin)).href;try{localStorage.setItem('theme',dark?'darkMODE':'lightMODE');}catch{}}paintTheme();});function paintTheme(){const dark=document.body.classList.contains('darkmode');themeButton.textContent=dark?'Switch to light mode':'Switch to dark mode';themeButton.setAttribute('aria-pressed',String(dark));}appearance.append(el('h3','Appearance'),themeButton);d.append(appearance,installSetting(d));const playback=el('section','','lc-hub-setting'),playbackLabel=el('label','','lc-hub-setting-toggle'),autoAudio=el('input');autoAudio.type='checkbox';try{autoAudio.checked=localStorage.getItem('lc-minimize-audio')==='1';}catch{}autoAudio.addEventListener('change',()=>{try{localStorage.setItem('lc-minimize-audio',autoAudio.checked?'1':'0');}catch{}});playbackLabel.append(el('span','Switch video to audio when leaving the app'),autoAudio);playback.append(el('h3','Playback'),playbackLabel,el('p','When audio is available, continue listening after you leave the app or lock your screen.','lc-hub-muted'));d.append(playback);paintTheme();const observer=new MutationObserver(paintTheme);observer.observe(document.body,{attributes:true,attributeFilter:['class']});d.addEventListener('close',()=>observer.disconnect(),{once:true});const box=el('section','','lc-hub-setting'),title=el('h3','Notifications'),status=el('p','','lc-hub-muted');
+status.setAttribute('role','status');
+let busy=false,message='';
+const toggle=action('Loading…',async()=>{
+  const controls=globalThis.LightCityNotificationSettings;
+  if(!controls||busy)return;
+  busy=true;
+  message='';
+  paint();
+  try{message=(await (controls.getState().enabled?controls.disable():controls.enable()))||'';}
+  catch{message='Could not change notifications. Please try again.';}
+  finally{busy=false;paint();}
+});
+function paint(){
+  if(!d.isConnected)return;
+  const state=globalThis.LightCityNotificationSettings?.getState();
+  toggle.disabled=busy||!state?.supported;
+  toggle.textContent=state?.enabled?'Turn off on this device':'Enable on this device';
+  status.textContent=busy?'Updating notifications…':!state?'Notification controls are loading…'
+    :!state.supported?'Push notifications are unavailable here. On iPhone, install the app first.'
+    :state.permission==='denied'?'Notifications are blocked. Allow notifications for LightCity in your phone or browser settings, then try again here.'
+    :message||(state.enabled?'Notifications are enabled on this device.':'Notifications are off on this device.');
+}
+box.append(title,status,toggle,el('p','The bell keeps recent announcements here even when push notifications are off.','lc-hub-small'));
+d.append(box);
+paint();
+window.addEventListener('lightcity-notification-settings-ready',paint,{once:true});
+window.addEventListener('focus',paint);
+document.addEventListener('visibilitychange',paint);
+d.addEventListener('close',()=>{
+  window.removeEventListener('lightcity-notification-settings-ready',paint);
+  window.removeEventListener('focus',paint);
+  document.removeEventListener('visibilitychange',paint);
+},{once:true});
+d.append(action('Open notification inbox',inbox));const clearHistory=globalThis.LightCityClearHistory;if(clearHistory||document.getElementById('clear-video-history')){const message=el('p','','lc-hub-small');message.setAttribute('role','status');d.append(action('Clear reading, watch and listening history',async()=>{if(!clearHistory){document.getElementById('clear-video-history')?.click();return}if(!confirm('Clear your reading, watch and listening history? Saved resources and playlists will be kept.'))return;try{await clearHistory();message.textContent='History cleared. Account sync will retry if needed.'}catch{message.textContent='Could not clear history. Please try again.'}}),el('p',isMemberAccount()?'Saved resources and playlists are kept.':'Saved resources are kept.','lc-hub-small'),message);}}
+async function loadPlaylists(force=false){await api()?.ready;if(!isMemberAccount()){playlists=[];return [];}if(!force&&playlistUntil>Date.now())return playlists;if(playlistFlight){if(!force)return playlistFlight;await playlistFlight.catch(()=>{});return loadPlaylists(true);}const owner=key(),ticket=revision;playlistFlight=(async()=>{const result=await api().getStudyCollections();if(ticket!==revision||owner!==key())return [];playlists=result.playlists||[];playlistUntil=Date.now()+30000;signal();return playlists;})();const flight=playlistFlight;try{return await flight;}finally{if(playlistFlight===flight)playlistFlight=null;}}
+async function mutate(data){const owner=key(),ticket=revision;const result=await api().updateStudyCollection(data);if(owner!==key()||ticket!==revision)return null;playlistUntil=0;await loadPlaylists(true);return result;}
+function createForm(d,item){const form=el('form','','lc-hub-create'),label=el('label','New playlist'),input=el('input'),submit=el('button','Create playlist','lc-hub-button lc-hub-primary'),feedback=el('p','','lc-hub-small');input.maxLength=80;input.required=true;input.placeholder='e.g. Prayer, Family study';input.id='lc-playlist-name';label.htmlFor=input.id;submit.type='submit';form.append(label,input,submit,feedback);form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;feedback.textContent='Creating…';try{const result=await mutate({action:'create',name:input.value});if(!result||!d.isConnected)return;if(item)await mutate({action:'add',playlistId:result.id,item});if(d.isConnected){feedback.textContent=item?'Saved to your new playlist.':'Playlist created.';input.value='';}}catch(error){if(d.isConnected)feedback.textContent=friendly(error);}finally{submit.disabled=false;}};d.append(form);}
+async function choosePlaylist(item){if(!isMemberAccount())return;const d=modal(item?'Save to playlist':'Create a playlist');const list=el('div','','lc-hub-picker'),status=el('p','Loading your playlists…','lc-hub-muted');d.append(status,list);createForm(d,item);const paint=()=>{if(!d.isConnected)return;status.textContent=playlists.length?'Private to your account.':'Create your first playlist below.';list.replaceChildren(...playlists.map(p=>action(p.name+' · '+p.items.length,async e=>{if(!item){showPlaylist(p.id);return;}const b=e.currentTarget;b.disabled=true;try{await mutate({action:'add',playlistId:p.id,item});if(d.isConnected)status.textContent='Saved to '+p.name+'.';}catch(error){if(d.isConnected)status.textContent=friendly(error);}finally{b.disabled=false;}})));};const changed=()=>paint();window.addEventListener('lightcity-playlists-changed',changed);d.addEventListener('close',()=>window.removeEventListener('lightcity-playlists-changed',changed),{once:true});try{await loadPlaylists();paint();}catch(error){status.textContent=friendly(error);}}
+function showPlaylist(id){const p=playlists.find(p=>p.id===id);if(!p)return;const d=modal(p.name),status=el('p',p.items.length+' resources · Private','lc-hub-muted'),tools=el('div','','lc-hub-actions'),list=el('div','','lc-hub-playlist-items');d.append(status,tools,list);tools.append(action('Rename',()=>{const form=el('form','','lc-hub-create'),input=el('input'),save=el('button','Save name','lc-hub-button lc-hub-primary');input.value=p.name;input.maxLength=80;input.required=true;input.setAttribute('aria-label','Playlist name');save.type='submit';form.append(input,save);form.onsubmit=async e=>{e.preventDefault();save.disabled=true;try{if(await mutate({action:'rename',playlistId:id,name:input.value}))showPlaylist(id);}catch(error){status.textContent=friendly(error);save.disabled=false;}};tools.replaceChildren(form);input.focus();}),action('Delete playlist',async()=>{if(!confirm('Delete “'+p.name+'”? Your saved resources and history will be kept.'))return;try{await mutate({action:'delete',playlistId:id});dismiss();}catch(error){status.textContent=friendly(error);}}));if(p.unavailableCount)d.append(el('p','Some resources are no longer available to your account.','lc-hub-small'));if(!p.items.length)list.append(el('p','Use “Save to playlist” on any resource to add it here.'));for(const item of p.items){const row=el('div','','lc-hub-inbox-row'),link=el('a',item.title),kind=el('span',item.mode==='audio'?'Audio':item.kind,'lc-hub-label');link.href=safeUrl(item.url)||sitePath('/MyLibrary/');link.prepend(kind);const remove=action('Remove',async()=>{remove.disabled=true;try{if(await mutate({action:'remove',playlistId:id,item:{type:item.type,id:item.id,...(item.mode?{mode:item.mode}:{})}}))showPlaylist(id);}catch(error){status.textContent=friendly(error);remove.disabled=false;}});row.append(link,remove);list.append(row);}}
+function paintBells(){for(const b of document.querySelectorAll('[data-hub-bell]')){const count=inboxData.unread;b.setAttribute('aria-label',count?`Notifications, ${count} unread`:'Notifications');const badge=b.querySelector('span');badge.textContent=count>99?'99+':String(count);badge.hidden=!count;}}
+async function loadInbox(force=false){if(inboxFlight){if(!force)return inboxFlight;await inboxFlight.catch(()=>{});return loadInbox(true);}const owner=key(),ticket=revision;inboxFlight=(async()=>{await api()?.ready;const data=await api().getNotificationInbox();if(owner!==key()||ticket!==revision)return null;inboxData=data;
+if(document.visibilityState==='visible')for(const item of data.items.filter(item=>!item.read)){
+ const target=new URL(item.url,location.origin),current=new URL(location.href);
+ const matches=item.type==='media'?/\/Watch\/?$/i.test(current.pathname)&&current.searchParams.get('v')===item.id:decodeURI(current.pathname)===decodeURI(target.pathname);
+ if(matches)try{await api().updateNotificationInbox({action:'read',notificationId:item.notificationId});if(ticket!==revision||owner!==key())return null;item.read=true;}catch{}
+}
+data.unread=data.items.filter(item=>!item.read).length;paintBells();return data;})();const flight=inboxFlight;try{return await flight;}finally{if(inboxFlight===flight)inboxFlight=null;}}
+async function inbox(){const d=modal('Notifications'),status=el('p','Loading announcements…','lc-hub-muted'),list=el('div','','lc-hub-inbox'),mark=action('Mark all read',async()=>{mark.disabled=true;try{await api().updateNotificationInbox({action:'readAll'});await loadInbox(true);paint();}catch(error){status.textContent=friendly(error);}finally{mark.disabled=false;}});d.append(status,mark,action('Notification settings',settings),list);function paint(){if(!d.isConnected)return;status.textContent=inboxData.items.length?'Recent announcements for your account.':'No recent announcements. New ones will appear here.';list.replaceChildren(...inboxData.items.map(item=>{const row=el('div','','lc-hub-inbox-row'+(item.read?'':' lc-hub-unread')),a=el('a'),kind=el('span',item.kind,'lc-hub-label');a.href=safeUrl(item.url)||sitePath('/MyLibrary/');a.append(kind,el('strong',item.title),el('small',new Date(item.sentAt).toLocaleString()));a.onclick=e=>{e.preventDefault();const owner=key(),ticket=revision;void api().updateNotificationInbox({action:'read',notificationId:item.notificationId}).then(()=>{if(owner!==key()||ticket!==revision)return;item.read=true;inboxData.unread=inboxData.items.filter(i=>!i.read).length;paintBells()}).catch(()=>{});if(globalThis.LightCityNavigationShell?.openURL?.(a.href))dismiss();else location.assign(a.href);};row.append(a);return row;}));}try{if(await loadInbox(true))paint();}catch(error){status.textContent=friendly(error);d.append(action('Retry',inbox));}}
+function mount(){
+ const restoring=api()?.loading ?? document.documentElement.classList.contains('lc-member-restoring');
+ function pending(host){let n=host.querySelector('.lc-hub-account-pending');if(!n){n=el('span','','lc-hub-account-pending lc-hub-icon');n.setAttribute('role','status');n.setAttribute('aria-label','Loading your account');n.append(el('span','','lc-hub-avatar'));host.append(n);}n.hidden=!restoring;}
+ const allowed=isMemberAccount();document.body.classList.toggle('lc-member-tools',allowed);
+ const modern=document.querySelector('.lc-shell-tools'),hosts=modern?[modern]:[...document.querySelectorAll('.mobileControls, #desktopHeader .homeHeaderNav, .home-header-controls')];
+ for(const host of hosts){let bar=host.querySelector('.lc-hub-header-tools');if(!bar){bar=el('div','','lc-hub-header-tools');const bell=action('',inbox,'lc-hub-icon');bell.innerHTML=icon('bell');bell.dataset.hubBell='';bell.setAttribute('aria-label','Notifications');const badge=el('span','','lc-hub-count');badge.hidden=true;bell.append(badge);bar.append(bell);if(host.classList.contains('mobileControls'))host.prepend(bar);else host.append(bar);}
+ let user=bar.querySelector('[data-hub-account]');if(!user){user=action('',account,'lc-hub-icon lc-hub-profile-button');user.dataset.hubAccount='';user.setAttribute('aria-label','Your account and settings');bar.append(user);}user.hidden=restoring||!allowed;user.replaceChildren(avatar(allowed?api().user:null));
+ let library=bar.querySelector('[data-hub-library]');if(!library){library=el('a','','lc-hub-icon lc-hub-library-link');library.dataset.hubLibrary='';library.href=sitePath('/MyLibrary/');library.title='My library';library.setAttribute('aria-label','My library');library.innerHTML=icon('bookmark');bar.append(library);}library.hidden=restoring||allowed;pending(bar);
+ }
+ const bottom=document.querySelector('.home-bottom-nav');if(bottom){let b=bottom.querySelector('[data-hub-mobile-account]');if(!b){b=el('a','','lc-hub-mobile-account');b.href=sitePath('/MyLibrary/');b.title='My library';b.dataset.hubMobileAccount='';b.setAttribute('aria-label','My library');bottom.append(b);}b.hidden=restoring||!allowed;b.replaceChildren(avatar(allowed?api().user:null),el('span','You'));bottom.classList.toggle('lc-has-account',allowed);let library=bottom.querySelector('[data-hub-mobile-library]');if(!library){library=el('a','','lc-hub-mobile-library');library.dataset.hubMobileLibrary='';library.href=sitePath('/MyLibrary/');library.title='My library';library.setAttribute('aria-label','My library');library.innerHTML=icon('bookmark');bottom.append(library);}library.hidden=restoring||allowed;pending(bottom);bottom.classList.toggle('lc-has-library',!allowed);}
+ document.body.classList.add('lc-account-hub-ready');paintBells();const watch=document.querySelector('.watch-menu-panel');if(watch&&!watch.querySelector('[data-hub-watch-settings]')){const b=action('Settings',()=>{document.getElementById('watch-menu').open=false;settings();});b.dataset.hubWatchSettings='';const i=el('span');i.innerHTML=icon('settings');b.prepend(i);watch.append(b);}if(watch&&!watch.querySelector('[data-hub-playlist]')){const b=action('Save to playlist',()=>{document.getElementById('watch-menu').open=false;choosePlaylist({type:'media',id:new URLSearchParams(location.search).get('v'),mode:document.querySelector('.lc-media-viewport.lc-audio-mode')||new URLSearchParams(location.search).get('mode')==='audio'?'audio':'video'});});b.dataset.hubPlaylist='';b.prepend(el('span',''));b.firstChild.innerHTML=icon('playlist');watch.append(b);}
+}
+function changeAccount(){revision++;playlists=[];playlistUntil=0;playlistFlight=null;inboxData={items:[],unread:0};inboxFlight=null;dismiss();mount();paintBells();signal();void loadInbox().catch(()=>{});}
+export const hub={refreshChrome:mount,openAccount:account,openSettings:settings,openInbox:inbox,choosePlaylist,loadPlaylists,showPlaylist,get canUseCollections(){return isMemberAccount();},get playlists(){return playlists;},get signedIn(){return Boolean(signed());}};
+globalThis.LightCityHub=hub;
+window.addEventListener('lightcity-add-to-playlist',e=>void choosePlaylist(e.detail));
+window.addEventListener('lightcity-members-changed',changeAccount);
+window.addEventListener('lightcity-notification-arrived',()=>{if(document.visibilityState==='visible')void loadInbox(true).catch(()=>{});});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void loadInbox(true).catch(()=>{});});
+const poll=setInterval(()=>{if(document.visibilityState==='visible')void loadInbox(true).catch(()=>{});},60000);poll.unref?.();
+mount();void loadInbox().catch(()=>{});
