@@ -38,6 +38,7 @@ jobs:
       - run: node tools/test-v2-legacy-redirect.cjs
       - run: node tools/test-v2-legacy-router.mjs
       - run: node tools/test-v2-member-link.mjs
+      - run: node tools/test-v2-member-cache.cjs
       - run: node tools/test-bible-script-scheduling.cjs
       - run: bundle exec jekyll build
         env:
@@ -122,3 +123,4 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/lightcity-browser-test/node_modules
           CHROME_BIN: /usr/bin/google-chrome
+

@@ -7,12 +7,12 @@ const page = document.getElementById('member-page');
 let invitation='';
 if(page){try{const token=new URLSearchParams(location.hash.slice(1)).get('invite');if(/^[a-f0-9]{64}$/.test(token||'')){sessionStorage.setItem('lc-member-invitation',token);history.replaceState(null,'',location.pathname+location.search);}invitation=sessionStorage.getItem('lc-member-invitation')||'';}catch{}}
 let busy = false, signup = false, notice = '';
-// Android can display the last server-approved library for the same restored
-// Firebase account while access is refreshed. Server calls remain authorized.
-const memberCacheKey = 'lc-android-member-library-v1', memberCacheAge = 7 * 24 * 60 * 60 * 1000;
+// Restore the last approved library for the same signed-in account while the
+// server rechecks access. Keep website and Android caches separate.
+const memberCacheKey = isAndroidApp() ? 'lc-android-member-library-v1' : 'lc-web-member-library-v1', memberCacheAge = 7 * 24 * 60 * 60 * 1000;
 function clearMemberCache(){try{localStorage.removeItem(memberCacheKey)}catch{}}
-function rememberMemberLibrary(user,videos){if(!isAndroidApp()||!user?.uid)return;try{localStorage.setItem(memberCacheKey,JSON.stringify({uid:user.uid,at:Date.now(),videos}))}catch{}}
-function rememberedMemberLibrary(user){if(!isAndroidApp()||!user?.uid)return null;try{const item=JSON.parse(localStorage.getItem(memberCacheKey)||'null');if(!item||item.uid!==user.uid||!Number.isFinite(item.at)||item.at>Date.now()||Date.now()-item.at>memberCacheAge||!Array.isArray(item.videos)||item.videos.some(v=>!/^[\w-]{11}$/.test(v?.id||'')))return null;return item.videos}catch{return null}}
+function rememberMemberLibrary(user,videos){if(!user?.uid)return;try{localStorage.setItem(memberCacheKey,JSON.stringify({uid:user.uid,at:Date.now(),videos}))}catch{}}
+function rememberedMemberLibrary(user){if(!user?.uid)return null;try{const item=JSON.parse(localStorage.getItem(memberCacheKey)||'null');if(!item||item.uid!==user.uid||!Number.isFinite(item.at)||item.at>Date.now()||Date.now()-item.at>memberCacheAge||!Array.isArray(item.videos)||item.videos.some(v=>!/^[\w-]{11}$/.test(v?.id||'')))return null;return item.videos}catch{return null}}
 const field = id => document.getElementById(id);
 // The Watch mini-player keeps the verified Watch page alive while browsing in
 // a same-origin frame. Reuse only its already-authorized in-memory library;
@@ -360,3 +360,4 @@ api.getCalendar=async month=>{await api.ready;return call('getChurchCalendar',{m
 api.getPrayerGroup=async()=>{await api.ready;return call('getMyPrayerGroup',{accountUid:api.user?.uid});};
 api.preparePrayerJoin=async data=>{await api.ready;return call('preparePrayerJoin',{...data,accountUid:api.user?.uid});};
 api.managePrayerGroups=async data=>{await api.ready;return call('manageChurchPrayerGroups',{...data,accountUid:api.user?.uid});};
+
