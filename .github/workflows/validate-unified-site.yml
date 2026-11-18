@@ -123,10 +123,23 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/lightcity-browser-test/node_modules
           CHROME_BIN: /usr/bin/google-chrome
+      - name: Prepare Windows-compatible preview
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          root = Path('_site')
+          def safe(name):
+              return ''.join('%%%02X' % ord(c) if c in '%<>:"\\|?*' else c for c in name)
+          with ZipFile('lightcity-preview.zip', 'w', ZIP_DEFLATED) as archive:
+              for item in root.rglob('*'):
+                  if item.is_file():
+                      archive.write(item, '/'.join(safe(part) for part in item.relative_to(root).parts))
+          PY
       - name: Package website preview
         uses: actions/upload-artifact@v4
         with:
           name: lightcity-website-preview
-          path: _site/
+          path: lightcity-preview.zip
           retention-days: 3
 
