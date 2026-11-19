@@ -596,3 +596,17 @@ body :is(h1,h2,h3,h4,h5,h6):not(.lc-quiz-question),body .lc-search-result-title,
 /* Download page */
 .lc-download-page .download-page,.lc-download-page .download-page *{box-sizing:content-box}
 body.lc-download-page{margin:0;background:#101010;color:#f5f5f5;font-family:Outfit,system-ui,sans-serif}.download-page{max-width:960px;margin:auto;padding:50px 24px}.download-brand{width:180px;max-width:60%;height:auto}.download-eyebrow{color:#ffbd00;letter-spacing:.12em;font-size:.75rem;font-weight:700;margin-top:54px}.download-page h1{font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;margin:10px 0 18px}.download-page p{line-height:1.6;color:#ccc}.download-card{margin-top:32px;background:#19191b;border:1px solid #333;border-radius:20px;padding:clamp(22px,4vw,38px)}.download-card h2{margin-top:0}.download-button{display:inline-block;border-radius:999px;background:#ffbd00;color:#161616!important;text-decoration:none;padding:14px 22px;font-weight:700}.download-member{border-top:1px solid #383838;margin-top:28px;padding-top:22px}.download-member[hidden]{display:none}.download-note{font-size:.9rem}.download-page a:not(.download-button){color:#ffbd00}
+
+/* Downloads use the shared site header, not the application header. */
+body.lc-download-page > .lc-shell-header{display:block;height:auto;padding:0}
+body.lc-download-page .download-page{box-sizing:border-box}
+@media(max-width:600px){
+ body.lc-download-page .download-page{padding:20px 16px 28px}
+ .lc-download-page .download-page h1{font-size:1.75rem;line-height:1.12;margin:0 0 16px}
+ .lc-download-page .download-card{margin-top:0;padding:18px;border-radius:18px}
+ .lc-download-page .download-card h2{font-size:1.25rem;line-height:1.2;margin:0 0 8px}
+ .lc-download-page .download-card p{font-size:.9rem;line-height:1.4;margin:0 0 12px}
+ .lc-download-page .download-button{padding:11px 17px;font-size:.9rem}
+ .lc-download-page .download-member{margin-top:15px;padding-top:15px}
+ .lc-download-page .download-note{margin:14px 0 0!important;font-size:.8rem!important}
+}
