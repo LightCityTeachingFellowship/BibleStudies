@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {watchFullscreenOrientation} from '../v2/src/lightcity-player-adapter.mjs';
+const listeners=new Map(), calls=[];
+const orientation={lock:async value=>calls.push(value),unlock:()=>calls.push('unlock')};
+const doc={defaultView:{screen:{orientation}},fullscreenElement:null,addEventListener:(event,fn)=>listeners.set(event,fn),removeEventListener:event=>listeners.delete(event)};
+const iframe={},viewport={contains:element=>element===iframe};
+const dispose=watchFullscreenOrientation(doc,viewport);
+doc.fullscreenElement=iframe;await listeners.get('fullscreenchange')();assert.deepEqual(calls,['landscape']);
+doc.fullscreenElement=null;await listeners.get('fullscreenchange')();assert.deepEqual(calls,['landscape','unlock']);
+doc.fullscreenElement={};await listeners.get('fullscreenchange')();assert.equal(calls.length,2);
+dispose();assert.equal(listeners.size,0);
+console.log('PASS: video fullscreen locks landscape, restores orientation, and ignores unrelated fullscreen.');
