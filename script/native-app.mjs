@@ -12,7 +12,15 @@ async function plugins(){
  if(!isAndroidApp())return null;
  return runtime??=import('./native/capacitor-core.mjs').then(({registerPlugin})=>({audio:registerPlugin('LightCityAudio'),auth:registerPlugin('FirebaseAuthentication')}));
 }
-export async function nativeGoogleCredential(){const p=await plugins();if(!p)return null;const result=await p.auth.signInWithGoogle();if(!result.credential?.idToken)throw Error('Google sign-in did not return an account. Please try again.');return result.credential;}
+export async function signInWithGoogleFallback(auth){
+ try{return await auth.signInWithGoogle();}
+ catch(error){
+  const detail=String(error?.message||error||'');
+  if(!/credential\s*manager/i.test(detail)||!/unsupported|not supported|does(?:n['’]t| not) support|unavailable/i.test(detail))throw error;
+  return auth.signInWithGoogle({useCredentialManager:false});
+ }
+}
+export async function nativeGoogleCredential(){const p=await plugins();if(!p)return null;const result=await signInWithGoogleFallback(p.auth);if(!result.credential?.idToken)throw Error('Google sign-in did not return an account. Please try again.');return result.credential;}
 export async function nativeSignOut(){const p=await plugins();if(p){await p.audio.stop();await p.auth.signOut();}}
 const engines=new WeakMap();
 export async function nativeAudio(audio){if(!isAndroidApp())return null;if(!engines.has(audio))engines.set(audio,(async()=>{const [p,{connectNativeAudio}]=await Promise.all([plugins(),import('./native/audio-element.mjs')]);return connectNativeAudio(audio,p.audio);})());return engines.get(audio);}
