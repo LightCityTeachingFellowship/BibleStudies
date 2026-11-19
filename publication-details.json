@@ -1,0 +1,16 @@
+---
+layout: null
+---
+{% assign article_items = site.pages | where: 'layout', 'articleTEMPLATE' %}
+{% assign summary_items = site.posts | where: 'layout', 'summaryTEMPLATE' %}
+{% assign summary_items2 = site.posts | where: 'layout', 'summaryTEMPLATE2' %}
+{% assign summary_items3 = site.posts | where: 'layout', 'summaryTEMPLATE3' %}
+{% assign items = article_items | concat: summary_items | concat: summary_items2 | concat: summary_items3 %}
+{% assign comma = '' %}
+{% assign empty_list = '' | split: ',' %}
+{
+{%- for item in items -%}{%- unless item.visibility == 'members' -%}
+{{ comma }}{{ item.permalink | default: item.url | relative_url | url_decode | downcase | jsonify }}:{"excerpt":{{ item.description | default: item.excerpt | default: item.content | strip_html | normalize_whitespace | truncate: 320 | jsonify }},"categories":{{ item.categories | default: empty_list | jsonify }}}
+{%- assign comma = ',' -%}{%- endunless -%}{%- endfor -%}
+
+}

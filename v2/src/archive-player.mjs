@@ -1,0 +1,18 @@
+// Archive recordings have their own public endpoint and 32-character IDs.
+export async function createArchivePlayer({id,title,mount,document,request,mountControls,nativeAudio,isAndroid,onPlaybackChange=()=>{}}){
+ if(!/^[a-f0-9]{32}$/.test(id))throw Error('Invalid archive recording');
+ const result=await request({id}),url=new URL(result.url);
+ if(result.id!==id||url.protocol!=='https:'||!/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/.test(url.hostname)||!(result.expiresAt>Date.now()))throw Error('Invalid archive audio link');
+ const viewport=document.createElement('div'),panel=document.createElement('div'),heading=document.createElement('p'),audio=document.createElement('audio');viewport.className='lc-shared-player-viewport lc-media-viewport lc-audio-mode';panel.className='lc-inline-audio lc-archive-player';heading.textContent=title;audio.controls=true;audio.preload='metadata';panel.append(heading,audio);viewport.append(panel);mount.append(viewport);
+ let engine=null,release=()=>{},disposed=false;const webSession=!isAndroid()?document.defaultView?.navigator?.mediaSession:null;
+ const mediaPlay=()=>{if(!webSession)return;try{const Metadata=document.defaultView?.MediaMetadata;if(Metadata)webSession.metadata=new Metadata({title,artist:'LightCity Teaching Fellowship',album:'Older messages'});webSession.playbackState='playing';webSession.setActionHandler('play',()=>void audio.play());webSession.setActionHandler('pause',()=>audio.pause());webSession.setActionHandler('seekto',event=>{if(Number.isFinite(event.seekTime))audio.currentTime=event.seekTime})}catch{}};
+ const mediaPause=()=>{if(webSession)try{webSession.playbackState='paused'}catch{}};
+ const remember=()=>{try{localStorage.setItem('lc-archive-position:'+id,String(audio.currentTime||0))}catch{}};
+ const restore=()=>{try{const time=Number(localStorage.getItem('lc-archive-position:'+id));if(time>0&&(!Number.isFinite(audio.duration)||time<audio.duration-5))audio.currentTime=time}catch{}};
+ try{
+  release=mountControls(audio,{title,downloadAudio:()=>request({id,download:true})});audio.addEventListener('loadedmetadata',restore,{once:true});audio.addEventListener('timeupdate',remember);audio.addEventListener('pause',remember);audio.addEventListener('play',onPlaybackChange);audio.addEventListener('pause',onPlaybackChange);audio.addEventListener('play',mediaPlay);audio.addEventListener('pause',mediaPause);
+  if(isAndroid()){engine=await nativeAudio(audio);if(!engine)throw Error('Android audio service unavailable');await engine.load({url:result.url,title,videoId:id,callable:'getChurchAudioArchive',expiresAt:result.expiresAt});restore()}else{audio.src=result.url;audio.load()}
+  try{await audio.play()}catch(error){if(error?.name!=='NotAllowedError')throw error}
+  return {isPlaying:()=>!audio.paused,toggle:async()=>{if(audio.paused)await audio.play();else audio.pause()},seek:seconds=>{audio.currentTime=seconds},switchTo:async mode=>{if(mode!=='audio')throw Error('This recording has no video')},dispose(options={}){if(disposed)return;disposed=true;remember();audio.removeEventListener('timeupdate',remember);audio.removeEventListener('pause',remember);audio.removeEventListener('play',onPlaybackChange);audio.removeEventListener('pause',onPlaybackChange);audio.removeEventListener('play',mediaPlay);audio.removeEventListener('pause',mediaPause);audio.pause();if(webSession)try{webSession.metadata=null;webSession.playbackState='none'}catch{}release();viewport.remove();if(engine&&options.stopNative)void engine.restore().then(state=>{if(state.videoId===id&&options.shouldStop?.())return engine.stop()}).catch(()=>{})}};
+ }catch(error){audio.pause();release();viewport.remove();throw error}
+}

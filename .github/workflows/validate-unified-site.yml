@@ -1,0 +1,145 @@
+name: Validate unified website
+on:
+  pull_request:
+    paths:
+      - 'v2/**'
+      - 'script/*-v2.*'
+      - 'script/v2-legacy-redirect.js'
+      - '_includes/**'
+      - 'study-catalog.json'
+      - 'tools/pages/create-unicode-aliases.py'
+      - 'tools/test-v2-legacy-redirect.cjs'
+      - 'tools/test-v2-legacy-router.mjs'
+      - 'tools/test-v2-member-link.mjs'
+      - 'tools/test-unified-site-browser.cjs'
+      - 'tools/test-bible-script-scheduling.cjs'
+      - 'StudyResource.html'
+      - 'category-data.json'
+      - 'publication-details.json'
+      - 'legacy-app-pages.json'
+      - 'style/app-reader-chrome.css'
+      - 'home.html'
+      - 'landing.html'
+      - 'manifest.webmanifest'
+      - '.github/workflows/validate-unified-site.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/tools/pages/Gemfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - run: bundle lock --add-platform x86_64-linux && bundle install
+      - run: node tools/test-v2-legacy-redirect.cjs
+      - run: node tools/test-v2-legacy-router.mjs
+      - run: node tools/test-v2-member-link.mjs
+      - run: node tools/test-v2-member-cache.cjs
+      - run: node tools/test-bible-script-scheduling.cjs
+      - run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+      - name: Preserve Unicode-equivalent publication links
+        run: python tools/pages/create-unicode-aliases.py
+      - name: Check generated app routes and publication metadata
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('_site')
+          paths = ['','legacy','videos','audio','articles','summaries','watch','read','library','quiz','quizzes','info','calendar','categories']
+          for path in paths:
+              page = root / 'v2' / path / 'index.html'
+              assert page.is_file(), f'Missing app page: {page}'
+              assert '/v2/bootstrap.mjs' in page.read_text(encoding='utf8'), f'Invalid app page: {page}'
+          details = json.loads((root / 'publication-details.json').read_text(encoding='utf8'))
+          catalog = json.loads((root / 'study-catalog.json').read_text(encoding='utf8'))
+          from urllib.parse import unquote,urlsplit
+          missing = [item['url'] for item in catalog['publications'] if unquote(urlsplit(item['url']).path).lower() not in details]
+          assert not missing, f'Publication details missing for {len(missing)} items: {missing[:5]}'
+          for item in catalog['publications']:
+              old_path = unquote(urlsplit(item['url']).path)
+              document = root / old_path.lstrip('/')
+              if old_path.endswith('/') or not document.suffix:
+                  document /= 'index.html'
+              if not document.is_file():
+                  import unicodedata
+                  first = old_path.strip('/').split('/')[0]
+                  candidates = [repr(x.name) for x in root.iterdir() if unicodedata.normalize('NFC', x.name) == unicodedata.normalize('NFC', first)]
+                  raise AssertionError(f'Missing publication page: {old_path!r}; unicode-equivalent outputs: {candidates}')
+              markup = document.read_text(encoding='utf8')
+              assert 'v2-legacy-redirect.js' in markup, f'Missing app redirect on publication: {old_path}'
+          print(f'Validated {len(paths)} app routes and {len(catalog["publications"])} publication entries.')
+          legacy = json.loads((root / 'legacy-app-pages.json').read_text(encoding='utf8'))
+          assert len(legacy['pages']) >= 21, 'Bible graph and storyline index is incomplete'
+          for item in legacy['pages']:
+              old_path = unquote(urlsplit(item['url']).path)
+              document = root / old_path.lstrip('/')
+              if old_path.endswith('/') or not document.suffix:
+                  document /= 'index.html'
+              assert document.is_file(), f'Missing original Bible study: {old_path}'
+              assert 'v2-legacy-redirect.js' in document.read_text(encoding='utf8'), f'Missing app redirect: {old_path}'
+          print(f'Validated {len(legacy["pages"])} original Bible graph and storyline pages.')
+          import re
+          sources = [Path('Posts-Articles'), Path('Posts-Summaries'), Path('BibleNodesGraph')]
+          sources += list(Path('.').glob('*.html'))
+          checked = 0
+          for directory in sources:
+              for source in (directory.rglob('*.html') if directory.is_dir() else [directory]):
+                  text = source.read_text(encoding='utf8', errors='replace')
+                  if not text.startswith('---'):
+                      continue
+                  front = text.split('---', 2)[1]
+                  match = re.search(r'(?m)^permalink:\s*(.+?)\s*$', front)
+                  if not match:
+                      continue
+                  permalink = match.group(1).strip().strip('"\'')
+                  if not permalink.startswith('/'):
+                      permalink = '/' + permalink
+                  relative = unquote(permalink).lstrip('/')
+                  output = root / relative
+                  if permalink.endswith('/') or not output.suffix:
+                      output /= 'index.html'
+                  assert output.is_file(), f'Missing original page: {permalink} ({source})'
+                  checked += 1
+          print(f'Validated {checked} original site page links.')
+          quiz_count = 0
+          for directory in Path('.').glob('QuizQuestions-*'):
+              for source in directory.rglob('*.html'):
+                  assert (root / source).is_file(), f'Missing quiz page: {source}'
+                  quiz_count += 1
+          print(f'Validated {quiz_count} original quiz page links.')
+          PY
+      - name: Install browser test dependency
+        run: npm install --prefix "$RUNNER_TEMP/lightcity-browser-test" --no-save --no-package-lock playwright@1.56.1
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      - name: Test built website navigation and reader
+        run: node tools/test-unified-site-browser.cjs
+        env:
+          NODE_PATH: ${{ runner.temp }}/lightcity-browser-test/node_modules
+          CHROME_BIN: /usr/bin/google-chrome
+      - name: Prepare Windows-compatible preview
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          root = Path('_site')
+          def safe(name):
+              return ''.join('%%%02X' % ord(c) if c in '%<>:"\\|?*' else c for c in name)
+          with ZipFile('lightcity-preview.zip', 'w', ZIP_DEFLATED) as archive:
+              for item in root.rglob('*'):
+                  if item.is_file():
+                      archive.write(item, '/'.join(safe(part) for part in item.relative_to(root).parts))
+          PY
+      - name: Package website preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: lightcity-website-preview
+          path: lightcity-preview.zip
+          retention-days: 3
+

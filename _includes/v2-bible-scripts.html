@@ -1,0 +1,11 @@
+<script>
+(() => {
+  const delayed = new URLSearchParams(location.search).has('lc-preview-reader') && window !== window.top;
+  const legacyDefer = {{ include.legacy_defer | default: false | jsonify }};
+  const sources = [{{ '/data/LSJ Full.js' | relative_url | jsonify }},{{ '/data/strongsObjectRoots.js' | relative_url | jsonify }},{{ '/data/strongsObjectWithFamilies2.js' | relative_url | jsonify }},{{ '/data/morphParse_GreeknHebrew.js' | relative_url | jsonify }},{{ '/data/bibleApp_reKeyedCrossReference.js' | relative_url | jsonify }},{{ '/script/reftaggerLightCity.js' | relative_url | jsonify }},{{ '/script/bibleApp_transliteration.js' | relative_url | jsonify }},{{ '/script/TSK.js' | relative_url | jsonify }},{{ '/script/interact.min.js' | relative_url | jsonify }}];
+  for (const src of sources) {
+    const attributes = delayed ? 'type="application/x-lc-delayed" data-lc-delayed ' : legacyDefer ? 'defer ' : '';
+    document.write('<script ' + attributes + 'src="' + src + '">' + '<' + '/script>');
+  }
+})();
+</script>
