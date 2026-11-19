@@ -331,6 +331,20 @@ body.lc-v2-inline-active #player .lc-inline-audio.lc-audio-artwork{display:flex;
 #view .lc-publication-page .lc-publication-categories button:hover,#view .lc-publication-page .lc-publication-card-categories button:hover{text-decoration:underline}
 
 /* Category indexes and category detail pages. */
+/* Keep the original About and Doctrines sections and their links in app-themed cards. */
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]){max-width:1200px;margin-inline:auto}
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]) [role="status"]:empty{display:none}
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]) .homeResources-grid-containter{box-sizing:border-box;background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:clamp(22px,2.8vw,40px);margin:0 0 20px!important;color:var(--text)}
+#view .lc-v2-info[data-info-page="about"] #homeBodyContent,#view .lc-v2-info[data-info-page="doctrines"] #Doctrines-section-inner{margin:0;padding:0}
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]) :is(h1,h2){font-family:Outfit,system-ui,sans-serif;color:var(--text);text-transform:none;line-height:1.15}
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]) h1{font-size:clamp(30px,3.2vw,50px);margin:0 0 24px}
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]) h2{font-size:clamp(25px,2.4vw,36px);margin:30px 0 20px}
+#view .lc-v2-info[data-info-page="doctrines"] .homeResources-grid-containter h2:first-child{margin-top:0}
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]) :is(p,li){font-size:clamp(16px,1.4vw,20px);line-height:1.65;letter-spacing:normal}
+#view .lc-v2-info[data-info-page="about"] p{margin:0 0 20px}
+#view .lc-v2-info[data-info-page="doctrines"] ol{margin:0;padding-left:1.5em}
+#view .lc-v2-info[data-info-page="doctrines"] li{padding:3px 0}
+#view .lc-v2-info:is([data-info-page="about"],[data-info-page="doctrines"]) a{color:var(--text);text-decoration:underline;text-underline-offset:3px}
 #view .lc-category-page .lc-category-group li small,#view .lc-publication-page .lc-publication-side-entry small{display:inline-block;margin-left:5px;font-size:13px!important;font-weight:400!important;line-height:1.4;color:var(--muted)}
 #view .lc-publication-page .lc-publication-date{font-size:13px!important;font-weight:400!important}
 .lc-category-heading h1{margin-bottom:26px}.lc-category-group h2{font-size:clamp(26px,2.5vw,36px);margin-bottom:30px}.lc-category-group ol{columns:3;column-gap:54px;margin:0;padding-left:32px}.lc-category-group li{break-inside:avoid;padding:0 0 20px 5px;font-size:clamp(18px,1.7vw,25px);font-weight:700;line-height:1.5}.lc-category-group li a{color:var(--text);text-decoration:none}.lc-category-group li a:hover{text-decoration:underline}.lc-category-group li small{font-size:14px;font-weight:500;white-space:nowrap}.lc-category-page>[role=status]:empty{display:none}@media(max-width:1100px){.lc-category-group ol{columns:2}}@media(max-width:650px){.lc-category-group ol{columns:1}.lc-category-group li{font-size:18px}}
