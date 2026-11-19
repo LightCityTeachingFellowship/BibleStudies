@@ -29,7 +29,7 @@ export function createLinkRouter({window,router,player,api,resources,session,onE
    const ticket=++incomingRevision,raw=target.searchParams.get('t'),parsed=raw===null?null:Number(raw),startSeconds=Number.isFinite(parsed)&&parsed>=0&&parsed<=172800?parsed:null;
    const watchURL=new URL('/v2/watch/',window.location.href).href;
    const viewReady=router.currentURL===watchURL?Promise.resolve(true):router.navigate(watchURL);
-   void Promise.all([viewReady,waitForSession()]).then(([ready])=>{if(!ready||ticket!==incomingRevision||window.location.href!==watchURL)return false;const row=[...(api.library||[]),...(api.publicLibrary||[])].find(item=>item.id===id);return player.open({id,title:row?.title||'LightCity video',mode:target.searchParams.get('mode')==='audio'?'audio':'video',startSeconds})}).catch(onError);return true;
+   void Promise.all([viewReady,waitForSession()]).then(async ([ready])=>{if(!ready||ticket!==incomingRevision||window.location.href!==watchURL)return false;let row=[...(api.library||[]),...(api.publicLibrary||[])].find(item=>item.id===id);if(!row&&target.searchParams.get('shared')==='1'&&api.getSharedVideo){const result=await api.getSharedVideo(id);row=result?.video;if(!row||!/^[A-Za-z0-9_-]{11}$/.test(row.id||'')||ticket!==incomingRevision||window.location.href!==watchURL)return false}return player.open({id:row?.id||id,title:row?.title||'LightCity video',mode:target.searchParams.get('mode')==='audio'?'audio':'video',startSeconds})}).catch(onError);return true;
   }
   if(/^\/biblenodesgraph\/[^/]+\.html$/i.test(target.pathname)){openLegacy(target,window.location.href);return true}
   if(/^\/(?:admin|members|share|api|__|logout|signout)(?:\/|$)/i.test(target.pathname)||/\.[a-z0-9]{1,8}$/i.test(target.pathname))return false;
