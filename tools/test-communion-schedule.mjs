@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {communionServiceOn} from './members/functions/communion-schedule.mjs';
+import {DEFAULT_SERVICE_SCHEDULE} from './members/functions/service-schedule.mjs';
+const schedule={...DEFAULT_SERVICE_SCHEDULE,monthly:[{id:'communion',name:'Communion',nth:3,day:1,time:'18:00',enabled:true,replaceWeekly:true}]};
+assert.equal(communionServiceOn(schedule,'2026-12-21')?.name,'Communion');
+assert.equal(communionServiceOn(schedule,'2026-12-14'),null);
+assert.equal(communionServiceOn({...schedule,monthly:[{...schedule.monthly[0],enabled:false}]},'2026-12-21'),null);
+assert.equal(communionServiceOn({...schedule,programme:{name:'Special programme',startDate:'2026-12-21',endDate:'2026-12-21',time:'18:00',exceptions:[]}},'2026-12-21'),null);
+assert.equal(communionServiceOn({...schedule,override:{name:'Communion',local:'2026-12-15T18:00'}},'2026-12-15')?.name,'Communion');
+console.log('Communion scheduling checks passed.');

@@ -12,7 +12,7 @@ window.addEventListener('appinstalled',()=>{window.LightCityDeferredInstallPromp
 // modules are loaded only when the listener opens a recording.
 let bundledPublicVideos=[];
 try{const data=JSON.parse(document.getElementById('lc-public-video-data')?.textContent||'{}');bundledPublicVideos=Object.entries(data).filter(([id,title])=>/^[A-Za-z0-9_-]{11}$/.test(id)&&typeof title==='string').map(([id,title])=>({id,title,visibility:'public'}))}catch{}
-let memberBootError=null;const memberModule=import('/script/members-v2.js?v=calendar-events-1').then(()=>window.LightCityMembers).catch(error=>{memberBootError=error;throw error});
+let memberBootError=null;const memberModule=import('/script/members-v2.js?v=communion-1').then(()=>window.LightCityMembers).catch(error=>{memberBootError=error;throw error});
 const api=new Proxy({}, {get(_target,key){
  if(key==='ready')return memberModule.then(member=>member.ready);
  if(key==='error'&&memberBootError)return memberBootError;

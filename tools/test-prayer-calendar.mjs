@@ -77,3 +77,14 @@ const beforeRevision=await api.manage(request('get'));await api.manage(request('
 const afterRevision=await api.calendar(member('alice',{month:'2025-07'}));assert.equal(afterRevision.events.find(e=>e.kind==='Prayer'&&e.date==='2025-07-13').group,'MAN','later settings changes do not rewrite previous prayer days');
 const search=await api.searchEvents(member('alice',{query:'when was prayer groups started'}));assert.equal(search.events[0].date,'2024-01-28');
 console.log('PASS: historical calendar ranges and schedule changes.');
+
+// Communion reminders go only to approved members and are deduplicated.
+clock=instant('2026-12-20','10:00');
+store.set('churchServiceSchedule/current',{heading:'Welcome',message:'Welcome',startingMessage:'Starting',holdMinutes:30,weekly:[],monthly:[{id:'communion',name:'Communion',nth:3,day:1,time:'18:00',enabled:true,replaceWeekly:true}],override:null,programme:null});
+await assert.rejects(api.manage(member('alice',{action:'communion-send'})),e=>e.code==='permission-denied');
+await api.manage(request('communion-schedule',{date:'2026-12-22'}));
+clock=instant('2026-12-21','08:59');let beforeCommunion=calls.length;await api.reminders();assert.equal(calls.length,beforeCommunion);
+clock=instant('2026-12-21','09:00');await api.reminders();assert.deepEqual(calls.slice(beforeCommunion).map(c=>c.tokens[0]).sort(),['alice-token','bob-token']);assert.ok(calls.slice(beforeCommunion).every(c=>c.notification.title==='Communion service today'));await api.reminders();assert.equal(calls.length,beforeCommunion+2);
+clock=instant('2026-12-22','09:00');beforeCommunion=calls.length;await api.reminders();assert.equal(calls.length,beforeCommunion+2,'additional date sends at 9 a.m.');await api.manage(request('communion-send'));assert.equal(calls.length,beforeCommunion+2,'manual send cannot duplicate a reminder already sent');
+clock=instant('2026-12-23','12:00');beforeCommunion=calls.length;await api.manage(request('communion-send'));assert.equal(calls.length,beforeCommunion+2,'manual reminder reaches members');await assert.rejects(api.manage(request('communion-schedule',{date:'2026-12-23'})),e=>e.code==='invalid-argument');
+console.log('PASS: communion reminders, member privacy, additional dates, timing and deduplication.');

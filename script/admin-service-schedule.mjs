@@ -52,6 +52,9 @@ export function setupAdminServiceSchedule({document,window,api=()=>globalThis.Li
   catch{if(ticket===generation)status('Service settings could not load. Deploy the service countdown functions if this is the first setup, then reload.');}
   finally{if(ticket===generation){busy=false;get('admin-service-reload').disabled=false;}}
  }
+ const communionStatus=message=>{get('admin-communion-status').textContent=message;};
+ get('admin-communion-schedule').addEventListener('click',async()=>{const button=get('admin-communion-schedule'),date=get('admin-communion-date').value;if(!date){communionStatus('Choose a date first.');return;}button.disabled=true;try{await api().scheduleCommunionReminder(date);communionStatus('Scheduled for 9 a.m. Nigeria time on '+date+'.');}catch(error){communionStatus(error?.code==='functions/invalid-argument'?error.message:'Could not schedule the reminder. Please try again.');}finally{button.disabled=false;}});
+ get('admin-communion-send').addEventListener('click',async()=>{if(!window.confirm('Send today’s communion reminder to church members now?'))return;const button=get('admin-communion-send');button.disabled=true;try{await api().sendCommunionReminder();communionStatus('Today’s reminder has been sent or was already sent.');}catch{communionStatus('Could not send the reminder. Please try again.');}finally{button.disabled=false;}});
  panel.addEventListener('toggle',()=>{if(panel.open&&!schedule)void load();});
  get('admin-service-reload').addEventListener('click',()=>{if(dirty&&!window.confirm('Reload service times and discard your unsaved changes?'))return;void load();});
  get('admin-service-add').addEventListener('click',()=>{if(get('admin-service-weekly').children.length>=14){status('Use up to 14 weekly times.');return;}row({id:'service-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6),name:'Service',day:0,time:'08:00',enabled:true});dirty=true;});
