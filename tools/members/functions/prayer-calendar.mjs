@@ -54,7 +54,10 @@ export function createPrayerCalendar(deps){
   }catch(error){await ref.set({leaseUntil:0},{merge:true});throw error;}
  }
  async function queue(notice){const id=hash(notice.key),ref=db.doc('churchStudioPublications/prayer-groups/notices/'+id);await db.runTransaction(async tx=>{if((await tx.get(ref)).exists)return;tx.set(ref,{...notice,createdAt:now()});});await deliver(id);}
- function communionNotice(date){return {key:'communion:'+date,kind:'service',date,title:'Communion service today',body:'Communion will be held today. Please prepare for the service.',url:'https://lightcityfellowship.com/Calendar/?date='+date,expiresAt:instant(addDays(date,1),'00:00')};}
+ const communionDefaults={title:'Communion service today',body:'We shall eat and drink of the body and blood of our LORD today. God God bless us greatly'};
+ const communionSettingsRef=()=>db.doc('churchStudioPublications/prayer-groups/communion-settings/current');
+ async function communionSettings(){const data=(await communionSettingsRef().get()).data();return {title:data?.title||communionDefaults.title,body:data?.body||communionDefaults.body};}
+ async function communionNotice(date){const {title,body}=await communionSettings();return {key:'communion:'+date,kind:'service',date,title,body,url:'https://lightcityfellowship.com/Calendar/?date='+date,expiresAt:instant(addDays(date,1),'00:00')};}
  async function communionReminder(date){const row=await db.doc('churchStudioPublications/prayer-groups/communion-dates/'+date).get();if(row.exists)return true;const snap=await db.doc('churchServiceSchedule/current').get(),schedule=snap.exists?validateServiceSchedule(snap.data()):DEFAULT_SERVICE_SCHEDULE;return !!communionServiceOn(schedule,date);}
  function dailyNotice(event,manual=false){return {key:(manual?'today:':'prayer:')+event.id,kind:'prayer',date:event.date,group:event.group,startAt:event.startAt,title:event.group+' prayer reminder',body:manual?'Your group is scheduled to pray today. Open the calendar for your local time.':'Your group prayer begins in 30 minutes. Open the calendar for your local time.',url:'https://lightcityfellowship.com/Calendar/?date='+event.date+'&at='+event.startAt,expiresAt:event.endAt};}
  return {
@@ -82,8 +85,10 @@ export function createPrayerCalendar(deps){
   async join(request){const person=await member(request,true),config=await settings(),group=request.data?.group;if(!GROUPS.includes(group))throw new fail('invalid-argument','Choose a prayer group.');const date=request.data?.date;if(!validDate(date))throw new fail('invalid-argument','Choose the prayer date.');const event=prayerForDate(date,config);if(!event||event.group!==group||event.paused||now()<event.startAt||now()>=event.endAt)throw new fail('failed-precondition','This group is not currently scheduled to pray.');const leader=config.leaders?.[group],phone=leader?.whatsapp;if(leader?.uid){const [assignment,approval,user]=await Promise.all([db.doc('churchStudioPublications/prayer-groups/members/'+leader.uid).get(),db.doc('churchMembers/'+leader.uid).get(),auth.getUser(leader.uid)]);if(assignment.data()?.group!==group||approval.data()?.active!==true||user.disabled||!user.emailVerified)throw new fail('failed-precondition','The group leader needs to be updated in Studio.');}if(!phone)throw new fail('failed-precondition','The group leader’s WhatsApp number has not been added yet.');return {url:'https://wa.me/'+phone.slice(1)+'?text='+encodeURIComponent('Hello, this is '+person.name+'. Please may I join the '+group+' prayer call taking place now?')};},
   async manage(request){
    await requireStudioAdmin(request,deps);const data=request.data||{};
+   if(data.action==='communion-settings-get')return {settings:await communionSettings()};
+   if(data.action==='communion-settings-save'){const title=typeof data.title==='string'?data.title.trim():'',body=typeof data.body==='string'?data.body.trim():'';if(!title||title.length>100||!body||body.length>500)throw new fail('invalid-argument','Enter a notification title (up to 100 characters) and message (up to 500 characters).');await communionSettingsRef().set({title,body,updatedAt:now(),updatedBy:request.auth.uid});return {settings:{title,body}};}
    if(data.action==='communion-schedule'){const date=data.date,today=dateKey(now());if(!validDate(date)||date<today||date>addDays(today,366)||instant(date,'09:00')<=now())throw new fail('invalid-argument','Choose a date within the next year before 9 a.m. Nigeria time.');await db.doc('churchStudioPublications/prayer-groups/communion-dates/'+date).set({date,createdAt:now(),createdBy:request.auth.uid});return {ok:true};}
-   if(data.action==='communion-send'){const today=dateKey(now());await queue(communionNotice(today));return {ok:true};}
+   if(data.action==='communion-send'){const today=dateKey(now());await queue(await communionNotice(today));return {ok:true};}
    if(data.action==='get'){const config=await settings(),roster=await db.collection('churchStudioPublications/prayer-groups/members').get();return {settings:config,roster:roster.docs.map(d=>({uid:d.id,group:d.data().group,whatsapp:d.data().whatsapp||''}))};}
    if(data.action==='assign'){
     if(!safeUid(data.uid)||data.group!==null&&!GROUPS.includes(data.group)||!safePhone(data.whatsapp||''))throw new fail('invalid-argument','Choose a member and group.');
@@ -99,7 +104,7 @@ export function createPrayerCalendar(deps){
    throw new fail('invalid-argument','Choose a prayer-group action.');
   },
   async reminders(){
-   const communionToday=dateKey(now()),morning=instant(communionToday,'09:00');if(morning<=now()&&now()-morning<10*60000&&await communionReminder(communionToday))await queue(communionNotice(communionToday));
+   const communionToday=dateKey(now()),morning=instant(communionToday,'09:00');if(morning<=now()&&now()-morning<10*60000&&await communionReminder(communionToday))await queue(await communionNotice(communionToday));
    // Prayer reminders activate only after Studio settings have been saved.
    if(!(await settingsRef().get()).exists){const pending=await db.collection('churchStudioPublications/prayer-groups/notices').where('createdAt','>=',now()-10*60000).get();for(const job of pending.docs)if(!job.data().sentAt&&!job.data().skippedAt)await deliver(job.id);return;}
    const config=await settings(),today=dateKey(now()),due=at=>at<=now()&&now()-at<10*60000;

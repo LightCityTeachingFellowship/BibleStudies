@@ -88,3 +88,12 @@ clock=instant('2026-12-21','09:00');await api.reminders();assert.deepEqual(calls
 clock=instant('2026-12-22','09:00');beforeCommunion=calls.length;await api.reminders();assert.equal(calls.length,beforeCommunion+2,'additional date sends at 9 a.m.');await api.manage(request('communion-send'));assert.equal(calls.length,beforeCommunion+2,'manual send cannot duplicate a reminder already sent');
 clock=instant('2026-12-23','12:00');beforeCommunion=calls.length;await api.manage(request('communion-send'));assert.equal(calls.length,beforeCommunion+2,'manual reminder reaches members');await assert.rejects(api.manage(request('communion-schedule',{date:'2026-12-23'})),e=>e.code==='invalid-argument');
 console.log('PASS: communion reminders, member privacy, additional dates, timing and deduplication.');
+
+const defaultCommunion=await api.manage(request('communion-settings-get'));
+assert.equal(defaultCommunion.settings.body,'We shall eat and drink of the body and blood of our LORD today. God God bless us greatly');
+await assert.rejects(api.manage(member('alice',{action:'communion-settings-save',title:'Test',body:'Test'})),e=>e.code==='permission-denied');
+await assert.rejects(api.manage(request('communion-settings-save',{title:'',body:'Test'})),e=>e.code==='invalid-argument');
+await api.manage(request('communion-settings-save',{title:'Special Communion',body:'Please prepare.'}));
+clock=instant('2026-12-24','12:00');beforeCommunion=calls.length;await api.manage(request('communion-send'));assert.equal(calls.length,beforeCommunion+2);assert.ok(calls.slice(beforeCommunion).every(c=>c.notification.title==='Special Communion'&&c.notification.body==='Please prepare.'));
+assert.equal((await api.manage(request('communion-settings-get'))).settings.title,'Special Communion');
+console.log('PASS: communion wording defaults, edits, validation and authorization.');
