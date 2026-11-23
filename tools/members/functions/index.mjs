@@ -172,6 +172,8 @@ export const notifyChurchStreamIssueOnWrite=onDocumentWritten({document:'churchS
 
 const prayerCalendar=createPrayerCalendar({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),messaging:getMessaging(),youtubeKey:()=>streamStatusKey.value().trim(),privateCatalog:JSON.parse(readFileSync(new URL('./reading-private-catalog.json',import.meta.url),'utf8')).publications,recordings:()=>audio.catalog()});
 export const getChurchCalendar=onCall({...options,secrets:[livePlaybackKey,streamStatusKey],timeoutSeconds:120},prayerCalendar.calendar);
+export const searchChurchCalendar=onCall(options,prayerCalendar.searchEvents);
+export const manageChurchCalendarEvents=onCall(options,prayerCalendar.manageEvents);
 export const getMyPrayerGroup=onCall(options,prayerCalendar.mine);
 export const preparePrayerJoin=onCall(options,prayerCalendar.join);
 export const manageChurchPrayerGroups=onCall({...options,timeoutSeconds:120},prayerCalendar.manage);

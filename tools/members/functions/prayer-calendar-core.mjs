@@ -6,8 +6,9 @@ export function validDate(value){if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2
 export const instant=(date,time)=>Date.parse(date+'T'+time+':00+01:00');
 export const addDays=(date,days)=>new Date(Date.parse(date+'T12:00:00Z')+days*DAY).toISOString().slice(0,10);
 export const weekday=date=>new Date(date+'T12:00:00Z').getUTCDay();
-export function weekOwner(date,settings){const sunday=addDays(date,-weekday(date)),weeks=Math.round((Date.parse(sunday+'T12:00:00Z')-Date.parse(settings.anchorSunday+'T12:00:00Z'))/(7*DAY));return GROUPS[((GROUPS.indexOf(settings.anchorGroup)+weeks)%4+4)%4];}
-export function prayerForDate(date,settings){const day=weekday(date);if(day===1||day===3)return null;const owner=weekOwner(date,settings),offset=day===0||day===2?0:day-3,group=GROUPS[(GROUPS.indexOf(owner)+offset)%4],startAt=instant(date,settings.times[group]);return {id:'prayer-'+date,kind:'Prayer',title:group+' group prayer',date,group,owner,startAt,endAt:startAt+settings.durationMinutes*60000,paused:prayerPaused(date,settings)};}
+export const PRAYER_START='2024-01-28', PRAYER_ROTATION_CHANGE='2025-07-13';
+export function weekOwner(date,settings){const historical=date<PRAYER_ROTATION_CHANGE,anchor=historical?'2024-01-28':settings.anchorSunday,group=historical?'MAN':settings.anchorGroup,sunday=addDays(date,-weekday(date)),weeks=Math.round((Date.parse(sunday+'T12:00:00Z')-Date.parse(anchor+'T12:00:00Z'))/(7*DAY));return GROUPS[((GROUPS.indexOf(group)+weeks)%4+4)%4];}
+export function prayerForDate(date,settings){const day=weekday(date);if(date<PRAYER_START||day===1||day===3)return null;const owner=weekOwner(date,settings),offset=date<PRAYER_ROTATION_CHANGE?0:day===0||day===2?0:day-3,group=GROUPS[(GROUPS.indexOf(owner)+offset)%4],startAt=instant(date,settings.times[group]);return {id:'prayer-'+date,kind:'Prayer',title:group+' group prayer',date,group,owner,startAt,endAt:startAt+settings.durationMinutes*60000,paused:prayerPaused(date,settings)};}
 export function prayerPaused(date,settings){return !settings.forceDates?.includes(date)&&(settings.paused||!!settings.pauseUntil&&date<=settings.pauseUntil);}
 export function prayerRange(start,end,settings){const result=[];for(let d=start;d<=end;d=addDays(d,1)){const event=prayerForDate(d,settings);if(event)result.push(event);}return result;}
 export function validatePrayerSettings(value){

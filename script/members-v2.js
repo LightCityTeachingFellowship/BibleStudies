@@ -356,6 +356,8 @@ api.connectStudioDesktop=async data=>{await api.ready;return call('connectChurch
 api.getServiceSchedule=async()=>{await api.ready;return call('manageChurchServiceSchedule',{action:'get',accountUid:api.user?.uid});};
 api.saveServiceSchedule=async(schedule,expectedRevision)=>{await api.ready;return call('manageChurchServiceSchedule',{action:'save',schedule,expectedRevision,accountUid:api.user?.uid});};
 
+api.searchCalendar=async query=>{await api.ready;return call('searchChurchCalendar',{query,...(api.user?{accountUid:api.user.uid}:{})});};
+api.manageCalendarEvents=async data=>{await api.ready;return call('manageChurchCalendarEvents',{...data,accountUid:api.user?.uid});};
 api.getCalendar=async month=>{await api.ready;return call('getChurchCalendar',{month,...(api.user?{accountUid:api.user.uid}:{})});};
 api.getPrayerGroup=async()=>{await api.ready;return call('getMyPrayerGroup',{accountUid:api.user?.uid});};
 api.preparePrayerJoin=async data=>{await api.ready;return call('preparePrayerJoin',{...data,accountUid:api.user?.uid});};
