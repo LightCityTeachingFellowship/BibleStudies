@@ -39,10 +39,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $buildFolder 'v2\index.html') -PathT
 if ($LASTEXITCODE -ne 0) { throw 'Website validation failed.' }
 & python $packager --website-build $buildFolder
 if ($LASTEXITCODE -ne 0) { throw 'Could not prepare Android assets.' }
-& python $releaseScript
+& python $releaseScript --output $finalApk
 if ($LASTEXITCODE -ne 0) { throw 'The signed Android build failed.' }
-$builtApk = Join-Path $android 'android\app\build\outputs\apk\release\app-release.apk'
-if (-not (Test-Path -LiteralPath $builtApk -PathType Leaf)) { throw 'Android build finished without an APK.' }
-New-Item -ItemType Directory -Force -Path $releaseFolder | Out-Null
-Copy-Item -LiteralPath $builtApk -Destination $finalApk
+if (-not (Test-Path -LiteralPath $finalApk -PathType Leaf)) { throw 'Android build finished without an APK.' }
 Write-Host "APK ready: $finalApk"
