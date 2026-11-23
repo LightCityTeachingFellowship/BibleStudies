@@ -17,7 +17,7 @@ export function setupStreamIssueForm({document,window,api=()=>globalThis.LightCi
   if(owner!==sessionOwner){sessionOwner=owner;revision++;dialog.close();message.textContent='';sender.value='';note.value='';}
   fields();let seen=0;try{const old=JSON.parse(window.sessionStorage.getItem(storageKey)||'null');if(old?.owner===owner)seen=old.at;}catch{}
   if(allowed&&isLive(id)){seen=Date.now();try{window.sessionStorage.setItem(storageKey,JSON.stringify({at:seen,owner}));}catch{}}
-  open.hidden=!allowed||(!privateTest&&(get('watch-player')?.hidden===true||!(isLive(id)||seen>0&&Date.now()-seen<2*3600000)));
+  open.hidden=!allowed||(!privateTest&&get('watch-player')?.hidden===true);
   // Replies do not depend on a healthy audio relay or YouTube's live label.
   inbox?.setEnabled(allowed&&(privateTest||get('watch-player')?.hidden!==true));
   if(!allowed)dialog.close();
@@ -38,6 +38,6 @@ export function setupStreamIssueForm({document,window,api=()=>globalThis.LightCi
  let outside=false;const beyond=e=>{const r=dialog.getBoundingClientRect();return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;};
  dialog.addEventListener('pointerdown',e=>{outside=e.target===dialog&&beyond(e);});dialog.addEventListener('click',e=>{if(outside&&e.target===dialog&&beyond(e))dialog.close();outside=false;});
  window.addEventListener('lightcity-live-status',availability);window.addEventListener('lightcity-members-changed',availability);if(!privateTest&&get('watch-player'))new MutationObserver(availability).observe(get('watch-player'),{attributes:true,attributeFilter:['hidden']});
- void Promise.resolve(api()?.ready).then(()=>privateTest?null:getLiveRecordings()).then(availability).catch(()=>{});return {availability,report};
+ void Promise.resolve(api()?.ready).then(()=>privateTest?null:getLiveRecordings()).then(availability).catch(()=>availability());return {availability,report};
 }
 if(typeof document!=='undefined'&&document.getElementById('watch-player'))setupStreamIssueForm({document,window});

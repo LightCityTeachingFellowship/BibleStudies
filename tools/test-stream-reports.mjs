@@ -24,7 +24,7 @@ f=fixture({fresh:false});assert.equal((await f.service.submit(request('ended')))
 const ended={...liveItem,liveStreamingDetails:{...liveItem.liveStreamingDetails,actualEndTime:'2026-10-28T09:59:58Z'}};
 f=fixture({states:[liveItem,ended]});assert.equal((await f.service.submit(request('ended'))).state,'reported','second check catches delayed end timestamp');f.advance();await f.service.submit(request('ended'));const reports=[...f.rows].filter(([p])=>p.includes('/reports/'));assert.equal(reports.length,1);assert.equal(reports[0][1].count,2);
 f=fixture();assert.equal((await f.service.submit(request('volume'))).state,'reported');assert.equal([...f.rows.values()].find(r=>r.issue==='volume').verified,false,'volume request is viewer feedback, not a measured change');
-f=fixture({states:[ended]});assert.equal((await f.service.submit(request('volume'))).state,'ended');assert.ok(!f.writes.some(p=>p.includes('/reports/')));
+f=fixture({states:[ended]});assert.equal((await f.service.submit(request('volume'))).state,'reported');assert.ok(f.writes.some(p=>p.includes('/reports/')),'volume feedback remains available after a stream ends');
 f=fixture();f.rows.set('churchVideoLibrary/current',{videos:[{id,visibility:'members'}]});await assert.rejects(f.service.submit(request('ended')),e=>e.code==='permission-denied');assert.equal(f.requests.length,0);
 await assert.rejects(f.service.submit({...request('ended'),data:{videoId:'bad',issue:'ended',deviceToken:'valid-device'}}),e=>e.code==='invalid-argument');await assert.rejects(f.service.submit({...request('ended'),data:{videoId:id,issue:'ended',deviceToken:'bad'}}),e=>e.code==='unauthenticated');
 f=fixture({states:[ended]});await f.service.submit(request('ended'));const [reportPath]=[...f.rows.keys()].filter(p=>p.includes('/reports/'));const reportId=reportPath.split('/').at(-1);let sends=[];
@@ -81,5 +81,7 @@ const {cleanReports}=await import('./studio-desktop/core.mjs');const compatible=
 f.rows.set(privateRoot+'/devices/phone',{});f.rows.set('webPushSubscribers/phone',{token:'admin-token'});let soundAlert;
 await notifyStreamReport({id:noSoundEntry[0].split('/').at(-1),db:f.db,auth:f.auth,emails:()=> 'admin@example.com',messaging:{sendEachForMulticast:async data=>{soundAlert=data;return {responses:[{}]};}}});assert.equal(soundAlert.notification.title,'No sound on the stream');assert.match(soundAlert.notification.body,/no sound/i);
 f=preparePrivate({relayPresent:false});assert.equal((await f.service.submit(privateRequest('no-sound'))).state,'reported');assert.equal([...f.rows.values()].find(v=>v.issue==='no-sound').testOwner,'admin');
-f=fixture({states:[ended]});assert.equal((await f.service.submit(request('no-sound'))).state,'ended');assert.ok(![...f.rows.keys()].some(p=>p.includes('/reports/')));
+f=fixture({states:[ended]});assert.equal((await f.service.submit(request('no-sound'))).state,'reported');assert.ok([...f.rows.keys()].some(p=>p.includes('/reports/')),'sound problems reach the admin after the stream ends');
 console.log('PASS: no-sound reports, missing-relay tolerance, sender identity, private scope, known-ended guidance, push text and installed-Windows compatibility.');
+
+f=fixture({states:[{...liveItem,liveStreamingDetails:{...liveItem.liveStreamingDetails,actualEndTime:'2026-10-27T09:00:00Z'}}]});assert.equal((await f.service.submit(request('ended'))).state,'reported','a confirmed older end may be reported');
