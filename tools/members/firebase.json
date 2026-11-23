@@ -13,7 +13,9 @@
     "public": "hosting",
     "ignore": [
       "firebase.json",
-      "**/.*",
+      "**/.!(well-known)",
+      "**/.well-known/!(assetlinks.json)",
+      "**/.well-known/**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [

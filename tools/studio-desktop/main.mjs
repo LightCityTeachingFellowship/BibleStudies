@@ -4,6 +4,8 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {join,dirname} from 'node:path';
 import {tmpdir} from 'node:os';
 import {createArchiveUpload} from './archive-upload.mjs';
+import {createProjectActions} from './project-actions.mjs';
+import {createReleaseActions} from './release-actions.mjs';
 import {createYouTubeConnection} from './youtube-connection.mjs';
 import {validBroadcast} from './live-handoff.mjs';
 import {STUDIO,ENDPOINT,studioURL,externalURL,pairing,cleanReports,reconcile,preferences,reportHeading} from './core.mjs';
@@ -67,7 +69,10 @@ if(!app.requestSingleInstanceLock())app.quit();else{
   try{settings=preferences(JSON.parse(await readFile(prefsFile(),'utf8')));}catch{}
   makeMain();makeAlerts();
   tray=new Tray(nativeImage.createFromPath(join(directory,'assets/studio.png')).resize({width:20,height:20}));tray.on('double-click',showMain);menu();
-  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Studio',submenu:[{label:'Unresolved alerts',click:()=>showAlerts()},{label:'Desktop settings',click:()=>{notice='Desktop settings';showAlerts();}},{type:'separator'},{role:'quit'}]},{label:'View',submenu:[{label:'Refresh Studio',click:()=>{if(!smoke)void main.loadURL(appURL);}},{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{role:'togglefullscreen'}]}]));
+  const projectActions=createProjectActions({dialog,shell,getWindow:()=>main});
+  const releaseActions=createReleaseActions({project:projectActions.project,dialog,getWindow:()=>main});
+  const runProject=async(label,action)=>{notice=label;showAlerts(false);try{await action();}catch(error){await dialog.showMessageBox(main,{type:'error',message:'Project action could not start.',detail:String(error.message||error)});}finally{notice='';push();}};
+  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Studio',submenu:[{label:'Unresolved alerts',click:()=>showAlerts()},{label:'Desktop settings',click:()=>{notice='Desktop settings';showAlerts();}},{type:'separator'},{role:'quit'}]},{label:'Project',submenu:[{label:'Upload website changes to GitHub',click:()=>void runProject('Uploading website changes…',()=>projectActions.upload())},{label:'Build Android APK',click:()=>void runProject('Building Android APK…',()=>projectActions.buildAndroid())},{label:'Release app',click:()=>void runProject('Preparing app release…',()=>releaseActions.release())}]},{label:'View',submenu:[{label:'Refresh Studio',click:()=>{if(!smoke)void main.loadURL(appURL);}},{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{role:'togglefullscreen'}]}]));
   const youtube=createYouTubeConnection({folder:app.getPath('userData'),safeStorage,openBrowser:url=>shell.openExternal(url),chooseFile:async()=>{const result=await dialog.showOpenDialog(main,{title:'Select the downloaded YouTube Desktop OAuth file',defaultPath:app.getPath('downloads'),properties:['openFile'],filters:[{name:'Google OAuth configuration',extensions:['json']}]});return result.canceled?null:result.filePaths[0];}});
   handle('studio:youtube-connect',()=>{if(!owner)throw Error('Finish signing in to Studio first.');return youtube.connect(owner);});
   handle('studio:youtube-disconnect',()=>{if(!owner)throw Error('Sign in to Studio first.');return youtube.disconnect();});

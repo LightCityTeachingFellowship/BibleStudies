@@ -204,7 +204,7 @@ async function main() {
   }
   if (action !== 'run') throw Error('Use init, run, status, or retry --id VIDEO_ID.');
   const localConfig=await json(join(WORK,'local-source.json'),{}),localMode=localConfig.mode==='local';
-  if(localMode&&resolve(localConfig.input||'').toLowerCase()!==resolve(ROOT,'Audio Queue').toLowerCase())throw Error('Local mode must use the dedicated project Audio Queue folder.');
+  if(localMode){const queue=resolve(ROOT,'Audio Queue'),info=await lstat(queue);if(!info.isDirectory()||info.isSymbolicLink())throw Error('The Audio Queue must be a normal folder.');const [actual,expected]=await Promise.all([realpath(localConfig.input||''),realpath(queue)]);if(actual.toLowerCase()!==expected.toLowerCase())throw Error('Local mode must use the dedicated project Audio Queue folder.');localConfig.input=expected;}
   if (!localMode && (await json(join(WORK, 'downloads-paused.json'), {})).paused === true) { console.log('Recorded YouTube downloads are paused. Completed audio and queued progress are preserved.'); return; }
   await mkdir(WORK, { recursive: true });
   const lockPath = join(WORK, 'worker.lock');
@@ -270,4 +270,4 @@ async function main() {
     } while (!stopped);
   } finally { await heartbeat.stop(); connection?.s3.destroy(); await unlink(lockPath).catch(() => {}); }
 }
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch(error => { const reason=String(error?.message||error?.code||'Unknown worker failure').replace(/https?:\/\/\S+/g,'[address omitted]').slice(0,400);console.error('Recorded-audio worker stopped: '+reason+'. Saved progress is preserved.'); process.exitCode = 1; });
+if (process.argv[1] && await realpath(process.argv[1]).catch(() => null) === fileURLToPath(import.meta.url)) main().catch(error => { const reason=String(error?.message||error?.code||'Unknown worker failure').replace(/https?:\/\/\S+/g,'[address omitted]').slice(0,400);console.error('Recorded-audio worker stopped: '+reason+'. Saved progress is preserved.'); process.exitCode = 1; });

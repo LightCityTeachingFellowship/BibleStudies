@@ -50,3 +50,7 @@ tools/live-audio/cloud/tools/live-audio/work/
 
 # Local Google desktop OAuth configuration
 client_secret*.json
+
+# Local Windows website builds
+/_windows-build-*/
+/_windows-build.lock

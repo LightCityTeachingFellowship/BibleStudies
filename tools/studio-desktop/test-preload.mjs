@@ -10,7 +10,7 @@ test('desktop connection is exposed during an opaque preload, only in the main f
   vm.runInNewContext(source,{require:name=>{assert.equal(name,'electron');return electron;},process:{isMainFrame:mainFrame},location:{origin:'null',pathname:'/'}});
   return {exposed,calls};
  };
- const {exposed,calls}=run(true);assert.ok(exposed.LightCityDesktop);assert.equal(exposed.LightCityDesktop.version,'0.1.4');
+ const {exposed,calls}=run(true);assert.ok(exposed.LightCityDesktop);assert.equal(exposed.LightCityDesktop.version,'0.1.6');
  assert.equal(await exposed.LightCityDesktop.connect(),'one-use-test-token');assert.equal(calls[0][0],'studio:connect');
  assert.equal(run(false).exposed.LightCityDesktop,undefined,'child frames never receive desktop actions');
 });
@@ -21,7 +21,7 @@ test('Windows sign-in cannot fall back to the browser OAuth popup if its native 
  async function run({desktop=false,bridge=false}={}){
   const calls=[];const api={ready:Promise.resolve()},memberAuth={};
   const sdk={auth:{signInWithCustomToken:async(_auth,token)=>calls.push(['custom',token]),signInWithPopup:async()=>calls.push(['popup']),GoogleAuthProvider:class {setCustomParameters(){}}}};
-  const context=vm.createContext({api,memberAuth,sdk,checkAccess:async()=>calls.push(['access']),URLSearchParams,location:{search:desktop?'?desktop=windows':''},navigator:{userAgent:desktop?'Electron/45.2.0':'Chrome'}});
+  const context=vm.createContext({api,memberAuth,sdk,isAndroidApp:()=>false,checkAccess:async()=>calls.push(['access']),URLSearchParams,location:{search:desktop?'?desktop=windows':''},navigator:{userAgent:desktop?'Electron/45.2.0':'Chrome'}});
   if(bridge)context.LightCityDesktop={connect:async()=>{calls.push(['connect']);return 'one-use-test-token';}};
   vm.runInContext(code,context);return {api,calls};
  }
