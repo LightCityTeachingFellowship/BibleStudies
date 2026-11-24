@@ -30,7 +30,7 @@ jobs:
       BUNDLE_GEMFILE: ${{ github.workspace }}/tools/pages/Gemfile
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,9 +76,20 @@ jobs:
         with:
           path: _site
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      # GitHub may take a short time to index a freshly uploaded Pages artifact.
+      - name: Wait for the uploaded website
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
+        run: sleep 20
       - name: Deploy the approved website
         if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate'
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Retry website deployment
+        if: steps.readiness.outputs.publish == 'true' && inputs.operation != 'validate' && steps.deployment.outcome == 'failure'
+        id: deployment_retry
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
