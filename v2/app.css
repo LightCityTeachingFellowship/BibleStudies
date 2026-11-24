@@ -660,3 +660,19 @@ body.lc-v2-watch-pending #player:not([hidden]){visibility:hidden}
 
 /* Public video browsing does not expose member categories. */
 .lc-v2-category-tabs[hidden]{display:none!important}
+
+.lc-native-app-info [hidden]{display:none!important}
+
+/* Compact settings headings with optional contextual help. */
+.lc-hub-settings .lc-setting-heading{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.lc-hub-settings .lc-setting-heading h3{margin:0!important}
+.lc-setting-help{position:relative;flex:none;place-self:start;margin-left:3px}
+.lc-setting-help summary{display:grid;place-items:center;box-sizing:border-box;width:15px;height:15px;border:1px solid var(--hub-muted);border-radius:50%;color:var(--hub-muted);font:600 10px/1 Inter,system-ui,sans-serif;cursor:pointer;list-style:none}
+.lc-setting-help summary::-webkit-details-marker{display:none}
+.lc-setting-help summary:focus-visible{outline:2px solid var(--hub-gold);outline-offset:3px}
+.lc-hub-settings .lc-setting-help-popover{position:absolute;z-index:5;top:calc(100% + 8px);left:-10px;box-sizing:border-box;width:min(200px,calc(100vw - 80px));margin:0!important;padding:12px 14px;border:1px solid var(--hub-border);border-radius:12px;background:var(--hub-panel);color:var(--hub-text);box-shadow:0 8px 24px #0005;font-size:13px;line-height:1.45}
+.lc-hub-settings .lc-hub-setting>button+button{margin-left:0}
+.lc-hub-settings .lc-hub-setting>button{margin-top:10px}
+.lc-hub-settings .lc-hub-setting:last-child{border-bottom:0}
+
+.lc-hub-settings .lc-history-settings>button{display:block;margin:10px 0 0;max-width:100%;text-align:left}

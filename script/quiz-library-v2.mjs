@@ -18,4 +18,4 @@ async function load(){const ticket=++epoch;rows=[];message='';await api()?.ready
  else{const {resources}=await api().learning({});if(ticket!==epoch)return;for(const resource of resources.filter(r=>r.kind==='Quiz')){try{const state=JSON.parse(localStorage.getItem('lc-quiz-v1:device:'+resource.id));if(state)rows.push({...state,resource});}catch{}}}
  }catch{if(ticket===epoch)message='Quiz history could not load. Refresh to retry.';}if(ticket===epoch)window.dispatchEvent(new Event('lightcity-quizzes-changed'));
 }
-window.addEventListener('lightcity-members-changed',()=>void load());void load();
+window.addEventListener('lightcity-quiz-history-cleared',()=>void load());window.addEventListener('lightcity-members-changed',()=>void load());void load();

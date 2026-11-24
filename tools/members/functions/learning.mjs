@@ -83,6 +83,17 @@ export function createLearning(deps){
  }
  async function activity(request){
   const person=await identity(request,true),data=request.data||{},base='churchVideoActivity/'+person.uid;
+  if(data.action==='clearHistory'){
+   const phase=data.phase==='attempts'?'attempts':'quizzes',cursor=data.cursor;
+   if(cursor!==undefined&&(typeof cursor!=='string'||!cursor||cursor.length>200))invalid('Invalid history cursor.');
+   let query=db.collection(base+(phase==='quizzes'?'/learningQuizzes':'/learningAttempts')).orderBy('__name__').limit(200);
+   if(cursor)query=query.startAfter(cursor);
+   const page=await query.get(),batch=db.batch();
+   for(const doc of page.docs){if(phase==='quizzes'&&doc.data()?.saved===true)batch.set(doc.ref,{saved:true,updatedAt:now()});else batch.delete(doc.ref);}
+   if(page.docs.length)await batch.commit();
+   if(page.docs.length===200)return {phase,cursor:page.docs[page.docs.length-1].id,more:true};
+   return phase==='quizzes'?{phase:'attempts',more:true}:{more:false};
+  }
   if(data.action==='history'){
    const page=await db.collection(base+'/learningQuizzes').orderBy('updatedAt','desc').limit(100).get(),library=await videos(),resources=await all();
    return {rows:page.docs.flatMap(doc=>{const r=resources.find(r=>r.id===doc.id),visibility=r&&accessFor(r,library);return r&&r.state==='published'&&visibility&&(visibility==='public'||person.member)?[{...doc.data(),resource:publicResource(r,visibility)}]:[];})};

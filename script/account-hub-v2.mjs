@@ -15,30 +15,34 @@ export function avatar(user){
  try{const url=new URL(user?.photoURL);if(url.protocol==='https:'&&/(^|\.)googleusercontent\.com$|(^|\.)ggpht\.com$/.test(url.hostname)){const img=el('img');img.src=url.href;img.alt='';img.referrerPolicy='no-referrer';img.decoding='async';img.onerror=()=>img.remove();node.append(img);}}catch{}
  return node;
 }
-function installSetting(dialog) {
-  const section = el('section', '', 'lc-hub-setting');
-  const status = el('p', '', 'lc-hub-muted');
-  status.setAttribute('role', 'status');
-  const nativeApp = Boolean(globalThis.Capacitor?.isNativePlatform?.()
-    || (globalThis.androidBridge && globalThis.Capacitor?.nativePromise));
-  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const install = action(ios ? 'Add to Home Screen' : 'Install Android App', () => {
-    if (nativeApp) return;
-    if (ios) {
-      status.textContent = 'Open Share, then choose Add to Home Screen.';
-      return;
-    }
-    window.location.assign(sitePath('/downloads/'));
+const isNativeApp=()=>Boolean(globalThis.Capacitor?.isNativePlatform?.() || (globalThis.androidBridge && globalThis.Capacitor?.nativePromise));
+function installSetting() {
+  const section=el('section','','lc-hub-setting'),status=el('p','','lc-hub-muted');status.setAttribute('role','status');
+  const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),android=/Android/i.test(ua);
+  const install=action(ios?'Add to Home Screen':android?'Install Android App':'Install as an app',async()=>{
+    if(ios){status.textContent='Open Share, then choose Add to Home Screen.';return;}
+    if(android){window.location.assign(sitePath('/downloads/'));return;}
+    try {
+      const prompt=window.LightCityDeferredInstallPrompt;
+      if(prompt){await prompt.prompt();await prompt.userChoice;window.LightCityDeferredInstallPrompt=null;return;}
+      if(globalThis.LightCityInstall?.request){status.textContent=await globalThis.LightCityInstall.request();return;}
+      status.textContent='Open your browser menu and choose Install app or Add to Home Screen.';
+    }catch{status.textContent='Open your browser menu and choose Install app or Add to Home Screen.';}
   });
-  if (nativeApp) {
-    install.disabled = true;
-    status.textContent = 'LightCity is already installed.';
-  }
-  section.append(el('h3', 'App'), install, status);
-  return section;
+  section.append(el('h3','App'),install,status);return section;
 }
-function settings(){const d=modal('Settings');d.classList.add('lc-hub-settings');const appearance=el('section','','lc-hub-setting'),themeButton=action('',()=>{const control=document.getElementById('theme-toggle')||document.getElementById('theme');if(control)control.click();else{const dark=!document.body.classList.contains('darkmode'),sheet=document.getElementById('theme-stylesheet');document.body.classList.toggle('darkmode',dark);if(sheet)sheet.href=new URL('style/'+(dark?'darkMODE':'lightMODE')+'.css',new URL(sitePath('/'),location.origin)).href;try{localStorage.setItem('theme',dark?'darkMODE':'lightMODE');}catch{}}paintTheme();});function paintTheme(){const dark=document.body.classList.contains('darkmode');themeButton.textContent=dark?'Switch to light mode':'Switch to dark mode';themeButton.setAttribute('aria-pressed',String(dark));}appearance.append(el('h3','Appearance'),themeButton);d.append(appearance,installSetting(d));const playback=el('section','','lc-hub-setting'),playbackLabel=el('label','','lc-hub-setting-toggle'),autoAudio=el('input');autoAudio.type='checkbox';try{autoAudio.checked=localStorage.getItem('lc-minimize-audio')==='1';}catch{}autoAudio.addEventListener('change',()=>{try{localStorage.setItem('lc-minimize-audio',autoAudio.checked?'1':'0');}catch{}});playbackLabel.append(el('span','Switch video to audio when leaving the app'),autoAudio);playback.append(el('h3','Playback'),playbackLabel,el('p','When audio is available, continue listening after you leave the app or lock your screen.','lc-hub-muted'));d.append(playback);paintTheme();const observer=new MutationObserver(paintTheme);observer.observe(document.body,{attributes:true,attributeFilter:['class']});d.addEventListener('close',()=>observer.disconnect(),{once:true});const box=el('section','','lc-hub-setting'),title=el('h3','Notifications'),status=el('p','','lc-hub-muted');
+function nativeAppInfo(){
+ const section=el('section','','lc-hub-setting lc-native-app-info'),version=el('p','Current version: loading…','lc-hub-muted'),status=el('p','Checking for updates…','lc-hub-muted');status.setAttribute('role','status');
+ const check=action('Check for updates',()=>void inspect()),update=action('Update app',async()=>{update.disabled=true;status.textContent='Downloading the update…';try{await plugin.download();status.textContent='The app will prompt you when the update is ready.';}catch{status.textContent='Could not start the update. Please try again.';update.disabled=false;}});check.hidden=true;update.hidden=true;section.append(el('h3','App information'),version,status,check,update);
+ let plugin;async function inspect(){check.disabled=true;status.textContent='Checking for updates…';try{const result=await plugin.check();if(!section.isConnected)return;update.hidden=!result.available;check.hidden=result.available;status.textContent=result.available?'Version '+result.latestVersion+' is available.':'LightCity is up to date.';}catch{if(section.isConnected){status.textContent='Could not check for updates. Please try again.';check.hidden=false;}}finally{check.disabled=false;}}
+ void import('/script/native/capacitor-core.mjs').then(async({registerPlugin})=>{plugin=registerPlugin('LightCityUpdate');const info=await plugin.getVersion();if(!section.isConnected)return;version.textContent='Current version: '+info.version;await inspect();}).catch(()=>{if(section.isConnected){version.textContent='Current version unavailable.';status.textContent='Update information is unavailable in this app version.';}});
+ return section;
+}
+function settingHeading(title, explanation){
+ const row=el('div','','lc-setting-heading'),heading=el('h3',title),help=el('details','','lc-setting-help'),trigger=el('summary','?'),text=el('p',explanation,'lc-setting-help-popover');
+ trigger.setAttribute('aria-label','About '+title.toLowerCase());help.append(trigger,text);row.append(heading,help);return row;
+}
+function settings(){const d=modal('Settings');d.classList.add('lc-hub-settings');const appearance=el('section','','lc-hub-setting'),themeButton=action('',()=>{const control=document.getElementById('theme-toggle')||document.getElementById('theme');if(control)control.click();else{const dark=!document.body.classList.contains('darkmode'),sheet=document.getElementById('theme-stylesheet');document.body.classList.toggle('darkmode',dark);if(sheet)sheet.href=new URL('style/'+(dark?'darkMODE':'lightMODE')+'.css',new URL(sitePath('/'),location.origin)).href;try{localStorage.setItem('theme',dark?'darkMODE':'lightMODE');}catch{}}paintTheme();});function paintTheme(){const dark=document.body.classList.contains('darkmode');themeButton.textContent=dark?'Switch to light mode':'Switch to dark mode';themeButton.setAttribute('aria-pressed',String(dark));}appearance.append(el('h3','Appearance'),themeButton);d.append(appearance);if(!isNativeApp())d.append(installSetting());const playback=el('section','','lc-hub-setting'),playbackLabel=el('label','','lc-hub-setting-toggle'),autoAudio=el('input');autoAudio.type='checkbox';try{autoAudio.checked=localStorage.getItem('lc-minimize-audio')==='1';}catch{}autoAudio.addEventListener('change',()=>{try{localStorage.setItem('lc-minimize-audio',autoAudio.checked?'1':'0');}catch{}});playbackLabel.append(el('span','Switch video to audio when i minimise'),autoAudio);playback.append(settingHeading('Playback','When audio is available, continue listening after you leave the app or lock your screen.'),playbackLabel);d.append(playback);paintTheme();const observer=new MutationObserver(paintTheme);observer.observe(document.body,{attributes:true,attributeFilter:['class']});d.addEventListener('close',()=>observer.disconnect(),{once:true});const box=el('section','','lc-hub-setting'),title=settingHeading('Notifications','The bell keeps recent announcements here even when push notifications are off.'),status=el('p','','lc-hub-muted');
 status.setAttribute('role','status');
 let busy=false,message='';
 const toggle=action('Loading…',async()=>{
@@ -57,11 +61,11 @@ function paint(){
   toggle.disabled=busy||!state?.supported;
   toggle.textContent=state?.enabled?'Turn off on this device':'Enable on this device';
   status.textContent=busy?'Updating notifications…':!state?'Notification controls are loading…'
-    :!state.supported?'Push notifications are unavailable here. On iPhone, install the app first.'
+    :!state.supported?((/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?'On iPhone or iPad, add LightCity to your home screen to enable notifications.':window.isSecureContext===false?'Open LightCity over HTTPS or on localhost to enable notifications.':'Push notifications are unavailable in this browser or device. Check browser notification settings.')
     :state.permission==='denied'?'Notifications are blocked. Allow notifications for LightCity in your phone or browser settings, then try again here.'
     :message||(state.enabled?'Notifications are enabled on this device.':'Notifications are off on this device.');
 }
-box.append(title,status,toggle,el('p','The bell keeps recent announcements here even when push notifications are off.','lc-hub-small'));
+box.append(title,status,toggle,action('Open notification inbox',inbox));
 d.append(box);
 paint();
 window.addEventListener('lightcity-notification-settings-ready',paint,{once:true});
@@ -72,7 +76,8 @@ d.addEventListener('close',()=>{
   window.removeEventListener('focus',paint);
   document.removeEventListener('visibilitychange',paint);
 },{once:true});
-d.append(action('Open notification inbox',inbox));const clearHistory=globalThis.LightCityClearHistory;if(clearHistory||document.getElementById('clear-video-history')){const message=el('p','','lc-hub-small');message.setAttribute('role','status');d.append(action('Clear reading, watch and listening history',async()=>{if(!clearHistory){document.getElementById('clear-video-history')?.click();return}if(!confirm('Clear your reading, watch and listening history? Saved resources and playlists will be kept.'))return;try{await clearHistory();message.textContent='History cleared. Account sync will retry if needed.'}catch{message.textContent='Could not clear history. Please try again.'}}),el('p',isMemberAccount()?'Saved resources and playlists are kept.':'Saved resources are kept.','lc-hub-small'),message);}}
+const historyActions=[['Clear reading history','reading',globalThis.LightCityClearReadingHistory],['Clear video and audio history','video and audio',globalThis.LightCityClearMediaHistory],['Clear quiz history','quiz',globalThis.LightCityClearQuizHistory]];
+if(historyActions.some(([, ,fn])=>typeof fn==='function')){const section=el('section','','lc-hub-setting lc-history-settings'),message=el('p','','lc-hub-small');message.setAttribute('role','status');section.append(settingHeading('History','Clearing history keeps your saved resources and playlists. Clearing quiz history also removes quiz progress and previous attempts.'));for(const [label,kind,fn] of historyActions){if(typeof fn!=='function')continue;const button=action(label,async()=>{if(!confirm(kind==='quiz'?'Clear your quiz history, including progress and previous attempts? Saved quizzes will be kept.':'Clear your '+kind+' history? Saved items will be kept.'))return;button.disabled=true;message.textContent='Clearing '+kind+' history…';try{await fn();message.textContent=kind.charAt(0).toUpperCase()+kind.slice(1)+' history cleared.'}catch{message.textContent='Could not clear '+kind+' history. Please try again.'}finally{button.disabled=false}});section.append(button)}section.append(message);d.append(section);}if(isNativeApp())d.append(nativeAppInfo());}
 async function loadPlaylists(force=false){await api()?.ready;if(!isMemberAccount()){playlists=[];return [];}if(!force&&playlistUntil>Date.now())return playlists;if(playlistFlight){if(!force)return playlistFlight;await playlistFlight.catch(()=>{});return loadPlaylists(true);}const owner=key(),ticket=revision;playlistFlight=(async()=>{const result=await api().getStudyCollections();if(ticket!==revision||owner!==key())return [];playlists=result.playlists||[];playlistUntil=Date.now()+30000;signal();return playlists;})();const flight=playlistFlight;try{return await flight;}finally{if(playlistFlight===flight)playlistFlight=null;}}
 async function mutate(data){const owner=key(),ticket=revision;const result=await api().updateStudyCollection(data);if(owner!==key()||ticket!==revision)return null;playlistUntil=0;await loadPlaylists(true);return result;}
 function createForm(d,item){const form=el('form','','lc-hub-create'),label=el('label','New playlist'),input=el('input'),submit=el('button','Create playlist','lc-hub-button lc-hub-primary'),feedback=el('p','','lc-hub-small');input.maxLength=80;input.required=true;input.placeholder='e.g. Prayer, Family study';input.id='lc-playlist-name';label.htmlFor=input.id;submit.type='submit';form.append(label,input,submit,feedback);form.onsubmit=async e=>{e.preventDefault();submit.disabled=true;feedback.textContent='Creating…';try{const result=await mutate({action:'create',name:input.value});if(!result||!d.isConnected)return;if(item)await mutate({action:'add',playlistId:result.id,item});if(d.isConnected){feedback.textContent=item?'Saved to your new playlist.':'Playlist created.';input.value='';}}catch(error){if(d.isConnected)feedback.textContent=friendly(error);}finally{submit.disabled=false;}};d.append(form);}
