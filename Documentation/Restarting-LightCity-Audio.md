@@ -12,11 +12,11 @@ The recorded-audio and Studio list tasks now run from `LightCity-Website`. Run t
 
 Wait 20–30 seconds, then run the same command with `-CheckOnly` to check the worker heartbeats. If a heartbeat is old, inspect the logs under `LightCity-Website\tools\audio-library\work`.
 
-The old Audio Queue location is a junction to the queue inside `LightCity-Website`, so existing recording programs can continue using that path. Keep the old website folder for any other tools that still use it.
+The recorded-audio helper uses `C:\Users\samvi\Videos\Audio-Queue`, outside OneDrive. Update any recording program or shortcut that used the old website queue; the old location is no longer monitored.
 
 ## Recorded audio
 
-Put only the final uploaded video file in the existing `Audio Queue` folder within `LightCity-Website`. The helper watches that folder, prepares and uploads audio, and registers it with the website. As in the existing setup, after successful verification and registration it removes the unchanged queued video and its temporary local audio. Keep your original files outside Audio Queue. Do not place a file there unless it is the final version you intend to process.
+Put only the final uploaded video file in `C:\Users\samvi\Videos\Audio-Queue`. The helper watches that folder, prepares and uploads audio, and registers it with the website. As in the existing setup, after successful verification and registration it removes the unchanged queued video and its temporary local audio. Keep your original files outside Audio Queue. Do not place a file there unless it is the final version you intend to process.
 
 ## Live audio in OBS
 

@@ -14,9 +14,10 @@ test('native app validates callers, deduplicates alerts, waits for server acknow
  assert.equal(windows.length,2);const [main,alerts]=windows;assert.equal(main.config.webPreferences.nodeIntegration,false);assert.equal(main.config.webPreferences.sandbox,true);assert.equal(main.config.webPreferences.contextIsolation,true);assert.equal(main.config.webPreferences.backgroundThrottling,false);
  const invoke=(name,data,local=false)=>{const wc=(local?alerts:main).webContents;return handlers.get(name)({sender:wc,senderFrame:wc.mainFrame},data);};
  const report={id:'a'.repeat(64),title:'Prayer meeting',issue:'volume',sender:{name:'Samuel'},count:1};
- await invoke('studio:reports',{uid:'admin',reports:[report]});assert.equal(toasts.length,1);assert.ok(alerts.visible);
+ await invoke('studio:reports',{uid:'admin',reports:[report]});assert.equal(toasts.length,1);assert.equal(alerts.visible,false,'new reports show Windows notifications without opening the panel by default');
  await invoke('studio:reports',{uid:'admin',reports:[report]});assert.equal(toasts.length,1,'polling does not repeat the same toast');
- await invoke('studio:reports',{uid:'admin',reports:[{...report,count:2}]});assert.equal(toasts.length,2);
+ await invoke('alerts:action',{type:'settings',value:{showAlertPanel:true}},true);
+ await invoke('studio:reports',{uid:'admin',reports:[{...report,count:2}]});assert.equal(toasts.length,2);assert.equal(alerts.visible,true,'optional setting opens the panel for a new report');
  await invoke('alerts:action',{type:'handled',value:report.id},true);assert.equal(main.webContents.messages.at(-1)[0],'studio:handle-report');
  const latest=()=>alerts.webContents.messages.filter(v=>v[0]==='alerts:state').at(-1)[1];assert.equal(latest().reports.length,1,'no optimistic acknowledgement');
  await invoke('studio:handled-result',{uid:'admin',id:report.id,ok:false});assert.equal(latest().reports.length,1);

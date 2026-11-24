@@ -1,4 +1,4 @@
-import {mountAudioControls} from './audio-controls.mjs?v=archive-1';
+import {mountAudioControls} from './audio-controls.mjs?v=controls-4';
 const section=document.getElementById('message-archive');
 import {archiveRecordings, archiveRequest} from './audio-archive-api.mjs?v=collections-1';
 

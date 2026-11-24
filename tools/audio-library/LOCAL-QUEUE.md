@@ -1,6 +1,6 @@
 # Local final-video audio queue
 
-Machine folder: Audio Queue/ at the website repository root. It is excluded from Git and Jekyll. Only place the FINAL video file uploaded to YouTube here, including all edits. Other Videos folders are never scanned or cleaned.
+Machine folder: `C:\Users\samvi\Videos\Audio-Queue`. It is outside OneDrive, Git and Jekyll. The old queue in the website folder is no longer monitored. Only place the FINAL video file uploaded to YouTube here, including all edits. Other Videos folders are never scanned or cleaned.
 
 Local settings and per-ID preparation receipts remain in ignored tools/audio-library/work/. YouTube media downloading stays paused. Local preparation ignores download rate limits/cooldowns and makes no media requests to YouTube. An optional oEmbed metadata request obtains the displayed title when needed; it never fetches audio/video.
 

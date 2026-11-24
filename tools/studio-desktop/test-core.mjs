@@ -13,5 +13,7 @@ test('reports stay until resolved; only new or increased reports notify',()=>{
  assert.equal(reconcile(old,cleanReports([a])).newRows.length,0);
  assert.equal(reconcile(old,cleanReports([{...a,resolved:true}])).rows.length,0);
  assert.equal(cleanReports([{...a,id:'../unsafe'},null]).length,0);
- assert.deepEqual(preferences({sound:false,openAtLogin:true,alwaysOnTop:'yes',extra:true}),{sound:false,openAtLogin:true,alwaysOnTop:false});
+ assert.deepEqual(preferences({sound:false,openAtLogin:true,alwaysOnTop:'yes',extra:true}),{sound:false,openAtLogin:true,alwaysOnTop:false,showAlertPanel:false});
 });
+
+test('stream-report panel is optional and defaults to off',()=>{assert.equal(preferences().showAlertPanel,false);assert.equal(preferences({showAlertPanel:true}).showAlertPanel,true);assert.equal(preferences({showAlertPanel:false}).showAlertPanel,false);});

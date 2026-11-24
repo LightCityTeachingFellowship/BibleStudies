@@ -1,4 +1,4 @@
-import {prepareLocal,uploadLocal,cleanLocal} from './local-source.mjs';
+import {INPUT,prepareLocal,uploadLocal,cleanLocal} from './local-source.mjs';
 import {startHelperHeartbeat} from '../helper-heartbeat.mjs';
 import {processingLibrary,requestAudioPublication} from '../studio-library.mjs';
 import { mkdir, open, readFile, unlink, lstat, realpath, statfs } from 'node:fs/promises';
@@ -204,7 +204,7 @@ async function main() {
   }
   if (action !== 'run') throw Error('Use init, run, status, or retry --id VIDEO_ID.');
   const localConfig=await json(join(WORK,'local-source.json'),{}),localMode=localConfig.mode==='local';
-  if(localMode){const queue=resolve(ROOT,'Audio Queue'),info=await lstat(queue);if(!info.isDirectory()||info.isSymbolicLink())throw Error('The Audio Queue must be a normal folder.');const [actual,expected]=await Promise.all([realpath(localConfig.input||''),realpath(queue)]);if(actual.toLowerCase()!==expected.toLowerCase())throw Error('Local mode must use the dedicated project Audio Queue folder.');localConfig.input=expected;}
+  if(localMode){const queue=resolve(INPUT),info=await lstat(queue);if(!info.isDirectory()||info.isSymbolicLink())throw Error('The Audio Queue must be a normal folder.');const [actual,expected]=await Promise.all([realpath(localConfig.input||''),realpath(queue)]);if(actual.toLowerCase()!==expected.toLowerCase())throw Error('Local mode must use the dedicated Videos/Audio-Queue folder.');localConfig.input=expected;}
   if (!localMode && (await json(join(WORK, 'downloads-paused.json'), {})).paused === true) { console.log('Recorded YouTube downloads are paused. Completed audio and queued progress are preserved.'); return; }
   await mkdir(WORK, { recursive: true });
   const lockPath = join(WORK, 'worker.lock');

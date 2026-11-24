@@ -27,6 +27,7 @@ function menu(){if(!tray)return;tray.setContextMenu(Menu.buildFromTemplate([
  {type:'separator'},{label:'Keep Studio above other windows',type:'checkbox',checked:settings.alwaysOnTop,click:item=>void saveSettings({alwaysOnTop:item.checked})},
  {label:'Start with Windows',type:'checkbox',checked:settings.openAtLogin,click:item=>void saveSettings({openAtLogin:item.checked})},
  {label:'Alert sound',type:'checkbox',checked:settings.sound,click:item=>void saveSettings({sound:item.checked})},
+ {label:'Open panel for stream reports',type:'checkbox',checked:settings.showAlertPanel,click:item=>void saveSettings({showAlertPanel:item.checked})},
  {type:'separator'},{label:'Refresh Studio',click:()=>{if(!smoke)void main?.loadURL(appURL);}},{label:'Quit LightCity Studio',click:()=>app.quit()}
  ]));}
 function toast(title,body){if(smoke||!Notification.isSupported())return;const n=new Notification({title,body:String(body).slice(0,240),icon:join(directory,'assets/studio.png'),timeoutType:'never',silent:true});n.on('click',()=>showAlerts());n.on('failed',()=>{notice='Windows could not display the banner. Your alerts remain here.';push();});n.show();}
@@ -104,7 +105,7 @@ if(!app.requestSingleInstanceLock())app.quit();else{
    const uid=typeof data.uid==='string'&&data.uid.length<=128?data.uid:null;if(!uid){clearIdentity();return;}
    if(owner!==uid){clearIdentity();owner=uid;}
    const result=reconcile(reports,cleanReports(data.reports));reports=result.rows;lastSync=Date.now();notice='';
-   if(result.newRows.length){ring=settings.sound;for(const row of result.newRows.slice(0,3))toast(reportHeading(row),row.message||row.title);showAlerts(false);}push();return {count:reports.length};
+   if(result.newRows.length){ring=settings.sound;for(const row of result.newRows.slice(0,3))toast(reportHeading(row),row.message||row.title);if(settings.showAlertPanel)showAlerts(false);}push();return {count:reports.length};
   });
   handle('studio:ready',data=>{if(typeof data?.uid!=='string'||data.uid!==owner||!studioURL(STUDIO))return;const url=externalURL(data.url);if(!url||new URL(url).origin!==new URL(STUDIO).origin)return;ready={uid:owner,title:String(data.title||'Ready to share').slice(0,300),url};ring=settings.sound;toast('LightCity link ready',ready.title);showAlerts(false);push();});
   handle('studio:handled-result',data=>{if(data?.uid!==owner)return;if(data.ok){reports=reports.filter(r=>r.id!==data.id);notice='Marked handled on all devices.';}else notice=String(data.message||'Could not mark handled. Please try again.').slice(0,240);push();});
@@ -113,7 +114,7 @@ if(!app.requestSingleInstanceLock())app.quit();else{
   handle('alerts:action',async({type,value}={})=>{
    if(type==='open')showMain();
    else if(type==='handled'&&reports.some(r=>r.id===value)){main.webContents.send('studio:handle-report',{id:value,uid:owner});notice='Updating the shared report…';push();}
-   else if(type==='settings'){if(!value||Object.keys(value).some(k=>!['sound','alwaysOnTop','openAtLogin'].includes(k)))throw Error('Invalid settings');return saveSettings(value);}
+   else if(type==='settings'){if(!value||Object.keys(value).some(k=>!['sound','alwaysOnTop','openAtLogin','showAlertPanel'].includes(k)))throw Error('Invalid settings');return saveSettings(value);}
    else if(type==='copy'&&ready){clipboard.writeText(ready.url);notice='Share link copied.';push();}
    else if(type==='dismiss-ready'){ready=null;push();}
    else if(type==='retry'){if(!smoke)void main.loadURL(appURL);showMain();}

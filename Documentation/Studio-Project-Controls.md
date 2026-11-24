@@ -10,4 +10,4 @@ In the Windows Studio app, open **Project**:
 
 The Windows Studio installer must be updated for these menu changes to appear. The mobile/web Studio cannot access this computer's files.
 
-The recorded-audio and Studio-list scheduled helpers now run from `LightCity-Website`. Their saved queues and protected local configuration were preserved. The old Audio Queue location is a link to the new queue so existing recording programs can keep using their current path. Keep the old project folder for now; other software may still refer to it.
+The recorded-audio and Studio-list scheduled helpers now run from `LightCity-Website`. Their saved queues and protected local configuration were preserved. The recorded-audio queue is `C:\Users\samvi\Videos\Audio-Queue`, outside OneDrive. Update recording programs and shortcuts to use this new path; old queue paths are not monitored. Keep the old project folder for other tools that may still use it.

@@ -90,3 +90,11 @@
 .lc-audio-volume-panel>button{flex:none;display:grid;place-items:center;width:32px;min-width:32px;padding:4px}
 .lc-audio-controls .lc-audio-download svg{fill:none}
 @container(max-width:480px){.lc-inline-audio .lc-audio-controls-actions{width:150px;gap:18px;margin:2px auto}.lc-inline-audio .lc-audio-controls-utility>button{width:28px;height:28px;min-width:28px;min-height:28px;padding:4px}.lc-audio-volume-panel{padding:6px;gap:6px;bottom:100%;width:180px}}
+
+/* Consistent, optically centred playback controls. */
+.lc-inline-audio .lc-audio-controls-actions>button, .lc-inline-audio .lc-audio-controls-utility>button { box-sizing:border-box; display:grid; place-items:center; padding:0; border-radius:50%; }
+.lc-audio-controls button svg, .lc-audio-controls button.lc-audio-play svg, .lc-audio-controls .lc-audio-controls-utility button svg { display:block; width:22px; height:22px; margin:0; fill:none; flex:none; }
+.lc-inline-audio .lc-audio-controls-actions>button { width:42px; height:42px; }
+.lc-inline-audio .lc-audio-controls-actions>button.lc-audio-play { width:48px; height:48px; }
+.lc-inline-audio .lc-audio-controls-actions>button.lc-audio-play svg { width:21px; height:21px; }
+@container(max-width:480px) { .lc-inline-audio .lc-audio-controls-actions>button { width:34px; height:34px; min-width:34px; min-height:34px; padding:0; } .lc-inline-audio .lc-audio-controls-actions>button.lc-audio-play { width:38px; height:38px; } .lc-audio-controls button svg, .lc-audio-controls button.lc-audio-play svg, .lc-audio-controls .lc-audio-controls-utility button svg { width:20px; height:20px; margin:0; } }

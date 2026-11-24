@@ -1,9 +1,10 @@
 import {mkdir,readdir,lstat,realpath,unlink} from 'node:fs/promises';
 import {resolve,join,dirname,basename,extname} from 'node:path';
+import {homedir} from 'node:os';
 import {ROOT,json,save,normalize,prepare,digest,ensureRemote} from './import.mjs';
 const types=new Set(['.mp4','.mkv','.mov','.webm','.m4v','.m4a','.mp3','.wav']);
 export const LOCAL_WORK=join(ROOT,'tools/audio-library/work/local-prepared');
-export const INPUT=join(ROOT,'Audio Queue');
+export const INPUT=join(homedir(),'Videos','Audio-Queue');
 const same=(a,b)=>process.platform==='win32'?resolve(a).toLowerCase()===resolve(b).toLowerCase():resolve(a)===resolve(b);
 export async function queueFiles(input=INPUT){
  const root=await lstat(input);if(!root.isDirectory()||root.isSymbolicLink())throw Error('The Audio Queue must be a normal folder.');
