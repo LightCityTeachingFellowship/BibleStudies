@@ -9,6 +9,7 @@ export function youtubeState(item){
  // actualEndTime overrides a stale liveBroadcastContent flag.
  if(d?.actualEndTime&&Number.isFinite(Date.parse(d.actualEndTime)))return {state:'ended',endedAt:Date.parse(d.actualEndTime)};
  if(d?.actualStartTime&&item?.snippet?.liveBroadcastContent==='live')return {state:'live'};
+ if(d?.actualStartTime&&Number.isFinite(Date.parse(d.actualStartTime)))return {state:'ended'};
  return {state:'unknown'};
 }
 export function playlistEvidence(text,now=Date.now()){
@@ -85,6 +86,17 @@ export function createStreamReports(deps){
   });
  }
  return {
+  async status(request){
+   const id=request.data?.videoId;if(!/^[\w-]{11}$/.test(id||''))throw new fail('invalid-argument','Choose a video.');
+   const snapshot=await db.doc('churchVideoLibrary/current').get();const video=snapshot.data()?.videos?.find(v=>v.id===id);
+   if(!video)throw new fail('not-found','This video is unavailable.');
+   if(video.visibility!=='public'){
+    const uid=request.auth?.uid;if(!uid)throw new fail('permission-denied','Church access is required.');
+    const [user,membership]=await Promise.all([auth.getUser(uid),db.doc('churchMembers/'+uid).get()]);
+    if(user.disabled||!user.emailVerified||membership.data()?.active!==true)throw new fail('permission-denied','Church access is required.');
+   }
+   const result=await youtube(id);return {stream:result.state==='live'||result.state==='ended'};
+  },
   async submit(request){
    const {videoId:id,issue,deviceToken}=request.data||{};
    if(!/^[\w-]{11}$/.test(id||'')||!['ended','volume','no-sound','message'].includes(issue))throw new fail('invalid-argument','Choose a stream and an issue.');

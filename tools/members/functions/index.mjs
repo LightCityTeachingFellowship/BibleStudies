@@ -158,6 +158,7 @@ export const checkStudioAudioReady=onSchedule({schedule:'every 1 minutes',region
  for(const job of pending.docs.sort((a,b)=>(b.data().requestedAt||0)-(a.data().requestedAt||0)).slice(0,10))try{await studioPublishing.promote(job.id);}catch{console.warn('Studio audio readiness will retry.');}
 });
 const streamReports=createStreamReports({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),key:()=>streamStatusKey.value().trim(),live});
+export const getChurchStreamStatus=onCall({...options,secrets:[streamStatusKey],timeoutSeconds:20},streamReports.status);
 export const reportChurchStreamIssue=onCall({...options,secrets:[streamStatusKey,livePlaybackKey],timeoutSeconds:60},streamReports.submit);
 export const getChurchStreamReports=onCall(options,streamReports.inbox);
 export const resolveChurchStreamReport=onCall(options,streamReports.resolve);
