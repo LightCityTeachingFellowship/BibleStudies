@@ -611,3 +611,8 @@ body.lc-download-page .download-page{box-sizing:border-box}
  .lc-download-page .download-member{margin-top:15px;padding-top:15px}
  .lc-download-page .download-note{margin:14px 0 0!important;font-size:.8rem!important}
 }
+
+/* Touch feedback should not imitate selection; keyboard focus remains visible. */
+:where(a,button,summary,input,select,textarea,[role="button"]){-webkit-tap-highlight-color:transparent}
+@media(hover:none){#view a:hover{text-decoration:none!important}}
+body.lc-v2-watch-pending #player:not([hidden]){visibility:hidden}

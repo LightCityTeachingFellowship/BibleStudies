@@ -1,4 +1,4 @@
-import {createBrowseCards} from './browse-cards.mjs';
+import {createBrowseCards} from './browse-cards.mjs?v=watch-loading-2';
 // The view shares the verified library and one player owned by the app.
 export function createVideoView({document,api,services}){
  const root=document.createElement('section'),heading=document.createElement('h1'),search=document.createElement('input'),category=document.createElement('select'),status=document.createElement('p'),grid=document.createElement('div'),more=document.createElement('button');

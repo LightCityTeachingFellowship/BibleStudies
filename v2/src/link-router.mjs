@@ -8,12 +8,12 @@ export function createLinkRouter({window,router,player,api,resources,session,onE
 
  const sections=new Map([['/home/','/v2/'],['/videos/','/v2/videos/'],['/listen/','/v2/audio/'],['/teaching-articles/','/v2/articles/'],['/teaching-summary/','/v2/summaries/'],['/mylibrary/','/v2/library/'],['/myvideos/','/v2/library/'],['/study-resources/','/v2/categories/?kind=Article'],['/categories/','/v2/categories/?kind=Summary'],['/bible-quiz/','/v2/quizzes/'],['/bible%20quiz/','/v2/quizzes/'],['/about-us/','/v2/info/?page=about'],['/about/','/v2/info/?page=about'],['/join-us/','/v2/info/?page=meeting'],['/doctrines/','/v2/info/?page=doctrines']]);
  async function waitForSession(){await api.ready;if(!session)return;const ready=state=>{const user=api.user&&!api.user.isAnonymous?api.user:null;if(user)return ['member','authenticated'].includes(state.status)&&state.user?.uid===user.uid;return state.status==='public'};if(ready(session.state))return;await new Promise((resolve,reject)=>{let unsubscribe=()=>{},finished=false;const timeout=setTimeout(()=>{if(finished)return;finished=true;unsubscribe();reject(Error('Account restoration timed out'))},30000);const finish=()=>{if(finished)return;finished=true;clearTimeout(timeout);unsubscribe();resolve()};unsubscribe=session.subscribe(state=>{if(ready(state))finish()});if(finished)unsubscribe()})}
- function open(input){let target;try{target=new URL(input,window.location.href)}catch{return false}
+ function open(input,{notification=false}={}){let target;try{target=new URL(input,window.location.href)}catch{return false}
   if(target.origin!==window.location.origin||!['http:','https:'].includes(target.protocol)||target.username||target.password)return false;
   const path=target.pathname.toLowerCase().replace(/\/?$/,'/');
   if(router.matches(target)){void router.navigate(target);return true}
   if(path==='/listen/'&&target.searchParams.has('archive')){
-   const id=target.searchParams.get('archive');if(!/^[a-f0-9]{32}$/.test(id||''))return false;const original=window.location.href;
+   const id=target.searchParams.get('archive');if(!/^[a-f0-9]{32}$/.test(id||''))return false;if(!notification){void router.navigate('/v2/watch/?v='+encodeURIComponent(id)+'&kind=archive&mode=audio');return true}const original=window.location.href;
    void resources.get('archive').then(rows=>{if(window.location.href!==original)return false;const row=rows.find(item=>item.id===id);if(!row)throw Error('Recording unavailable');return player.open({id,title:row.title,kind:'archive',mode:'audio'})}).then(opened=>{if(opened&&window.location.href===original)return router.navigate('/v2/watch/')}).catch(onError);return true;
   }
   if(path==='/calendar/'){void router.navigate('/v2/calendar/'+target.search+target.hash);return true}
@@ -26,6 +26,7 @@ export function createLinkRouter({window,router,player,api,resources,session,onE
   if(path==='/teachingquiz/'&&/^[a-zA-Z0-9_-]{1,100}$/.test(target.searchParams.get('id')||'')){void router.navigate('/v2/quiz/'+target.search);return true}
   if(path==='/watch/'){
    const id=target.searchParams.get('v');if(!/^[A-Za-z0-9_-]{11}$/.test(id||''))return false;
+   if(!notification){const watch=new URL('/v2/watch/',window.location.href);watch.searchParams.set('v',id);watch.searchParams.set('mode',target.searchParams.get('mode')==='audio'?'audio':'video');if(target.searchParams.has('t'))watch.searchParams.set('t',target.searchParams.get('t'));if(target.searchParams.get('shared')==='1')watch.searchParams.set('shared','1');void router.navigate(watch.href);return true}
    const ticket=++incomingRevision,raw=target.searchParams.get('t'),parsed=raw===null?null:Number(raw),startSeconds=Number.isFinite(parsed)&&parsed>=0&&parsed<=172800?parsed:null;
    const watchURL=new URL('/v2/watch/',window.location.href).href;
    const viewReady=router.currentURL===watchURL?Promise.resolve(true):router.navigate(watchURL);
