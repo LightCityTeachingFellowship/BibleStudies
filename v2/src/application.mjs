@@ -32,6 +32,6 @@ export function createApplication({window,document,outlet,playerMount,routes,ses
   event.preventDefault();void router.navigate(url);
  };
  const pop=()=>{void router.navigate(window.location.href,{pop:true})};
- const nativeBridge={back:()=>router.back(),refresh:()=>{if(outlet.scrollTop>0)return false;resources.clear();void router.navigate(window.location.href,{replace:true});return true}};
+ const nativeBridge={back:()=>{if(window.history.state?.lightcitySettings){window.history.back();return true}return router.back()},refresh:()=>{if(outlet.scrollTop>0)return false;resources.clear();void router.navigate(window.location.href,{replace:true});return true}};
  return {services,router,async start({initialURL=window.location.href,skipInitialRoute=false}={}){document.addEventListener('click',click);window.addEventListener('popstate',pop);window.LightCityNavigationShell=nativeBridge;session.start();return skipInitialRoute?true:router.navigate(initialURL,{replace:true});},destroy(){document.removeEventListener('click',click);window.removeEventListener('popstate',pop);unsubscribe();if(window.LightCityNavigationShell===nativeBridge)delete window.LightCityNavigationShell;router.destroy();player.destroy();session.destroy();resources.clear();}};
 }

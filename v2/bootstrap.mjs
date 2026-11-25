@@ -53,7 +53,22 @@ const settings=document.querySelector('#settings'),backgroundAudio=document.quer
 function attachNotificationSettings(){const area=document.querySelector('.lc-device-prompts[aria-label="LightCity on your device"]');if(area)document.querySelector('#notification-mount').append(area)}
 window.addEventListener('lightcity-notification-settings-ready',attachNotificationSettings);
 let hubPromise;const getHub=()=>hubPromise??=import('/script/account-hub-v2.mjs?v=history-split-1').then(module=>module.hub).catch(error=>{hubPromise=null;throw error});
-app.services.getHub=getHub;app.services.openAccount=()=>{const user=app.services.session.state.user;if(!user||user.isAnonymous){void app.router.navigate('/v2/library/');return}void getHub().then(hub=>{if(hub.canUseCollections)hub.openAccount();else accountDialog.showModal()}).catch(()=>accountDialog.showModal())};app.services.openSettings=()=>{if(accountDialog.open)accountDialog.close();ensureHubStyle();void getHub().then(hub=>hub.openSettings()).catch(()=>settings.showModal())};
+app.services.getHub=getHub;app.services.openAccount=()=>{const user=app.services.session.state.user;if(!user||user.isAnonymous){void app.router.navigate('/v2/library/');return}void getHub().then(hub=>{if(hub.canUseCollections)hub.openAccount();else accountDialog.showModal()}).catch(()=>accountDialog.showModal())};let settingsBackEntry=null;
+function trackSettingsBack(dialog){
+ if(!dialog?.open)return;
+ const token=String(Date.now())+'-'+Math.random().toString(36).slice(2),url=location.href;
+ settingsBackEntry={dialog,token,url};
+ history.pushState({...history.state,lightcitySettings:token},'',url);
+ dialog.addEventListener('close',()=>{if(settingsBackEntry?.token!==token)return;settingsBackEntry=null;if(history.state?.lightcitySettings===token)history.back()},{once:true});
+}
+window.addEventListener('popstate',event=>{
+ const entry=settingsBackEntry;
+ if(!entry||history.state?.lightcitySettings===entry.token)return;
+ settingsBackEntry=null;
+ if(entry.dialog.open)entry.dialog.close();
+ if(location.href===entry.url)event.stopImmediatePropagation();
+},true);
+app.services.openSettings=()=>{if(accountDialog.open)accountDialog.close();ensureHubStyle();void getHub().then(hub=>{hub.openSettings();trackSettingsBack(document.querySelector('dialog.lc-hub-dialog[open]'))}).catch(()=>{settings.showModal();trackSettingsBack(settings)})};
 window.LightCityClearReadingHistory=async()=>{const study=await app.services.getStudy();study.store.clearHistory();await study.flush()};
 window.LightCityClearMediaHistory=async()=>{const user=app.services.session.state.user,uid=user&&!user.isAnonymous?user.uid:null;const {personal}=await import('/script/video-personal.js?v=search-1');const current=app.services.session.state.user;if((current&&!current.isAnonymous?current.uid:null)!==uid)throw Error('Account changed');personal.setIdentity(uid);personal.clearHistory()};
 window.LightCityClearQuizHistory=async()=>{const user=app.services.session.state.user,uid=user&&!user.isAnonymous?user.uid:null,scope=encodeURIComponent(uid||'device'),prefix='lc-quiz-v1:'+scope+':';if(uid){let next={action:'clearHistory'};do{const result=await api.quizActivity(next);const current=app.services.session.state.user;if(current?.uid!==uid)throw Error('Account changed');next=result?.more?{action:'clearHistory',phase:result.phase,...(result.cursor?{cursor:result.cursor}:{})}:null;}while(next)}for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(!key?.startsWith(prefix))continue;try{const value=JSON.parse(localStorage.getItem(key));if(value?.saved)localStorage.setItem(key,JSON.stringify({version:value.version,saved:true,answers:Array.isArray(value.answers)?value.answers.map(()=>[]):[],question:0,completed:false}));else localStorage.removeItem(key)}catch{localStorage.removeItem(key)}}window.dispatchEvent(new Event('lightcity-quiz-history-cleared'))};
