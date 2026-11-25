@@ -27,7 +27,7 @@
 .lc-device-prompts .lc-device-status:empty {display:none;}
 .lc-device-prompts .lc-device-status {flex-basis:100%;}
 .lc-device-prompts .lc-device-actions {display:flex; align-items:center; gap:10px;}
-.lc-device-prompts .lc-device-button {font:500 15px/1.4 'Outfit','Segoe UI',sans-serif; border:0; border-radius:26px; padding:10px 18px; background:var(--device-accent); color:var(--black); cursor:pointer; box-shadow:none;}
+.lc-device-prompts .lc-device-button {font:500 15px/1.4 'Outfit','Segoe UI',sans-serif; border:0; border-radius:26px; padding:10px 18px; background:var(--device-accent); color:#171717; cursor:pointer; box-shadow:none;}
 .lc-device-prompts .lc-device-button:disabled {opacity:.6; cursor:wait;}
 .lc-device-prompts .lc-device-dismiss {width:36px; height:36px; border:0; border-radius:50%; background:transparent; color:var(--device-text); font:400 25px/1 'Outfit','Segoe UI',sans-serif; cursor:pointer;}
 .lc-device-prompts button:focus-visible,.lc-device-prompts summary:focus-visible {outline:2px solid var(--device-accent); outline-offset:3px;}
