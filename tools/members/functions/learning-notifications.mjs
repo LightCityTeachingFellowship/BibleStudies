@@ -1,3 +1,4 @@
+import {configuredNotification} from './notification-templates.mjs';
 import {createHash} from 'node:crypto';
 import {accessFor} from './learning-core.mjs';
 import {memberDeviceIds,recipients} from './push-audiences.mjs';
@@ -19,8 +20,8 @@ export async function notifyLearning({id,db,auth,messaging,now=Date.now}){
    if(!targets.length)continue;
    const receipts=await db.getAll(...targets.map(d=>db.doc('churchVideoActivity/learning/push/'+key+'/tokens/'+hash(d.data().token))));
    const docs=targets.filter((_,n)=>!receipts[n].exists);if(!docs.length)continue;
-   const url='https://lightcityfellowship.com'+((resource.filePublished&&resource.fileUrl)||((resource.kind==='Quiz'?'/TeachingQuiz/':'/StudyResource/')+'?id='+encodeURIComponent(id))),data={id:key,title:resource.kind,body:resource.title,url};
-   const result=await messaging.sendEachForMulticast({tokens:docs.map(d=>d.data().token),notification:{title:data.title,body:data.body},data,webpush:{headers:{TTL:'86400',Urgency:'high'},notification:{icon:'https://lightcityfellowship.com/images/pwa-192.png',tag:key},fcmOptions:{link:url}}});
+   const url='https://lightcityfellowship.com'+((resource.filePublished&&resource.fileUrl)||((resource.kind==='Quiz'?'/TeachingQuiz/':'/StudyResource/')+'?id='+encodeURIComponent(id))),data=await configuredNotification(db,resource.kind==='Quiz'?'quiz':resource.kind==='Article'?'article':resource.kind==='Summary'?'summary':'learning',{id:key,title:resource.kind,body:resource.title,url},{contentTitle:resource.title,contentType:resource.kind});
+   const result=await messaging.sendEachForMulticast({tokens:docs.map(d=>d.data().token),notification:{title:data.title,body:data.body,...(data.image?{imageUrl:data.image}:{})},data,webpush:{headers:{TTL:'86400',Urgency:'high'},notification:{...(data.image?{image:data.image}:{}),icon:'https://lightcityfellowship.com/images/pwa-192.png',tag:key},fcmOptions:{link:url}}});
    const write=db.batch();let retry=false;
    result.responses.forEach((r,n)=>{if(!r.error)write.set(db.doc('churchVideoActivity/learning/push/'+key+'/tokens/'+hash(docs[n].data().token)),{sentAt:new Date(now())});else if(!['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error.code))retry=true;});
    await write.commit();if(retry)throw Error('Some notifications need another delivery attempt');

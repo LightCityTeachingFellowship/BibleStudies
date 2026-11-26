@@ -11,4 +11,4 @@ export async function getLiveRecordings({force=false}={}){
  const request=(async()=>{try{const result=await (api?.getLiveAudio?.()||Promise.resolve({recordings:[]}));if(!Array.isArray(result?.recordings))throw Error('Invalid live catalogue');if(ticket===revision&&audience===scope()){recordings=result.recordings;checkedAt=Date.now();changed();}return result;}catch(error){if(ticket===revision)changed();throw error;}finally{if(ticket===revision)pending=null;}})();pending=request;return request;
 }
 export function refreshLiveStatus(){return getLiveRecordings().catch(()=>{});}
-if(globalThis.window){globalThis.LightCityLiveStatus={getRecordings:getLiveRecordings,isLive};window.addEventListener?.('lightcity-members-changed',syncOwner);}
+if(globalThis.window){globalThis.LightCityLiveStatus={getRecordings:getLiveRecordings,isLive,getSnapshot:()=>owner===scope()?recordings.slice():[]};window.addEventListener?.('lightcity-members-changed',syncOwner);}

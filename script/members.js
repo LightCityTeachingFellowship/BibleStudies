@@ -340,6 +340,7 @@ api.getNotificationInbox=async()=>call('getMyNotificationInbox',await inboxIdent
 api.updateNotificationInbox=async data=>call('updateMyNotificationInbox',{...data,...await inboxIdentity()});
 api.connectStudioDesktop=async data=>{await api.ready;return call('connectChurchStudioDesktop',data);};
 
+api.manageNotifications=async data=>{await api.ready;return call('manageChurchNotifications',{...data,accountUid:api.user?.uid});};
 api.getCommunionSettings=async()=>{await api.ready;return call('manageChurchPrayerGroups',{action:'communion-settings-get',accountUid:api.user?.uid});};
 api.saveCommunionSettings=async(title,body)=>{await api.ready;return call('manageChurchPrayerGroups',{action:'communion-settings-save',title,body,accountUid:api.user?.uid});};
 api.scheduleCommunionReminder=async(date)=>{await api.ready;return call('manageChurchPrayerGroups',{action:'communion-schedule',date,accountUid:api.user?.uid});};

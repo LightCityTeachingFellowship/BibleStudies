@@ -1,3 +1,4 @@
+import {configuredNotification} from './notification-templates.mjs';
 import {createHash,randomUUID} from 'node:crypto';
 import {requireStudioAdmin} from './studio-publishing.mjs';
 import {canReplyToStreamMessage,privateStreamMessagesPath} from './stream-messages.mjs';
@@ -162,9 +163,10 @@ export async function notifyStreamReport({id,db,auth,messaging,emails,now=Date.n
  const senderLabel=(row.sender?.name||'A viewer')+(row.sender?.source==='visitor'?' (visitor)':'');
  const url='https://lightcityfellowship.com/Admin/?reports=1',title=(row.privateTest?'Private test · ':'')+(row.replyTo?'Stream reply from '+senderLabel:row.issue==='message'?'Stream message from '+senderLabel:row.issue==='ended'?'Stream ended — confirmed':row.issue==='no-sound'?'No sound on the stream':'Speaker volume request');
  const body=row.issue==='message'?row.message.slice(0,240)+' · '+row.title:(senderLabel+': '+(row.issue==='ended'?'Stream ending confirmed. ':row.issue==='no-sound'?'There is no sound on the stream. ':'Speaker volume is too low. ')+row.title);
+ const copy=await configuredNotification(db,'streamReport',{title,body},{reportTitle:title,reportBody:body});
  for(const [token,subscriber]of targets){
   const receipt=db.doc(reportsPath+'/'+id+'/delivery/'+hash(token));if((await receipt.get()).exists)continue;
-  const result=await messaging.sendEachForMulticast({tokens:[token],notification:{title,body},data:{id:'stream-issue-'+id,title,body,url,requireInteraction:'true'},webpush:{headers:{TTL:'1800',Urgency:'high'},notification:{icon:'https://lightcityfellowship.com/images/pwa-192.png',badge:'https://lightcityfellowship.com/images/notification-badge.png',tag:'stream-issue-'+id,silent:false,renotify:true,requireInteraction:true},fcmOptions:{link:url}}});
+  const result=await messaging.sendEachForMulticast({tokens:[token],notification:{title:copy.title,body:copy.body,...(copy.image?{imageUrl:copy.image}:{})},data:{id:'stream-issue-'+id,title:copy.title,body:copy.body,url,requireInteraction:'true',...(copy.image?{image:copy.image}:{})},webpush:{headers:{TTL:'1800',Urgency:'high'},notification:{...(copy.image?{image:copy.image}:{}),icon:'https://lightcityfellowship.com/images/pwa-192.png',badge:'https://lightcityfellowship.com/images/notification-badge.png',tag:'stream-issue-'+id,silent:false,renotify:true,requireInteraction:true},fcmOptions:{link:url}}});
   const error=result.responses[0]?.error;if(error){if(['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(error.code)){await subscriber.ref.delete();continue;}throw Error('Admin notification needs retry.');}
   await receipt.set({sentAt:now()});
  }

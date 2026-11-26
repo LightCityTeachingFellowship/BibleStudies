@@ -1,3 +1,4 @@
+import {createNotificationCenter} from './notification-center.mjs';
 import {createAudioArchive} from './audio-archive.mjs';
 import {createLearning} from './learning.mjs';
 import {syncLearningFiles} from './learning-files.mjs';
@@ -107,6 +108,10 @@ export const getChurchAdminUsers=onCall(options,createAdminUsers({auth:getAuth()
 const serviceSchedule=createServiceSchedule({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value()});
 export const getChurchServiceSchedule=onRequest({...options,cors:true},async(req,res)=>{res.set('Cache-Control','no-store');if(req.method!=='GET'){res.status(405).json({error:'Use GET'});return;}try{res.json(await serviceSchedule.publicSchedule());}catch{res.status(503).json({error:'Service schedule unavailable'});}});
 export const manageChurchServiceSchedule=onCall(options,request=>serviceSchedule.manage(request));
+
+const notificationCenter=createNotificationCenter({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),messaging:getMessaging()});
+export const manageChurchNotifications=onCall({...options,timeoutSeconds:180},notificationCenter.manage);
+export const churchNotificationImage=onRequest({region:'us-central1',invoker:'public',maxInstances:5},notificationCenter.image);
 
 const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});
 const legacyStudioPublishing=createStudioPublishing({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),github:studioGitHub});

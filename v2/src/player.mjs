@@ -23,5 +23,5 @@ export function createPlayerService({ mount, authorize, createController }) {
   current={id,title,mode,kind,controller};publish();return true;
  }
  function close(){const token=++request,previous=current;current=null;previous?.controller.dispose({stopNative:true,shouldStop:()=>request===token});publish();}
- return {open,close,videoPlaying(){return current?.mode==='video'&&!!current.controller.isVideoPlaying?.()},async toggle(){if(!current?.controller.toggle)return;await current.controller.toggle();publish()},subscribe(fn){listeners.add(fn);fn(snapshot());return()=>listeners.delete(fn)},get current(){return snapshot()},destroy(){close();listeners.clear();}};
+ return {open,close,setTitle(id,title){if(current?.id!==id||typeof title!=='string'||!title.trim()||/^lightcity video$/i.test(title.trim())||current.title===title.trim())return false;current.title=title.trim();publish();return true},videoPlaying(){return current?.mode==='video'&&!!current.controller.isVideoPlaying?.()},async toggle(){if(!current?.controller.toggle)return;await current.controller.toggle();publish()},subscribe(fn){listeners.add(fn);fn(snapshot());return()=>listeners.delete(fn)},get current(){return snapshot()},destroy(){close();listeners.clear();}};
 }

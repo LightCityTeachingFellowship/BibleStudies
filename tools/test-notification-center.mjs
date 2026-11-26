@@ -1,0 +1,27 @@
+import assert from 'node:assert/strict';
+import {createNotificationCenter} from './members/functions/notification-center.mjs';
+import {configuredNotification} from './members/functions/notification-templates.mjs';
+class Fail extends Error {constructor(code,message){super(message);this.code=code}}
+const docs=new Map(),payloads=[];
+const ref=path=>({id:path.split('/').at(-1),async get(){const value=docs.get(path);return {exists:value!==undefined,data:()=>value}},async set(value,options){const prior=options?.merge?docs.get(path)||{}:{};docs.set(path,{...prior,...value})},async delete(){docs.delete(path)}});
+const sub=(id,token)=>({id,ref:ref('sub/'+id),data:()=>({token})});
+const subscribers=[sub('public-device','p'),sub('member-device','m')];
+const db={doc:ref,collection(name){if(name==='webPushSubscribers')return {get:async()=>({docs:subscribers})};throw Error(name)},async getAll(...refs){return Promise.all(refs.map(r=>r.get()))},async runTransaction(fn){return fn({get:r=>r.get(),create:(r,v)=>docs.set('churchStudioPublications/notification-center/custom/'+r.id,v),set:(r,v)=>docs.set('churchStudioPublications/notification-center/custom/'+r.id,v)})}};
+const auth={getUser:async uid=>({uid,email:'admin@example.com',emailVerified:true,disabled:false,providerData:[{}]}),getUsers:async()=>({users:[{uid:'member',emailVerified:true,disabled:false}]})};
+docs.set('churchDevices/member-device',{memberUid:'member'});docs.set('churchMembers/member',{active:true});
+const messaging={async sendEachForMulticast(data){payloads.push(data);return {successCount:data.tokens.length,failureCount:0,responses:data.tokens.map(()=>({success:true}))}}};
+const service=createNotificationCenter({db,auth,messaging,fail:Fail,emails:()=> 'admin@example.com',now:()=>1000});
+const call=data=>service.manage({auth:{uid:'admin'},data});
+await assert.rejects(service.manage({data:{action:'get'}}),e=>e.code==='unauthenticated');
+const id='12345678-1234-1234-1234-123456789abc';
+let sent=await call({action:'send',id,audience:'members',title:'Hello',body:'Members',url:'https://lightcityfellowship.com/'});
+assert.equal(sent.accepted,1);assert.deepEqual(payloads[0].tokens,['m']);
+await assert.rejects(call({action:'send',id,audience:'members',title:'Hello',body:'Members'}),e=>e.code==='already-exists');
+await assert.rejects(call({action:'send',id:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',audience:'public',title:'Hi',body:'World',url:'https://evil.example/'}),e=>e.code==='invalid-argument');
+await call({action:'save',type:'video',template:{title:'New video',body:'{contentTitle}',image:''}});
+assert.equal((await configuredNotification(db,'video',{title:'Video',body:'old'},{contentTitle:'Study'})).body,'Study');
+process.env.GCLOUD_PROJECT='test-project';
+const png=Buffer.from([137,80,78,71,13,10,26,10,1,2,3]).toString('base64');
+const image=await call({action:'image',base64:png});assert.match(image.url,/^https:\/\/us-central1-test-project\.cloudfunctions\.net\/churchNotificationImage\?id=[a-f0-9]{64}$/);
+await assert.rejects(call({action:'image',base64:Buffer.from('not an image').toString('base64')}),e=>e.code==='invalid-argument');
+console.log('PASS: admin authorization, member-only targeting, duplicate prevention, link validation and templates.');

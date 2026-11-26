@@ -1,3 +1,4 @@
+import {configuredNotification} from '../members/functions/notification-templates.mjs';
 import {splitReplacementNotifications,publishedNotificationLibrary} from '../video-replacements.mjs';
 import {initializeApp,cert} from 'firebase-admin/app';
 import {getFirestore,FieldValue} from 'firebase-admin/firestore';
@@ -153,6 +154,8 @@ for(const item of pending.filter(item=>item.kind==='video')) plans.push({items:[
 const subscribers=await db.collection('webPushSubscribers').get();
 const approvedDevices=visibilityEnabled ? await memberDeviceIds(db,getAuth(),subscribers.docs) : new Set();
 for(const plan of plans) {
+ const item=plan.items.at(-1),type=item.kind==='video'?'video':item.kind==='Article'?'article':item.kind==='Summary'?'summary':null;
+ if(type)plan.data=await configuredNotification(db,type,plan.data,{contentTitle:item.title||plan.data.body,contentType:item.kind});
  let failed=false;
  const targets=recipients(subscribers.docs,plan.audience,approvedDevices);
  for(let i=0;i<targets.length;i+=500) {
