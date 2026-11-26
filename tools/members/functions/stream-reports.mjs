@@ -157,7 +157,7 @@ export async function notifyStreamReport({id,db,auth,messaging,emails,now=Date.n
  for(const email of String(emails()).split(/[,;\s]+/).filter(Boolean)){
   let user;try{user=await auth.getUserByEmail(email);}catch{continue;}if(user.disabled||!user.emailVerified||!canManageReport(row,user.uid))continue;
   const devices=await db.collection('churchStudioPublications/private-test-'+hash(user.uid)+'/devices').get();if(!devices.docs.length)continue;
-  const subscribers=await db.getAll(...devices.docs.map(d=>db.doc('webPushSubscribers/'+d.id)));for(const d of subscribers)if(typeof d.data()?.token==='string'&&d.data().token)targets.set(d.data().token,d);
+  const subscribers=await db.getAll(...devices.docs.filter(d=>d.data()?.reportAlerts!==false).map(d=>db.doc('webPushSubscribers/'+d.id)));for(const d of subscribers)if(typeof d.data()?.token==='string'&&d.data().token)targets.set(d.data().token,d);
  }
  if(!targets.size){await ref.set({delivery:'no-devices'},{merge:true});return;}
  const senderLabel=(row.sender?.name||'A viewer')+(row.sender?.source==='visitor'?' (visitor)':'');

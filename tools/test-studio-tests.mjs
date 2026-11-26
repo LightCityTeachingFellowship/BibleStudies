@@ -14,6 +14,13 @@ await assert.rejects(service.manage(req({action:'register',deviceToken:'phone'})
 rows.set('webPushSubscribers/phone',{token:'phone-token'});rows.set('webPushSubscribers/computer',{token:'computer-token'});rows.set('webPushSubscribers/member',{token:'other-person'});
 invalid=true;await assert.rejects(service.manage(req({action:'register',deviceToken:'phone'})),e=>e.code==='permission-denied');invalid=false;
 for(const deviceToken of ['phone','computer'])await service.manage(req({action:'register',deviceToken}));
+assert.equal((await service.manage(req({action:'reports-status',deviceToken:'phone'}))).enabled,true);
+await service.manage(req({action:'reports-disable',deviceToken:'phone'}));
+assert.equal((await service.manage(req({action:'reports-status',deviceToken:'phone'}))).enabled,false);
+assert.equal((await service.manage(req({action:'reports-status',deviceToken:'computer'}))).enabled,true,'other device must remain enabled');
+await service.manage(req({action:'reports-enable',deviceToken:'phone'}));
+assert.equal((await service.manage(req({action:'reports-status',deviceToken:'phone'}))).enabled,true);
+rows.set('webPushSubscribers/reports-phone',{token:'report-only-token'});await service.manage(req({action:'reports-enable',deviceToken:'reports-phone'}));
 const result=await service.publish(req({videoId:id}));assert.equal(result.accepted,2);assert.equal(result.visibility,'test');assert.deepEqual(calls[0].tokens,['phone-token','computer-token']);assert.equal(calls[0].data.url,'https://lightcityfellowship.com/Admin/?test='+id);
 assert.ok([...rows.keys()].every(k=>k.startsWith('webPushSubscribers/')||k.startsWith(root('admin'))),'no library, GitHub or normal push writes');
 assert.equal((await service.status(req({videoId:id}))).title,'Private prayer test');

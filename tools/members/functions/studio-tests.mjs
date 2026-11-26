@@ -10,21 +10,24 @@ export function createStudioTests(deps){
  async function devices(uid){
   const registered=await db.collection(root(uid)+'/devices').get();
   if(!registered.docs.length)return [];
-  const subscribers=await db.getAll(...registered.docs.map(d=>db.doc('webPushSubscribers/'+d.id)));
+  const subscribers=await db.getAll(...registered.docs.filter(d=>d.data()?.privateTests!==false).map(d=>db.doc('webPushSubscribers/'+d.id)));
   return [...new Map(subscribers.filter(d=>d.exists&&typeof d.data()?.token==='string'&&d.data().token).map(d=>[d.data().token,d])).values()];
  }
  return {
   async manage(request){
    const uid=await requireStudioAdmin(request,deps),action=request.data?.action;
-   if(!['register','unregister'].includes(action))throw new fail('invalid-argument','Choose a device action.');
+   if(!['register','unregister','reports-status','reports-enable','reports-disable'].includes(action))throw new fail('invalid-argument','Choose a device action.');
    const token=request.data?.deviceToken;
    if(typeof token!=='string'||token.length>10000)throw new fail('invalid-argument','Device sign-in is missing.');
    let device;try{device=(await auth.verifyIdToken(token,true)).uid;}catch{throw new fail('permission-denied','This device could not be verified.');}
    const ref=db.doc(root(uid)+'/devices/'+device);
-   if(action==='unregister'){await ref.delete();return {registered:false};}
+   if(action==='unregister'){const current=(await ref.get()).data();if(current?.reportAlerts===true)await ref.set({privateTests:false},{merge:true});else await ref.delete();return {registered:false};}
+   if(action==='reports-status'){const current=(await ref.get()).data(),subscriber=(await db.doc('webPushSubscribers/'+device).get()).data();return {enabled:!!current&&current.reportAlerts!==false&&!!subscriber?.token};}
+   if(action==='reports-disable'){const snap=await ref.get();if(snap.exists)await ref.set({reportAlerts:false},{merge:true});return {enabled:false};}
    const subscriber=await db.doc('webPushSubscribers/'+device).get();
    if(!subscriber.exists||!subscriber.data()?.token)throw new fail('failed-precondition','Enable LightCity notifications in this browser or installed app first, then return here to register this device.');
-   await ref.set({registeredAt:now()});return {registered:true};
+   if(action==='reports-enable'){const snap=await ref.get();await ref.set({reportAlerts:true,...(!snap.exists?{privateTests:false}:{}),registeredAt:now()},{merge:true});return {enabled:true};}
+   await ref.set({registeredAt:now(),privateTests:true},{merge:true});return {registered:true};
   },
   async publish(request){
    const uid=await requireStudioAdmin(request,deps),id=request.data?.videoId;
