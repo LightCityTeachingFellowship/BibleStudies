@@ -2,7 +2,7 @@
 {% include study-controls.html %}
 <article data-study-body class="reading-column homeResources-grid-containter bg-color leftRight-space-16 bottomBorderRadius-0">
 	<small id="archive-date" class="archive-date">{{ page.date | date: "%a, %b %d, %y." }}</small>
-	<main>
+	<main{% if page.learning_resource_id %} data-lc-generated-learning{% endif %}>
 		{{content}}
 	</main>
 </article>
@@ -55,10 +55,10 @@
 <script type="text/javascript" src="../script/victorScripts/dropDownMenu.js?v=themed-nav-2"></script>
 <script type="text/javascript" src="../script/victorScripts/slideInscript.js"></script>
 <script type="text/javascript" src="../script/victorScripts/generalscript.js?v=archive-search-1"></script>
-<script type="text/javascript" src="../script/H1-H6.Accordion-D.js"></script>
+<!-- <script type="text/javascript" src="../script/H1-H6.Accordion-D.js"></script> -->
 <script type="text/javascript" src="../script/victorScripts/responsiveTable.js"></script>
 <script type="text/javascript" src="../script/scroll2head.js"></script>
 <script type="text/javascript" src="../script/victorScripts/recentposts.js"></script>
 <script type="text/javascript" src="../script/swipeDetect.js"></script>
-<script src="../script/toggleH1toH6Siblings.js?v=toolbar-3"></script>
+<!-- <script src="../script/toggleH1toH6Siblings.js?v=toolbar-3"></script> -->
 {% include v2-bible-scripts.html %}

@@ -2518,8 +2518,12 @@ function replaceAllStrongsAndRefs(xtx, proofEditText = true) {
                 .replace(/&nbsp;|&#160;/gi, ' ')
                 .replace(/\s+/gi, ' ');
 
-            // Generate new HTML for the combined text
-            const processedHtml = generateRefsInNote(normalizedText, false, proofEditText);
+            // Generated resources use the site's preferred book abbreviations.
+            // AI text often uses an en dash for verse ranges; the reference
+            // parser expects a hyphen, so normalize only chapter:verse ranges.
+            const generated = !!group[0].parentElement?.closest('[data-lc-generated-learning]');
+            if (generated) normalizedText = normalizedText.replace(/(\b[\p{L}]+(?:\s+[\p{L}]+){0,3}\s+\d+:\d+)\s*[–—−]\s*(\d+(?::\d+)?)/gu, '$1-$2');
+            const processedHtml = generateRefsInNote(normalizedText, generated, proofEditText);
 
             // Only replace if content actually changed
             if (processedHtml !== normalizedText) {

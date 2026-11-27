@@ -9,6 +9,7 @@ try{
  const {resource:r}=await api().learning({id,format:'classic',...(preview?{preview:true}:{})});
  if(!preview&&r.url&&!new URL(r.url,location.origin).search&&new URL(r.url,location.origin).pathname!==location.pathname){location.replace(r.url);throw Error('Opening the quiz…');}
  if(r.kind!=='Quiz'||!r.questions?.length)throw Error('This quiz is not available.');
+ if(!r.legacy)document.body.setAttribute('data-lc-generated-learning','');
  window.LightCityClassicQuiz={...r,preview};document.title=r.title+' | LightCity';
  const ol=el('ol');
  for(const q of r.questions){
@@ -18,7 +19,7 @@ try{
   if(q.hint||q.correct.length>1)li.append(el('em',[q.correct.length>1?'Select all answers that apply.':'',q.hint].filter(Boolean).join(' ')));
   const ul=el('ul');q.options.forEach((text,i)=>{const option=el('li');option.append(q.correct.includes(i)?el('strong',text):document.createTextNode(text));if(q.correct.includes(i)&&(q.explanation||q.reference)){const notes=el('ul');notes.append(el('li',[q.explanation,q.reference].filter(Boolean).join(' ')));option.append(notes);}ul.append(option);});li.append(ul);ol.append(li);
  }
- document.querySelector('.QandA-Board').append(ol);document.querySelector('#quizCatName span').textContent=r.title;
+ document.querySelector('.QandA-Board').replaceChildren(ol);document.querySelector('#quizCatName span').textContent=r.title;
  // These are the links resolved by the original Adult Quiz template.
  const newQuiz=document.querySelector('.quizCatLink');newQuiz.textContent='New Quiz';newQuiz.href='/QuizQuestions-Adult/A0-Home-Adult.html';
  document.querySelectorAll('#newBtn,.corAnswers-btn button:last-child').forEach(n=>{n.replaceChildren();const a=el('a','New Quiz');a.href='/QuizQuestions-Adult/A0-Home-Adult.html';n.append(a);});
@@ -26,6 +27,7 @@ try{
  await script('/script/victorScripts/QandAscriptsFontsandThemes.js?v=quiz-repair-2');
  await script('/script/victorScripts/QandAscripts.js?v=quiz-repair-2');
  if(!window.LightCityQuizEngineReady)throw Error('Quiz controls did not initialize. Refresh to retry.');
+ if(!r.legacy&&typeof globalThis.replaceAllStrongsAndRefs==='function')globalThis.replaceAllStrongsAndRefs(content);
  content.hidden=false;status.textContent=preview?'Private preview · not published · no notifications. Scores here do not affect your history.':'';
  await script('/script/victorScripts/recentposts.js');
  await import('./legacy-quiz-session.mjs?v=quiz-viewport-1');

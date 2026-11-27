@@ -1,7 +1,7 @@
 {% include QandA-head.html %}
 {% include QandA-headCSS.html %}
 </head>
-<body class="newBG">
+<body class="newBG"{% if page.learning_resource_id %} data-lc-generated-learning{% endif %}>
     <div class="loader-bg-bibleQuiz">
         <div class="loader-bibleQuiz"></div>
     </div>

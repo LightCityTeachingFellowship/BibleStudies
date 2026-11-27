@@ -1,5 +1,6 @@
 const api=()=>globalThis.LightCityMembers;
 const root=document.getElementById('learning-resource'),status=document.getElementById('learning-status');
+root.setAttribute('data-lc-generated-learning','');
 const params=new URL(location.href).searchParams,id=params.get('id'),preview=params.get('preview')==='1';
 const el=(tag,text)=>{const n=document.createElement(tag);if(text)n.textContent=text;return n;};
 let epoch=0;const dateNode=document.getElementById('archive-date');
