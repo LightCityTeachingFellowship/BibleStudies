@@ -1,4 +1,4 @@
-import {readdir,stat,mkdir,open,unlink} from 'node:fs/promises';
+import {readdir,stat,mkdir,open,unlink,readFile} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {join,relative,resolve} from 'node:path';
@@ -34,7 +34,10 @@ try{
  const remote=await client();s3=remote.s3;const {sdk}=remote;
  const get=async()=>{try{return await retryStorage(async()=>{const result=await s3.send(new sdk.GetObjectCommand({Bucket,Key:catalogKey}));return JSON.parse(await result.Body.transformToString());});}catch(e){if(e.$metadata?.httpStatusCode===404)return {version:1,recordings:[]};throw e;}};
  const catalog=await get();if(!Array.isArray(catalog.recordings))throw Error('Archive catalogue is invalid');
- const files=(await walk(source)).sort((a,b)=>a.localeCompare(b));
+ // Exclude only the exact unavailable file versions the administrator cleared.
+ // A replaced or modified recording is automatically eligible on the next run.
+ let excluded=[];try{excluded=JSON.parse(await readFile(join(work,'excluded.json'),'utf8'));if(!Array.isArray(excluded))throw Error('Invalid archive exclusion list');}catch(error){if(error.code!=='ENOENT')throw error;}
+ const files=[];for(const path of await walk(source)){const rel=relative(source,path).replaceAll('\\','/'),previous=excluded.find(item=>item.relative===rel);if(previous){const info=await stat(path);if(info.size===previous.size&&info.mtimeMs===previous.mtimeMs)continue;}files.push(path);}files.sort((a,b)=>a.localeCompare(b));
  await save(join(work,'inventory.json'),files.map(path=>({path,relative:relative(source,path)})));
  console.log(`Found ${files.length} MP3 files. Originals will be preserved.`);
  const statusPath=join(work,'status.json');

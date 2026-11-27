@@ -4,12 +4,18 @@ import {canonicalVideo,validateDraft} from './learning-core.mjs';
 
 // Amounts are millionths of a US dollar. Reservations count towards the allowance
 // before requests leave the server, including requests with an uncertain outcome.
+export function preserveSummarySeriesNumber(sourceTitle, draftTitle){
+ const prefix=String(sourceTitle||'').match(/^\s*\[\s*(\d+)\s*\]/);
+ if(!prefix)return draftTitle;
+ const rest=String(draftTitle||'').replace(/^\s*\[\s*\d+\s*\]\s*/,'').trim();
+ return ('['+prefix[1]+'] '+rest).slice(0,300);
+}
 export const monthKey=now=>new Date(now+3600000).toISOString().slice(0,7);
 export const hashText=text=>createHash('sha256').update(text).digest('hex');
 export const estimateText=bytes=>Math.ceil(bytes+12000*5); // conservative input byte bound + output cap
 export const estimateAudio=seconds=>Math.ceil(seconds/60*12000); // 2x published estimated minute rate
 const settingsRef=db=>db.doc('churchVideoActivity/learning/settings/ai');
-const defaults={enabled:false,monthlyAllowance:5000000,trialLimit:3,trialVideoIds:[]};
+const defaults={enabled:false,monthlyAllowance:5000000};
 const schema={type:'object',additionalProperties:false,required:['summary','quiz'],properties:{
  summary:{type:'object',additionalProperties:false,required:['title','sections'],properties:{title:{type:'string'},sections:{type:'array',items:{type:'object',additionalProperties:false,required:['heading','points'],properties:{heading:{type:'string'},points:{type:'array',items:{type:'string'}}}}}}},
  quiz:{type:'object',additionalProperties:false,required:['title','questions'],properties:{title:{type:'string'},questions:{type:'array',items:{type:'object',additionalProperties:false,required:['prompt','options','correct','explanation','reference','hint'],properties:{prompt:{type:'string'},options:{type:'array',items:{type:'string'}},correct:{type:'array',items:{type:'integer'}},explanation:{type:'string'},reference:{type:'string'},hint:{type:'string'}}}}}}
@@ -55,9 +61,6 @@ export function createLearningAI(deps){
    const [s,u,c]=await Promise.all([tx.get(settingsRef(db)),tx.get(usageRef),tx.get(callRef)]),settings={...defaults,...s.data()},usage=u.data()||{};
    if(c.exists){if(c.data().state==='complete')return {cached:c.data().result};throw Error('uncertain');}
    if(!settings.enabled)throw Error('paused');if((usage.committed||0)+amount>settings.monthlyAllowance)throw Error('allowance');
-   const trialIds=settings.trialVideoIds||[];
-   if(!trialIds.includes(job)&&trialIds.length>=settings.trialLimit)throw Error('trial-complete');
-   if(!trialIds.includes(job))tx.set(settingsRef(db),{trialVideoIds:[...trialIds,job]},{merge:true});
    tx.set(usageRef,{...usage,committed:(usage.committed||0)+amount,updatedAt:now()});
    tx.set(callRef,{job,month,reserved:amount,state:'started',startedAt:now()});return {};
   });
@@ -106,7 +109,7 @@ export function createLearningAI(deps){
    await db.runTransaction(async tx=>{
     const s=db.doc('churchVideoActivity/learning/resources/summary-'+id),q=db.doc('churchVideoActivity/learning/resources/quiz-'+id),j=await tx.get(item.ref),ss=await tx.get(s),qs=await tx.get(q),current=(await tx.get(db.doc('churchVideoLibrary/current'))).data()?.videos||[];
     if(j.data()?.lease!==lease||canonicalVideo(current,id)?.id!==id)throw Error('source-changed');
-    for(const [ref,snapshot,draft]of [[s,ss,result.summary],[q,qs,result.quiz]].filter(([, ,draft])=>draft)){const r=snapshot.data();if(r?.state!=='awaiting-draft')throw Error('draft-changed');tx.set(ref,{...r,...draft,state:'draft',version:r.version+1,generatedAt:now(),transcriptId:id});}
+    for(const [ref,snapshot,draft]of [[s,ss,result.summary],[q,qs,result.quiz]].filter(([, ,draft])=>draft)){const r=snapshot.data();if(r?.state!=='awaiting-draft')throw Error('draft-changed');const prepared=r.kind==='Summary'?{...draft,title:preserveSummarySeriesNumber(video.title,draft.title)}:draft;tx.set(ref,{...r,...prepared,state:'draft',version:r.version+1,generatedAt:now(),transcriptId:id});}
     tx.set(item.ref,{state:'complete',completedAt:now(),leaseUntil:0},{merge:true});
    });return {prepared:id};
   }catch(error){const code=['allowance','paused','waiting-audio','source-changed','duration','transcript-size','draft-changed','trial-complete'].includes(error.message)?error.message:'uncertain';await item.ref.set({state:code==='uncertain'?'uncertain':'paused',error:code,leaseUntil:0,updatedAt:now()},{merge:true});return {paused:id,reason:code};}

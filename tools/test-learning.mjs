@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createLearning} from './members/functions/learning.mjs';
-import {createLearningAI,monthKey} from './members/functions/learning-ai.mjs';
+import {createLearningAI,monthKey,preserveSummarySeriesNumber} from './members/functions/learning-ai.mjs';
 import {accessFor,gradeQuiz,validateDraft} from './members/functions/learning-core.mjs';
 import {notifyLearning} from './members/functions/learning-notifications.mjs';
 import {createVideoPrivacy} from './members/functions/video-privacy.mjs';
@@ -70,7 +70,11 @@ assert.throws(()=>validateDraft({...pair.quiz,kind:'Quiz',questions:[{...legacy.
 const c='ccccccccccc';data.set(base+'settings/ai',{enabled:true,monthlyAllowance:5e6,trialVideoIds:[a,b,'ddddddddddd']});
 await ai.manage(request('admin',{action:'saveSettings',enabled:true,monthlyAllowance:5e6}));assert.equal(data.get(base+'settings/ai').trialVideoIds.length,3,'saving the allowance never resets trial slots');
 data.set('churchVideoLibrary/current',{videos:[{id:c,title:'Fourth teaching',visibility:'public'}]});data.set(base+'jobs/'+c,{videoId:c,state:'queued'});recording.videoId=c;recording.sha256='c'.repeat(64);failRequest=false;
-const before=transcriptions;assert.equal((await ai.process()).reason,'trial-complete');assert.equal(transcriptions,before,'only three distinct teachings can incur paid requests');
+data.set(base+'resources/summary-'+c,{id:'summary-'+c,videoId:c,kind:'Summary',state:'awaiting-draft',version:1});data.set(base+'resources/quiz-'+c,{id:'quiz-'+c,videoId:c,kind:'Quiz',state:'awaiting-draft',version:1});
+const before=transcriptions;assert.equal((await ai.process()).prepared,c);assert.equal(transcriptions,before+1,'more than three teachings can be processed');
+assert.equal(preserveSummarySeriesNumber('[2] What Does It Mean?', 'What Does It Mean?'),'[2] What Does It Mean?');
+assert.equal(preserveSummarySeriesNumber('[2] Teaching','[2] Title'),'[2] Title');
+assert.equal(preserveSummarySeriesNumber('Unnumbered teaching','Title'),'Title');
 data.set('churchVideoLibrary/current',{videos:[{id:a,title:'Christ',visibility:'members'}]});
 for(const [prefix,kind]of [['silent-summary','Summary'],['silent-quiz','Quiz']])data.set(base+'resources/'+prefix,{id:prefix,videoId:a,kind,state:'draft',version:2,summaryId:'silent-summary',...(kind==='Summary'?pair.summary:pair.quiz)});
 await assert.rejects(learning.manage(request('admin',{action:'publishSilent',id:'silent-quiz',version:2})),e=>e.code==='failed-precondition');
@@ -84,7 +88,7 @@ assert.equal(validateDraft(metadataDraft).teachingDate,'2026-10-04');
 assert.throws(()=>validateDraft({...metadataDraft,teachingDate:'2026-02-31'}));
 assert.throws(()=>validateDraft({...metadataDraft,categories:['<script>']}));
 // A standalone quiz can be prepared and released without creating a summary.
-const solo='eeeeeeeeeee';data.set('churchVideoLibrary/current',{videos:[{id:solo,title:'Independent teaching',visibility:'members'}]});
+const solo='eeeeeeeeeee';data.set('churchVideoLibrary/current',{videos:[{id:solo,title:'[2] Independent teaching',visibility:'members'}]});
 data.set(base+'settings/ai',{enabled:true,monthlyAllowance:5e6,trialLimit:3,trialVideoIds:[a,b,solo]});recording.videoId=solo;recording.sha256='e'.repeat(64);
 await learning.manage(request('admin',{action:'queue',videoId:solo,teachingEndedAt:clock,kinds:['Quiz']}));
 assert.equal(data.has(base+'resources/summary-'+solo),false);assert.equal(data.get(base+'resources/quiz-'+solo).summaryId,null);
@@ -92,7 +96,7 @@ assert.equal((await ai.process()).prepared,solo);assert.deepEqual(lastSchema.req
 await learning.manage(request('admin',{action:'approve',id:'quiz-'+solo,version:2}));assert.equal((await learning.release()).released,1,'standalone quiz is eligible on approval');
 const countBefore=transcriptions;await learning.manage(request('admin',{action:'queue',videoId:solo,teachingEndedAt:clock,kinds:['Summary']}));assert.equal((await ai.process()).prepared,solo);
 assert.equal(transcriptions,countBefore,'adding the other draft reuses the existing transcript');assert.deepEqual(lastSchema.required,['summary']);
-assert.equal(data.get(base+'resources/quiz-'+solo).state,'published');assert.equal(data.get(base+'resources/summary-'+solo).state,'draft');
+assert.equal(data.get(base+'resources/quiz-'+solo).state,'published');assert.equal(data.get(base+'resources/summary-'+solo).state,'draft');assert.equal(data.get(base+'resources/summary-'+solo).title,'[2] Fullness in Christ');
 await assert.rejects(learning.manage(request('admin',{action:'queue',videoId:solo,teachingEndedAt:clock,kinds:['Quiz']})),e=>e.code==='already-exists');
 // A quiz requested after a summary keeps the normal summary-first release rule.
 const firstSummary='ffffffffff1';data.set('churchVideoLibrary/current',{videos:[{id:firstSummary,title:'Summary first',visibility:'public'}]});

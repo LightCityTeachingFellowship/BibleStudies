@@ -1,3 +1,4 @@
+import {syncLocalRepository} from './studio-local-repository.mjs';
 import {readFile,writeFile,mkdir,open,unlink,stat} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -94,9 +95,10 @@ export async function runLocalSync(root,{once=false,send=fetch}={}){
   const response=await send('https://us-central1-perceptive-zoo-424115-j6.cloudfunctions.net/getStudioHelperLibrary',{method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json'},body:JSON.stringify({...body,syncProtocol:2}),redirect:'error',signal:AbortSignal.timeout(20000)});
   if(!response.ok){await response.body?.cancel();throw Error(response.status===409?'The online video changed. Local sync will recheck it.':'Studio list sync is temporarily unavailable.');}return response.json();
  };
- let phase='checking',lastSuccessAt=null;
- const heartbeat=once?null:startHelperHeartbeat(join(root,'tools/audio-library/work/studio-sync'),{name:'Studio ID lists',details:()=>({phase,lastSuccessAt})});
+ let phase='checking',lastSuccessAt=null,lastRepositoryCheck=0,repositoryStatus='waiting';
+ const heartbeat=once?null:startHelperHeartbeat(join(root,'tools/audio-library/work/studio-sync'),{name:'Studio ID lists',details:()=>({phase,lastSuccessAt,repositoryStatus})});
  try{do{
+  if(!once&&Date.now()-lastRepositoryCheck>=60000){lastRepositoryCheck=Date.now();try{const sync=await syncLocalRepository(root);repositoryStatus=sync.synced?'synced':sync.reason;}catch(error){repositoryStatus='unavailable';console.warn('Website repository sync:',error.message);}}
   try{let disabled=false;try{disabled=JSON.parse(await readFile(join(root,'tools/audio-library/work/studio-sync/supervisor-disabled.json'),'utf8')).disabled===true;}catch(error){if(error.code!=='ENOENT')throw error;}if(disabled)break;const result=await syncLocalVideoLists(root,await request({}),{remove:(id,expectedVersion)=>request({removeVideoId:id,expectedVersion}),replace:data=>request({replaceVideo:data})});phase=result.busy?'waiting-for-list-lock':'watching';if(result.synced)lastSuccessAt=Date.now();if(once)console.log(result.busy?'Another list synchronization is still finishing.':'Studio and local ID lists synchronized.');}
   catch(error){phase='retrying';if(once)throw error;console.warn(error.message);}
   if(!once)await new Promise(resolve=>setTimeout(resolve,15000));
