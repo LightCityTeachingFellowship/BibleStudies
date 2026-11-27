@@ -10,7 +10,11 @@ layout: null
 {% assign empty_list = '' | split: ',' %}
 {
 {%- for item in items -%}{%- unless item.visibility == 'members' -%}
-{{ comma }}{{ item.permalink | default: item.url | relative_url | url_decode | downcase | jsonify }}:{"excerpt":{{ item.description | default: item.excerpt | default: item.content | strip_html | normalize_whitespace | truncate: 320 | jsonify }},"categories":{{ item.categories | default: empty_list | jsonify }}}
+{%- assign excerpt_text = item.description | default: item.excerpt | default: item.content -%}
+{%- if item.content contains '<!--excerpt.start-->' and item.content contains '<!--excerpt.end-->' -%}
+  {%- assign excerpt_text = item.content | split: '<!--excerpt.start-->' | last | split: '<!--excerpt.end-->' | first -%}
+{%- endif -%}
+{{ comma }}{{ item.permalink | default: item.url | relative_url | url_decode | downcase | jsonify }}:{"excerpt":{{ excerpt_text | strip_html | normalize_whitespace | truncate: 1200 | jsonify }},"categories":{{ item.categories | default: empty_list | jsonify }}}
 {%- assign comma = ',' -%}{%- endunless -%}{%- endfor -%}
 
 }
