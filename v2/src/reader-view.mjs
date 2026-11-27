@@ -6,12 +6,12 @@ export function createReaderView({document,url,services,fetchPage=fetch}){
  title.textContent='Reading';status.setAttribute('role','status');status.textContent='Loading…';full.textContent='Open full reader';full.hidden=true;element.append(title,status,full,content);const loading=createViewLoading(document,'Opening reading page…');element.append(loading);
  let disposed=false,revoked=false,unsubscribeAccess=null,originalReader=null;
  async function load(){try{
-  const requested=url.searchParams.get('url');if(!requested)throw Error('Invalid reading link');const target=new URL(requested,document.location.origin);
+  const requested=url.searchParams.get('url');if(!requested)throw Error('Invalid reading link');let target=new URL(requested,document.location.origin);
   if(target.origin!==document.location.origin||!/^https?:$/.test(target.protocol))throw Error('Invalid reading link');
   const catalogue=await services.resources.get('publications');if(disposed)return;
-  const find=()=>catalogue?.publications?.find(row=>{try{return new URL(row.url,document.location.origin).href===target.href}catch{return false}});
+  const find=()=>catalogue?.publications?.find(row=>{try{return [row.url,row.previousUrl].filter(Boolean).some(link=>new URL(link,document.location.origin).href===target.href)}catch{return false}});
   let publication=find();if(!publication&&catalogue?.memberReady){await catalogue.memberReady;if(disposed)return;publication=find()}
-  if(!publication)throw Error('This publication is unavailable');if(['Article','Summary'].includes(publication.kind))services.setSearchScope?.(publication.kind);
+  if(!publication)throw Error('This publication is unavailable');target=new URL(publication.url,document.location.origin);if(['Article','Summary'].includes(publication.kind))services.setSearchScope?.(publication.kind);
   if(publication.visibility==='members'){
    const state=services.session.state;if(state.status!=='member'||!state.user?.uid)throw Error('Member access is required');const owner=state.user.uid;
    unsubscribeAccess=services.session.subscribe(next=>{if(next.status==='member'&&next.user?.uid===owner)return;revoked=true;loading.hidden=true;controller.abort();originalReader?.dispose();originalReader=null;content.replaceChildren();title.hidden=false;title.textContent='Member access required';full.hidden=true;status.textContent='Sign in with an approved member account to continue.'});
