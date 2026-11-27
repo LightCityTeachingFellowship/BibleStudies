@@ -33,3 +33,12 @@
 .studio-learning form{display:flex;flex-wrap:wrap;align-items:end;gap:1rem}.studio-learning label,.studio-learning-dialog label{display:grid;gap:.4rem;margin:.75rem 0}.studio-learning-dialog{width:min(900px,92vw);max-height:88dvh;overflow:auto}.studio-learning-dialog textarea{width:100%;box-sizing:border-box}.studio-learning-dialog section{border-top:1px solid #dce1d8;margin-top:1rem;padding-top:.5rem}.studio-learning-dialog button{margin:.4rem}
 
 .studio-publish-notification{display:flex;align-items:center;gap:10px;margin:16px 0 8px;font-size:14px;cursor:pointer}.quick-link .studio-publish-notification input{flex:none;width:19px;height:19px;min-height:0;padding:0;accent-color:#d39b00}
+
+/* Summary category selection in the draft editor. */
+.studio-learning-dialog .studio-category-picker{border:1px solid #d9dfd5;border-radius:12px;padding:16px;margin:18px 0;min-width:0}
+.studio-learning-dialog .studio-category-picker legend{padding:0 6px;font-weight:600}
+.studio-learning-dialog .studio-category-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:8px;max-height:230px;overflow:auto;margin:12px 0;padding:4px}
+.studio-learning-dialog .studio-category-options label{display:flex;align-items:center;gap:9px;margin:0;cursor:pointer}
+.studio-learning-dialog .studio-category-options input[type=checkbox]{width:18px;height:18px;min-width:18px;margin:0;accent-color:#dfaa00}
+.studio-learning-dialog .studio-category-picker input[type=search],.studio-learning-dialog .studio-category-picker input[aria-label="New category name"]{width:100%;box-sizing:border-box}
+.studio-learning-dialog .studio-category-picker p[role=status]:empty{display:none}
