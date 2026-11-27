@@ -13,12 +13,15 @@ export function learningFile(resource,visibility,summary){
  const path=isSummary?'Posts-Summaries/_posts/'+name+'.html':'QuizQuestions-Adult/'+name+'.html';
  const url=isSummary?'/'+slug(draft.title)+'-'+date+'/':'/'+path;
  const categories=isSummary?[...new Set(['Year-'+date.slice(0,4),...(resource.categories||[]).filter(c=>!/^Year-/.test(c))])]:['Quiz Cat'];
- const front=['---','visibility: '+visibility,'layout: '+(isSummary?'summaryTEMPLATE':'QandA-TEMPLATE'),'title: '+json(draft.title),'permalink: '+json(url),'categories: '+json(categories),'tags: '+json(isSummary?categories:['Adult']),'date: '+date,...(!isSummary?['subsection: [Adult]']:[]),'learning_resource_id: '+resource.id,'source_video_id: '+resource.videoId,'learning_version: '+(Number.isSafeInteger(resource.version)?resource.version:1),'notification_policy: manual','---',''];
+ const front=['---','visibility: '+visibility,'layout: '+(isSummary?'summaryTEMPLATE':'QandA-TEMPLATE'),'title: '+json(draft.title),'permalink: '+json(url),'categories: '+json(categories),'tags: '+json(isSummary?categories:['Adult']),'date: '+date,...(!isSummary?['subsection: [Adult]']:[]),'learning_resource_id: '+resource.id,'source_video_id: '+resource.videoId,...(isSummary?['description: '+json(draft.sections[0].points[0].slice(0,320))]:[]),'learning_version: '+(Number.isSafeInteger(resource.version)?resource.version:1),'notification_policy: manual','---',''];
  let body;
- if(visibility==='members'){
-  body=isSummary?'<div data-generated-summary="'+resource.id+'" role="status"></div>\n<script type="module" src="/script/generated-summary.mjs?v=1"></script>':'<!-- Questions are loaded only after church membership is verified. -->';
- }else if(isSummary){
-  let first=true;body='<header><h1>'+html(draft.title)+'</h1></header>\n'+draft.sections.map(s=>'<h2>'+html(s.heading)+'</h2>\n<ol>\n'+s.points.map(p=>{const text='    <li>'+html(p)+'</li>';if(!first)return text;first=false;return '<!--excerpt.start-->\n'+text+'\n<!--excerpt.end-->';}).join('\n')+'\n</ol>').join('\n');
+ if(isSummary){
+  let first=true;body='<header><h1>'+html(draft.title)+'</h1></header>\n<ol>\n'+draft.sections.map(section=>{
+   const points=section.points.map(point=>'        <li>'+html(point)+'</li>').join('\n');
+   const item='    <li>'+html(section.heading)+'\n      <ol>\n'+points+'\n      </ol>\n    </li>';
+   if(!first)return item;first=false;return '<!--excerpt.start-->\n'+item+'\n<!--excerpt.end-->';
+  }).join('\n')+'\n</ol>';
+
  }else{
   body='<ol>\n'+draft.questions.map(q=>'    <li>'+html(q.prompt)+(q.hint||q.correct.length>1?'\n        <em>'+html([q.correct.length>1?'Select all answers that apply.':'',q.hint].filter(Boolean).join(' '))+'</em>':'')+'\n        <ul>\n'+q.options.map((o,i)=>'            <li>'+(q.correct.includes(i)?'<strong>'+html(o)+'</strong>':html(o))+(q.correct.includes(i)&&(q.explanation||q.reference)?'<ul><li>'+html([q.explanation,q.reference].filter(Boolean).join(' '))+'</li></ul>':'')+'</li>').join('\n')+'\n        </ul>\n    </li>').join('\n')+'\n</ol>';
  }

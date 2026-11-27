@@ -18,10 +18,10 @@ const learning=createLearning({...deps,legacy:[legacy]}),base='churchVideoActivi
 await assert.rejects(learning.manage(request('member',{action:'queue',videoId:a,teachingEndedAt:clock})),e=>e.code==='permission-denied');
 await learning.manage(request('admin',{action:'queue',videoId:a,teachingEndedAt:clock}));
 assert.equal(data.get(base+'jobs/'+a).state,'queued');assert.equal((await learning.release()).released,0);
-let transcriptions=0,generations=0,failRequest=false;
+let transcriptions=0,generations=0,failRequest=false,lastSchema=null;
 const recording={videoId:a,objectKey:'audio/'+a+'.m4a',durationSeconds:900,sha256:'a'.repeat(64)};
 const pair={summary:{title:'Fullness in Christ',sections:[{heading:'Continue in Christ',points:['As we received Christ as Lord, we are to continue in Him.']}]},quiz:{title:'Fullness in Christ quiz',questions:legacy.questions}};
-const ai=createLearningAI({...deps,apiKey:()=> 'test-only',recordings:async()=>[recording],transcode:async()=>({files:[{seconds:900,read:async()=>new Uint8Array([1,2])}],cleanup:async()=>{}}),send:async(url,options)=>{if(failRequest)throw Error('timeout');if(url.endsWith('transcriptions')){transcriptions++;assert.equal(options.body.get('model'),'gpt-4o-transcribe');return Response.json({text:'As we received Christ as Lord, continue in Him.'});}generations++;const body=JSON.parse(options.body);assert.equal(body.store,false);assert.equal(body.text.format.strict,true);return Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(pair)}]}],usage:{input_tokens:100,output_tokens:100}});}});
+const ai=createLearningAI({...deps,apiKey:()=> 'test-only',recordings:async()=>[recording],transcode:async()=>({files:[{seconds:900,read:async()=>new Uint8Array([1,2])}],cleanup:async()=>{}}),send:async(url,options)=>{if(failRequest)throw Error('timeout');if(url.endsWith('transcriptions')){transcriptions++;assert.equal(options.body.get('model'),'gpt-4o-transcribe');return Response.json({text:'As we received Christ as Lord, continue in Him.'});}generations++;const body=JSON.parse(options.body);lastSchema=body.text.format.schema;assert.equal(body.store,false);assert.equal(body.text.format.strict,true);return Response.json({status:'completed',output:[{content:[{type:'output_text',text:JSON.stringify(pair)}]}],usage:{input_tokens:100,output_tokens:100}});}});
 assert.deepEqual(await ai.process(),{paused:true});assert.equal(transcriptions,0);
 await ai.manage(request('admin',{action:'saveSettings',enabled:true,monthlyAllowance:1}));assert.equal((await ai.process()).reason,'allowance');assert.equal(transcriptions,0,'allowance prevents paid calls');
 await ai.manage(request('admin',{action:'saveSettings',enabled:true,monthlyAllowance:5e6}));await ai.manage(request('admin',{action:'retry',videoId:a}));assert.equal((await ai.process()).prepared,a);assert.equal(transcriptions,1);assert.equal(generations,1);assert.ok(data.get(base+'transcripts/'+a).text);assert.equal(data.get(base+'resources/summary-'+a).state,'draft');
@@ -83,4 +83,23 @@ assert.deepEqual(validateDraft(metadataDraft).categories,['Year-2026','Salvation
 assert.equal(validateDraft(metadataDraft).teachingDate,'2026-10-04');
 assert.throws(()=>validateDraft({...metadataDraft,teachingDate:'2026-02-31'}));
 assert.throws(()=>validateDraft({...metadataDraft,categories:['<script>']}));
+// A standalone quiz can be prepared and released without creating a summary.
+const solo='eeeeeeeeeee';data.set('churchVideoLibrary/current',{videos:[{id:solo,title:'Independent teaching',visibility:'members'}]});
+data.set(base+'settings/ai',{enabled:true,monthlyAllowance:5e6,trialLimit:3,trialVideoIds:[a,b,solo]});recording.videoId=solo;recording.sha256='e'.repeat(64);
+await learning.manage(request('admin',{action:'queue',videoId:solo,teachingEndedAt:clock,kinds:['Quiz']}));
+assert.equal(data.has(base+'resources/summary-'+solo),false);assert.equal(data.get(base+'resources/quiz-'+solo).summaryId,null);
+assert.equal((await ai.process()).prepared,solo);assert.deepEqual(lastSchema.required,['quiz']);assert.deepEqual(Object.keys(lastSchema.properties),['quiz']);
+await learning.manage(request('admin',{action:'approve',id:'quiz-'+solo,version:2}));assert.equal((await learning.release()).released,1,'standalone quiz is eligible on approval');
+const countBefore=transcriptions;await learning.manage(request('admin',{action:'queue',videoId:solo,teachingEndedAt:clock,kinds:['Summary']}));assert.equal((await ai.process()).prepared,solo);
+assert.equal(transcriptions,countBefore,'adding the other draft reuses the existing transcript');assert.deepEqual(lastSchema.required,['summary']);
+assert.equal(data.get(base+'resources/quiz-'+solo).state,'published');assert.equal(data.get(base+'resources/summary-'+solo).state,'draft');
+await assert.rejects(learning.manage(request('admin',{action:'queue',videoId:solo,teachingEndedAt:clock,kinds:['Quiz']})),e=>e.code==='already-exists');
+// A quiz requested after a summary keeps the normal summary-first release rule.
+const firstSummary='ffffffffff1';data.set('churchVideoLibrary/current',{videos:[{id:firstSummary,title:'Summary first',visibility:'public'}]});
+data.set(base+'settings/ai',{enabled:true,monthlyAllowance:5e6,trialLimit:3,trialVideoIds:[a,b,firstSummary]});recording.videoId=firstSummary;recording.sha256='f'.repeat(64);
+await learning.manage(request('admin',{action:'queue',videoId:firstSummary,teachingEndedAt:clock,kinds:['Summary']}));assert.equal((await ai.process()).prepared,firstSummary);assert.deepEqual(lastSchema.required,['summary']);
+assert.equal(data.has(base+'resources/quiz-'+firstSummary),false);
+await learning.manage(request('admin',{action:'queue',videoId:firstSummary,teachingEndedAt:clock,kinds:['Quiz']}));assert.equal((await ai.process()).prepared,firstSummary);assert.equal(data.get(base+'resources/quiz-'+firstSummary).summaryId,'summary-'+firstSummary);
+await assert.rejects(learning.manage(request('admin',{action:'publishSilent',id:'quiz-'+firstSummary,version:2})),e=>e.code==='failed-precondition');
+console.log('PASS: independent quiz approval, selective AI schema, subsequent drafts and transcript reuse.');
 console.log('PASS: opt-in generation, cached transcription, allowance reservations, uncertain request hold, approval and 3h/1h timing, access inheritance, account isolation, scores and idempotent submissions.');

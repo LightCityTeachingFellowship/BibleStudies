@@ -2,7 +2,7 @@ export const SUMMARY_DELAY=3*60*60*1000,QUIZ_DELAY=60*60*1000;
 export const resourceId=id=>typeof id==='string'&&/^[a-zA-Z0-9_-]{1,100}$/.test(id);
 export function canonicalVideo(videos,id){return videos.find(v=>v.id===id)||videos.find(v=>v.replaces?.includes(id));}
 export function accessFor(resource,videos){if(!resource.videoId)return resource.legacy===true?'public':null;const visibility=canonicalVideo(videos,resource.videoId)?.visibility;return ['public','members'].includes(visibility)?visibility:null;}
-export function eligibleAt(resource,summary){return resource.kind==='Summary'?resource.teachingEndedAt+SUMMARY_DELAY:summary?.state==='published'?summary.publishedAt+QUIZ_DELAY:null;}
+export function eligibleAt(resource,summary){return resource.kind==='Summary'?resource.teachingEndedAt+SUMMARY_DELAY:resource.kind==='Quiz'&&!resource.summaryId?(resource.approvedAt??null):summary?.state==='published'?summary.publishedAt+QUIZ_DELAY:null;}
 export function canRelease(resource,summary,now){const time=eligibleAt(resource,summary);return resource.state==='approved'&&Number.isFinite(time)&&time<=now;}
 const text=(value,max)=>typeof value==='string'?value.trim().slice(0,max):'';
 export function validateDraft(input){

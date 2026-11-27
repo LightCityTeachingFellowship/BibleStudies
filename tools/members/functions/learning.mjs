@@ -22,12 +22,18 @@ export function createLearning(deps){
   if(data.action==='queue'){
    const video=canonicalVideo(await videos(),data.videoId),end=data.teachingEndedAt;
    if(!video||!['public','members'].includes(video.visibility)||!Number.isSafeInteger(end)||end<946684800000||end>now()+60000)invalid('Choose a published public/member teaching and its actual ending time.');
-   const summaryId='summary-'+video.id,quizId='quiz-'+video.id;
-   await db.runTransaction(async tx=>{const s=await tx.get(ref(summaryId)),q=await tx.get(ref(quizId));
-    if(s.exists||q.exists)throw new fail('already-exists','This teaching already has a review workflow.');
-    for(const [id,kind]of [[summaryId,'Summary'],[quizId,'Quiz']])tx.set(ref(id),{id,kind,videoId:video.id,title:video.title,summaryId,teachingEndedAt:end,state:'awaiting-draft',...(kind==='Summary'?{teachingDate:new Date(end+3600000).toISOString().slice(0,10),categories:['Year-'+new Date(end+3600000).getUTCFullYear()]}:{}),version:1,createdAt:now(),createdBy:uid});
-    tx.set(db.doc('churchVideoActivity/learning/jobs/'+video.id),{videoId:video.id,state:'queued',createdAt:now(),createdBy:uid});
-   });return {summaryId,quizId};
+   const requested=data.kinds===undefined?['Summary','Quiz']:data.kinds;
+   if(!Array.isArray(requested)||!requested.length||requested.length>2||new Set(requested).size!==requested.length||requested.some(k=>!['Summary','Quiz'].includes(k)))invalid('Choose a summary, a quiz, or both.');
+   const summaryId='summary-'+video.id,quizId='quiz-'+video.id,jobRef=db.doc('churchVideoActivity/learning/jobs/'+video.id);
+   const created=await db.runTransaction(async tx=>{
+    const [s,q,job]=await Promise.all([tx.get(ref(summaryId)),tx.get(ref(quizId)),tx.get(jobRef)]);
+    const missing=requested.filter(kind=>kind==='Summary'?!s.exists:!q.exists);
+    if(!missing.length)throw new fail('already-exists','The selected drafts already exist for this teaching.');
+    if(job.exists&&job.data()?.state!=='complete')throw new fail('failed-precondition','Finish or resolve the existing preparation before creating another draft.');
+    const summaryRequired=s.exists||missing.includes('Summary');
+    for(const kind of missing){const id=kind==='Summary'?summaryId:quizId;tx.set(ref(id),{id,kind,videoId:video.id,title:video.title,summaryId:kind==='Quiz'&&!summaryRequired?null:summaryId,teachingEndedAt:end,state:'awaiting-draft',...(kind==='Summary'?{teachingDate:new Date(end+3600000).toISOString().slice(0,10),categories:['Year-'+new Date(end+3600000).getUTCFullYear()]}:{}),version:1,createdAt:now(),createdBy:uid});}
+    tx.set(jobRef,{videoId:video.id,kinds:missing,state:'queued',createdAt:now(),createdBy:uid});return missing;
+   });return {summaryId:created.includes('Summary')?summaryId:null,quizId:created.includes('Quiz')?quizId:null,created};
   }
   if(!resourceId(data.id)||legacy.some(r=>r.id===data.id))invalid('Choose a generated draft. Existing quizzes remain public.');
   return db.runTransaction(async tx=>{
@@ -45,7 +51,7 @@ export function createLearning(deps){
     try{validateDraft(r);}catch(e){invalid(e.message);}
     const library=(await tx.get(db.doc('churchVideoLibrary/current'))).data()?.videos||[];
     if(!accessFor(r,library))throw new fail('failed-precondition','The source video is not available.');
-    if(r.kind==='Quiz'){const summary=(await tx.get(ref(r.summaryId))).data();if(summary?.state!=='published')throw new fail('failed-precondition','Publish the summary first.');}
+    if(r.kind==='Quiz'&&r.summaryId){const summary=(await tx.get(ref(r.summaryId))).data();if(summary?.state!=='published')throw new fail('failed-precondition','Publish the summary first.');}
     tx.set(ref(data.id),{...r,state:'published',approvedAt:now(),approvedBy:uid,publishedAt:now(),notificationState:'held'});return {published:true,notificationsHeld:true};
    }
    if(data.action==='save'){
@@ -64,7 +70,7 @@ export function createLearning(deps){
  async function release(){
   const approved=await db.collection('churchVideoActivity/learning/resources').where('state','==','approved').limit(100).get();let count=0;
   for(const item of approved.docs){const r=item.data();const released=await db.runTransaction(async tx=>{
-   const [fresh,library,summary]=await Promise.all([tx.get(item.ref),tx.get(db.doc('churchVideoLibrary/current')),r.kind==='Quiz'?tx.get(ref(r.summaryId)):Promise.resolve(null)]);
+   const [fresh,library,summary]=await Promise.all([tx.get(item.ref),tx.get(db.doc('churchVideoLibrary/current')),r.kind==='Quiz'&&r.summaryId?tx.get(ref(r.summaryId)):Promise.resolve(null)]);
    const current=fresh.data();if(!current||!accessFor(current,library.data()?.videos||[])||!canRelease(current,summary?.data(),now()))return false;
    tx.set(item.ref,{...current,state:'published',publishedAt:now(),notificationState:'held'});return true;
   });if(released)count++;}return {released:count};

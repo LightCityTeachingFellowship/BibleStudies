@@ -25,7 +25,7 @@ function doc(p){return{get:async()=>snapshot(p,data.get(p)),set:async v=>data.se
 function collection(p){let limit=100,after;const q={doc:i=>doc(p+'/'+i),orderBy(){return q;},startAfter(t,i){after={t,i};return q;},limit(n){limit=n;return q;},async get(){let rows=[...data].filter(([k])=>k.startsWith(p+'/')).map(([k,v])=>snapshot(k,v)).sort((a,b)=>b.data().updatedAt-a.data().updatedAt||b.id.localeCompare(a.id));if(after)rows=rows.filter(d=>d.data().updatedAt<after.t||d.data().updatedAt===after.t&&d.id<after.i);rows=rows.slice(0,limit);return{docs:rows,size:rows.length};}};return q;}
 class Failure extends Error{constructor(code,message){super(message);this.code=code;}}
 let verified=true,disabled=false;
-const backend=createReadingActivity({auth:{getUser:async()=>({emailVerified:verified,disabled,providerData:[{providerId:'google.com'}]})},db:{collection,batch:()=>{const paths=[];return{delete:r=>paths.push(r.path),commit:async()=>paths.forEach(p=>data.delete(p))};}},fail:Failure,catalog:cat,now:()=>++time});
+const backend=createReadingActivity({auth:{getUser:async()=>({emailVerified:verified,disabled,providerData:[{providerId:'google.com'}]})},db:{doc:()=>({get:async()=>({exists:false,data:()=>null})}),collection,batch:()=>{const paths=[];return{delete:r=>paths.push(r.path),commit:async()=>paths.forEach(p=>data.delete(p))};}},fail:Failure,catalog:cat,now:()=>++time});
 const request=(uid,body)=>({auth:uid?{uid}:undefined,data:{accountUid:uid,...body}});
 await assert.rejects(backend.getMyReadingActivity(request(null,{view:'saved'})),e=>e.code==='unauthenticated');
 await backend.updateMyReadingActivity(request('alice',{action:'save',resourceId:id}));

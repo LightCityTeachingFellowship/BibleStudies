@@ -91,17 +91,22 @@ export function createLearningAI(deps){
     transcript=parts.join('\n\n');if(Buffer.byteLength(transcript)>650000)throw Error('transcript-size');
     await transcriptRef.set({videoId:id,fingerprint,text:transcript,createdAt:now()});
    }
-   const prompt=JSON.stringify({title:video.title,transcript}),key=hashText('draft-pair-v4:'+fingerprint);
-   const result=await paid(id,key,estimateText(Buffer.byteLength(prompt)+Buffer.byteLength(instructions)),async()=>{
-    const r=await request('responses',{model:'gpt-6.1-terra',store:false,instructions,input:prompt,max_output_tokens:12000,text:{format:{type:'json_schema',name:'lightcity_learning',strict:true,schema}}});
+   const kinds=Array.isArray(item.data()?.kinds)&&item.data().kinds.length?item.data().kinds:['Summary','Quiz'];
+   if(kinds.some(k=>!['Summary','Quiz'].includes(k)))throw Error('draft-changed');
+   const pairMode=kinds.includes('Summary')&&kinds.includes('Quiz'),keys=kinds.map(k=>k.toLowerCase());
+   const selectedSchema=pairMode?schema:{...schema,required:keys,properties:Object.fromEntries(keys.map(k=>[k,schema.properties[k]]))};
+   const selectedInstructions=pairMode?instructions:instructions+'\n\nFor this request, generate ONLY the '+kinds[0]+'; omit the other resource entirely.';
+   const prompt=JSON.stringify({title:video.title,transcript}),key=hashText((pairMode?'draft-pair-v4:':'draft-single-v1:'+keys[0]+':')+fingerprint);
+   const result=await paid(id,key,estimateText(Buffer.byteLength(prompt)+Buffer.byteLength(selectedInstructions)),async()=>{
+    const r=await request('responses',{model:'gpt-6.1-terra',store:false,instructions:selectedInstructions,input:prompt,max_output_tokens:12000,text:{format:{type:'json_schema',name:'lightcity_learning',strict:true,schema:selectedSchema}}});
     if(r.status!=='completed')throw Error('Draft generation incomplete');
     const text=(r.output||[]).flatMap(o=>o.content||[]).filter(c=>c.type==='output_text').map(c=>c.text).join('');const pair=JSON.parse(text);
-    const summary=validateDraft({...pair.summary,kind:'Summary'}),quiz=validateDraft({...pair.quiz,kind:'Quiz'});return {summary,quiz,cost:Math.ceil((r.usage?.input_tokens||Buffer.byteLength(prompt))+(r.usage?.output_tokens||12000)*5)};
+    const drafts={};if(kinds.includes('Summary'))drafts.summary=validateDraft({...pair.summary,kind:'Summary'});if(kinds.includes('Quiz'))drafts.quiz=validateDraft({...pair.quiz,kind:'Quiz'});return {...drafts,cost:Math.ceil((r.usage?.input_tokens||Buffer.byteLength(prompt))+(r.usage?.output_tokens||12000)*5)};
    });
    await db.runTransaction(async tx=>{
     const s=db.doc('churchVideoActivity/learning/resources/summary-'+id),q=db.doc('churchVideoActivity/learning/resources/quiz-'+id),j=await tx.get(item.ref),ss=await tx.get(s),qs=await tx.get(q),current=(await tx.get(db.doc('churchVideoLibrary/current'))).data()?.videos||[];
     if(j.data()?.lease!==lease||canonicalVideo(current,id)?.id!==id)throw Error('source-changed');
-    for(const [ref,snapshot,draft]of [[s,ss,result.summary],[q,qs,result.quiz]]){const r=snapshot.data();if(r?.state!=='awaiting-draft')throw Error('draft-changed');tx.set(ref,{...r,...draft,state:'draft',version:r.version+1,generatedAt:now(),transcriptId:id});}
+    for(const [ref,snapshot,draft]of [[s,ss,result.summary],[q,qs,result.quiz]].filter(([, ,draft])=>draft)){const r=snapshot.data();if(r?.state!=='awaiting-draft')throw Error('draft-changed');tx.set(ref,{...r,...draft,state:'draft',version:r.version+1,generatedAt:now(),transcriptId:id});}
     tx.set(item.ref,{state:'complete',completedAt:now(),leaseUntil:0},{merge:true});
    });return {prepared:id};
   }catch(error){const code=['allowance','paused','waiting-audio','source-changed','duration','transcript-size','draft-changed','trial-complete'].includes(error.message)?error.message:'uncertain';await item.ref.set({state:code==='uncertain'?'uncertain':'paused',error:code,leaseUntil:0,updatedAt:now()},{merge:true});return {paused:id,reason:code};}
