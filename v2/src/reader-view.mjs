@@ -1,5 +1,5 @@
 import {createViewLoading} from './view-loading.mjs';
-import {mountOriginalReader} from './original-reader.mjs';
+import {mountOriginalReader} from './original-reader.mjs?v=summary-links-2';
 // Only publications in the verified audience's catalogue may be displayed.
 export function createReaderView({document,url,services,fetchPage=fetch}){
  const element=document.createElement('section'),title=document.createElement('h1'),status=document.createElement('p'),full=document.createElement('a'),content=document.createElement('div'),controller=new AbortController();
