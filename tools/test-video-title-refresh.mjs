@@ -19,4 +19,4 @@ assert.ok(result.videos.every(v=>v.title==='Updated '+v.id));
 result=await refreshVideoTitles(videos,{checkedAt:now,titles:{removed0001:{title:'Private old title'}}},{now:now+1});assert.equal(result.cache.titles.removed0001,undefined,'removed title cache entries are pruned');
 const audio=audioLibrary({publicVideos:[{id,title:'New title',category:'Study'}],recordings:[{videoId:id,title:'Old audio title'}]});
 assert.equal(audio[0].title,'New title','audio uses refreshed library metadata without downloading or changing audio');
-console.log('PASS: daily expiry, last-good fallback, API batching, preserved IDs/audiences/order, removed-cache pruning and refreshed audio titles.');
+console.log('PASS: refresh expiry, last-good fallback, API batching, preserved IDs/audiences/order, removed-cache pruning and refreshed audio titles.');

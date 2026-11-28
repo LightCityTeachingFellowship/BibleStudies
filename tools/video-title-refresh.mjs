@@ -1,4 +1,4 @@
-export const TITLE_REFRESH_MS = 24 * 3600000;
+export const TITLE_REFRESH_MS = 6 * 3600000;
 const valid = id => /^[\w-]{11}$/.test(id || '');
 export async function refreshVideoTitles(videos, cache = {}, { now = Date.now(), send = fetch, apiKey = '', classify = () => null, deadlineMs = 240000 } = {}) {
   const wanted = new Set(videos.map(v => v.id));

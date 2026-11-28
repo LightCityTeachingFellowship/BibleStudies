@@ -46,6 +46,13 @@ try {
  assert.deepEqual(plan.videos[1].replaces,[c]);
  const synced=reconcileReplacements(previous,plan.videos,plan.videos.flatMap(x=>(x.replaces||[]).map(from=>({from,to:x.id,visibility:x.replacementVisibility[from]}))));
  assert.deepEqual(synced.videos,plan.videos,'multiple ready replacements sync without ambiguity');
+ const studioVideo={...v(e,'members'),title:'Old Studio title'};
+ const studio={entries:[{video:studioVideo,state:'ready',sourceSeen:false,createdAt:1}]};
+ const refreshed=await preparePublication({root,previous:{videos:[...previous,studioVideo],revision:'old'},desired:previous,studio,titleMetadata:{[e]:{title:'Renamed on YouTube',category:'Study'}},declared:[],recordings:[],live:[],revision:'new'});
+ assert.equal(refreshed.videos.find(x=>x.id===e).title,'Renamed on YouTube','Studio entries use refreshed YouTube metadata');
+ assert.equal(refreshed.videos.find(x=>x.id===e).visibility,'members','title refresh preserves Studio audience');
+ const stored=JSON.parse(await readFile(join(root,'tools/audio-library/work/publication.json'),'utf8'));
+ assert.equal(stored.titleMetadata[e].title,'Renamed on YouTube','protected publication sync retains refreshed metadata');
  const unchanged=await preparePublication({root,previous:{videos:previous,revision:'same'},desired:[v(b),v(c,'members')],declared:[],recordings:[],live:[],revision:'same'});
  assert.equal(unchanged.publish,false,'scheduled waiting check does not rebuild unchanged site');
  const forced=await preparePublication({root,previous:{videos:previous,revision:'same'},desired:previous,declared:[],recordings:[],live:[],revision:'same',force:true});

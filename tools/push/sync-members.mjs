@@ -1,4 +1,5 @@
 import {publicationTransaction} from './publication-transaction.mjs';
+import {applyTitles} from '../video-title-refresh.mjs';
 import {mergeStudioVideos,acknowledgeStudio} from '../members/functions/direct-library.mjs';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
@@ -18,7 +19,7 @@ else {
  initializeApp({credential:cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))});const db=getFirestore();
  const outcome=await publicationTransaction(db,async tx=>{const ref=db.doc('churchVideoLibrary/current'),previous=await tx.get(ref);
   const studioRef=db.doc('churchVideoLibrary/studio'),studio=await tx.get(studioRef),sourceIds=prepared?.sourceIds||current.map(v=>v.id);
-  const latest=mergeStudioVideos(current,studio.data(),{sourceIds});
+  const latest=applyTitles(mergeStudioVideos(current,studio.data(),{sourceIds}),prepared?.titleMetadata||{});
   if(publicationRevisionDecision(previous.exists?previous.data()?.revision:null,revision,isAncestor)==='skip')return {skipped:true,count:0};
   const result=reconcileReplacements(previous.exists?previous.data()?.videos:[],latest,declared);
   if(Buffer.byteLength(JSON.stringify(result.videos))>850000)throw Error('Library is too large for one document; split it before syncing.');
