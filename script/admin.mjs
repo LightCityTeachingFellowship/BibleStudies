@@ -2,7 +2,7 @@ import {archiveRequest} from './audio-archive-api.mjs';
 import {setupAdminUsers} from './admin-users.mjs?v=1';
 import {setupStudioTests} from './studio-tests.mjs?v=stream-reply-1';
 import {setupStudioPublisher} from './studio-publish.mjs?v=silent-additions-1';
-import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=learning-1';
+import {streamId,watchLink,previewLink,dashboardRows,filterRows} from './admin-core.mjs?v=library-refresh-1';
 export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCityMembers,loadArchive=archiveRequest}){
  const byId=id=>document.getElementById(id);if(!byId('admin-content'))return;
  const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -90,7 +90,7 @@ export function setupAdmin({document,window,navigator,api=()=>globalThis.LightCi
    byId('admin-signin').disabled=!client?.enabled;byId('admin-signout').hidden=!client?.user;byId('admin-account').textContent=client?.user?.email||'';
    if(!client?.enabled){status('Sign-in is not configured yet.');return;}
    if(!client.user||client.user.isAnonymous){status('Sign in to open your admin dashboard.');return;}
-   const uid=client.user.uid;const data=await client.getAdminDashboard();if(current!==generation||api()?.user?.uid!==uid)return;
+   const uid=client.user.uid;const data=await client.getAdminDashboard();try{const catalogue=await fetch('/study-catalog.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null);for(const row of data.learning||[]){const published=(catalogue?.generatedSummaries||[]).find(item=>item.id===row.resourceId);if(row.kind==='Summary'&&row.published&&published){row.title=published.title;row.url=published.url;row.date=published.date||row.date}}}catch{}if(current!==generation||api()?.user?.uid!==uid)return;
    owner=uid;if(!silent)void accounts?.load();checks={...data.checks};
    let archive;
    try {

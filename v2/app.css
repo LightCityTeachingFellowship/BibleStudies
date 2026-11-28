@@ -568,7 +568,7 @@ body :is(h1,h2,h3,h4,h5,h6):not(.lc-quiz-question),body .lc-search-result-title,
 #view .lc-v2-library > div.lc-hub-tabs { display: flex; }
 @media (max-width: 650px) { #view .lc-v2-library > .lc-hub-tabs button { margin: 0; flex: 1 1 auto; } }
 /* Duration badges on media thumbnails throughout the app. */
-.lc-app-duration{position:absolute;right:7px;bottom:7px;z-index:2;padding:2px 5px;border-radius:4px;background:#080808;color:#fff;font:700 12px/1.3 Inter,system-ui,sans-serif;pointer-events:none}
+.lc-app-duration{position:absolute;right:7px;bottom:7px;z-index:2;padding:2px 5px;border-radius:4px;background:rgba(0, 0, 0, 0.5);color:#fff;font:700 12px/1.3 Inter,system-ui,sans-serif;pointer-events:none}
 .lc-related-image{position:relative}
 .lc-search-duration .lc-app-duration{position:static;display:inline-block;margin-top:6px}
 

@@ -23,13 +23,15 @@ export function dashboardRows(data){
   });
  }
  for(const r of data.readings||[])if(['Article','Summary'].includes(r.kind)&&siteLink(r.url))rows.push({...r,url:siteLink(r.url),published:true});
- for(const r of data.learning||[])if(['Summary','Quiz'].includes(r.kind)&&siteLink(r.url))rows.push({...r,url:siteLink(r.url)});
+ for(const r of data.learning||[])if(['Summary','Quiz'].includes(r.kind)&&siteLink(r.url)){const url=siteLink(r.url),index=rows.findIndex(item=>item.kind===r.kind&&item.url===url);if(index>=0)rows[index]={...rows[index],...r,url};else rows.push({...r,url});}
  for(const [title,path]of [['Home','/Home/'],['Video library','/Videos/'],['Audio library','/Listen/'],['Articles','/Teaching-Articles/'],['Summaries','/teaching-summary/']])rows.push({title,url:siteLink(path),kind:'Page',visibility:'public',published:true});
  return rows;
 }
 export function filterRows(rows,tab='All',query=''){
  const normal=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();const words=normal(query).split(/\s+/).filter(Boolean);
- return rows.filter(r=>tab==='All'||tab==='Audio'&&r.audio&&r.published||tab==='Live'&&r.live||tab==='Pending'&&!r.published||r.kind===tab).filter(r=>words.every(w=>normal([r.title,r.id,r.date,r.visibility].join(' ')).includes(w)));
+ const filtered=rows.filter(r=>tab==='All'||tab==='Audio'&&r.audio&&r.published||tab==='Live'&&r.live||tab==='Pending'&&!r.published||r.kind===tab).filter(r=>words.every(w=>normal([r.title,r.id,r.date,r.visibility].join(' ')).includes(w)));
+ if(tab==='Article'||tab==='Summary')filtered.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+ return filtered;
 }
 
 export const previewLink=(id,audio=false)=>videoShareLink(id,{audio});
