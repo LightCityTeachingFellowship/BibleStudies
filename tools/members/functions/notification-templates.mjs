@@ -44,9 +44,11 @@ export function renderNotificationTemplate(type, custom, values = {}) {
 // Missing settings preserve the sender's current copy and image exactly.
 export async function configuredNotification(db,type,original,values={}) {
  const snapshot=await db.doc('churchStudioPublications/notification-center/settings/current').get();
- const custom=snapshot.data()?.templates?.[type];
- if(!custom)return original;
+ const settings=snapshot.data()||{},custom=settings.templates?.[type];
+ const group=String(values.group||'').toUpperCase();
+ const groupImage=type.startsWith('prayer')&&['MAN','OX','LION','EAGLE'].includes(group)?settings.prayerGroupImages?.[group]||'https://lightcityfellowship.com/images/prayer-groups/'+group.toLowerCase()+'.png':'';
+ if(!custom)return groupImage?{...original,image:groupImage}:original;
  const rendered=renderNotificationTemplate(type,custom,values);
  if(!rendered.title||!rendered.body)throw Error('Notification template has missing information.');
- return {...original,title:rendered.title,body:rendered.body,...(rendered.image?{image:rendered.image}:{})};
+ return {...original,title:rendered.title,body:rendered.body,...((groupImage||rendered.image)?{image:groupImage||rendered.image}:{})};
 }

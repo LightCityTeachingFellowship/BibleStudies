@@ -13,7 +13,7 @@ export function createNotificationCenter(deps){
    const [doc,communion]=await Promise.all([db.doc('churchStudioPublications/notification-center/settings/current').get(),db.doc('churchStudioPublications/prayer-groups/communion-settings/current').get()]);
    const templates={...(doc.data()?.templates||{})},old=communion.data();
    if(!templates.communion&&old?.title&&old?.body)templates.communion={title:old.title,body:old.body,image:''};
-   return {templates,types:NOTIFICATION_TYPES};
+   return {templates,types:NOTIFICATION_TYPES,prayerGroupImages:doc.data()?.prayerGroupImages||{}};
   }
   if(data.action==='save'){
    if(!Object.hasOwn(NOTIFICATION_TYPES,data.type))throw new fail('invalid-argument','Choose a notification type.');
@@ -23,6 +23,11 @@ export function createNotificationCenter(deps){
    await db.doc('churchStudioPublications/notification-center/settings/current').set({templates:{[data.type]:template}},{merge:true});
    if(data.type==='communion')await db.doc('churchStudioPublications/prayer-groups/communion-settings/current').set({title:template.title,body:template.body,updatedAt:now(),updatedBy:uid},{merge:true});
    return {ok:true};
+  }
+  if(data.action==='saveGroupImage'){
+   if(!['MAN','OX','LION','EAGLE'].includes(data.group))throw new fail('invalid-argument','Choose a prayer group.');
+   let image;try{image=validateNotificationTemplate({title:'Prayer',body:'Prayer',image:data.image}).image}catch(e){throw new fail('invalid-argument',e.message)}
+   await db.doc('churchStudioPublications/notification-center/settings/current').set({prayerGroupImages:{[data.group]:image}},{merge:true});return {ok:true};
   }
   if(data.action==='image'){
    if(typeof data.base64!=='string'||data.base64.length>600000||!/^[A-Za-z0-9+/]+={0,2}$/.test(data.base64))throw new fail('invalid-argument','Choose a PNG, JPEG or WebP image smaller than 400 KB.');
