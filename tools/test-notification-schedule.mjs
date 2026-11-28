@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {validateNotificationSchedule,notificationOccurrence} from './members/functions/notification-schedule-core.mjs';
+const start={frequency:'daily',startDate:'2026-11-28',time:'09:00',endDate:'2026-11-30'};
+assert.equal(notificationOccurrence(start,Date.parse('2026-11-28T08:00:20Z')),'2026-11-28T09:00');
+assert.equal(notificationOccurrence(start,Date.parse('2026-12-01T08:00:00Z')),null);
+assert.equal(notificationOccurrence({...start,frequency:'weekly',endDate:''},Date.parse('2026-12-05T08:00:00Z')),'2026-12-05T09:00');
+assert.equal(notificationOccurrence({...start,frequency:'once'},Date.parse('2026-11-29T08:00:00Z')),null);
+assert.equal(notificationOccurrence({...start,frequency:'monthly',startDate:'2026-01-31',endDate:''},Date.parse('2026-02-28T08:00:00Z')),null);
+assert.throws(()=>validateNotificationSchedule({...start,startDate:'2026-02-30'}));
+assert.throws(()=>validateNotificationSchedule({...start,endDate:'2026-11-27'}));
+console.log('PASS: one-time, daily, weekly, monthly and bounded schedules use Nigeria time.');

@@ -1,4 +1,5 @@
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
+import {validateNotificationSchedule,notificationOccurrence} from './notification-schedule-core.mjs';
 import {requireStudioAdmin} from './studio-publishing.mjs';
 import {memberDeviceIds,recipients} from './push-audiences.mjs';
 import {NOTIFICATION_TYPES,validateNotificationTemplate} from './notification-templates.mjs';
@@ -13,7 +14,7 @@ export function createNotificationCenter(deps){
    const [doc,communion]=await Promise.all([db.doc('churchStudioPublications/notification-center/settings/current').get(),db.doc('churchStudioPublications/prayer-groups/communion-settings/current').get()]);
    const templates={...(doc.data()?.templates||{})},old=communion.data();
    if(!templates.communion&&old?.title&&old?.body)templates.communion={title:old.title,body:old.body,image:''};
-   return {templates,types:NOTIFICATION_TYPES,prayerGroupImages:doc.data()?.prayerGroupImages||{}};
+   return {templates,types:NOTIFICATION_TYPES,prayerGroupImages:doc.data()?.prayerGroupImages||{},serviceReminderMinutes:doc.data()?.serviceReminderMinutes??30};
   }
   if(data.action==='save'){
    if(!Object.hasOwn(NOTIFICATION_TYPES,data.type))throw new fail('invalid-argument','Choose a notification type.');
@@ -23,6 +24,25 @@ export function createNotificationCenter(deps){
    await db.doc('churchStudioPublications/notification-center/settings/current').set({templates:{[data.type]:template}},{merge:true});
    if(data.type==='communion')await db.doc('churchStudioPublications/prayer-groups/communion-settings/current').set({title:template.title,body:template.body,updatedAt:now(),updatedBy:uid},{merge:true});
    return {ok:true};
+  }
+  if(data.action==='saveServiceReminder'){
+   if(!Number.isInteger(data.minutes)||data.minutes<0||data.minutes>1440)throw new fail('invalid-argument','Choose a time from 0 to 1440 minutes before the service.');
+   await db.doc('churchStudioPublications/notification-center/settings/current').set({serviceReminderMinutes:data.minutes},{merge:true});return {ok:true};
+  }
+  if(data.action==='listSchedules'){
+   const result=await db.collection('churchStudioPublications/notification-center/schedules').where('enabled','==',true).limit(200).get();
+   return {schedules:result.docs.map(d=>({id:d.id,...d.data()})).filter(row=>row.enabled)};
+  }
+  if(data.action==='stopSchedule'){
+   if(!validId(data.id))throw new fail('invalid-argument','Choose a schedule.');
+   await db.doc('churchStudioPublications/notification-center/schedules/'+data.id).set({enabled:false,stoppedAt:now()},{merge:true});return {ok:true};
+  }
+  if(data.action==='createSchedule'){
+   let timing,copy;try{timing=validateNotificationSchedule(data.schedule);copy=validateNotificationTemplate(data)}catch(e){throw new fail('invalid-argument',e.message)}
+   if(!['members','public'].includes(data.audience)||/[{}]/.test(copy.title+copy.body))throw new fail('invalid-argument','Choose an audience and use plain text.');
+   let url;try{url=new URL(data.url||'https://lightcityfellowship.com/');if(url.protocol!=='https:'||url.hostname!=='lightcityfellowship.com'||url.username||url.password)throw Error()}catch{throw new fail('invalid-argument','Use a LightCity website link.')}
+   const first=Date.parse(timing.startDate+'T'+timing.time+':00+01:00');if(first<=now())throw new fail('invalid-argument','Choose a future date and time in Nigeria.');
+   const id=randomUUID();await db.doc('churchStudioPublications/notification-center/schedules/'+id).set({...timing,...copy,url:url.href,audience:data.audience,createdBy:uid,createdAt:now(),enabled:true});return {ok:true,id};
   }
   if(data.action==='saveGroupImage'){
    if(!['MAN','OX','LION','EAGLE'].includes(data.group))throw new fail('invalid-argument','Choose a prayer group.');
@@ -68,5 +88,15 @@ export function createNotificationCenter(deps){
   const id=req.query.id;if(req.method!=='GET'||typeof id!=='string'||!/^[a-f0-9]{64}$/.test(id)){res.status(404).end();return;}
   try{const doc=await db.doc('churchStudioPublications/notification-center/images/'+id).get(),data=doc.data();if(!data||!['image/png','image/jpeg','image/webp'].includes(data.contentType)){res.status(404).end();return;}res.set('Content-Type',data.contentType);res.set('Cache-Control','public, max-age=86400');res.set('X-Content-Type-Options','nosniff');res.status(200).send(Buffer.from(data.base64,'base64'));}catch{res.status(503).end();}
  }
- return {manage,image};
+ async function runSchedules(){
+  const snapshot=await db.collection('churchStudioPublications/notification-center/schedules').where('enabled','==',true).limit(200).get();
+  for(const doc of snapshot.docs){const row=doc.data();let occurrence=null;for(let i=0;i<5&&!occurrence;i++)occurrence=notificationOccurrence(row,now()-i*60000);if(!occurrence)continue;
+   const fresh=(await doc.ref.get()).data();if(!fresh?.enabled)continue;
+   const hex=digest(doc.id+':'+occurrence),id=hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20,32);
+   try{await manage({auth:{uid:row.createdBy},data:{action:'send',id,title:row.title,body:row.body,image:row.image,url:row.url,audience:row.audience}});await doc.ref.set({lastOccurrence:occurrence,lastResult:'sent'},{merge:true})}
+   catch(error){if(error.code!=='already-exists')await doc.ref.set({lastOccurrence:occurrence,lastResult:'failed',lastError:String(error.message||'Delivery failed').slice(0,200)},{merge:true})}
+   if(row.frequency==='once')await doc.ref.set({enabled:false},{merge:true});
+  }
+ }
+ return {manage,image,runSchedules};
 }

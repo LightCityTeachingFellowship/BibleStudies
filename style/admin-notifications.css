@@ -12,3 +12,5 @@
 .notice-group-heading{display:flex;align-items:center;gap:12px}.notice-group-heading img{width:48px;height:48px;object-fit:cover;border-radius:12px;background:#e9eee9}
 .notice-group-heading strong{letter-spacing:.06em}.notice-panel [role=status]:empty{display:none}
 @media(max-width:700px){[data-studio-view="notifications"] .notice-panel{grid-template-columns:1fr;padding:22px}.notice-panel>label{grid-column:1/-1}#notice-groups{grid-template-columns:1fr}}
+[data-studio-view="notifications"] [hidden]{display:none!important}
+#notice-schedules{grid-column:1/-1;display:grid;gap:12px}.notice-schedule-row{display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid #dfe5de;padding-top:14px}.notice-schedule-row p{margin:5px 0 0;font-size:.85rem;color:#61746c}@media(max-width:700px){.notice-schedule-row{align-items:flex-start;flex-direction:column}}

@@ -111,6 +111,7 @@ export const manageChurchServiceSchedule=onCall(options,request=>serviceSchedule
 
 const notificationCenter=createNotificationCenter({auth:getAuth(),db:getFirestore(),fail:HttpsError,emails:()=>adminEmails.value(),messaging:getMessaging()});
 export const manageChurchNotifications=onCall({...options,timeoutSeconds:180},notificationCenter.manage);
+export const sendScheduledChurchNotifications=onSchedule({schedule:'every 1 minutes',region:'us-central1',maxInstances:1,timeoutSeconds:180},notificationCenter.runSchedules);
 export const churchNotificationImage=onRequest({region:'us-central1',invoker:'public',maxInstances:5},notificationCenter.image);
 
 const studioGitHub=githubPublisher({token:()=>studioGitHubToken.value()});

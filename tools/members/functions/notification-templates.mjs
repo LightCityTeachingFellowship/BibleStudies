@@ -10,7 +10,7 @@ export const NOTIFICATION_TYPES = Object.freeze({
   prayerToday: ['{group} prayer reminder', 'Your group is scheduled to pray today. Open the calendar for your local time.'],
   prayerStarting: ['{group} prayer reminder', 'Your group prayer begins in 30 minutes. Open the calendar for your local time.'],
   prayerWeek: ['{group} owns the coming prayer week', 'Your group owns next week and prays on Sunday and Tuesday. Open the calendar to see your local times.'],
-  service: ['Service begins in 30 minutes', '{serviceTitle}. Open the calendar for your local time.'],
+  service: ['Service reminder', '{serviceTitle}. Open the calendar for your local time.'],
   communion: ['Communion service today', 'We shall eat and drink of the body and blood of our LORD today. God God bless us greatly'],
   streamReport: ['{reportTitle}', '{reportBody}']
 });
